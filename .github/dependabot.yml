@@ -1,0 +1,18 @@
+version: 2
+
+updates:
+  # NuGet (/) e npm (/src/frontend) entram na Fase 2, quando existirem manifestos.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
