@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Regras puras do domínio: sem dependência de infraestrutura, HTTP ou outras camadas. -->
+
+</Project>

@@ -19,6 +19,21 @@ cd cartola-varzea
 dotnet --version   # deve mostrar 10.0.2xx
 ```
 
+## Backend
+
+A solution fica em `src/backend/Fut7Fantasy.slnx`; os testes em `tests/backend/`.
+
+```bash
+dotnet restore src/backend/Fut7Fantasy.slnx
+dotnet build src/backend/Fut7Fantasy.slnx
+dotnet test --solution src/backend/Fut7Fantasy.slnx
+dotnet format src/backend/Fut7Fantasy.slnx --verify-no-changes
+dotnet run --project src/backend/src/Fut7Fantasy.Api   # GET http://localhost:5277/health/live
+```
+
+- Os testes usam xUnit v3 no Microsoft Testing Platform (configurado em `global.json`).
+- Ao adicionar ou atualizar pacote, rode `dotnet restore` e versione os `packages.lock.json` alterados; o CI restaura em modo travado.
+
 ## Convenções
 
 ### Idioma

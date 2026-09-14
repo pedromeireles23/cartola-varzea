@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\backend\src\Fut7Fantasy.Api\Fut7Fantasy.Api.csproj" />
+    <ProjectReference Include="..\..\..\src\backend\src\Fut7Fantasy.Application\Fut7Fantasy.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\backend\src\Fut7Fantasy.Domain\Fut7Fantasy.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\backend\src\Fut7Fantasy.Infrastructure\Fut7Fantasy.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

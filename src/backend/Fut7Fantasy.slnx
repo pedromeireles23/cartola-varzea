@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Fut7Fantasy.Api/Fut7Fantasy.Api.csproj" />
+    <Project Path="src/Fut7Fantasy.Application/Fut7Fantasy.Application.csproj" />
+    <Project Path="src/Fut7Fantasy.Domain/Fut7Fantasy.Domain.csproj" />
+    <Project Path="src/Fut7Fantasy.Infrastructure/Fut7Fantasy.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="../../tests/backend/Fut7Fantasy.ArchitectureTests/Fut7Fantasy.ArchitectureTests.csproj" />
+    <Project Path="../../tests/backend/Fut7Fantasy.IntegrationTests/Fut7Fantasy.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

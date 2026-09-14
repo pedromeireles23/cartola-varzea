@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fut7Fantasy.Domain\Fut7Fantasy.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

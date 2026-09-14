@@ -1,7 +1,25 @@
 version: 2
 
 updates:
-  # NuGet (/) e npm (/src/frontend) entram na Fase 2, quando existirem manifestos.
+  # npm (/src/frontend) entra quando o workspace Angular existir.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+    groups:
+      aspnetcore:
+        patterns:
+          - "Microsoft.AspNetCore.*"
+      testes:
+        patterns:
+          - "xunit*"
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

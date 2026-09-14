@@ -13,8 +13,9 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 
 - Regras do MVP definidas: formação, mercado, pontuação, preços e valorização (calibrados por simulação).
 - Mapa de navegação e wireflows de baixa fidelidade em validação.
-- Repositório com estrutura base, convenções de build e primeira decisão de arquitetura ([ADR-001](docs/adr/0001-monolito-modular.md)).
-- Próximo passo: CI mínimo e, em seguida, a fundação técnica (backend, frontend e ambiente local).
+- Repositório com CI, convenções de build e primeira decisão de arquitetura ([ADR-001](docs/adr/0001-monolito-modular.md)).
+- Backend inicial: solution `Fut7Fantasy` com as camadas Api, Application, Domain e Infrastructure, health check e testes de arquitetura e integração.
+- Próximo passo: workspace Angular, ambiente local com Docker Compose e o primeiro fluxo vertical.
 
 ## Stack planejada
 

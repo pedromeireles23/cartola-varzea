@@ -22,7 +22,7 @@ jobs:
       GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
     steps:
       - name: Checkout com histórico completo
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -47,7 +47,7 @@ jobs:
       EC_SHA256: 90139c6ed52373c0acfc9deb2a07aa812e5184753afd4bc8252bf44eb4909155
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -63,3 +63,37 @@ jobs:
 
       - name: Verificar arquivos
         run: '"$RUNNER_TEMP/editorconfig-checker"'
+
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CI: "true"
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+      SOLUTION: src/backend/Fut7Fantasy.slnx
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar .NET do global.json
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      - name: Restaurar com lockfiles travados
+        run: dotnet restore "$SOLUTION" --locked-mode
+
+      - name: Verificar formatação e estilo
+        run: dotnet format "$SOLUTION" --verify-no-changes --no-restore
+
+      - name: Compilar em Release
+        run: dotnet build "$SOLUTION" --configuration Release --no-restore
+
+      - name: Testar
+        run: dotnet test --solution "$SOLUTION" --configuration Release --no-build
