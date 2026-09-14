@@ -1,5 +1,8 @@
 # Cartola Várzea
 
+[![CI](https://github.com/pedromeireles23/cartola-varzea/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pedromeireles23/cartola-varzea/actions/workflows/ci.yml)
+[![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
+
 > Nome provisório. Projeto de portfólio em fase de planejamento: ainda não há código executável.
 
 Plataforma web de fantasy game para campeonatos amadores de futebol, começando pelo Fut7. Organizadores cadastram campeonatos, times, atletas e súmulas; participantes montam equipes com atletas reais, disputam o ranking geral e criam ligas privadas.
