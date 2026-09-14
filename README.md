@@ -10,7 +10,8 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 
 - Regras do MVP definidas: formação, mercado, pontuação, preços e valorização (calibrados por simulação).
 - Mapa de navegação e wireflows de baixa fidelidade em validação.
-- Próximo passo: fundação do repositório (estrutura, CI e ambiente local).
+- Repositório com estrutura base, convenções de build e primeira decisão de arquitetura ([ADR-001](docs/adr/0001-monolito-modular.md)).
+- Próximo passo: CI mínimo e, em seguida, a fundação técnica (backend, frontend e ambiente local).
 
 ## Stack planejada
 
@@ -24,4 +25,4 @@ A stack pode mudar durante a implementação; este README acompanha o que realme
 
 ## Licença
 
-A definir.
+Distribuído sob a licença [MIT](LICENSE).
