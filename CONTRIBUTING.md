@@ -4,12 +4,13 @@ Obrigado pelo interesse. O projeto está em fase inicial e é mantido como portf
 
 ## Pré-requisitos
 
-| Ferramenta | Versão | Observação |
-|---|---|---|
-| Git | 2.40 ou superior | |
-| .NET SDK | 10.0.200 (patch mais recente da faixa) | Fixado em `global.json` |
-| Docker | Engine 24 ou superior | Banco, storage e e-mail locais |
-| Node.js | 24.19.0 | Fixado em `src/frontend/.nvmrc`; o Angular 22 exige `^22.22.3 \|\| ^24.15.0 \|\| >=26` |
+| Ferramenta | Versão                                 | Observação                                                                             |
+| ---------- | -------------------------------------- | -------------------------------------------------------------------------------------- |
+| Git        | 2.40 ou superior                       |                                                                                        |
+| .NET SDK   | 10.0.200 (patch mais recente da faixa) | Fixado em `global.json`                                                                |
+| Docker     | Engine 24 ou superior                  | Banco, storage e e-mail locais                                                         |
+| Node.js    | 24.19.0                                | Fixado em `src/frontend/.nvmrc`; o Angular 22 exige `^22.22.3 \|\| ^24.15.0 \|\| >=26` |
+| npm        | 11.17.0                                | Registrado em `src/frontend/package.json` pelo campo `packageManager`                  |
 
 ## Primeiros passos
 
@@ -17,9 +18,14 @@ Obrigado pelo interesse. O projeto está em fase inicial e é mantido como portf
 git clone https://github.com/pedromeireles23/cartola-varzea.git
 cd cartola-varzea
 dotnet --version     # deve mostrar 10.0.2xx
-node --version       # deve mostrar v24.21.x
+node --version       # deve mostrar v24.19.0
+npm.cmd --version    # deve mostrar 11.17.0 no Windows PowerShell
 dotnet tool restore  # instala o dotnet-ef fixado em .config/dotnet-tools.json
 ```
+
+No Windows PowerShell com execução de scripts desabilitada, use `npm.cmd` no lugar de `npm` (por exemplo,
+`npm.cmd ci`). Isso evita apenas o shim `npm.ps1`; não altera a versão instalada nem a política de segurança da
+máquina. Em outros shells, os comandos `npm` abaixo funcionam normalmente.
 
 ## Ambiente local
 
@@ -39,11 +45,11 @@ docker compose up -d
 docker compose ps         # sqlserver precisa aparecer como healthy
 ```
 
-| Serviço | Porta local | Uso |
-|---|---|---|
-| SQL Server | 1433 | Banco da aplicação |
-| Azurite | 10000–10002 | Blob, queue e table locais |
-| Mailpit | 1025 (SMTP) e 8025 (web) | E-mail de conta em desenvolvimento |
+| Serviço    | Porta local              | Uso                                |
+| ---------- | ------------------------ | ---------------------------------- |
+| SQL Server | 1433                     | Banco da aplicação                 |
+| Azurite    | 10000–10002              | Blob, queue e table locais         |
+| Mailpit    | 1025 (SMTP) e 8025 (web) | E-mail de conta em desenvolvimento |
 
 Tudo escuta apenas em `127.0.0.1`. Para apagar os dados locais: `docker compose down -v`.
 
@@ -71,10 +77,10 @@ dotnet run --project src/backend/src/Fut7Fantasy.Api
 
 Endpoints da fundação:
 
-| Rota | O que faz |
-|---|---|
-| `GET /health/live` | Processo de pé; não consulta dependência alguma |
-| `GET /health/ready` | Inclui o banco; é o que indica capacidade de atender |
+| Rota                      | O que faz                                                       |
+| ------------------------- | --------------------------------------------------------------- |
+| `GET /health/live`        | Processo de pé; não consulta dependência alguma                 |
+| `GET /health/ready`       | Inclui o banco; é o que indica capacidade de atender            |
 | `GET /api/v1/system/info` | Versão, ambiente, hora do servidor e inicializações registradas |
 
 - Os testes usam xUnit v3 no Microsoft Testing Platform (configurado em `global.json`).
@@ -99,12 +105,12 @@ O `npm start` encaminha `/api` para `http://localhost:5277` via `proxy.conf.json
 
 Organização de `src/app`:
 
-| Pasta | Conteúdo |
-|---|---|
-| `core/` | Cliente HTTP, configuração por ambiente, tradução de Problem Details |
-| `layouts/` | Casca pública e casca autenticada |
+| Pasta        | Conteúdo                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------- |
+| `core/`      | Cliente HTTP, configuração por ambiente, tradução de Problem Details                        |
+| `layouts/`   | Casca pública e casca autenticada                                                           |
 | `shared/ui/` | Design system sem regra de negócio: button, form-field, alert, card, badge, dialog, loading |
-| `features/` | Uma pasta por área funcional, carregada sob demanda |
+| `features/`  | Uma pasta por área funcional, carregada sob demanda                                         |
 
 Os tokens do design system ficam em `src/styles/_tokens.scss` como CSS custom properties. Componentes usam sempre o token, nunca o valor literal — é o que vai permitir acrescentar tema escuro sem reescrever cada componente.
 
