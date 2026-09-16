@@ -1,0 +1,79 @@
+.btn {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-body);
+  font-size: var(--font-body-size);
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition: background-color var(--motion-feedback) var(--motion-easing);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 60%;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+// Verde-limao nunca recebe texto branco (02 §4).
+.btn--primary {
+  color: var(--color-ink-950);
+  background-color: var(--color-brand-500);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--color-brand-300);
+}
+
+.btn--secondary {
+  color: var(--color-ink-950);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: var(--color-brand-50);
+}
+
+.btn--ghost {
+  color: var(--color-ink-700);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background-color: var(--color-brand-50);
+}
+
+.btn--danger {
+  color: var(--color-surface);
+  background-color: var(--color-danger);
+}
+
+.spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentcolor;
+  border-top-color: transparent;
+  border-radius: var(--radius-pill);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+}

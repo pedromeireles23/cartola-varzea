@@ -1,0 +1,76 @@
+@use 'styles/tokens';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  // O usuario pode ampliar ate 200% sem quebrar a tarefa principal (02 §12).
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-canvas);
+  color: var(--color-ink-950);
+  font-family: var(--font-body);
+  font-size: var(--font-body-size);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: var(--font-h1);
+  font-weight: 600;
+}
+
+h2 {
+  font-size: var(--font-h2);
+  font-weight: 600;
+}
+
+h3 {
+  font-size: var(--font-h3);
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+}
+
+// Foco sempre visivel, nunca removido sem substituto (02 §12).
+:focus-visible {
+  outline: 2px solid var(--color-ink-950);
+  outline-offset: 2px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+// Conteudo apenas para leitor de tela.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
