@@ -16,7 +16,7 @@ namespace Fut7Fantasy.IntegrationTests;
 /// </summary>
 internal static partial class TestAccounts
 {
-    public const string ValidPassword = "uma-senha-bem-longa-2026";
+    public const string SenhaValida = "uma-senha-bem-longa-2026";
 
     [GeneratedRegex("XSRF-TOKEN=(?<value>[^;]+)")]
     private static partial Regex AntiforgeryCookie { get; }
@@ -42,7 +42,7 @@ internal static partial class TestAccounts
             DisplayName = "Pessoa de Teste",
             CreatedAt = ApiFactory.FixedNow,
         };
-        Assert.True((await users.CreateAsync(user, ValidPassword)).Succeeded);
+        Assert.True((await users.CreateAsync(user, SenhaValida)).Succeeded);
 
         if (role is not null)
         {
@@ -100,7 +100,7 @@ internal static partial class TestAccounts
         await RefreshAntiforgeryAsync(client, cancellationToken);
         using var login = await client.PostAsJsonAsync(
             new Uri("/api/v1/auth/login", UriKind.Relative),
-            new { email, password = ValidPassword },
+            new { email, password = SenhaValida },
             cancellationToken);
         login.EnsureSuccessStatusCode();
         await RefreshAntiforgeryAsync(client, cancellationToken);

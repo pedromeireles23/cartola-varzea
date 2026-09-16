@@ -52,7 +52,8 @@ public sealed class ModalityProfile
 
         if (Enum.GetValues<Position>().Any(position => formation.CountOf(position) < 1))
         {
-            throw new ArgumentException("A formação precisa de ao menos um titular por posição.", nameof(formation));
+            throw new ArgumentException(
+                "A formação precisa de ao menos um titular por posição.", nameof(formation));
         }
 
         if (Enum.GetValues<Position>().Any(position => !fallbackPrices.ContainsKey(position)))

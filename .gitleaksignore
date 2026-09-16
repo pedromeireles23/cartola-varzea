@@ -1,2 +1,4 @@
 # Falso positivo histórico: credencial exclusivamente fictícia de teste, removida no commit seguinte.
 6ff7486262132d8a7144e59b756a1be41d1d6083:tests/backend/Fut7Fantasy.IntegrationTests/OrganizerApplicationFlowTests.cs:generic-api-key:19
+# Falso positivo: senha fictícia dos testes, marcada só pelo nome ValidPassword; a constante voltou a se chamar SenhaValida.
+8cd6c2ec3d2657c973301074019c0596cca4fc45:tests/backend/Fut7Fantasy.IntegrationTests/TestAccounts.cs:generic-api-key:19

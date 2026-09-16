@@ -95,11 +95,17 @@ namespace Fut7Fantasy.Infrastructure.Persistence.Migrations
 
                     b.ToTable("Competitions", "competitions", t =>
                         {
-                            t.HasCheckConstraint("CK_Competitions_CorrectionWindowBusinessDays", "[CorrectionWindowBusinessDays] BETWEEN 1 AND 10");
+                            t.HasCheckConstraint(
+                                "CK_Competitions_CorrectionWindowBusinessDays",
+                                "[CorrectionWindowBusinessDays] BETWEEN 1 AND 10");
 
-                            t.HasCheckConstraint("CK_Competitions_MarketCloseLeadTimeMinutes", "[MarketCloseLeadTimeMinutes] BETWEEN 0 AND 4320");
+                            t.HasCheckConstraint(
+                                "CK_Competitions_MarketCloseLeadTimeMinutes",
+                                "[MarketCloseLeadTimeMinutes] BETWEEN 0 AND 4320");
 
-                            t.HasCheckConstraint("CK_Competitions_ResultsSlaBusinessDays", "[ResultsSlaBusinessDays] BETWEEN 1 AND 10");
+                            t.HasCheckConstraint(
+                                "CK_Competitions_ResultsSlaBusinessDays",
+                                "[ResultsSlaBusinessDays] BETWEEN 1 AND 10");
                         });
                 });
 

@@ -38,9 +38,15 @@ namespace Fut7Fantasy.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Competitions", x => x.Id);
-                    table.CheckConstraint("CK_Competitions_CorrectionWindowBusinessDays", "[CorrectionWindowBusinessDays] BETWEEN 1 AND 10");
-                    table.CheckConstraint("CK_Competitions_MarketCloseLeadTimeMinutes", "[MarketCloseLeadTimeMinutes] BETWEEN 0 AND 4320");
-                    table.CheckConstraint("CK_Competitions_ResultsSlaBusinessDays", "[ResultsSlaBusinessDays] BETWEEN 1 AND 10");
+                    table.CheckConstraint(
+                        "CK_Competitions_CorrectionWindowBusinessDays",
+                        "[CorrectionWindowBusinessDays] BETWEEN 1 AND 10");
+                    table.CheckConstraint(
+                        "CK_Competitions_MarketCloseLeadTimeMinutes",
+                        "[MarketCloseLeadTimeMinutes] BETWEEN 0 AND 4320");
+                    table.CheckConstraint(
+                        "CK_Competitions_ResultsSlaBusinessDays",
+                        "[ResultsSlaBusinessDays] BETWEEN 1 AND 10");
                     table.ForeignKey(
                         name: "FK_Competitions_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
