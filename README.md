@@ -3,7 +3,7 @@
 [![CI](https://github.com/pedromeireles23/cartola-varzea/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pedromeireles23/cartola-varzea/actions/workflows/ci.yml)
 [![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
 
-> Nome provisório. Projeto de portfólio em fase de planejamento: ainda não há código executável.
+> Nome provisório. Projeto de portfólio em desenvolvimento, com fundações técnicas e conta local executáveis.
 
 Plataforma web de fantasy game para campeonatos amadores de futebol, cobrindo Fut7, futsal e futebol de campo. Organizadores cadastram campeonatos, times, atletas e súmulas; participantes montam equipes com atletas reais, disputam o ranking geral e criam ligas privadas.
 
@@ -14,11 +14,11 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 - Regras do MVP definidas: formação por modalidade, mercado, pontuação, preços e valorização (calibrados por simulação no Fut7).
 - Mapa de navegação e wireflows de baixa fidelidade validados com um organizador de campeonato amador.
 - Repositório com CI, convenções de build e primeira decisão de arquitetura ([ADR-001](docs/adr/0001-monolito-modular.md)).
-- Backend: solution `Fut7Fantasy` com as camadas Api, Application, Domain e Infrastructure, EF Core com SQL Server, health checks de liveness e readiness, Problem Details e 15 testes de arquitetura e integração (dois deles contra um SQL Server real em container).
+- Backend: solution `Fut7Fantasy` com as camadas Api, Application, Domain e Infrastructure, EF Core com SQL Server, ASP.NET Core Identity, sessão em cookie seguro, health checks, Problem Details e testes contra SQL Server real em container.
 - Ambiente local com Docker Compose (SQL Server, Azurite e Mailpit) e script de bootstrap para Windows.
-- Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base e a primeira página consumindo a API.
-- Fluxo vertical completo em pé: navegador → Angular → API → SQL Server, coberto por 31 testes (backend, frontend e E2E em Playwright).
-- Próximo passo: identidade, sessão e conta.
+- Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base, página de sistema e fluxos de cadastro, confirmação, login, recuperação e perfil.
+- Fluxo vertical completo em pé: navegador → Angular → API → SQL Server e Mailpit, coberto por 55 testes (backend, frontend e E2E em Playwright desktop/mobile).
+- Próximo passo: administração da plataforma, organizações, papéis e isolamento por escopo. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
 
 ## Stack planejada
 
