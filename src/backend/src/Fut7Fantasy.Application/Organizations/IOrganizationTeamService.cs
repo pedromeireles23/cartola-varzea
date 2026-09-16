@@ -19,6 +19,8 @@ public interface IOrganizationTeamService
 }
 
 public sealed record OrganizationTeamView(
+    Guid OrganizationId,
+    string OrganizationName,
     IReadOnlyList<OrganizationMemberView> Assistants,
     IReadOnlyList<OrganizationInvitationView> Invitations);
 

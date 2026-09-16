@@ -35,6 +35,11 @@ public sealed class OrganizationTeamService(
         Guid organizationId,
         CancellationToken cancellationToken)
     {
+        var organization = await dbContext.Organizations
+            .AsNoTracking()
+            .SingleAsync(item => item.Id == organizationId, cancellationToken)
+            .ConfigureAwait(false);
+
         var assistants = await (
             from member in dbContext.OrganizationMembers.AsNoTracking()
             join user in dbContext.Users.AsNoTracking() on member.UserId equals user.Id
@@ -53,6 +58,8 @@ public sealed class OrganizationTeamService(
             .ConfigureAwait(false);
 
         return new OrganizationTeamView(
+            organization.Id,
+            organization.Name,
             assistants,
             [.. invitations.Select(invitation => ToView(invitation, now))]);
     }

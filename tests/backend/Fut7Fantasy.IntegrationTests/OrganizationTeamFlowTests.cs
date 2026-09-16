@@ -88,6 +88,8 @@ public sealed partial class OrganizationTeamFlowTests(SqlServerFixture sqlServer
             cancellationToken);
         teamResponse.EnsureSuccessStatusCode();
         var team = await teamResponse.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        Assert.Equal(organizationId, team.GetProperty("organizationId").GetGuid());
+        Assert.Equal("Liga Autorizada", team.GetProperty("organizationName").GetString());
         Assert.Contains(
             team.GetProperty("assistants").EnumerateArray(),
             member => member.GetProperty("userId").GetGuid() == assistantId);
