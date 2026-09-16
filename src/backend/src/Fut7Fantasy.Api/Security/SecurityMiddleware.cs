@@ -7,6 +7,33 @@ public static class SecurityMiddleware
 {
     private static readonly string[] MutatingMethods = ["POST", "PUT", "PATCH", "DELETE"];
 
+    /// <summary>Bloqueia mutações da conta pública de demonstração no servidor.</summary>
+    public static IApplicationBuilder UseDemoViewerReadOnly(this IApplicationBuilder app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        return app.Use(async (context, next) =>
+        {
+            var isMutation = MutatingMethods.Contains(
+                context.Request.Method, StringComparer.OrdinalIgnoreCase);
+            var isLogout = context.Request.Path == "/api/v1/auth/logout";
+            if (!isMutation
+                || isLogout
+                || !context.User.IsInRole(Fut7Fantasy.Infrastructure.Identity.ApplicationRole.DemoViewer))
+            {
+                await next(context).ConfigureAwait(false);
+                return;
+            }
+
+            await Results.Problem(
+                    title: "Modo demonstração",
+                    detail: "Esta conta é somente leitura.",
+                    statusCode: StatusCodes.Status403Forbidden)
+                .ExecuteAsync(context)
+                .ConfigureAwait(false);
+        });
+    }
+
     /// <summary>
     /// Exige antiforgery em toda requisição que altera estado e vinda de cookie.
     ///

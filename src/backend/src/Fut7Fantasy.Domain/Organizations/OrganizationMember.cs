@@ -29,12 +29,23 @@ public sealed class OrganizationMember
 
     /// <summary>Cria o primeiro membro, proprietário da organização.</summary>
     public static OrganizationMember CreateOwner(Guid organizationId, Guid userId, DateTimeOffset joinedAt)
+        => Create(organizationId, userId, OrganizationRole.Owner, joinedAt);
+
+    /// <summary>Cria uma associação auxiliar a partir de um convite aceito.</summary>
+    public static OrganizationMember CreateAssistant(Guid organizationId, Guid userId, DateTimeOffset joinedAt)
+        => Create(organizationId, userId, OrganizationRole.Assistant, joinedAt);
+
+    private static OrganizationMember Create(
+        Guid organizationId,
+        Guid userId,
+        OrganizationRole role,
+        DateTimeOffset joinedAt)
     {
         if (organizationId == Guid.Empty || userId == Guid.Empty)
         {
             throw new ArgumentException("Organização e conta precisam ser identificadas.");
         }
 
-        return new OrganizationMember(organizationId, userId, OrganizationRole.Owner, joinedAt);
+        return new OrganizationMember(organizationId, userId, role, joinedAt);
     }
 }

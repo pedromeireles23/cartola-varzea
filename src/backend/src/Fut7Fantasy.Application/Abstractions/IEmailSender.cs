@@ -1,8 +1,7 @@
 namespace Fut7Fantasy.Application.Abstractions;
 
 /// <summary>
-/// Envio de e-mail transacional. No MVP so existem verificacao, recuperacao e
-/// alertas de seguranca; convite e resultado usam notificacao interna.
+/// Envio de e-mail transacional para conta, segurança e convites.
 /// </summary>
 public interface IEmailSender
 {

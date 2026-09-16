@@ -5,7 +5,9 @@ using Fut7Fantasy.Api.Endpoints;
 using Fut7Fantasy.Api.Security;
 using Fut7Fantasy.Application;
 using Fut7Fantasy.Application.Diagnostics;
+using Fut7Fantasy.Domain.Organizations;
 using Fut7Fantasy.Infrastructure;
+using Fut7Fantasy.Infrastructure.Authorization;
 using Fut7Fantasy.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -72,9 +74,28 @@ builder.Services.AddAntiforgery(options =>
 });
 
 builder.Services.AddAuthorization(options =>
+{
     options.AddPolicy(
         AuthorizationPolicies.PlatformAdmin,
-        policy => policy.RequireRole(ApplicationRole.PlatformAdmin)));
+        policy => policy.RequireRole(ApplicationRole.PlatformAdmin));
+    options.AddPolicy(
+        AuthorizationPolicies.OrganizationMember,
+        policy => policy.RequireAuthenticatedUser().AddRequirements(
+            new OrganizationRoleRequirement(OrganizationRole.Owner, OrganizationRole.Assistant)));
+    options.AddPolicy(
+        AuthorizationPolicies.OrganizationOwner,
+        policy => policy.RequireAuthenticatedUser().AddRequirements(
+            new OrganizationRoleRequirement(OrganizationRole.Owner)));
+    options.AddPolicy(
+        AuthorizationPolicies.OrganizationOwnerWrite,
+        policy => policy.RequireAuthenticatedUser()
+            .RequireAssertion(context => !context.User.IsInRole(ApplicationRole.DemoViewer))
+            .AddRequirements(new OrganizationRoleRequirement(OrganizationRole.Owner)));
+    options.AddPolicy(
+        AuthorizationPolicies.AuthenticatedWrite,
+        policy => policy.RequireAuthenticatedUser()
+            .RequireAssertion(context => !context.User.IsInRole(ApplicationRole.DemoViewer)));
+});
 
 // Rate limiting por risco de endpoint (04-seguranca §13). A chave combina IP e
 // caminho: sem isso, uma janela por IP deixaria o abuso de login consumir a cota
@@ -134,6 +155,7 @@ app.UseSecurityHeaders();
 app.UseRateLimiter();
 
 app.UseAuthentication();
+app.UseDemoViewerReadOnly();
 app.UseAuthorization();
 app.UseAntiforgeryForMutations();
 
@@ -154,6 +176,7 @@ app.MapGet(
 
 app.MapAccountEndpoints();
 app.MapOrganizerApplicationEndpoints();
+app.MapOrganizationTeamEndpoints();
 
 await app.RunAsync();
 

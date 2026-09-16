@@ -1,12 +1,16 @@
 using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Accounts;
+using Fut7Fantasy.Application.Organizations;
 using Fut7Fantasy.Application.PlatformAdministration;
+using Fut7Fantasy.Infrastructure.Authorization;
 using Fut7Fantasy.Infrastructure.Email;
 using Fut7Fantasy.Infrastructure.Identity;
 using Fut7Fantasy.Infrastructure.Options;
+using Fut7Fantasy.Infrastructure.Organizations;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Fut7Fantasy.Infrastructure.PlatformAdministration;
 using Fut7Fantasy.Infrastructure.Startup;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -44,6 +48,11 @@ public static class InfrastructureServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<OrganizationOptions>()
+            .Bind(configuration.GetSection(OrganizationOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         // Relogio abstrato do proprio .NET: os testes injetam FakeTimeProvider.
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IApplicationEnvironment, HostApplicationEnvironment>();
@@ -67,6 +76,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IOrganizerApplicationService, OrganizerApplicationService>();
+        services.AddScoped<IOrganizationTeamService, OrganizationTeamService>();
+        services.AddScoped<IAuthorizationHandler, OrganizationRoleHandler>();
 
         return services;
     }

@@ -37,6 +37,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();
 
+    public DbSet<OrganizationInvitation> OrganizationInvitations => Set<OrganizationInvitation>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {

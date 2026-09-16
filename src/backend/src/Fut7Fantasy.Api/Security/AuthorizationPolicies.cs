@@ -4,4 +4,12 @@ namespace Fut7Fantasy.Api.Security;
 public static class AuthorizationPolicies
 {
     public const string PlatformAdmin = "platform-admin";
+
+    public const string OrganizationMember = "organization-member";
+
+    public const string OrganizationOwner = "organization-owner";
+
+    public const string OrganizationOwnerWrite = "organization-owner-write";
+
+    public const string AuthenticatedWrite = "authenticated-write";
 }

@@ -32,3 +32,31 @@ public sealed class OrganizationMemberConfiguration : IEntityTypeConfiguration<O
         builder.HasIndex(member => member.UserId);
     }
 }
+
+public sealed class OrganizationInvitationConfiguration : IEntityTypeConfiguration<OrganizationInvitation>
+{
+    public void Configure(EntityTypeBuilder<OrganizationInvitation> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.ToTable("OrganizationInvitations", Fut7FantasyDbContext.OrganizationsSchema);
+        builder.HasKey(invitation => invitation.Id);
+        builder.Property(invitation => invitation.InvitedEmail).HasMaxLength(254).IsRequired();
+        builder.Property(invitation => invitation.InvitedEmailNormalized).HasMaxLength(254).IsRequired();
+        builder.Property(invitation => invitation.TokenHash).HasMaxLength(64).IsRequired();
+        builder.Property(invitation => invitation.Status).HasConversion<string>().HasMaxLength(24).IsRequired();
+        builder.Property(invitation => invitation.RowVersion).IsRowVersion();
+        builder.HasOne<Organization>().WithMany().HasForeignKey(invitation => invitation.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(invitation => invitation.InvitedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(invitation => invitation.AcceptedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(invitation => invitation.TokenHash).IsUnique();
+        builder.HasIndex(invitation => new
+        {
+            invitation.OrganizationId,
+            invitation.InvitedEmailNormalized,
+            invitation.Status,
+        });
+    }
+}
