@@ -107,6 +107,14 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'fases',
+            title: 'Fases',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/competition-stages').then(
+                (m) => m.CompetitionStagesPage,
+              ),
+          },
+          {
             path: 'configuracao',
             title: 'Configuração',
             loadComponent: () =>

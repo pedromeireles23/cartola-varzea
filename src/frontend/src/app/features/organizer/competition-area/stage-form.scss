@@ -1,0 +1,43 @@
+// Complementa os estilos do formulário de configuração, carregados junto.
+.criterios {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: criterio;
+}
+
+.criterio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.criterio__marca {
+  display: flex;
+  flex: 1 1 12rem;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: var(--touch-target);
+  cursor: pointer;
+}
+
+.criterio__marca input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--color-brand-700);
+}
+
+.criterio__acoes {
+  display: flex;
+  gap: var(--space-1);
+}
