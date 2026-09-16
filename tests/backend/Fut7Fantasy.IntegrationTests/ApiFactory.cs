@@ -19,7 +19,8 @@ public class ApiFactory : WebApplicationFactory<Program>
     public static readonly DateTimeOffset FixedNow = new(2026, 9, 16, 12, 30, 0, TimeSpan.Zero);
 
     private const string UnreachableConnectionString =
-        "Server=127.0.0.1,14330;Database=Fut7FantasyTests;User Id=sa;Password=nao-usada;TrustServerCertificate=True;Connect Timeout=1";
+        "Server=127.0.0.1,14330;Database=Fut7FantasyTests;User Id=sa;Password=nao-usada;"
+        + "TrustServerCertificate=True;Connect Timeout=1";
 
     /// <summary>Registro de inicializacoes em memoria.</summary>
     public FakeStartupLog StartupLog { get; } = new();

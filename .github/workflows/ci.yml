@@ -190,6 +190,9 @@ jobs:
           done
           [ "$estado" = "healthy" ] || { docker compose logs sqlserver; exit 1; }
 
+      - name: Restaurar o backend com lockfiles travados
+        run: dotnet restore src/backend/Fut7Fantasy.slnx --locked-mode
+
       # A connection string sai da senha gerada acima e vive só no ambiente do passo.
       - name: Aplicar as migrations
         run: |

@@ -1,7 +1,7 @@
 /* Configuração do TypeScript: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html */
 /* Opções do compilador Angular: https://angular.dev/reference/configs/angular-compiler-options */
-/* strict e strictTemplates ligados de propósito: o backend trata aviso como erro
-   e o frontend segue o mesmo padrão de rigor. */
+/* strict e strictTemplates ligados de propósito: o backend trata aviso */
+/* como erro e o frontend segue o mesmo padrão de rigor. */
 {
   "compileOnSave": false,
   "compilerOptions": {

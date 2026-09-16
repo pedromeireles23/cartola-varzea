@@ -16,7 +16,8 @@ namespace Fut7Fantasy.IntegrationTests;
 public sealed class SqlServerFixture : Xunit.IAsyncLifetime
 {
     private const string Image =
-        "mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04@sha256:4402d880dd4c34bfa7d8705e56a86cd6c88da80a1f6bbbe741f999e76264a090";
+        "mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04"
+        + "@sha256:4402d880dd4c34bfa7d8705e56a86cd6c88da80a1f6bbbe741f999e76264a090";
 
     private MsSqlContainer? _container;
 

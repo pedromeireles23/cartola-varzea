@@ -24,7 +24,11 @@ public sealed class EfStartupLog(Fut7FantasyDbContext dbContext, TimeProvider ti
     {
         var summary = await dbContext.StartupRecords
             .GroupBy(_ => 1)
-            .Select(group => new { Count = group.Count(), Last = group.Max(record => (DateTimeOffset?)record.StartedAt) })
+            .Select(group => new
+            {
+                Count = group.Count(),
+                Last = group.Max(record => (DateTimeOffset?)record.StartedAt),
+            })
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
