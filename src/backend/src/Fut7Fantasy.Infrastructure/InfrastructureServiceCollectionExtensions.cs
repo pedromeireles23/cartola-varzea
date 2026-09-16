@@ -1,7 +1,11 @@
 using Fut7Fantasy.Application.Abstractions;
+using Fut7Fantasy.Application.Accounts;
+using Fut7Fantasy.Infrastructure.Email;
+using Fut7Fantasy.Infrastructure.Identity;
 using Fut7Fantasy.Infrastructure.Options;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Fut7Fantasy.Infrastructure.Startup;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +18,9 @@ namespace Fut7Fantasy.Infrastructure;
 /// <summary>Registro da camada Infrastructure.</summary>
 public static class InfrastructureServiceCollectionExtensions
 {
+    /// <summary>Nome do provedor de token da confirmacao de e-mail.</summary>
+    private const string EmailConfirmationProvider = "EmailConfirmation";
+
     /// <summary>Adiciona persistencia, relogio e servicos de infraestrutura.</summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
@@ -22,6 +29,16 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddOptions<DatabaseOptions>()
             .Bind(configuration.GetSection(DatabaseOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<EmailOptions>()
+            .Bind(configuration.GetSection(EmailOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<AuthenticationOptions>()
+            .Bind(configuration.GetSection(AuthenticationOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -44,12 +61,17 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IStartupLog, EfStartupLog>();
         services.AddHostedService<StartupRecorder>();
 
+        AddIdentity(services);
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IAccountService, AccountService>();
+
         return services;
     }
 
     /// <summary>
-    /// Adiciona o health check de prontidao. Fica separado do liveness: um banco fora do ar
-    /// torna a aplicacao incapaz de atender, mas nao significa que o processo deva ser reiniciado.
+    /// Adiciona o health check de prontidao. Fica separado do liveness: um banco fora
+    /// do ar torna a aplicacao incapaz de atender, mas nao significa que o processo
+    /// deva ser reiniciado.
     /// </summary>
     public static IHealthChecksBuilder AddInfrastructureHealthChecks(this IHealthChecksBuilder builder)
     {
@@ -59,5 +81,75 @@ public static class InfrastructureServiceCollectionExtensions
             name: "database",
             failureStatus: HealthStatus.Unhealthy,
             tags: [HealthCheckTags.Readiness]);
+    }
+
+    private static void AddIdentity(IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
+
+        // Sessao em cookie, nunca token no browser (04-seguranca §5). A configuracao
+        // do cookie em si fica no Api, que conhece o ambiente e o HTTPS.
+        services
+            .AddAuthentication(IdentityConstants.ApplicationScheme)
+            .AddIdentityCookies();
+
+        services
+            .AddIdentityCore<ApplicationUser>(options =>
+            {
+                // Politica de senha por comprimento, sem regras de composicao
+                // (04-seguranca §5): exigir simbolo e maiuscula empurra a pessoa
+                // para senhas curtas e previsiveis, e gerenciadores de senha geram
+                // segredos longos que passariam de qualquer forma.
+                options.Password.RequiredLength = 12;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredUniqueChars = 4;
+
+                options.User.RequireUniqueEmail = true;
+
+                // Operacoes sensiveis exigem e-mail verificado.
+                options.SignIn.RequireConfirmedEmail = true;
+
+                options.Lockout.AllowedForNewUsers = true;
+
+                // Confirmacao de e-mail e recuperacao de senha usam provedores
+                // distintos so para terem validades distintas (24h e 1h).
+                options.Tokens.EmailConfirmationTokenProvider = EmailConfirmationProvider;
+            })
+            .AddRoles<ApplicationRole>()
+            .AddEntityFrameworkStores<Fut7FantasyDbContext>()
+            .AddSignInManager()
+            .AddDefaultTokenProviders()
+            .AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>(EmailConfirmationProvider)
+            .AddPasswordValidator<PasswordPolicy>();
+
+        // Lockout e validade de token saem da configuracao, nao de constantes.
+        services.AddOptions<IdentityOptions>()
+            .Configure<IOptions<AuthenticationOptions>>((identity, auth) =>
+            {
+                identity.Lockout.MaxFailedAccessAttempts = auth.Value.MaxFailedAccessAttempts;
+                identity.Lockout.DefaultLockoutTimeSpan = auth.Value.LockoutDuration;
+            });
+
+        // Revalidar o security stamp a cada requisicao, em vez dos 30 minutos padrao.
+        //
+        // Sem isso, "redefinir a senha revoga as sessoes" (04-seguranca §5) so seria
+        // verdade depois de meia hora: um cookie roubado continuaria valendo nesse
+        // intervalo, justamente na janela em que a pessoa esta reagindo a um
+        // comprometimento. O custo e uma consulta por chave primaria por requisicao
+        // autenticada, aceitavel na escala deste projeto; se virar gargalo, o lugar
+        // de rever e aqui, com medicao.
+        services.Configure<SecurityStampValidatorOptions>(options =>
+            options.ValidationInterval = TimeSpan.Zero);
+
+        // O token de recuperacao de senha vale 1 hora; o de confirmacao, 24.
+        services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromHours(1));
+        services.Configure<DataProtectionTokenProviderOptions>(
+            EmailConfirmationProvider,
+            options => options.TokenLifespan = TimeSpan.FromHours(24));
     }
 }

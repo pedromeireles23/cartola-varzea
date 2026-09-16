@@ -28,14 +28,31 @@ public class ApiFactory : WebApplicationFactory<Program>
     /// <summary>Relogio controlado pelo teste.</summary>
     public FakeTimeProvider Clock { get; } = new(FixedNow);
 
-    /// <inheritdoc />
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    /// <summary>
+    /// Configuracao minima para a aplicacao subir num teste: as opcoes sao validadas
+    /// no startup, entao todas as obrigatorias precisam existir.
+    /// </summary>
+    public static void ApplyRequiredSettings(IWebHostBuilder builder, string connectionString)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.UseSetting(
             $"{DatabaseOptions.SectionName}:{nameof(DatabaseOptions.ConnectionString)}",
-            UnreachableConnectionString);
+            connectionString);
+        builder.UseSetting("Authentication:PublicOrigin", "https://testes.local");
+        builder.UseSetting("Email:Host", "127.0.0.1");
+        builder.UseSetting("Email:Port", "1025");
+        builder.UseSetting("Email:UseStartTls", "false");
+        builder.UseSetting("Email:FromAddress", "nao-responda@testes.local");
+        builder.UseSetting("Email:FromName", "Testes");
+    }
+
+    /// <inheritdoc />
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        ApplyRequiredSettings(builder, UnreachableConnectionString);
 
         builder.ConfigureServices(services =>
         {

@@ -1,8 +1,9 @@
-using Fut7Fantasy.Infrastructure.Options;
+using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.MsSql;
 
 namespace Fut7Fantasy.IntegrationTests;
@@ -64,7 +65,63 @@ public sealed class SqlServerFixture : Xunit.IAsyncLifetime
     /// <summary>Cria um host apontando para o container, com a infraestrutura real.</summary>
     public WebApplicationFactory<Program> CreateApi() =>
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-            builder.UseSetting(
-                $"{DatabaseOptions.SectionName}:{nameof(DatabaseOptions.ConnectionString)}",
-                ConnectionString));
+            ApiFactory.ApplyRequiredSettings(builder, ConnectionString));
+
+    /// <summary>
+    /// Host com o SQL Server real, mas com o envio de e-mail capturado em memoria.
+    /// Nenhum teste depende de SMTP no ar; o que importa e o conteudo da mensagem.
+    /// </summary>
+    public WebApplicationFactory<Program> CreateApi(CapturingEmailSender email) =>
+        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            ApiFactory.ApplyRequiredSettings(builder, ConnectionString);
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<IEmailSender>();
+                services.AddSingleton<IEmailSender>(email);
+            });
+        });
 }
+
+/// <summary>Guarda as mensagens em memoria para que o teste leia o link enviado.</summary>
+public sealed class CapturingEmailSender : IEmailSender
+{
+    private readonly List<CapturedEmail> _messages = [];
+
+    /// <summary>Mensagens enviadas, na ordem.</summary>
+    public IReadOnlyList<CapturedEmail> Messages
+    {
+        get
+        {
+            lock (_messages)
+            {
+                return [.. _messages];
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public Task SendAsync(
+        string recipient,
+        string subject,
+        string htmlBody,
+        string textBody,
+        CancellationToken cancellationToken)
+    {
+        lock (_messages)
+        {
+            _messages.Add(new CapturedEmail(recipient, subject, textBody));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Ultima mensagem enviada para o destinatario.</summary>
+    public CapturedEmail LastTo(string recipient) =>
+        Messages.Last(message => string.Equals(message.Recipient, recipient, StringComparison.OrdinalIgnoreCase));
+}
+
+/// <param name="Recipient">Destinatário.</param>
+/// <param name="Subject">Assunto.</param>
+/// <param name="TextBody">Corpo em texto puro, de onde os testes extraem o link.</param>
+public sealed record CapturedEmail(string Recipient, string Subject, string TextBody);
