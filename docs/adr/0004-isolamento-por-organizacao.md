@@ -54,3 +54,13 @@ seu primeiro membro e promover a conta sem deixar estado parcial.
   rapidamente, evitando persistência, telemetria ou propagação para terceiros.
 - Quem controla a configuração controla a administração da plataforma. Retirar o
   e-mail da configuração não revoga o papel; a revogação é uma ação explícita.
+
+## Atualizações
+
+- **2026-09-16:** a transação única da aprovação (item 5) usa read committed com
+  `UPDLOCK` apenas na linha do pedido, não Serializable. O Serializable colocava
+  range locks nas tabelas de papéis do Identity e aprovações simultâneas de
+  pedidos diferentes entravam em deadlock. A garantia de idempotência não muda:
+  aprovações do mesmo pedido continuam serializadas pelo lock da linha.
+- **2026-09-16:** o token do convite é mantido só em memória pela interface
+  enquanto a pessoa entra na conta; nunca vai para URL de login nem para storage.

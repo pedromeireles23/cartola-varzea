@@ -90,12 +90,25 @@ public sealed class OrganizerApplicationService(
             // estado garante que uma tentativa revertida não pareça já aprovada.
             dbContext.ChangeTracker.Clear();
 
+            // Fora da transação: só acontece na primeira aprovação da plataforma e
+            // não pode segurar locks enquanto a aprovação roda.
+            await EnsureOrganizerRoleExistsAsync().ConfigureAwait(false);
+
+            // Read committed com UPDLOCK só na linha do pedido. Serializable colocava
+            // range locks nas tabelas de papéis do Identity, e aprovações simultâneas
+            // de pedidos diferentes entravam em deadlock (6 aprovações levavam ~16 s).
+            // Duas aprovações do mesmo pedido continuam seriais: a segunda espera o
+            // lock e já encontra o pedido aprovado.
             await using var transaction = await dbContext.Database
-                .BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+                .BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken)
                 .ConfigureAwait(false);
 
             var application = await dbContext.OrganizerApplications
-                .SingleOrDefaultAsync(item => item.Id == applicationId, cancellationToken)
+                .FromSql($"""
+                    SELECT * FROM [platform].[OrganizerApplications] WITH (UPDLOCK, ROWLOCK)
+                    WHERE [Id] = {applicationId}
+                    """)
+                .SingleOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             if (application is null)
@@ -130,7 +143,10 @@ public sealed class OrganizerApplicationService(
             dbContext.AdministrativeAuditEntries.Add(AdministrativeAuditEntry.Create(
                 reviewerId, "OrganizerApplicationApproved", application.Id, reason, now));
 
-            await EnsureOrganizerRoleAsync(applicant).ConfigureAwait(false);
+            if (!await users.IsInRoleAsync(applicant, ApplicationRole.Organizer).ConfigureAwait(false))
+            {
+                EnsureSucceeded(await users.AddToRoleAsync(applicant, ApplicationRole.Organizer).ConfigureAwait(false));
+            }
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -167,26 +183,57 @@ public sealed class OrganizerApplicationService(
         application.Reject(reviewerId, reason, now);
         dbContext.AdministrativeAuditEntries.Add(AdministrativeAuditEntry.Create(
             reviewerId, "OrganizerApplicationRejected", application.Id, reason, now));
-        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Outra decisão foi gravada entre a leitura e a gravação (o RowVersion mudou).
+            // A resposta reflete o que ficou no banco, em vez de virar erro 500.
+            dbContext.ChangeTracker.Clear();
+            var current = await dbContext.OrganizerApplications
+                .AsNoTracking()
+                .SingleAsync(item => item.Id == applicationId, cancellationToken)
+                .ConfigureAwait(false);
+            var outcome = current.Status == OrganizerApplicationStatus.Rejected
+                ? ReviewOutcome.AlreadyCompleted
+                : ReviewOutcome.ConflictingDecision;
+            return new ReviewResult(outcome, ToView(current));
+        }
 
         return new ReviewResult(ReviewOutcome.Completed, ToView(application));
     }
 
-    private async Task EnsureOrganizerRoleAsync(ApplicationUser applicant)
+    private async Task EnsureOrganizerRoleExistsAsync()
     {
-        if (!await roles.RoleExistsAsync(ApplicationRole.Organizer).ConfigureAwait(false))
+        if (await roles.RoleExistsAsync(ApplicationRole.Organizer).ConfigureAwait(false))
         {
-            var roleResult = await roles.CreateAsync(new ApplicationRole
+            return;
+        }
+
+        try
+        {
+            var result = await roles.CreateAsync(new ApplicationRole
             {
                 Id = Guid.CreateVersion7(),
                 Name = ApplicationRole.Organizer,
             }).ConfigureAwait(false);
-            EnsureSucceeded(roleResult);
+            if (result.Succeeded)
+            {
+                return;
+            }
+        }
+        catch (DbUpdateException)
+        {
+            // Outra aprovação criou o papel ao mesmo tempo; o índice único recusou este.
         }
 
-        if (!await users.IsInRoleAsync(applicant, ApplicationRole.Organizer).ConfigureAwait(false))
+        dbContext.ChangeTracker.Clear();
+        if (!await roles.RoleExistsAsync(ApplicationRole.Organizer).ConfigureAwait(false))
         {
-            EnsureSucceeded(await users.AddToRoleAsync(applicant, ApplicationRole.Organizer).ConfigureAwait(false));
+            throw new InvalidOperationException("Não foi possível criar o papel Organizer.");
         }
     }
 
