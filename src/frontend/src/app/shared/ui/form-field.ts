@@ -27,6 +27,7 @@ import { ChangeDetectionStrategy, Component, computed, input, model } from '@ang
         [required]="required()"
         [attr.autocomplete]="autocomplete()"
         [attr.minlength]="minLength()"
+        [attr.maxlength]="maxLength()"
         [attr.aria-invalid]="error() ? 'true' : null"
         [attr.aria-describedby]="describedBy()"
         [value]="value()"
@@ -54,6 +55,7 @@ export class FormField {
   readonly error = input<string>();
   readonly hint = input<string>();
   readonly minLength = input<number>();
+  readonly maxLength = input<number>();
   readonly value = model('');
 
   /**

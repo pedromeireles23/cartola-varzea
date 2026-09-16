@@ -47,6 +47,15 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () => import('./features/profile/profile').then((m) => m.ProfilePage),
       },
+      {
+        // Por enquanto na casca pública, como o perfil. A navegação lateral da área de
+        // organização chega junto com /organizar.
+        path: 'organizar/solicitar',
+        title: 'Organizar campeonatos',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/organizer/request-access').then((m) => m.RequestAccessPage),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'sistema' },
     ],
   },

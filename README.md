@@ -18,7 +18,7 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 - Ambiente local com Docker Compose (SQL Server, Azurite e Mailpit) e script de bootstrap para Windows.
 - Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base, página de sistema e fluxos de cadastro, confirmação, login, recuperação e perfil.
 - Fluxo vertical completo em pé: navegador → Angular → API → SQL Server e Mailpit, coberto por 55 testes (backend, frontend e E2E em Playwright desktop/mobile).
-- Em andamento: organizações. A API já cobre solicitação e aprovação de organizador, equipe auxiliar por convite e isolamento entre organizações; as telas vêm a seguir. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
+- Em andamento: organizações. A API já cobre solicitação e aprovação de organizador, equipe auxiliar por convite e isolamento entre organizações; das telas, a solicitação de acesso já existe e as de aprovação e equipe vêm a seguir. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
 
 ## Stack planejada
 

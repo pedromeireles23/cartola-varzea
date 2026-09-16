@@ -1,4 +1,6 @@
-import { APIRequestContext, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+
+import { SENHA, aguardarEmail, emailUnico, extrairCaminho } from '../support/conta';
 
 /**
  * Fluxo de conta ponta a ponta, incluindo o e-mail de verdade.
@@ -7,46 +9,6 @@ import { APIRequestContext, expect, test } from '@playwright/test';
  * caminho testado é o real: API manda por SMTP, a pessoa abre o link, confirma e
  * entra. Um duplo de e-mail em memória não provaria isso.
  */
-const MAILPIT = 'http://127.0.0.1:8025';
-
-const SENHA = 'uma-senha-bem-longa-2026';
-
-function emailUnico(): string {
-  return `e2e-${Date.now()}-${Math.floor(Math.random() * 10_000)}@exemplo.local`;
-}
-
-/** Busca o corpo da última mensagem enviada para o endereço, esperando ela chegar. */
-async function aguardarEmail(
-  api: APIRequestContext,
-  destinatario: string,
-  caminhoEsperado: string,
-): Promise<string> {
-  for (let tentativa = 0; tentativa < 30; tentativa++) {
-    const lista = await api.get(`${MAILPIT}/api/v1/search?query=to:${destinatario}`);
-
-    if (lista.ok()) {
-      const corpo = (await lista.json()) as { messages?: { ID: string }[] };
-      for (const mensagemDaLista of corpo.messages ?? []) {
-        const detalhe = await api.get(`${MAILPIT}/api/v1/message/${mensagemDaLista.ID}`);
-        const mensagem = (await detalhe.json()) as { Text?: string };
-        if (mensagem.Text?.includes(caminhoEsperado)) {
-          return mensagem.Text;
-        }
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  throw new Error(`Nenhum e-mail chegou para ${destinatario} no Mailpit.`);
-}
-
-function extrairCaminho(corpo: string): string {
-  const match = /http:\/\/localhost:4200(\/[^\s]+)/.exec(corpo);
-  expect(match, `Nenhum link encontrado no e-mail:\n${corpo}`).not.toBeNull();
-  return match![1];
-}
-
 test('cadastro, confirmação por e-mail, entrada e saída', async ({ page, request }) => {
   const email = emailUnico();
 

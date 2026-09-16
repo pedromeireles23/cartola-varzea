@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { Alert, Badge, Button, Card } from '../../shared/ui';
@@ -7,7 +7,7 @@ import { Alert, Badge, Button, Card } from '../../shared/ui';
 @Component({
   selector: 'app-profile',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card],
+  imports: [Alert, Badge, Button, Card, RouterLink],
   template: `
     <h1>Seu perfil</h1>
 
@@ -40,6 +40,13 @@ import { Alert, Badge, Button, Card } from '../../shared/ui';
       <app-button variant="secondary" [loading]="saindo()" (pressed)="sair()">
         Encerrar sessão
       </app-button>
+    </app-card>
+
+    <app-card heading="Organizar campeonatos">
+      <p class="apoio">
+        Organiza uma liga ou campeonato amador? Peça acesso para cadastrar times, atletas e súmulas.
+      </p>
+      <a class="acao" routerLink="/organizar/solicitar">Quero organizar</a>
     </app-card>
   `,
   styleUrl: './profile.scss',
