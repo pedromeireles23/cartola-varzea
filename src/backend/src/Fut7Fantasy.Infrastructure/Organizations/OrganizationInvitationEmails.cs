@@ -11,7 +11,9 @@ internal static class OrganizationInvitationEmails
     {
         var safeName = WebUtility.HtmlEncode(organizationName);
         var safeLink = WebUtility.HtmlEncode(link.AbsoluteUri);
-        var expiration = expiresAt.ToString("dd/MM/yyyy 'às' HH:mm 'UTC'", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+        var expiration = expiresAt.ToString(
+            "dd/MM/yyyy 'às' HH:mm 'UTC'",
+            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
 
         return (
             $"Convite para auxiliar {organizationName}",

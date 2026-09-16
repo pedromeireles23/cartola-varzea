@@ -20,7 +20,10 @@ namespace Fut7Fantasy.Infrastructure.Persistence.Migrations
                     OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     InvitedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     InvitedEmail = table.Column<string>(type: "nvarchar(254)", maxLength: 254, nullable: false),
-                    InvitedEmailNormalized = table.Column<string>(type: "nvarchar(254)", maxLength: 254, nullable: false),
+                    InvitedEmailNormalized = table.Column<string>(
+                        type: "nvarchar(254)",
+                        maxLength: 254,
+                        nullable: false),
                     TokenHash = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
                     Status = table.Column<string>(type: "nvarchar(24)", maxLength: 24, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
