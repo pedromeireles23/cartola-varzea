@@ -1,7 +1,6 @@
 version: 2
 
 updates:
-  # npm (/src/frontend) entra quando o workspace Angular existir.
   - package-ecosystem: nuget
     directory: /
     schedule:
@@ -16,9 +15,55 @@ updates:
       aspnetcore:
         patterns:
           - "Microsoft.AspNetCore.*"
+      entity-framework:
+        patterns:
+          - "Microsoft.EntityFrameworkCore.*"
+      extensions:
+        patterns:
+          - "Microsoft.Extensions.*"
       testes:
         patterns:
           - "xunit*"
+          - "Testcontainers.*"
+
+  - package-ecosystem: npm
+    directory: /src/frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
+          - "angular-eslint"
+      ferramentas:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+          - "typescript-eslint"
+          - "prettier"
+          - "vitest"
+          - "typescript"
+
+  - package-ecosystem: npm
+    directory: /tests/frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore"
+    groups:
+      playwright:
+        patterns:
+          - "@playwright/*"
 
   - package-ecosystem: github-actions
     directory: /

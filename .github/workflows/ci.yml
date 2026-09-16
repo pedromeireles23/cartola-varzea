@@ -89,11 +89,135 @@ jobs:
       - name: Restaurar com lockfiles travados
         run: dotnet restore "$SOLUTION" --locked-mode
 
+      - name: Restaurar ferramentas locais
+        run: dotnet tool restore
+
       - name: Verificar formatação e estilo
         run: dotnet format "$SOLUTION" --verify-no-changes --no-restore
 
       - name: Compilar em Release
         run: dotnet build "$SOLUTION" --configuration Release --no-restore
 
+      # O modelo do EF Core e as migrations precisam andar juntos: sem isso uma
+      # mudança de entidade passa no build e só quebra ao aplicar o schema.
+      - name: Conferir migrations pendentes
+        run: >
+          dotnet ef migrations has-pending-model-changes
+          --project src/backend/src/Fut7Fantasy.Infrastructure
+          --startup-project src/backend/src/Fut7Fantasy.Infrastructure
+          --no-build --configuration Release
+
+      # O runner do GitHub tem Docker, então os testes com SQL Server real executam
+      # de verdade aqui, mesmo quando são ignorados na máquina de desenvolvimento.
       - name: Testar
         run: dotnet test --solution "$SOLUTION" --configuration Release --no-build
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar Node do .nvmrc
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: src/frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      # npm ci falha se o lockfile estiver fora de sincronia com o package.json.
+      - name: Instalar dependências travadas
+        run: npm ci --ignore-scripts
+
+      - name: Verificar formatação
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Testes unitários e de componente
+        run: npm test
+
+      - name: Build de produção
+        run: npm run build
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: [backend, frontend]
+    env:
+      CI: "true"
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar .NET do global.json
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      - name: Instalar Node do .nvmrc
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: src/frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: |
+            src/frontend/package-lock.json
+            tests/frontend/package-lock.json
+
+      - name: Subir SQL Server, Azurite e Mailpit
+        run: |
+          echo "MSSQL_SA_PASSWORD=Ci!$(openssl rand -hex 12)" > .env
+          docker compose up -d
+          for _ in $(seq 1 36); do
+            estado=$(docker inspect --format '{{.State.Health.Status}}' fut7fantasy-sqlserver 2>/dev/null || true)
+            [ "$estado" = "healthy" ] && break
+            sleep 5
+          done
+          [ "$estado" = "healthy" ] || { docker compose logs sqlserver; exit 1; }
+
+      # A connection string sai da senha gerada acima e vive só no ambiente do passo.
+      - name: Aplicar as migrations
+        run: |
+          senha=$(sed -n 's/^MSSQL_SA_PASSWORD=//p' .env)
+          export Database__ConnectionString="Server=127.0.0.1,1433;Database=Fut7Fantasy;User Id=sa;Password=${senha};TrustServerCertificate=True"
+          dotnet tool restore
+          dotnet ef database update             --project src/backend/src/Fut7Fantasy.Infrastructure             --startup-project src/backend/src/Fut7Fantasy.Infrastructure
+
+      - name: Instalar dependências do frontend e do E2E
+        run: |
+          npm ci --ignore-scripts --prefix src/frontend
+          npm ci --prefix tests/frontend
+
+      - name: Instalar o Chromium do Playwright
+        run: npx --prefix tests/frontend playwright install --with-deps chromium
+
+      # O Playwright sobe a API e o dev-server; a API herda a connection string daqui.
+      - name: Rodar o smoke E2E
+        working-directory: tests/frontend
+        run: |
+          senha=$(sed -n 's/^MSSQL_SA_PASSWORD=//p' ../../.env)
+          export Database__ConnectionString="Server=127.0.0.1,1433;Database=Fut7Fantasy;User Id=sa;Password=${senha};TrustServerCertificate=True"
+          npx playwright test
+
+      - name: Guardar o relatório quando falhar
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report
+          path: tests/frontend/playwright-report
+          retention-days: 7

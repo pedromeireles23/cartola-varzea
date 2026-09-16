@@ -1,5 +1,7 @@
 {
   "Exclude": [
-    "packages\\.lock\\.json$"
+    "packages\\.lock\\.json$",
+    "package-lock\\.json$",
+    "\\.ico$"
   ]
 }
