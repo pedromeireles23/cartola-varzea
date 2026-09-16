@@ -1,0 +1,221 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Web;
+using Fut7Fantasy.Domain.Organizations;
+using Fut7Fantasy.Infrastructure.Identity;
+using Fut7Fantasy.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Fut7Fantasy.IntegrationTests;
+
+/// <summary>Fronteira de autorização e idempotência da aprovação de organizadores.</summary>
+public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : IClassFixture<SqlServerFixture>
+{
+    private const string Password = "uma-senha-bem-longa-2026";
+
+    [Fact]
+    public async Task CommonUserAppliesAndAdminApprovalCreatesOneOrganization()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var factory = sqlServer.CreateApi();
+        var applicantEmail = UniqueEmail("applicant");
+        var adminEmail = UniqueEmail("admin");
+        var applicantId = await CreateUserAsync(factory, applicantEmail, isPlatformAdmin: false);
+        await CreateUserAsync(factory, adminEmail, isPlatformAdmin: true);
+
+        using var applicant = await CreateAuthenticatedClientAsync(
+            factory, applicantEmail, cancellationToken);
+
+        using var submitted = await applicant.PostAsJsonAsync(
+            new Uri("/api/v1/organizer-applications", UriKind.Relative),
+            new { organizationName = "Liga do Bairro" },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.Created, submitted.StatusCode);
+        var application = await submitted.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        var applicationId = application.GetProperty("id").GetGuid();
+
+        using var duplicate = await applicant.PostAsJsonAsync(
+            new Uri("/api/v1/organizer-applications", UriKind.Relative),
+            new { organizationName = "Outro nome não deve duplicar" },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, duplicate.StatusCode);
+        var duplicateBody = await duplicate.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        Assert.Equal(applicationId, duplicateBody.GetProperty("id").GetGuid());
+
+        using var forbiddenQueue = await applicant.GetAsync(
+            new Uri("/api/v1/platform-admin/organizer-applications/pending", UriKind.Relative),
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenQueue.StatusCode);
+
+        using var admin = await CreateAuthenticatedClientAsync(factory, adminEmail, cancellationToken);
+        using var queue = await admin.GetAsync(
+            new Uri("/api/v1/platform-admin/organizer-applications/pending", UriKind.Relative),
+            cancellationToken);
+        queue.EnsureSuccessStatusCode();
+        var pending = await queue.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        Assert.Contains(pending.EnumerateArray(), item => item.GetProperty("id").GetGuid() == applicationId);
+
+        var review = new { reason = "Responsável validado para operar o campeonato." };
+        using var approved = await admin.PostAsJsonAsync(
+            new Uri($"/api/v1/platform-admin/organizer-applications/{applicationId}/approve", UriKind.Relative),
+            review,
+            cancellationToken);
+        approved.EnsureSuccessStatusCode();
+        var approvedBody = await approved.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        var organizationId = approvedBody.GetProperty("organizationId").GetGuid();
+
+        using var repeated = await admin.PostAsJsonAsync(
+            new Uri($"/api/v1/platform-admin/organizer-applications/{applicationId}/approve", UriKind.Relative),
+            review,
+            cancellationToken);
+        repeated.EnsureSuccessStatusCode();
+        var repeatedBody = await repeated.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        Assert.Equal(organizationId, repeatedBody.GetProperty("organizationId").GetGuid());
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+        Assert.Equal(1, await dbContext.Organizations.CountAsync(
+            item => item.Id == organizationId, cancellationToken));
+        Assert.Equal(1, await dbContext.OrganizationMembers.CountAsync(
+            item => item.OrganizationId == organizationId
+                && item.UserId == applicantId
+                && item.Role == OrganizationRole.Owner,
+            cancellationToken));
+        Assert.Equal(1, await dbContext.AdministrativeAuditEntries.CountAsync(
+            item => item.TargetId == applicationId, cancellationToken));
+
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var applicantUser = await users.FindByIdAsync(applicantId.ToString());
+        Assert.NotNull(applicantUser);
+        Assert.True(await users.IsInRoleAsync(applicantUser, ApplicationRole.Organizer));
+    }
+
+    [Fact]
+    public async Task RejectionIsAuditedAndCannotBecomeApproval()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var factory = sqlServer.CreateApi();
+        var applicantEmail = UniqueEmail("rejected-applicant");
+        var adminEmail = UniqueEmail("rejection-admin");
+        await CreateUserAsync(factory, applicantEmail, isPlatformAdmin: false);
+        await CreateUserAsync(factory, adminEmail, isPlatformAdmin: true);
+
+        using var applicant = await CreateAuthenticatedClientAsync(
+            factory, applicantEmail, cancellationToken);
+        using var submitted = await applicant.PostAsJsonAsync(
+            new Uri("/api/v1/organizer-applications", UriKind.Relative),
+            new { organizationName = "Liga sem documentação" },
+            cancellationToken);
+        submitted.EnsureSuccessStatusCode();
+        var submittedBody = await submitted.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        var applicationId = submittedBody.GetProperty("id").GetGuid();
+
+        using var admin = await CreateAuthenticatedClientAsync(factory, adminEmail, cancellationToken);
+        var review = new { reason = "Documentação mínima ainda não apresentada." };
+        using var rejected = await admin.PostAsJsonAsync(
+            new Uri($"/api/v1/platform-admin/organizer-applications/{applicationId}/reject", UriKind.Relative),
+            review,
+            cancellationToken);
+        rejected.EnsureSuccessStatusCode();
+
+        using var repeated = await admin.PostAsJsonAsync(
+            new Uri($"/api/v1/platform-admin/organizer-applications/{applicationId}/reject", UriKind.Relative),
+            review,
+            cancellationToken);
+        repeated.EnsureSuccessStatusCode();
+
+        using var conflictingApproval = await admin.PostAsJsonAsync(
+            new Uri($"/api/v1/platform-admin/organizer-applications/{applicationId}/approve", UriKind.Relative),
+            new { reason = "Tentativa posterior incompatível." },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.Conflict, conflictingApproval.StatusCode);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+        Assert.Equal(1, await dbContext.AdministrativeAuditEntries.CountAsync(
+            item => item.TargetId == applicationId, cancellationToken));
+        Assert.Equal(0, await dbContext.Organizations.CountAsync(
+            item => item.Name == "Liga sem documentação", cancellationToken));
+    }
+
+    private static async Task<Guid> CreateUserAsync(
+        WebApplicationFactory<Program> factory,
+        string email,
+        bool isPlatformAdmin)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roles = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+        var user = new ApplicationUser
+        {
+            Id = Guid.CreateVersion7(),
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true,
+            DisplayName = "Pessoa de Teste",
+            CreatedAt = ApiFactory.FixedNow,
+        };
+
+        Assert.True((await users.CreateAsync(user, Password)).Succeeded);
+
+        if (isPlatformAdmin)
+        {
+            if (!await roles.RoleExistsAsync(ApplicationRole.PlatformAdmin))
+            {
+                Assert.True((await roles.CreateAsync(new ApplicationRole
+                {
+                    Id = Guid.CreateVersion7(),
+                    Name = ApplicationRole.PlatformAdmin,
+                })).Succeeded);
+            }
+
+            Assert.True((await users.AddToRoleAsync(user, ApplicationRole.PlatformAdmin)).Succeeded);
+        }
+
+        return user.Id;
+    }
+
+    private static async Task<HttpClient> CreateAuthenticatedClientAsync(
+        WebApplicationFactory<Program> factory,
+        string email,
+        CancellationToken cancellationToken)
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        await RefreshAntiforgeryAsync(client, cancellationToken);
+        using var login = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/login", UriKind.Relative),
+            new { email, password = Password },
+            cancellationToken);
+        login.EnsureSuccessStatusCode();
+        await RefreshAntiforgeryAsync(client, cancellationToken);
+        return client;
+    }
+
+    private static async Task RefreshAntiforgeryAsync(
+        HttpClient client,
+        CancellationToken cancellationToken)
+    {
+        using var response = await client.GetAsync(
+            new Uri("/api/v1/auth/antiforgery", UriKind.Relative), cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var requestToken = response.Headers.GetValues("Set-Cookie")
+            .Select(cookie => Regex.Match(cookie, @"XSRF-TOKEN=(?<value>[^;]+)"))
+            .First(match => match.Success)
+            .Groups["value"].Value;
+        client.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
+        client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", HttpUtility.UrlDecode(requestToken));
+    }
+
+    private static string UniqueEmail(string prefix) =>
+        $"{prefix}-{Guid.NewGuid():N}@example.test";
+}

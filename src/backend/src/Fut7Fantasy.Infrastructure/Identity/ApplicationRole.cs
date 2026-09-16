@@ -11,6 +11,9 @@ public sealed class ApplicationRole : IdentityRole<Guid>
     /// <summary>Administrador da plataforma.</summary>
     public const string PlatformAdmin = "PlatformAdmin";
 
+    /// <summary>Conta aprovada para organizar; o acesso concreto depende da associação.</summary>
+    public const string Organizer = "Organizer";
+
     /// <summary>Conta publica de demonstracao, somente leitura.</summary>
     public const string DemoViewer = "DemoViewer";
 }

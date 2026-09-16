@@ -6,6 +6,7 @@ using Fut7Fantasy.Api.Security;
 using Fut7Fantasy.Application;
 using Fut7Fantasy.Application.Diagnostics;
 using Fut7Fantasy.Infrastructure;
+using Fut7Fantasy.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
@@ -70,7 +71,10 @@ builder.Services.AddAntiforgery(options =>
         : CookieSecurePolicy.Always;
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy(
+        AuthorizationPolicies.PlatformAdmin,
+        policy => policy.RequireRole(ApplicationRole.PlatformAdmin)));
 
 // Rate limiting por risco de endpoint (04-seguranca §13). A chave combina IP e
 // caminho: sem isso, uma janela por IP deixaria o abuso de login consumir a cota
@@ -149,6 +153,7 @@ app.MapGet(
     .WithSummary("Informação técnica pública da aplicação.");
 
 app.MapAccountEndpoints();
+app.MapOrganizerApplicationEndpoints();
 
 await app.RunAsync();
 

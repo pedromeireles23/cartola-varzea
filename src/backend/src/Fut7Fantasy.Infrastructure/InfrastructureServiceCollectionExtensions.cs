@@ -1,9 +1,11 @@
 using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Accounts;
+using Fut7Fantasy.Application.PlatformAdministration;
 using Fut7Fantasy.Infrastructure.Email;
 using Fut7Fantasy.Infrastructure.Identity;
 using Fut7Fantasy.Infrastructure.Options;
 using Fut7Fantasy.Infrastructure.Persistence;
+using Fut7Fantasy.Infrastructure.PlatformAdministration;
 using Fut7Fantasy.Infrastructure.Startup;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +66,7 @@ public static class InfrastructureServiceCollectionExtensions
         AddIdentity(services);
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IOrganizerApplicationService, OrganizerApplicationService>();
 
         return services;
     }

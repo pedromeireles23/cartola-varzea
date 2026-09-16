@@ -1,3 +1,5 @@
+using Fut7Fantasy.Domain.Organizations;
+using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +22,20 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
     /// <summary>Schema das tabelas de identidade.</summary>
     public const string IdentitySchema = "identity";
 
+    public const string PlatformAdministrationSchema = "platform";
+
+    public const string OrganizationsSchema = "organizations";
+
     /// <summary>Historico de inicializacoes.</summary>
     public DbSet<StartupRecord> StartupRecords => Set<StartupRecord>();
+
+    public DbSet<OrganizerApplication> OrganizerApplications => Set<OrganizerApplication>();
+
+    public DbSet<AdministrativeAuditEntry> AdministrativeAuditEntries => Set<AdministrativeAuditEntry>();
+
+    public DbSet<Organization> Organizations => Set<Organization>();
+
+    public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
