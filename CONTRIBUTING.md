@@ -140,6 +140,10 @@ npm test
 
 O Playwright sobe backend e frontend sozinho, mas o backend precisa do SQL Server: rode o `bootstrap.ps1` antes. Os testes rodam em viewport de desktop e de celular.
 
+- Um projeto `setup` cria a conta `admin-e2e@exemplo.local` antes dos demais. A API que o próprio Playwright sobe já recebe esse e-mail como administrador inicial.
+- Se uma API sua já estiver rodando, o Playwright reaproveita essa instância e a configuração dela. Nesse caso, os testes de administração são ignorados com aviso quando a conta do E2E não é administradora; no CI eles falham.
+- O E2E grava contas e solicitações fictícias no banco local. Para limpar: `docker compose down -v`, `docker compose up -d` e aplicar as migrations de novo.
+
 ### Migrations
 
 A aplicação **não** aplica migration ao iniciar. O schema é aplicado explicitamente.

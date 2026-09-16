@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+import { ADMIN_E2E_EMAIL } from './support/conta';
+
 /**
  * Smoke E2E do corte vertical da Fase 2.
  *
@@ -25,9 +27,15 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'chromium-desktop', use: { ...devices['Desktop Chrome'] } },
+    // Garante a conta de administração uma única vez, antes dos projetos em paralelo.
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    {
+      name: 'chromium-desktop',
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
+    },
     // A experiencia e mobile-first: o smoke roda tambem em viewport estreita.
-    { name: 'chromium-mobile', use: { ...devices['Pixel 7'] } },
+    { name: 'chromium-mobile', use: { ...devices['Pixel 7'] }, dependencies: ['setup'] },
   ],
 
   webServer: [
@@ -36,6 +44,9 @@ export default defineConfig({
       url: 'http://localhost:5277/health/ready',
       reuseExistingServer: !process.env['CI'],
       timeout: 180_000,
+      // Só vale quando o próprio Playwright sobe a API (sempre no CI). Uma API local já
+      // em execução usa a configuração dela, e os testes de administração avisam isso.
+      env: { PlatformAdministration__InitialAdminEmail: ADMIN_E2E_EMAIL },
     },
     {
       command: `npm start --prefix ${RAIZ}/src/frontend`,

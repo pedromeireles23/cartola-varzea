@@ -25,6 +25,12 @@
   border-radius: var(--radius-md);
 }
 
+.field__input--multiline {
+  min-height: auto;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 .field__input[aria-invalid='true'] {
   border-color: var(--color-danger);
 }

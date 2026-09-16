@@ -41,6 +41,11 @@ export class AuthService {
 
   readonly isAuthenticated = computed(() => this.account() !== null);
 
+  /** Só decide o que mostrar; a API continua sendo quem autoriza. */
+  readonly isPlatformAdmin = computed(
+    () => this.account()?.roles.includes('PlatformAdmin') ?? false,
+  );
+
   /**
    * Busca o par de tokens antiforgery.
    *

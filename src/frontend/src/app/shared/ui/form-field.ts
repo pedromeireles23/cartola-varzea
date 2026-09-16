@@ -18,21 +18,38 @@ import { ChangeDetectionStrategy, Component, computed, input, model } from '@ang
         }
       </label>
 
-      <input
-        class="field__input"
-        [id]="fieldId()"
-        [name]="fieldId()"
-        [type]="type()"
-        [placeholder]="placeholder()"
-        [required]="required()"
-        [attr.autocomplete]="autocomplete()"
-        [attr.minlength]="minLength()"
-        [attr.maxlength]="maxLength()"
-        [attr.aria-invalid]="error() ? 'true' : null"
-        [attr.aria-describedby]="describedBy()"
-        [value]="value()"
-        (input)="onInput($event)"
-      />
+      @if (multiline()) {
+        <textarea
+          class="field__input field__input--multiline"
+          [id]="fieldId()"
+          [name]="fieldId()"
+          [rows]="rows()"
+          [placeholder]="placeholder()"
+          [required]="required()"
+          [attr.minlength]="minLength()"
+          [attr.maxlength]="maxLength()"
+          [attr.aria-invalid]="error() ? 'true' : null"
+          [attr.aria-describedby]="describedBy()"
+          [value]="value()"
+          (input)="onInput($event)"
+        ></textarea>
+      } @else {
+        <input
+          class="field__input"
+          [id]="fieldId()"
+          [name]="fieldId()"
+          [type]="type()"
+          [placeholder]="placeholder()"
+          [required]="required()"
+          [attr.autocomplete]="autocomplete()"
+          [attr.minlength]="minLength()"
+          [attr.maxlength]="maxLength()"
+          [attr.aria-invalid]="error() ? 'true' : null"
+          [attr.aria-describedby]="describedBy()"
+          [value]="value()"
+          (input)="onInput($event)"
+        />
+      }
 
       @if (hint() && !error()) {
         <p class="field__hint" [id]="hintId()">{{ hint() }}</p>
@@ -56,6 +73,9 @@ export class FormField {
   readonly hint = input<string>();
   readonly minLength = input<number>();
   readonly maxLength = input<number>();
+  /** Texto livre em várias linhas, como motivos e observações. */
+  readonly multiline = input(false);
+  readonly rows = input(4);
   readonly value = model('');
 
   /**
@@ -79,6 +99,6 @@ export class FormField {
   });
 
   protected onInput(event: Event): void {
-    this.value.set((event.target as HTMLInputElement).value);
+    this.value.set((event.target as HTMLInputElement | HTMLTextAreaElement).value);
   }
 }

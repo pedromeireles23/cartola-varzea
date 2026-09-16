@@ -46,6 +46,43 @@ export function extrairCaminho(corpo: string): string {
   return match![1];
 }
 
+/**
+ * Conta que o Playwright configura como administrador inicial da API que ele sobe
+ * (`PlatformAdministration:InitialAdminEmail`). Fictícia e só local/CI.
+ */
+export const ADMIN_E2E_EMAIL = 'admin-e2e@exemplo.local';
+
+/** Tenta entrar e diz se deu certo, sem falhar o teste. */
+export async function tentarEntrar(page: Page, email: string, senha = SENHA): Promise<boolean> {
+  await page.goto('/entrar');
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Senha').fill(senha);
+  await page.getByRole('button', { name: 'Entrar' }).click();
+
+  // A espera que perde a corrida é encerrada com a página; o catch evita rejeição solta.
+  return Promise.race([
+    page
+      .waitForURL(/\/perfil$/)
+      .then(() => true)
+      .catch(() => false),
+    page
+      .getByRole('alert')
+      .waitFor()
+      .then(() => false)
+      .catch(() => false),
+  ]);
+}
+
+/** Entra e garante que a conta tem o papel de administração da plataforma. */
+export async function entrarComoAdmin(page: Page): Promise<boolean> {
+  expect(await tentarEntrar(page, ADMIN_E2E_EMAIL), 'A conta de administração não entrou').toBe(
+    true,
+  );
+  const resposta = await page.request.get('/api/v1/auth/me');
+  const conta = (await resposta.json()) as { roles: string[] };
+  return conta.roles.includes('PlatformAdmin');
+}
+
 /** Cadastra, confirma pelo Mailpit e entra. Termina no perfil. */
 export async function entrarComContaNova(
   page: Page,

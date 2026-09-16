@@ -18,8 +18,8 @@ import {
   selector: 'app-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <dialog #dialog class="dialog" (close)="dismissed.emit()">
-      <h2 class="dialog__heading">{{ heading() }}</h2>
+    <dialog #dialog class="dialog" [attr.aria-labelledby]="headingId" (close)="dismissed.emit()">
+      <h2 class="dialog__heading" [id]="headingId">{{ heading() }}</h2>
       <div class="dialog__body"><ng-content /></div>
       <div class="dialog__actions"><ng-content select="[dialogActions]" /></div>
     </dialog>
@@ -27,6 +27,11 @@ import {
   styleUrl: './dialog.scss',
 })
 export class Dialog {
+  private static nextId = 0;
+
+  /** Liga o título ao diálogo para que o leitor de tela anuncie o que está sendo decidido. */
+  protected readonly headingId = `dialog-heading-${Dialog.nextId++}`;
+
   readonly heading = input.required<string>();
   readonly open = input(false);
 

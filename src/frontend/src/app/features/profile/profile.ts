@@ -48,6 +48,13 @@ import { Alert, Badge, Button, Card } from '../../shared/ui';
       </p>
       <a class="acao" routerLink="/organizar/solicitar">Quero organizar</a>
     </app-card>
+
+    @if (administra()) {
+      <app-card heading="Administração da plataforma">
+        <p class="apoio">Analise os pedidos de quem quer organizar campeonatos.</p>
+        <a class="acao" routerLink="/admin/solicitacoes">Ver solicitações</a>
+      </app-card>
+    }
   `,
   styleUrl: './profile.scss',
 })
@@ -56,6 +63,7 @@ export class ProfilePage {
   private readonly router = inject(Router);
 
   protected readonly conta = this.auth.current;
+  protected readonly administra = this.auth.isPlatformAdmin;
   protected readonly saindo = signal(false);
 
   protected async sair(): Promise<void> {

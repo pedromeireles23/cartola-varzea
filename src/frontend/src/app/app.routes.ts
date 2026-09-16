@@ -56,6 +56,17 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/organizer/request-access').then((m) => m.RequestAccessPage),
       },
+      {
+        // Só exige login: quem não é Platform admin recebe 403 da API e a tela mostra o
+        // estado sem permissão. A navegação própria da administração chega depois.
+        path: 'admin/solicitacoes',
+        title: 'Solicitações de organizador',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/platform-admin/organizer-applications').then(
+            (m) => m.OrganizerApplicationsPage,
+          ),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'sistema' },
     ],
   },
