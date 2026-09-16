@@ -1,0 +1,19 @@
+{
+  "name": "fut7fantasy-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Smoke E2E do fluxo vertical: navegador -> Angular -> API -> SQL Server.",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "install:browsers": "playwright install --with-deps chromium"
+  },
+  "engines": {
+    "node": "^24.21.0",
+    "npm": ">=11.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
