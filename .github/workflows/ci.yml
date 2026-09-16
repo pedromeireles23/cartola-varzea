@@ -206,6 +206,10 @@ jobs:
           npm ci --ignore-scripts --prefix src/frontend
           npm ci --prefix tests/frontend
 
+      - name: Verificar formatação do E2E
+        working-directory: tests/frontend
+        run: npm run format:check
+
       - name: Instalar o Chromium do Playwright
         run: npx --prefix tests/frontend playwright install --with-deps chromium
 

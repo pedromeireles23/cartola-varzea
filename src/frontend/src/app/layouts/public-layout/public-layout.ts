@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+
+import { AuthService } from '../../core/auth/auth.service';
 
 /**
  * Layout das areas sem login (02 §9.1). Navegacao enxuta, focada em descobrir
- * campeonatos.
+ * campeonatos. Quando ha sessao, o acesso ao perfil aparece no lugar de entrar.
  */
 @Component({
   selector: 'app-public-layout',
@@ -17,6 +19,11 @@ import { RouterLink, RouterOutlet } from '@angular/router';
         <a class="topo__marca" routerLink="/">Cartola Várzea</a>
         <nav class="topo__nav" aria-label="Navegação principal">
           <a routerLink="/sistema">Sistema</a>
+          @if (conta(); as dados) {
+            <a routerLink="/perfil">{{ dados.displayName }}</a>
+          } @else {
+            <a routerLink="/entrar">Entrar</a>
+          }
         </nav>
       </div>
     </header>
@@ -31,4 +38,6 @@ import { RouterLink, RouterOutlet } from '@angular/router';
   `,
   styleUrl: './public-layout.scss',
 })
-export class PublicLayout {}
+export class PublicLayout {
+  protected readonly conta = inject(AuthService).current;
+}

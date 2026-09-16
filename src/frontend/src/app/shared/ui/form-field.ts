@@ -21,14 +21,21 @@ import { ChangeDetectionStrategy, Component, computed, input, model } from '@ang
       <input
         class="field__input"
         [id]="fieldId()"
+        [name]="fieldId()"
         [type]="type()"
         [placeholder]="placeholder()"
         [required]="required()"
+        [attr.autocomplete]="autocomplete()"
+        [attr.minlength]="minLength()"
         [attr.aria-invalid]="error() ? 'true' : null"
-        [attr.aria-describedby]="error() ? errorId() : null"
+        [attr.aria-describedby]="describedBy()"
         [value]="value()"
         (input)="onInput($event)"
       />
+
+      @if (hint() && !error()) {
+        <p class="field__hint" [id]="hintId()">{{ hint() }}</p>
+      }
 
       @if (error()) {
         <p class="field__error" [id]="errorId()">{{ error() }}</p>
@@ -45,12 +52,29 @@ export class FormField {
   readonly placeholder = input('');
   readonly required = input(false);
   readonly error = input<string>();
+  readonly hint = input<string>();
+  readonly minLength = input<number>();
   readonly value = model('');
+
+  /**
+   * Dica de preenchimento para o navegador e para gerenciadores de senha. Sem ela,
+   * o autofill erra o campo e a pessoa acaba digitando tudo à mão.
+   */
+  readonly autocomplete = input<string>();
 
   private readonly instanceId = FormField.nextId++;
 
   protected readonly fieldId = computed(() => `field-${this.instanceId}`);
   protected readonly errorId = computed(() => `field-${this.instanceId}-error`);
+  protected readonly hintId = computed(() => `field-${this.instanceId}-hint`);
+
+  protected readonly describedBy = computed(() => {
+    if (this.error()) {
+      return this.errorId();
+    }
+
+    return this.hint() ? this.hintId() : null;
+  });
 
   protected onInput(event: Event): void {
     this.value.set((event.target as HTMLInputElement).value);
