@@ -13,4 +13,10 @@ public static partial class OrganizationEvents
         ILogger logger,
         Guid invitationId,
         Exception exception);
+
+    [LoggerMessage(
+        EventId = 3001,
+        Level = LogLevel.Information,
+        Message = "Auxiliar removido. organizationId={OrganizationId} userId={UserId}")]
+    public static partial void AssistantRemoved(ILogger logger, Guid organizationId, Guid userId);
 }

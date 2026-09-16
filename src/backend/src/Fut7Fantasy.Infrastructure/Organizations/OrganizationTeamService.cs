@@ -184,6 +184,40 @@ public sealed class OrganizationTeamService(
         return new InvitationActionResult(InvitationActionOutcome.Completed, ToView(invitation, now));
     }
 
+    public async Task<MemberRemovalOutcome> RemoveAssistantAsync(
+        Guid organizationId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var member = await dbContext.OrganizationMembers.SingleOrDefaultAsync(
+            item => item.OrganizationId == organizationId && item.UserId == userId,
+            cancellationToken).ConfigureAwait(false);
+        if (member is null)
+        {
+            return MemberRemovalOutcome.NotFound;
+        }
+
+        // O proprietário não sai por aqui: a organização ficaria sem ninguém para
+        // administrá-la. Transferência de propriedade é outra decisão.
+        if (member.Role != OrganizationRole.Assistant)
+        {
+            return MemberRemovalOutcome.NotAnAssistant;
+        }
+
+        var now = clock.GetUtcNow();
+        dbContext.OrganizationMembers.Remove(member);
+        dbContext.AdministrativeAuditEntries.Add(AdministrativeAuditEntry.Create(
+            RequiredUserId(),
+            "OrganizationAssistantRemoved",
+            userId,
+            $"Auxiliar removido da organização {organizationId}.",
+            now));
+        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        OrganizationEvents.AssistantRemoved(logger, organizationId, userId);
+        return MemberRemovalOutcome.Removed;
+    }
+
     public async Task<InvitationActionResult> RevokeInvitationAsync(
         Guid organizationId,
         Guid invitationId,

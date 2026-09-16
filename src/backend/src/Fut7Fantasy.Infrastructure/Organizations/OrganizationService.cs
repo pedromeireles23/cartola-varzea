@@ -9,10 +9,21 @@ public sealed class OrganizationService(
     Fut7FantasyDbContext dbContext,
     ICurrentUser currentUser) : IOrganizationService
 {
-    public async Task<IReadOnlyList<MyOrganizationView>> GetMineAsync(CancellationToken cancellationToken)
-    {
+    public Task<IReadOnlyList<MyOrganizationView>> GetMineAsync(CancellationToken cancellationToken) =>
         // O escopo sai da sessão, nunca de um parâmetro: a lista é a própria prova
         // de associação que a interface usa para montar a navegação.
+        QueryAsync(organizationId: null, cancellationToken);
+
+    public async Task<MyOrganizationView?> GetAsync(Guid organizationId, CancellationToken cancellationToken)
+    {
+        var found = await QueryAsync(organizationId, cancellationToken).ConfigureAwait(false);
+        return found.SingleOrDefault();
+    }
+
+    private async Task<IReadOnlyList<MyOrganizationView>> QueryAsync(
+        Guid? organizationId,
+        CancellationToken cancellationToken)
+    {
         var userId = currentUser.Id
             ?? throw new InvalidOperationException("O caso de uso exige uma conta autenticada.");
 
@@ -21,6 +32,7 @@ public sealed class OrganizationService(
             join organization in dbContext.Organizations.AsNoTracking()
                 on member.OrganizationId equals organization.Id
             where member.UserId == userId
+                && (organizationId == null || organization.Id == organizationId)
             orderby organization.Name
             select new { organization.Id, organization.Name, member.Role, member.JoinedAt })
             .ToListAsync(cancellationToken)

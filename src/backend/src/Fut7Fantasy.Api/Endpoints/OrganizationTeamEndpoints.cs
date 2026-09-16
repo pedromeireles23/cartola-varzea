@@ -17,6 +17,12 @@ public static class OrganizationTeamEndpoints
             .WithName("GetMyOrganizations")
             .WithSummary("Lista as organizações da conta atual e o papel em cada uma.");
 
+        routes.MapGet("/api/v1/organizations/{organizationId:guid}", GetOrganizationAsync)
+            .RequireAuthorization(AuthorizationPolicies.OrganizationMember)
+            .WithTags("Organizações")
+            .WithName("GetOrganization")
+            .WithSummary("Dados da organização e o papel da conta atual nela.");
+
         var team = routes.MapGroup("/api/v1/organizations/{organizationId:guid}/team")
             .WithTags("Equipe da organização");
 
@@ -28,6 +34,10 @@ public static class OrganizationTeamEndpoints
             .RequireAuthorization(AuthorizationPolicies.OrganizationOwnerWrite)
             .WithName("InviteOrganizationAssistant")
             .WithSummary("Convida uma conta para auxiliar a organização.");
+        team.MapDelete("/assistants/{userId:guid}", RemoveAssistantAsync)
+            .RequireAuthorization(AuthorizationPolicies.OrganizationOwnerWrite)
+            .WithName("RemoveOrganizationAssistant")
+            .WithSummary("Retira um auxiliar; o acesso acaba na requisição seguinte.");
         team.MapDelete("/invitations/{invitationId:guid}", RevokeAsync)
             .RequireAuthorization(AuthorizationPolicies.OrganizationOwnerWrite)
             .WithName("RevokeOrganizationInvitation")
@@ -46,6 +56,26 @@ public static class OrganizationTeamEndpoints
         IOrganizationService service,
         CancellationToken cancellationToken) =>
         Results.Ok(await service.GetMineAsync(cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> GetOrganizationAsync(
+        Guid organizationId,
+        IOrganizationService service,
+        CancellationToken cancellationToken) =>
+        await service.GetAsync(organizationId, cancellationToken).ConfigureAwait(false) is { } organization
+            ? Results.Ok(organization)
+            : Results.NotFound();
+
+    private static async Task<IResult> RemoveAssistantAsync(
+        Guid organizationId,
+        Guid userId,
+        IOrganizationTeamService service,
+        CancellationToken cancellationToken) =>
+        await service.RemoveAssistantAsync(organizationId, userId, cancellationToken).ConfigureAwait(false) switch
+        {
+            MemberRemovalOutcome.Removed => Results.NoContent(),
+            MemberRemovalOutcome.NotAnAssistant => Results.Conflict(),
+            _ => Results.NotFound(),
+        };
 
     private static async Task<IResult> GetAsync(
         Guid organizationId,

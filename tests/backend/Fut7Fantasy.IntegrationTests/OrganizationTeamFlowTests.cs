@@ -207,6 +207,108 @@ public sealed partial class OrganizationTeamFlowTests(SqlServerFixture sqlServer
     }
 
     [Fact]
+    public async Task RemovedAssistantLosesAccessOnNextRequestAndCanBeInvitedAgain()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        using var factory = sqlServer.CreateApi(emails);
+        var ownerEmail = UniqueEmail("removing-owner");
+        var assistantEmail = UniqueEmail("removed-assistant");
+        var otherAssistantEmail = UniqueEmail("other-assistant");
+        var ownerId = await CreateUserAsync(factory, ownerEmail);
+        var assistantId = await CreateUserAsync(factory, assistantEmail);
+        var otherAssistantId = await CreateUserAsync(factory, otherAssistantEmail);
+        var organizationId = await CreateOrganizationAsync(factory, ownerId, "Liga que Remove");
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+            dbContext.OrganizationMembers.Add(OrganizationMember.CreateAssistant(
+                organizationId, assistantId, ApiFactory.FixedNow));
+            dbContext.OrganizationMembers.Add(OrganizationMember.CreateAssistant(
+                organizationId, otherAssistantId, ApiFactory.FixedNow));
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var organizationUri = new Uri($"/api/v1/organizations/{organizationId}", UriKind.Relative);
+        Uri AssistantUri(Guid userId) =>
+            new($"/api/v1/organizations/{organizationId}/team/assistants/{userId}", UriKind.Relative);
+
+        using var owner = await CreateAuthenticatedClientAsync(factory, ownerEmail, cancellationToken);
+        using var assistant = await CreateAuthenticatedClientAsync(factory, assistantEmail, cancellationToken);
+        using var otherAssistant = await CreateAuthenticatedClientAsync(
+            factory, otherAssistantEmail, cancellationToken);
+
+        // A sessão do auxiliar vê a organização antes da remoção.
+        using (var before = await assistant.GetAsync(organizationUri, cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.OK, before.StatusCode);
+            var body = await before.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+            Assert.Equal("Assistant", body.GetProperty("role").GetString());
+        }
+
+        // Auxiliar não remove colega, e o proprietário não sai por esta rota.
+        using (var byAssistant = await otherAssistant.DeleteAsync(AssistantUri(assistantId), cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, byAssistant.StatusCode);
+        }
+
+        using (var removingOwner = await owner.DeleteAsync(AssistantUri(ownerId), cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.Conflict, removingOwner.StatusCode);
+        }
+
+        using (var removed = await owner.DeleteAsync(AssistantUri(assistantId), cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+        }
+
+        using (var removedAgain = await owner.DeleteAsync(AssistantUri(assistantId), cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NotFound, removedAgain.StatusCode);
+        }
+
+        // A mesma sessão, sem sair e entrar, já perde o acesso.
+        using (var after = await assistant.GetAsync(organizationUri, cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, after.StatusCode);
+        }
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+            Assert.Equal(1, await dbContext.AdministrativeAuditEntries.CountAsync(
+                entry => entry.TargetId == assistantId && entry.Action == "OrganizationAssistantRemoved",
+                cancellationToken));
+            Assert.True(await dbContext.OrganizationMembers.AnyAsync(
+                member => member.OrganizationId == organizationId && member.UserId == otherAssistantId,
+                cancellationToken));
+        }
+
+        // Voltar exige um convite novo, e ele funciona normalmente.
+        using (var invited = await owner.PostAsJsonAsync(
+            new Uri($"/api/v1/organizations/{organizationId}/team/invitations", UriKind.Relative),
+            new { email = assistantEmail },
+            cancellationToken))
+        {
+            invited.EnsureSuccessStatusCode();
+        }
+
+        var token = ExtractToken(emails.LastTo(assistantEmail).TextBody);
+        using (var accepted = await assistant.PostAsJsonAsync(
+            new Uri("/api/v1/organization-invitations/accept", UriKind.Relative),
+            new { token },
+            cancellationToken))
+        {
+            accepted.EnsureSuccessStatusCode();
+        }
+
+        using var again = await assistant.GetAsync(organizationUri, cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, again.StatusCode);
+    }
+
+    [Fact]
     public async Task MyOrganizationsListsOnlyMembershipsOfCurrentAccount()
     {
         Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);

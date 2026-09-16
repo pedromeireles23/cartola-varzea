@@ -5,6 +5,9 @@ public interface IOrganizationService
 {
     /// <summary>Organizações em que a conta atual é membro, com o papel de cada uma.</summary>
     Task<IReadOnlyList<MyOrganizationView>> GetMineAsync(CancellationToken cancellationToken);
+
+    /// <summary>Uma organização da conta atual; a policy de membro já validou o acesso.</summary>
+    Task<MyOrganizationView?> GetAsync(Guid organizationId, CancellationToken cancellationToken);
 }
 
 public sealed record MyOrganizationView(

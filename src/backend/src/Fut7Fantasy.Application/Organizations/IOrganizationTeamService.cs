@@ -12,6 +12,15 @@ public interface IOrganizationTeamService
 
     Task<InvitationActionResult> AcceptInvitationAsync(string token, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Retira um auxiliar da organização. O acesso acaba na requisição seguinte, porque
+    /// as policies consultam a associação a cada requisição.
+    /// </summary>
+    Task<MemberRemovalOutcome> RemoveAssistantAsync(
+        Guid organizationId,
+        Guid userId,
+        CancellationToken cancellationToken);
+
     Task<InvitationActionResult> RevokeInvitationAsync(
         Guid organizationId,
         Guid invitationId,
@@ -39,6 +48,13 @@ public sealed record OrganizationInvitationView(
     DateTimeOffset ExpiresAt,
     DateTimeOffset? AcceptedAt,
     DateTimeOffset? RevokedAt);
+
+public enum MemberRemovalOutcome
+{
+    Removed,
+    NotFound,
+    NotAnAssistant,
+}
 
 public enum InvitationActionOutcome
 {
