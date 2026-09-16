@@ -87,7 +87,8 @@ public sealed class RealTeamFlowTests(SqlServerFixture sqlServer) : IClassFixtur
         Assert.Equal(2, await dbContext.RealTeams.CountAsync(
             team => team.CompetitionId == competitionId, cancellationToken));
         Assert.Equal(4, await dbContext.AdministrativeAuditEntries.CountAsync(
-            entry => entry.Action.StartsWith("RealTeam"), cancellationToken));
+            entry => entry.ActorUserId == ownerId && entry.Action.StartsWith("RealTeam"),
+            cancellationToken));
     }
 
     [Fact]
