@@ -18,9 +18,9 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 - Ambiente local com Docker Compose (SQL Server, Azurite e Mailpit) e script de bootstrap para Windows.
 - Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base, página de sistema e fluxos de cadastro, confirmação, login, recuperação e perfil.
 - Organizações: solicitação e aprovação de organizador, equipe auxiliar por convite (convidar, aceitar, revogar e remover), isolamento entre organizações, modo demonstração somente leitura e uma matriz de autorização verificada por teste.
-- Campeonatos: criação em rascunho e configuração por organização, com modalidade (Fut7, futsal e campo) de parâmetros versionados, fuso, fechamento do mercado e prazos de resultado; edição protegida contra sobrescrita concorrente e área própria com navegação lateral.
-- Fluxos cobertos por 197 testes: 95 de backend (49 unitários e o restante contra SQL Server real), 77 de frontend e 25 E2E em Playwright desktop/mobile, lendo e-mails reais do Mailpit.
-- Próximo passo: fases do campeonato, checklist e publicação. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
+- Campeonatos: criação em rascunho e configuração por organização, com modalidade (Fut7, futsal e campo) de parâmetros versionados, fuso, fechamento do mercado e prazos de resultado; fases de grupos e mata-mata em ordem livre, com desempate configurável; edição protegida contra sobrescrita concorrente e área própria com navegação lateral.
+- Fluxos cobertos por 234 testes: 117 de backend (67 unitários e o restante contra SQL Server real), 88 de frontend e 29 E2E em Playwright desktop/mobile, lendo e-mails reais do Mailpit.
+- Próximo passo: checklist de prontidão e publicação do campeonato. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
 
 ## Stack planejada
 
