@@ -7,7 +7,7 @@ public interface IOrganizerApplicationService
 
     Task<IReadOnlyList<OrganizerApplicationView>> GetMineAsync(CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<OrganizerApplicationView>> GetPendingAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<PendingOrganizerApplicationView>> GetPendingAsync(CancellationToken cancellationToken);
 
     Task<ReviewResult> ApproveAsync(Guid applicationId, string reason, CancellationToken cancellationToken);
 
@@ -23,6 +23,15 @@ public sealed record OrganizerApplicationView(
     DateTimeOffset? DecidedAt,
     string? DecisionReason,
     Guid? OrganizationId);
+
+/// <summary>Item da fila de análise: inclui quem pediu, que só o Platform admin vê.</summary>
+public sealed record PendingOrganizerApplicationView(
+    Guid Id,
+    string OrganizationName,
+    DateTimeOffset SubmittedAt,
+    Guid ApplicantUserId,
+    string ApplicantDisplayName,
+    string ApplicantEmail);
 
 public sealed record SubmissionResult(OrganizerApplicationView Application, bool Created);
 

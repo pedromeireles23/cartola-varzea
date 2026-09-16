@@ -57,17 +57,23 @@ public sealed class OrganizerApplicationService(
         return [.. applications.Select(ToView)];
     }
 
-    public async Task<IReadOnlyList<OrganizerApplicationView>> GetPendingAsync(
+    public async Task<IReadOnlyList<PendingOrganizerApplicationView>> GetPendingAsync(
         CancellationToken cancellationToken)
     {
-        var applications = await dbContext.OrganizerApplications
-            .AsNoTracking()
-            .Where(application => application.Status == OrganizerApplicationStatus.Pending)
-            .OrderBy(application => application.SubmittedAt)
+        return await (
+            from application in dbContext.OrganizerApplications.AsNoTracking()
+            join applicant in dbContext.Users.AsNoTracking() on application.ApplicantUserId equals applicant.Id
+            where application.Status == OrganizerApplicationStatus.Pending
+            orderby application.SubmittedAt
+            select new PendingOrganizerApplicationView(
+                application.Id,
+                application.OrganizationName,
+                application.SubmittedAt,
+                applicant.Id,
+                applicant.DisplayName,
+                applicant.Email!))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-
-        return [.. applications.Select(ToView)];
     }
 
     public Task<ReviewResult> ApproveAsync(

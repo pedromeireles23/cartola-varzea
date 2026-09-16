@@ -60,7 +60,12 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
             cancellationToken);
         queue.EnsureSuccessStatusCode();
         var pending = await queue.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
-        Assert.Contains(pending.EnumerateArray(), item => item.GetProperty("id").GetGuid() == applicationId);
+        var pendingItem = Assert.Single(
+            pending.EnumerateArray(), item => item.GetProperty("id").GetGuid() == applicationId);
+        // Quem decide precisa saber quem pediu; a fila só é visível ao Platform admin.
+        Assert.Equal(applicantEmail, pendingItem.GetProperty("applicantEmail").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(pendingItem.GetProperty("applicantDisplayName").GetString()));
+        Assert.Equal("Liga do Bairro", pendingItem.GetProperty("organizationName").GetString());
 
         var review = new { reason = "Responsável validado para operar o campeonato." };
         using var approved = await admin.PostAsJsonAsync(
