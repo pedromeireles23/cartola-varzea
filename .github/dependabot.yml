@@ -49,6 +49,15 @@ updates:
           - "prettier"
           - "vitest"
           - "typescript"
+    # Angular 22.1 aceita TypeScript >=6.0 <6.1 e Vitest ^4.0.8.
+    # Remover estes limites quando uma versao adotada do Angular ampliar os peers.
+    ignore:
+      - dependency-name: "typescript"
+        versions:
+          - ">=6.1.0"
+      - dependency-name: "vitest"
+        versions:
+          - ">=5.0.0"
 
   - package-ecosystem: npm
     directory: /tests/frontend
