@@ -65,6 +65,13 @@ export class OrganizationService {
     );
   }
 
+  /** Retira um auxiliar. A API responde 404 se ele já não fizer parte da equipe. */
+  removeAssistant(organizationId: string, userId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl}/organizations/${encodeURIComponent(organizationId)}/team/assistants/${encodeURIComponent(userId)}`,
+    );
+  }
+
   revoke(organizationId: string, invitationId: string): Observable<OrganizationInvitation> {
     return this.http.delete<OrganizationInvitation>(
       `${this.baseUrl}/organizations/${encodeURIComponent(organizationId)}/team/invitations/${encodeURIComponent(invitationId)}`,

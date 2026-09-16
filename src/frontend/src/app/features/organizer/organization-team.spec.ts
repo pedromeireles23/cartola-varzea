@@ -178,6 +178,62 @@ describe('OrganizationTeamPage', () => {
     expect(texto).toContain('Revogado');
   });
 
+  it('remove auxiliar depois de confirmar e avisa que o acesso acaba na hora', async () => {
+    const pessoa = {
+      userId: 'u1',
+      displayName: 'Ana Auxiliar',
+      email: 'ana@exemplo.local',
+      joinedAt: '2026-09-16T12:00:00Z',
+    };
+    const fixture = await abrirCom(equipe({ assistants: [pessoa] }));
+
+    botao(fixture, 'Remover').click();
+    await estabilizar(fixture);
+    const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto()).toContain('Remover Ana Auxiliar da equipe?');
+    expect(texto()).toContain('acaba na hora');
+
+    botao(fixture, 'Remover da equipe').click();
+    await estabilizar(fixture);
+
+    const remocao = http.expectOne('/api/v1/organizations/o1/team/assistants/u1');
+    expect(remocao.request.method).toBe('DELETE');
+    remocao.flush(null, { status: 204, statusText: 'No Content' });
+    await estabilizar(fixture);
+
+    http.expectOne(TEAM).flush(equipe());
+    await estabilizar(fixture);
+
+    expect(texto()).toContain('Ana Auxiliar saiu da equipe.');
+    expect(texto()).toContain('Ninguém auxilia esta organização ainda.');
+  });
+
+  it('remoção já feita por outra aba atualiza a lista em vez de mostrar erro', async () => {
+    const pessoa = {
+      userId: 'u1',
+      displayName: 'Ana Auxiliar',
+      email: 'ana@exemplo.local',
+      joinedAt: '2026-09-16T12:00:00Z',
+    };
+    const fixture = await abrirCom(equipe({ assistants: [pessoa] }));
+
+    botao(fixture, 'Remover').click();
+    await estabilizar(fixture);
+    botao(fixture, 'Remover da equipe').click();
+    await estabilizar(fixture);
+
+    http
+      .expectOne('/api/v1/organizations/o1/team/assistants/u1')
+      .flush({ status: 404 }, new HttpErrorResponse({ status: 404, statusText: 'Not Found' }));
+    await estabilizar(fixture);
+    http.expectOne(TEAM).flush(equipe());
+    await estabilizar(fixture);
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'já não fazia parte da equipe',
+    );
+  });
+
   it('quem não é proprietário vê o aviso de acesso restrito', async () => {
     const fixture = TestBed.createComponent(OrganizationTeamPage);
     fixture.componentRef.setInput('organizacao', 'o1');

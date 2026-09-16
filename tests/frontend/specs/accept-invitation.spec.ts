@@ -10,7 +10,7 @@ import {
 } from '../support/conta';
 import { criarOrganizacaoAprovada } from '../support/organizacao';
 
-test('convidado entra pelo link do e-mail, aceita, e a conta errada não consome o convite', async ({
+test('convidado aceita pelo link do e-mail, a conta errada não consome o convite e a remoção corta o acesso', async ({
   browser,
   page,
   request,
@@ -93,6 +93,24 @@ test('convidado entra pelo link do e-mail, aceita, e a conta errada não consome
       .filter({ hasText: emailConvidado })
       .getByText('Aceito', { exact: true }),
   ).toBeVisible();
+
+  // 6. O dono remove a pessoa; na sessão que ela já tinha aberta, a organização some.
+  const auxiliares = page.getByRole('region', { name: 'Auxiliares' });
+  await auxiliares
+    .getByRole('listitem')
+    .filter({ hasText: 'Pessoa Auxiliar' })
+    .getByRole('button', { name: 'Remover', exact: true })
+    .click();
+  await page
+    .getByRole('dialog', { name: 'Remover Pessoa Auxiliar da equipe?' })
+    .getByRole('button', { name: 'Remover da equipe' })
+    .click();
+  await expect(page.getByText('Pessoa Auxiliar saiu da equipe.')).toBeVisible();
+  await expect(auxiliares.getByText('Ninguém auxilia esta organização ainda.')).toBeVisible();
+
+  await convidado.reload();
+  await expect(convidado.getByText('Nenhuma organização ainda')).toBeVisible();
+  await expect(convidado.getByRole('region', { name: organizacao })).toHaveCount(0);
 
   await contextoConvidado.close();
   await contextoAdmin.close();

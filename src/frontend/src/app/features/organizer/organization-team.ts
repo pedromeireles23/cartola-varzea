@@ -18,6 +18,7 @@ import { ApiFailure } from '../../core/api/problem-details';
 import { Alert, Badge, BadgeTone, Button, Card, Dialog, FormField, Loading } from '../../shared/ui';
 import {
   InvitationStatus,
+  OrganizationAssistant,
   OrganizationInvitation,
   OrganizationService,
   OrganizationTeam,
@@ -116,6 +117,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
               @for (pessoa of equipe()!.assistants; track pessoa.userId) {
                 <li class="lista__item">
                   <span class="lista__principal">{{ pessoa.displayName }}</span>
+                  <app-button variant="ghost" (pressed)="pedirRemocao(pessoa)">Remover</app-button>
                   <span class="lista__detalhe">
                     {{ pessoa.email }} · desde {{ pessoa.joinedAt | date: formatoData }}
                   </span>
@@ -173,6 +175,28 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         </app-button>
       </div>
     </app-dialog>
+
+    <app-dialog
+      [heading]="'Remover ' + (removendo()?.displayName ?? '') + ' da equipe?'"
+      [open]="removendo() !== null"
+      (dismissed)="cancelarRemocao()"
+    >
+      <p>
+        O acesso à organização acaba na hora, mesmo com a sessão aberta. Para voltar, a pessoa
+        precisa de um convite novo.
+      </p>
+      @if (falhaAoRemover()) {
+        <app-alert tone="danger">{{ falhaAoRemover() }}</app-alert>
+      }
+      <div dialogActions class="dialogo__acoes">
+        <app-button variant="ghost" [disabled]="confirmando()" (pressed)="cancelarRemocao()">
+          Cancelar
+        </app-button>
+        <app-button variant="danger" [loading]="confirmando()" (pressed)="remover()">
+          Remover da equipe
+        </app-button>
+      </div>
+    </app-dialog>
   `,
   styleUrl: './organizer.scss',
 })
@@ -199,6 +223,9 @@ export class OrganizationTeamPage implements OnInit {
   protected readonly revogando = signal<OrganizationInvitation | null>(null);
   protected readonly confirmando = signal(false);
   protected readonly falhaAoRevogar = signal<string | null>(null);
+
+  protected readonly removendo = signal<OrganizationAssistant | null>(null);
+  protected readonly falhaAoRemover = signal<string | null>(null);
 
   protected readonly equipe = computed(() => {
     const atual = this.estado();
@@ -278,11 +305,11 @@ export class OrganizationTeamPage implements OnInit {
 
     this.confirmando.set(true);
     this.service.revoke(this.organizacao(), convite.id).subscribe({
-      next: () => this.concluirRevogacao(`Convite de ${convite.invitedEmail} revogado.`),
+      next: () => this.concluir(`Convite de ${convite.invitedEmail} revogado.`),
       error: (falha: ApiFailure) => {
         if (falha.status === 409) {
           // O convite foi aceito ou revogado enquanto a tela estava aberta.
-          this.concluirRevogacao(
+          this.concluir(
             `O convite de ${convite.invitedEmail} já não estava pendente. A lista foi atualizada.`,
           );
           return;
@@ -294,13 +321,49 @@ export class OrganizationTeamPage implements OnInit {
     });
   }
 
-  private concluirRevogacao(texto: string): void {
+  protected pedirRemocao(pessoa: OrganizationAssistant): void {
+    this.falhaAoRemover.set(null);
+    this.removendo.set(pessoa);
+  }
+
+  protected cancelarRemocao(): void {
+    if (!this.confirmando()) {
+      this.removendo.set(null);
+    }
+  }
+
+  protected remover(): void {
+    const pessoa = this.removendo();
+    if (!pessoa || this.confirmando()) {
+      return;
+    }
+
+    this.confirmando.set(true);
+    this.service.removeAssistant(this.organizacao(), pessoa.userId).subscribe({
+      next: () => this.concluir(`${pessoa.displayName} saiu da equipe.`),
+      error: (falha: ApiFailure) => {
+        if (falha.status === 404) {
+          // Outra aba ou outra pessoa já removeu; o resultado é o mesmo.
+          this.concluir(
+            `${pessoa.displayName} já não fazia parte da equipe. A lista foi atualizada.`,
+          );
+          return;
+        }
+
+        this.confirmando.set(false);
+        this.falhaAoRemover.set(falha.message);
+      },
+    });
+  }
+
+  private concluir(texto: string): void {
     this.confirmando.set(false);
     this.revogando.set(null);
+    this.removendo.set(null);
     this.retorno.set({ tom: 'success', texto });
     this.carregar();
 
-    // O botão Revogar some com o convite; o foco vai para o aviso do resultado em vez de
+    // O botão de origem some da lista; o foco vai para o aviso do resultado em vez de
     // cair no início da página.
     afterNextRender(() => this.aviso()?.nativeElement.focus(), { injector: this.injector });
   }
