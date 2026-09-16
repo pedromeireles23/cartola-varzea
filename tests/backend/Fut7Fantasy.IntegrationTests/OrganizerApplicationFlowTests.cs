@@ -1,23 +1,20 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Web;
 using Fut7Fantasy.Domain.Organizations;
 using Fut7Fantasy.Infrastructure.Identity;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+
+using static Fut7Fantasy.IntegrationTests.TestAccounts;
 
 namespace Fut7Fantasy.IntegrationTests;
 
 /// <summary>Fronteira de autorização e idempotência da aprovação de organizadores.</summary>
 public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : IClassFixture<SqlServerFixture>
 {
-    private const string SenhaValida = "uma-senha-bem-longa-2026";
-
     [Fact]
     public async Task CommonUserAppliesAndAdminApprovalCreatesOneOrganization()
     {
@@ -27,8 +24,8 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         using var factory = sqlServer.CreateApi();
         var applicantEmail = UniqueEmail("applicant");
         var adminEmail = UniqueEmail("admin");
-        var applicantId = await CreateUserAsync(factory, applicantEmail, isPlatformAdmin: false);
-        await CreateUserAsync(factory, adminEmail, isPlatformAdmin: true);
+        var applicantId = await CreateUserAsync(factory, applicantEmail);
+        await CreateUserAsync(factory, adminEmail, ApplicationRole.PlatformAdmin);
 
         using var applicant = await CreateAuthenticatedClientAsync(
             factory, applicantEmail, cancellationToken);
@@ -111,8 +108,8 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         using var factory = sqlServer.CreateApi();
         var applicantEmail = UniqueEmail("rejected-applicant");
         var adminEmail = UniqueEmail("rejection-admin");
-        await CreateUserAsync(factory, applicantEmail, isPlatformAdmin: false);
-        await CreateUserAsync(factory, adminEmail, isPlatformAdmin: true);
+        await CreateUserAsync(factory, applicantEmail);
+        await CreateUserAsync(factory, adminEmail, ApplicationRole.PlatformAdmin);
 
         using var applicant = await CreateAuthenticatedClientAsync(
             factory, applicantEmail, cancellationToken);
@@ -160,13 +157,13 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         var cancellationToken = TestContext.Current.CancellationToken;
         using var factory = sqlServer.CreateApi();
         var adminEmail = UniqueEmail("concurrent-admin");
-        await CreateUserAsync(factory, adminEmail, isPlatformAdmin: true);
+        await CreateUserAsync(factory, adminEmail, ApplicationRole.PlatformAdmin);
 
         var applicationIds = new List<Guid>();
         for (var index = 0; index < 6; index++)
         {
             var applicantEmail = UniqueEmail($"concurrent-applicant-{index}");
-            await CreateUserAsync(factory, applicantEmail, isPlatformAdmin: false);
+            await CreateUserAsync(factory, applicantEmail);
             using var applicant = await CreateAuthenticatedClientAsync(factory, applicantEmail, cancellationToken);
             using var submitted = await applicant.PostAsJsonAsync(
                 new Uri("/api/v1/organizer-applications", UriKind.Relative),
@@ -203,7 +200,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
 
         // O mesmo pedido aprovado três vezes ao mesmo tempo cria uma única organização.
         var repeatedEmail = UniqueEmail("concurrent-repeated");
-        await CreateUserAsync(factory, repeatedEmail, isPlatformAdmin: false);
+        await CreateUserAsync(factory, repeatedEmail);
         using var repeatedApplicant = await CreateAuthenticatedClientAsync(factory, repeatedEmail, cancellationToken);
         using var repeatedSubmission = await repeatedApplicant.PostAsJsonAsync(
             new Uri("/api/v1/organizer-applications", UriKind.Relative),
@@ -241,13 +238,13 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         var cancellationToken = TestContext.Current.CancellationToken;
         using var factory = sqlServer.CreateApi();
         var adminEmail = UniqueEmail("race-admin");
-        await CreateUserAsync(factory, adminEmail, isPlatformAdmin: true);
+        await CreateUserAsync(factory, adminEmail, ApplicationRole.PlatformAdmin);
         using var admin = await CreateAuthenticatedClientAsync(factory, adminEmail, cancellationToken);
 
         for (var round = 0; round < 5; round++)
         {
             var applicantEmail = UniqueEmail($"race-applicant-{round}");
-            await CreateUserAsync(factory, applicantEmail, isPlatformAdmin: false);
+            await CreateUserAsync(factory, applicantEmail);
             using var applicant = await CreateAuthenticatedClientAsync(factory, applicantEmail, cancellationToken);
             using var submitted = await applicant.PostAsJsonAsync(
                 new Uri("/api/v1/organizer-applications", UriKind.Relative),
@@ -282,76 +279,4 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
                 item => item.TargetId == applicationId, cancellationToken));
         }
     }
-
-    private static async Task<Guid> CreateUserAsync(
-        WebApplicationFactory<Program> factory,
-        string email,
-        bool isPlatformAdmin)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roles = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-        var user = new ApplicationUser
-        {
-            Id = Guid.CreateVersion7(),
-            UserName = email,
-            Email = email,
-            EmailConfirmed = true,
-            DisplayName = "Pessoa de Teste",
-            CreatedAt = ApiFactory.FixedNow,
-        };
-
-        Assert.True((await users.CreateAsync(user, SenhaValida)).Succeeded);
-
-        if (isPlatformAdmin)
-        {
-            if (!await roles.RoleExistsAsync(ApplicationRole.PlatformAdmin))
-            {
-                Assert.True((await roles.CreateAsync(new ApplicationRole
-                {
-                    Id = Guid.CreateVersion7(),
-                    Name = ApplicationRole.PlatformAdmin,
-                })).Succeeded);
-            }
-
-            Assert.True((await users.AddToRoleAsync(user, ApplicationRole.PlatformAdmin)).Succeeded);
-        }
-
-        return user.Id;
-    }
-
-    private static async Task<HttpClient> CreateAuthenticatedClientAsync(
-        WebApplicationFactory<Program> factory,
-        string email,
-        CancellationToken cancellationToken)
-    {
-        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
-        await RefreshAntiforgeryAsync(client, cancellationToken);
-        using var login = await client.PostAsJsonAsync(
-            new Uri("/api/v1/auth/login", UriKind.Relative),
-            new { email, password = SenhaValida },
-            cancellationToken);
-        login.EnsureSuccessStatusCode();
-        await RefreshAntiforgeryAsync(client, cancellationToken);
-        return client;
-    }
-
-    private static async Task RefreshAntiforgeryAsync(
-        HttpClient client,
-        CancellationToken cancellationToken)
-    {
-        using var response = await client.GetAsync(
-            new Uri("/api/v1/auth/antiforgery", UriKind.Relative), cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        var requestToken = response.Headers.GetValues("Set-Cookie")
-            .Select(cookie => Regex.Match(cookie, @"XSRF-TOKEN=(?<value>[^;]+)"))
-            .First(match => match.Success)
-            .Groups["value"].Value;
-        client.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
-        client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", HttpUtility.UrlDecode(requestToken));
-    }
-
-    private static string UniqueEmail(string prefix) =>
-        $"{prefix}-{Guid.NewGuid():N}@example.test";
 }
