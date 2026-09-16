@@ -1,8 +1,10 @@
 using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Accounts;
+using Fut7Fantasy.Application.Competitions;
 using Fut7Fantasy.Application.Organizations;
 using Fut7Fantasy.Application.PlatformAdministration;
 using Fut7Fantasy.Infrastructure.Authorization;
+using Fut7Fantasy.Infrastructure.Competitions;
 using Fut7Fantasy.Infrastructure.Email;
 using Fut7Fantasy.Infrastructure.Identity;
 using Fut7Fantasy.Infrastructure.Options;
@@ -86,6 +88,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IOrganizationTeamService, OrganizationTeamService>();
         services.AddScoped<IAuthorizationHandler, OrganizationRoleHandler>();
+        services.AddScoped<ICompetitionManagementService, CompetitionManagementService>();
+        services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
         return services;
     }

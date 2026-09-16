@@ -31,6 +31,9 @@ public sealed class AuthorizationMatrixTests
         "DELETE /api/v1/organizations/{organizationId:guid}/team/invitations/{invitationId:guid}"
             + " -> organization-owner-write",
         "GET /api/v1/auth/antiforgery -> " + Anonymous,
+        "GET /api/v1/competitions/{competitionId:guid}/settings -> competition-member",
+        "GET /api/v1/modality-profiles -> " + Anonymous,
+        "GET /api/v1/organizations/{organizationId:guid}/competitions/ -> organization-member",
         "GET /api/v1/auth/me -> " + Anonymous,
         "GET /api/v1/organizations/mine -> " + Authenticated,
         "GET /api/v1/organizations/{organizationId:guid} -> organization-member",
@@ -46,10 +49,12 @@ public sealed class AuthorizationMatrixTests
         "POST /api/v1/auth/register -> " + Anonymous,
         "POST /api/v1/auth/reset-password -> " + Anonymous,
         "POST /api/v1/organization-invitations/accept -> authenticated-write",
+        "POST /api/v1/organizations/{organizationId:guid}/competitions/ -> organization-owner-write",
         "POST /api/v1/organizations/{organizationId:guid}/team/invitations -> organization-owner-write",
         "POST /api/v1/organizer-applications/ -> " + Authenticated,
         "POST /api/v1/platform-admin/organizer-applications/{applicationId:guid}/approve -> platform-admin",
         "POST /api/v1/platform-admin/organizer-applications/{applicationId:guid}/reject -> platform-admin",
+        "PUT /api/v1/competitions/{competitionId:guid}/settings -> competition-owner-write",
     ];
 
     [Fact]

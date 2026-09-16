@@ -12,4 +12,8 @@ public static class AuthorizationPolicies
     public const string OrganizationOwnerWrite = "organization-owner-write";
 
     public const string AuthenticatedWrite = "authenticated-write";
+
+    public const string CompetitionMember = "competition-member";
+
+    public const string CompetitionOwnerWrite = "competition-owner-write";
 }

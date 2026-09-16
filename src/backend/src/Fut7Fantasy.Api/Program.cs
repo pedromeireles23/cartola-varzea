@@ -92,6 +92,15 @@ builder.Services.AddAuthorization(options =>
             .RequireAssertion(context => !context.User.IsInRole(ApplicationRole.DemoViewer))
             .AddRequirements(new OrganizationRoleRequirement(OrganizationRole.Owner)));
     options.AddPolicy(
+        AuthorizationPolicies.CompetitionMember,
+        policy => policy.RequireAuthenticatedUser().AddRequirements(
+            new CompetitionRoleRequirement(OrganizationRole.Owner, OrganizationRole.Assistant)));
+    options.AddPolicy(
+        AuthorizationPolicies.CompetitionOwnerWrite,
+        policy => policy.RequireAuthenticatedUser()
+            .RequireAssertion(context => !context.User.IsInRole(ApplicationRole.DemoViewer))
+            .AddRequirements(new CompetitionRoleRequirement(OrganizationRole.Owner)));
+    options.AddPolicy(
         AuthorizationPolicies.AuthenticatedWrite,
         policy => policy.RequireAuthenticatedUser()
             .RequireAssertion(context => !context.User.IsInRole(ApplicationRole.DemoViewer)));
@@ -193,6 +202,7 @@ app.MapGet(
 app.MapAccountEndpoints();
 app.MapOrganizerApplicationEndpoints();
 app.MapOrganizationTeamEndpoints();
+app.MapCompetitionEndpoints();
 
 await app.RunAsync();
 

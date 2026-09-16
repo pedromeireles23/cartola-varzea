@@ -1,3 +1,4 @@
+using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.Organizations;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Infrastructure.Identity;
@@ -26,6 +27,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public const string OrganizationsSchema = "organizations";
 
+    public const string CompetitionsSchema = "competitions";
+
     /// <summary>Historico de inicializacoes.</summary>
     public DbSet<StartupRecord> StartupRecords => Set<StartupRecord>();
 
@@ -38,6 +41,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
     public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();
 
     public DbSet<OrganizationInvitation> OrganizationInvitations => Set<OrganizationInvitation>();
+
+    public DbSet<Competition> Competitions => Set<Competition>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
