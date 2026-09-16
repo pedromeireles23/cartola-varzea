@@ -111,6 +111,14 @@ export interface CompetitionCreatedState {
             >
               Fases
             </a>
+            <a
+              routerLink="times"
+              routerLinkActive="area__link--ativo"
+              ariaCurrentWhenActive="page"
+              class="area__link"
+            >
+              Times
+            </a>
             @if (contexto.proprietario()) {
               <a
                 routerLink="configuracao"

@@ -115,6 +115,14 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'times',
+            title: 'Times',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/competition-teams').then(
+                (m) => m.CompetitionTeamsPage,
+              ),
+          },
+          {
             path: 'configuracao',
             title: 'Configuração',
             loadComponent: () =>

@@ -81,12 +81,12 @@ describe('CompetitionLayout', () => {
 
   it('proprietário vê Configuração na navegação; auxiliar não', async () => {
     const dono = await abrir(campeonato());
-    expect(links(dono)).toEqual(['Resumo', 'Fases', 'Configuração']);
+    expect(links(dono)).toEqual(['Resumo', 'Fases', 'Times', 'Configuração']);
   });
 
   it('auxiliar navega só pelo que pode usar', async () => {
     const auxiliar = await abrir(campeonato({ viewerRole: 'Assistant' }));
-    expect(links(auxiliar)).toEqual(['Resumo', 'Fases']);
+    expect(links(auxiliar)).toEqual(['Resumo', 'Fases', 'Times']);
   });
 
   it('guarda o aviso de criação para o resumo consumir uma única vez', async () => {
