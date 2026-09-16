@@ -46,7 +46,10 @@ import { Alert, Badge, Button, Card } from '../../shared/ui';
       <p class="apoio">
         Organiza uma liga ou campeonato amador? Peça acesso para cadastrar times, atletas e súmulas.
       </p>
-      <a class="acao" routerLink="/organizar/solicitar">Quero organizar</a>
+      <div class="acoes">
+        <a class="acao" routerLink="/organizar">Minhas organizações</a>
+        <a class="acao" routerLink="/organizar/solicitar">Quero organizar</a>
+      </div>
     </app-card>
 
     @if (administra()) {

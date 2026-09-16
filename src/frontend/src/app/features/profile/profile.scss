@@ -57,3 +57,9 @@ dd {
 .acao:hover {
   background-color: var(--color-brand-50);
 }
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

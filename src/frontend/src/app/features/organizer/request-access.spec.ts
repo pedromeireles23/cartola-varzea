@@ -1,6 +1,7 @@
 import { HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { apiErrorInterceptor } from '../../core/api/api-error.interceptor';
 import { API_BASE_URL } from '../../core/config/api-base-url';
@@ -37,6 +38,7 @@ describe('RequestAccessPage', () => {
       providers: [
         provideHttpClient(withInterceptors([apiErrorInterceptor])),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: API_BASE_URL, useValue: '/api/v1' },
       ],
     });

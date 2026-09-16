@@ -10,6 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { Alert, Badge, BadgeTone, Button, Card, FormField, Loading } from '../../shared/ui';
@@ -45,7 +46,7 @@ const STATUS: Readonly<
 @Component({
   selector: 'app-request-access',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, DatePipe, FormField, Loading],
+  imports: [Alert, Badge, Button, Card, DatePipe, FormField, Loading, RouterLink],
   template: `
     <h1>Organizar campeonatos</h1>
     <p class="intro">
@@ -121,7 +122,10 @@ const STATUS: Readonly<
                 <p>
                   A organização <strong>{{ decisao.organizationName }}</strong> foi aprovada.
                 </p>
-                <p>Se quiser organizar outra liga, envie um novo pedido abaixo.</p>
+                <p>
+                  <a routerLink="/organizar">Ver minhas organizações</a>. Se quiser organizar outra
+                  liga, envie um novo pedido abaixo.
+                </p>
               </app-alert>
             }
           }

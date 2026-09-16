@@ -48,8 +48,23 @@ export const routes: Routes = [
         loadComponent: () => import('./features/profile/profile').then((m) => m.ProfilePage),
       },
       {
-        // Por enquanto na casca pública, como o perfil. A navegação lateral da área de
-        // organização chega junto com /organizar.
+        // A área de organização usa por enquanto a casca pública, como o perfil. A
+        // navegação lateral própria (02 §9.1) chega com os campeonatos, na Fase 5.
+        path: 'organizar',
+        pathMatch: 'full',
+        title: 'Minhas organizações',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/organizer/my-organizations').then((m) => m.MyOrganizationsPage),
+      },
+      {
+        path: 'organizar/o/:organizacao/equipe',
+        title: 'Equipe da organização',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/organizer/organization-team').then((m) => m.OrganizationTeamPage),
+      },
+      {
         path: 'organizar/solicitar',
         title: 'Organizar campeonatos',
         canActivate: [authGuard],
