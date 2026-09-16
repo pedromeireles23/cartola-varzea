@@ -1,12 +1,11 @@
 # Planejamento local do projeto
 .project-docs/
 
-# Documentação em Markdown fica local; exceções previstas no roadmap são versionadas
+# Documentação em Markdown fica local; somente os arquivos institucionais da raiz são versionados
 *.md
 !README.md
 !CONTRIBUTING.md
 !SECURITY.md
-!docs/adr/*.md
 !.github/pull_request_template.md
 
 # Segredos e configuração local
