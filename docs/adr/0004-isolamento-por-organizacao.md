@@ -64,3 +64,8 @@ seu primeiro membro e promover a conta sem deixar estado parcial.
   aprovações do mesmo pedido continuam serializadas pelo lock da linha.
 - **2026-09-16:** o token do convite é mantido só em memória pela interface
   enquanto a pessoa entra na conta; nunca vai para URL de login nem para storage.
+- **2026-09-16:** a policy contextual de campeonato existe desde a Fase 5. Ela lê
+  o `competitionId` da rota, busca a organização dona do campeonato no banco e
+  exige a associação com ela; a organização nunca vem do cliente. Campeonato
+  inexistente e campeonato de outra organização respondem igual (`403`). O
+  auxiliar lê o campeonato, mas só o `Owner` cria e altera.
