@@ -100,18 +100,26 @@ builder.Services.AddAuthorization(options =>
 // Rate limiting por risco de endpoint (04-seguranca §13). A chave combina IP e
 // caminho: sem isso, uma janela por IP deixaria o abuso de login consumir a cota
 // de navegacao normal.
+builder.Services.AddOptions<AccountRateLimitOptions>()
+    .Bind(builder.Configuration.GetSection(AccountRateLimitOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
     options.AddPolicy(AccountEndpoints.StrictRateLimitPolicy, context =>
-        RateLimitPartition.GetFixedWindowLimiter(
+    {
+        var limits = context.RequestServices.GetRequiredService<IOptions<AccountRateLimitOptions>>().Value;
+        return RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: $"{context.Connection.RemoteIpAddress}|{context.Request.Path}",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,
-                Window = TimeSpan.FromMinutes(15),
-            }));
+                PermitLimit = limits.PermitLimit,
+                Window = limits.Window,
+            });
+    });
 
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(

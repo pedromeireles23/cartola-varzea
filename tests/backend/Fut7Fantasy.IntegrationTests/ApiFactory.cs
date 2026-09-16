@@ -45,6 +45,11 @@ public class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Email:UseStartTls", "false");
         builder.UseSetting("Email:FromAddress", "nao-responda@testes.local");
         builder.UseSetting("Email:FromName", "Testes");
+
+        // O host de teste roda como Development, que afrouxa o limite para o E2E local.
+        // Os testes fixam o valor de produção para provar a proteção real.
+        builder.UseSetting("RateLimiting:Account:PermitLimit", "10");
+        builder.UseSetting("RateLimiting:Account:Window", "00:15:00");
     }
 
     /// <inheritdoc />
