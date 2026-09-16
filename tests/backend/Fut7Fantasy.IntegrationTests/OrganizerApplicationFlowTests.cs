@@ -16,7 +16,7 @@ namespace Fut7Fantasy.IntegrationTests;
 /// <summary>Fronteira de autorização e idempotência da aprovação de organizadores.</summary>
 public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : IClassFixture<SqlServerFixture>
 {
-    private const string Password = "uma-senha-bem-longa-2026";
+    private const string SenhaValida = "uma-senha-bem-longa-2026";
 
     [Fact]
     public async Task CommonUserAppliesAndAdminApprovalCreatesOneOrganization()
@@ -165,7 +165,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
             CreatedAt = ApiFactory.FixedNow,
         };
 
-        Assert.True((await users.CreateAsync(user, Password)).Succeeded);
+        Assert.True((await users.CreateAsync(user, SenhaValida)).Succeeded);
 
         if (isPlatformAdmin)
         {
@@ -193,7 +193,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         await RefreshAntiforgeryAsync(client, cancellationToken);
         using var login = await client.PostAsJsonAsync(
             new Uri("/api/v1/auth/login", UriKind.Relative),
-            new { email, password = Password },
+            new { email, password = SenhaValida },
             cancellationToken);
         login.EnsureSuccessStatusCode();
         await RefreshAntiforgeryAsync(client, cancellationToken);

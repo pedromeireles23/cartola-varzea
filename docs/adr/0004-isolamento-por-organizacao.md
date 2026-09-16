@@ -14,23 +14,23 @@ seu primeiro membro e promover a conta sem deixar estado parcial.
 ## Decisão
 
 1. Todo agregado privado terá `OrganizationId` explícito. O identificador será
-   resolvido e validado no servidor; valores enviados pelo cliente nunca serão
-   tratados como prova de autorização.
+  resolvido e validado no servidor; valores enviados pelo cliente nunca serão
+  tratados como prova de autorização.
 2. Papéis globais do ASP.NET Core Identity serão usados somente para capacidades
-   da plataforma (`PlatformAdmin`, `Organizer` e `DemoViewer`). Permissões dentro
-   de uma organização serão representadas por `OrganizationMember`.
+  da plataforma (`PlatformAdmin`, `Organizer` e `DemoViewer`). Permissões dentro
+  de uma organização serão representadas por `OrganizationMember`.
 3. `Owner` poderá administrar a organização. Papéis auxiliares serão concedidos
-   por associação e nunca por autoatribuição da própria conta.
+  por associação e nunca por autoatribuição da própria conta.
 4. Policies consultarão a associação para cada organização ou campeonato. Um
-   filtro global do EF Core poderá reduzir risco acidental, mas não substituirá
-   a autorização explícita nem os testes de acesso cruzado.
+  filtro global do EF Core poderá reduzir risco acidental, mas não substituirá
+  a autorização explícita nem os testes de acesso cruzado.
 5. A aprovação será idempotente e executada em uma única transação no DbContext
-   compartilhado com Identity: solicitação, organização, proprietário, papel
-   global e auditoria mudam juntos.
+  compartilhado com Identity: solicitação, organização, proprietário, papel
+  global e auditoria mudam juntos.
 6. Aprovações e rejeições registrarão ator, alvo, instante e motivo. Logs não
-   substituirão o registro de auditoria persistido.
+  substituirão o registro de auditoria persistido.
 7. `DemoViewer` será bloqueado em policies de escrita no servidor, mesmo quando
-   a interface não exibir comandos de edição.
+  a interface não exibir comandos de edição.
 
 ## Consequências
 
