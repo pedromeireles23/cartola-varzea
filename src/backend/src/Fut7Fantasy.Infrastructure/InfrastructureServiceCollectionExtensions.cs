@@ -123,7 +123,7 @@ public static class InfrastructureServiceCollectionExtensions
             .AddEntityFrameworkStores<Fut7FantasyDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders()
-            .AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>(EmailConfirmationProvider)
+            .AddTokenProvider<EmailConfirmationTokenProvider>(EmailConfirmationProvider)
             .AddPasswordValidator<PasswordPolicy>();
 
         // Lockout e validade de token saem da configuracao, nao de constantes.
@@ -148,8 +148,9 @@ public static class InfrastructureServiceCollectionExtensions
         // O token de recuperacao de senha vale 1 hora; o de confirmacao, 24.
         services.Configure<DataProtectionTokenProviderOptions>(options =>
             options.TokenLifespan = TimeSpan.FromHours(1));
-        services.Configure<DataProtectionTokenProviderOptions>(
-            EmailConfirmationProvider,
-            options => options.TokenLifespan = TimeSpan.FromHours(24));
+        services.AddOptions<EmailConfirmationTokenProviderOptions>()
+            .Configure(options => options.TokenLifespan = TimeSpan.FromHours(24))
+            .Validate(options => options.TokenLifespan > TimeSpan.Zero, "A validade precisa ser positiva.")
+            .ValidateOnStart();
     }
 }

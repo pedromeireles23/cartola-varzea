@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { AuthService } from '../../core/auth/auth.service';
@@ -35,6 +35,7 @@ import { Alert, Card, Loading } from '../../shared/ui';
 export class VerifyEmailPage {
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly estado = signal<'verificando' | 'confirmado' | 'falhou'>('verificando');
   protected readonly mensagem = signal('');
@@ -53,6 +54,10 @@ export class VerifyEmailPage {
       this.mensagem.set('O link está incompleto. Abra o link do e-mail sem alterá-lo.');
       return;
     }
+
+    // O link precisa carregar o token para chegar ate esta tela, mas ele nao deve
+    // permanecer na barra nem no historico enquanto a requisicao e processada.
+    await this.router.navigate([], { queryParams: {}, replaceUrl: true });
 
     try {
       const resposta = await this.auth.confirmEmail(id, token);

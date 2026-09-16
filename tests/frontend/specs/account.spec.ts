@@ -16,18 +16,20 @@ function emailUnico(): string {
 }
 
 /** Busca o corpo da última mensagem enviada para o endereço, esperando ela chegar. */
-async function aguardarEmail(api: APIRequestContext, destinatario: string): Promise<string> {
+async function aguardarEmail(
+  api: APIRequestContext,
+  destinatario: string,
+  caminhoEsperado: string,
+): Promise<string> {
   for (let tentativa = 0; tentativa < 30; tentativa++) {
     const lista = await api.get(`${MAILPIT}/api/v1/search?query=to:${destinatario}`);
 
     if (lista.ok()) {
       const corpo = (await lista.json()) as { messages?: { ID: string }[] };
-      const primeira = corpo.messages?.[0];
-
-      if (primeira) {
-        const detalhe = await api.get(`${MAILPIT}/api/v1/message/${primeira.ID}`);
+      for (const mensagemDaLista of corpo.messages ?? []) {
+        const detalhe = await api.get(`${MAILPIT}/api/v1/message/${mensagemDaLista.ID}`);
         const mensagem = (await detalhe.json()) as { Text?: string };
-        if (mensagem.Text) {
+        if (mensagem.Text?.includes(caminhoEsperado)) {
           return mensagem.Text;
         }
       }
@@ -59,9 +61,10 @@ test('cadastro, confirmação por e-mail, entrada e saída', async ({ page, requ
   await expect(page.getByText(/você vai receber uma mensagem/i)).toBeVisible();
 
   // 2. Confirmação pelo link que chegou no Mailpit
-  const verificacao = await aguardarEmail(request, email);
+  const verificacao = await aguardarEmail(request, email, '/verificar-email');
   await page.goto(extrairCaminho(verificacao));
   await expect(page.getByText('E-mail confirmado')).toBeVisible();
+  await expect(page).toHaveURL(/\/verificar-email$/);
 
   // 3. Entrada
   await page.goto('/entrar');
@@ -73,12 +76,45 @@ test('cadastro, confirmação por e-mail, entrada e saída', async ({ page, requ
   await expect(page.getByText(email)).toBeVisible();
   await expect(page.getByText('E-mail confirmado')).toBeVisible();
 
+  // A sessão fica apenas no cookie HttpOnly. Nenhum token ou perfil é persistido
+  // nos storages acessíveis por JavaScript.
+  const storage = await page.evaluate(() => ({
+    local: Object.keys(localStorage),
+    session: Object.keys(sessionStorage),
+  }));
+  expect(storage).toEqual({ local: [], session: [] });
+
+  const cookies = await page.context().cookies();
+  const sessao = cookies.find((cookie) => cookie.name === 'fut7fantasy.session');
+  expect(sessao?.httpOnly).toBe(true);
+  expect(sessao?.sameSite).toBe('Lax');
+
   // 4. Saída volta para a tela de entrada e a sessão some
   await page.getByRole('button', { name: 'Encerrar sessão' }).click();
   await expect(page).toHaveURL(/\/entrar/);
 
   await page.goto('/perfil');
   await expect(page).toHaveURL(/\/entrar\?destino=/);
+
+  // 5. Recuperação usa o link real do Mailpit e remove o token da URL depois
+  // do uso. O mesmo fluxo confirma que a senha nova passa a valer.
+  await page.goto('/recuperar-senha');
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByRole('button', { name: 'Enviar link' }).click();
+  await expect(page.getByText(/você vai receber uma mensagem/i)).toBeVisible();
+
+  const recuperacao = await aguardarEmail(request, email, '/recuperar-senha');
+  await page.goto(extrairCaminho(recuperacao));
+  await page.getByRole('textbox', { name: /^Senha nova/ }).fill('outra-senha-bem-longa-2026');
+  await page.getByRole('button', { name: 'Salvar senha nova' }).click();
+  await expect(page.getByText('Senha redefinida')).toBeVisible();
+  await expect(page).toHaveURL(/\/recuperar-senha$/);
+
+  await page.goto('/entrar');
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Senha').fill('outra-senha-bem-longa-2026');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page).toHaveURL(/\/perfil$/);
 });
 
 test('entrada com senha errada não revela se a conta existe', async ({ page }) => {

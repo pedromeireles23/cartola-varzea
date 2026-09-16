@@ -71,7 +71,9 @@ public sealed class SqlServerFixture : Xunit.IAsyncLifetime
     /// Host com o SQL Server real, mas com o envio de e-mail capturado em memoria.
     /// Nenhum teste depende de SMTP no ar; o que importa e o conteudo da mensagem.
     /// </summary>
-    public WebApplicationFactory<Program> CreateApi(CapturingEmailSender email) =>
+    public WebApplicationFactory<Program> CreateApi(
+        CapturingEmailSender email,
+        Action<IServiceCollection>? configureServices = null) =>
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             ApiFactory.ApplyRequiredSettings(builder, ConnectionString);
@@ -79,6 +81,7 @@ public sealed class SqlServerFixture : Xunit.IAsyncLifetime
             {
                 services.RemoveAll<IEmailSender>();
                 services.AddSingleton<IEmailSender>(email);
+                configureServices?.Invoke(services);
             });
         });
 }

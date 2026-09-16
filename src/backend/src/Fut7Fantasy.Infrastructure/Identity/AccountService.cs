@@ -74,6 +74,15 @@ public sealed class AccountService(
             return false;
         }
 
+        // Confirmar de novo com o mesmo link nao pode parecer uma operacao valida.
+        // O provedor padrao do Identity pode continuar aceitando o token enquanto
+        // o security stamp nao muda, entao o estado da conta fecha o uso unico.
+        if (await users.IsEmailConfirmedAsync(user).ConfigureAwait(false))
+        {
+            SecurityEvents.InvalidToken(logger, "confirmacao de e-mail");
+            return false;
+        }
+
         var resultado = await users.ConfirmEmailAsync(user, Decode(token)).ConfigureAwait(false);
         if (!resultado.Succeeded)
         {

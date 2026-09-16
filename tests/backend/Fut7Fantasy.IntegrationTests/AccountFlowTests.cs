@@ -3,6 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Web;
+using Fut7Fantasy.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Fut7Fantasy.IntegrationTests;
 
@@ -157,6 +160,129 @@ public sealed partial class AccountFlowTests(SqlServerFixture sqlServer) : IClas
         using var comCookieAntigo = await client.GetAsync(
             new Uri("/api/v1/auth/me", UriKind.Relative), cancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, comCookieAntigo.StatusCode);
+
+        // O mesmo link nao redefine a senha uma segunda vez, mesmo em outro
+        // cliente e com um par de antiforgery novo.
+        using var outroCliente = await CriarClienteAsync(factory, cancellationToken);
+        using var repeticao = await outroCliente.PostAsJsonAsync(
+            new Uri("/api/v1/auth/reset-password", UriKind.Relative),
+            new { userId = id, token, newPassword = "terceira-senha-bem-longa-2026" },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, repeticao.StatusCode);
+    }
+
+    [Fact]
+    public async Task LinkDeConfirmacaoTemUsoUnico()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        using var factory = sqlServer.CreateApi(emails);
+        using var client = await CriarClienteAsync(factory, cancellationToken);
+        var email = EmailUnico();
+
+        using var cadastro = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/register", UriKind.Relative),
+            new { email, displayName = "Uso Unico", password = SenhaValida },
+            cancellationToken);
+        cadastro.EnsureSuccessStatusCode();
+
+        var (id, token) = ExtrairLink(emails.LastTo(email).TextBody, "verificar-email");
+        var corpo = new { userId = id, token };
+
+        using var primeira = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/confirm-email", UriKind.Relative), corpo, cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, primeira.StatusCode);
+
+        using var repeticao = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/confirm-email", UriKind.Relative), corpo, cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, repeticao.StatusCode);
+    }
+
+    [Fact]
+    public async Task LinkDeConfirmacaoExpira()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        using var factory = sqlServer.CreateApi(emails, services =>
+            services.Configure<EmailConfirmationTokenProviderOptions>(options =>
+                options.TokenLifespan = TimeSpan.FromMilliseconds(50)));
+        using var client = await CriarClienteAsync(factory, cancellationToken);
+        var email = EmailUnico();
+
+        using var cadastro = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/register", UriKind.Relative),
+            new { email, displayName = "Token Expirado", password = SenhaValida },
+            cancellationToken);
+        cadastro.EnsureSuccessStatusCode();
+
+        var (id, token) = ExtrairLink(emails.LastTo(email).TextBody, "verificar-email");
+        await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+
+        using var confirmacao = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/confirm-email", UriKind.Relative),
+            new { userId = id, token },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, confirmacao.StatusCode);
+    }
+
+    [Fact]
+    public async Task LinkDeRecuperacaoExpira()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        using var factory = sqlServer.CreateApi(emails, services =>
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+                options.TokenLifespan = TimeSpan.FromMilliseconds(50)));
+        using var client = await CriarClienteAsync(factory, cancellationToken);
+        var email = EmailUnico();
+
+        await CriarContaConfirmadaAsync(client, emails, email, cancellationToken);
+        using var pedido = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/forgot-password", UriKind.Relative),
+            new { email },
+            cancellationToken);
+        pedido.EnsureSuccessStatusCode();
+
+        var (id, token) = ExtrairLink(emails.LastTo(email).TextBody, "recuperar-senha");
+        await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
+
+        using var redefinicao = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/reset-password", UriKind.Relative),
+            new { userId = id, token, newPassword = "outra-senha-bem-longa-2026" },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, redefinicao.StatusCode);
+    }
+
+    [Fact]
+    public async Task RateLimitBloqueiaAbusoSemBloquearLeituraComum()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        using var factory = sqlServer.CreateApi(emails);
+        using var client = await CriarClienteAsync(factory, cancellationToken);
+
+        for (var tentativa = 0; tentativa < 10; tentativa++)
+        {
+            using var resposta = await LoginAsync(
+                client, EmailUnico(), "senha-errada-mas-longa", cancellationToken);
+            Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
+        }
+
+        using var limitada = await LoginAsync(
+            client, EmailUnico(), "senha-errada-mas-longa", cancellationToken);
+        Assert.Equal(HttpStatusCode.TooManyRequests, limitada.StatusCode);
+
+        using var leitura = await client.GetAsync(
+            new Uri("/api/v1/system/info", UriKind.Relative), cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, leitura.StatusCode);
     }
 
     [Fact]
