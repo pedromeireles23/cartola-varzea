@@ -13,12 +13,12 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 
 - Regras do MVP definidas: formação por modalidade, mercado, pontuação, preços e valorização (calibrados por simulação no Fut7).
 - Mapa de navegação e wireflows de baixa fidelidade validados com um organizador de campeonato amador.
-- Repositório com CI, convenções de build e primeira decisão de arquitetura ([ADR-001](docs/adr/0001-monolito-modular.md)).
+- Repositório com CI, convenções de build e decisões de arquitetura registradas ([ADR-001](docs/adr/0001-monolito-modular.md) e [ADR-004](docs/adr/0004-isolamento-por-organizacao.md)).
 - Backend: solution `Fut7Fantasy` com as camadas Api, Application, Domain e Infrastructure, EF Core com SQL Server, ASP.NET Core Identity, sessão em cookie seguro, health checks, Problem Details e testes contra SQL Server real em container.
 - Ambiente local com Docker Compose (SQL Server, Azurite e Mailpit) e script de bootstrap para Windows.
 - Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base, página de sistema e fluxos de cadastro, confirmação, login, recuperação e perfil.
 - Fluxo vertical completo em pé: navegador → Angular → API → SQL Server e Mailpit, coberto por 55 testes (backend, frontend e E2E em Playwright desktop/mobile).
-- Próximo passo: administração da plataforma, organizações, papéis e isolamento por escopo. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
+- Em andamento: organizações. A API já cobre solicitação e aprovação de organizador, equipe auxiliar por convite e isolamento entre organizações; as telas vêm a seguir. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
 
 ## Stack planejada
 

@@ -1,11 +1,13 @@
 # Planejamento local do projeto
 .project-docs/
 
-# Documentação em Markdown fica local; somente os arquivos institucionais da raiz são versionados
+# Documentação em Markdown fica local; versionados só os arquivos institucionais e os ADRs,
+# que registram publicamente as decisões de arquitetura
 *.md
 !README.md
 !CONTRIBUTING.md
 !SECURITY.md
+!docs/adr/*.md
 !.github/pull_request_template.md
 
 # Segredos e configuração local
