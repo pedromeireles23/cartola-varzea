@@ -42,6 +42,9 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.account() !== null);
 
   /** Só decide o que mostrar; a API continua sendo quem autoriza. */
+  /** Conta pública de demonstração: tudo é somente leitura no servidor. */
+  readonly isDemoViewer = computed(() => this.account()?.roles.includes('DemoViewer') ?? false);
+
   readonly isPlatformAdmin = computed(
     () => this.account()?.roles.includes('PlatformAdmin') ?? false,
   );

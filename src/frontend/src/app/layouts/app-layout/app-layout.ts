@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { DemoBanner } from '../demo-banner/demo-banner';
+
 /**
  * Layout das areas autenticadas do participante (02 §9.1).
  *
@@ -11,9 +13,11 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-app-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [DemoBanner, RouterLink, RouterLinkActive, RouterOutlet],
   template: `
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+    <app-demo-banner />
 
     <main id="conteudo" class="conteudo">
       <router-outlet />

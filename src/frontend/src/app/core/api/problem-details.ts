@@ -39,6 +39,13 @@ const MESSAGES: Readonly<Record<number, string>> = {
 
 const FALLBACK_MESSAGE = 'Algo deu errado. Tente de novo em instantes.';
 
+/** Códigos estáveis da API que pedem uma mensagem própria, mais precisa que a do status. */
+export const DEMO_READ_ONLY = 'demo_read_only';
+
+const CODE_MESSAGES: Readonly<Record<string, string>> = {
+  [DEMO_READ_ONLY]: 'Esta é uma conta de demonstração: dá para navegar por tudo, mas nada é salvo.',
+};
+
 export function isProblemDetails(value: unknown): value is ProblemDetails {
   return typeof value === 'object' && value !== null && ('title' in value || 'status' in value);
 }
@@ -47,7 +54,10 @@ export function toApiFailure(status: number, body: unknown): ApiFailure {
   const problem = isProblemDetails(body) ? body : undefined;
 
   return {
-    message: MESSAGES[status] ?? FALLBACK_MESSAGE,
+    message:
+      (problem?.code ? CODE_MESSAGES[problem.code] : undefined) ??
+      MESSAGES[status] ??
+      FALLBACK_MESSAGE,
     status,
     traceId: problem?.traceId,
     code: problem?.code,

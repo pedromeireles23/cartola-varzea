@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { DemoBanner } from '../demo-banner/demo-banner';
 
 /**
  * Layout das areas sem login (02 §9.1). Navegacao enxuta, focada em descobrir
@@ -10,7 +11,7 @@ import { AuthService } from '../../core/auth/auth.service';
 @Component({
   selector: 'app-public-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterOutlet],
+  imports: [DemoBanner, RouterLink, RouterOutlet],
   template: `
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 
@@ -27,6 +28,8 @@ import { AuthService } from '../../core/auth/auth.service';
         </nav>
       </div>
     </header>
+
+    <app-demo-banner />
 
     <main id="conteudo" class="conteudo">
       <router-outlet />

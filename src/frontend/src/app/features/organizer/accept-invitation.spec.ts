@@ -131,6 +131,23 @@ describe('AcceptInvitationPage', () => {
     expect(TestBed.inject(PendingInvitation).current()).toBe('token-do-email');
   });
 
+  it('conta de demonstração vê o motivo do bloqueio, não a mensagem de outro e-mail', async () => {
+    const { fixture, texto } = await abrir();
+
+    aceitar(fixture);
+    await estabilizar(fixture);
+    http
+      .expectOne(ACCEPT)
+      .flush(
+        { status: 403, title: 'Modo demonstração', code: 'demo_read_only' },
+        new HttpErrorResponse({ status: 403, statusText: 'Forbidden' }),
+      );
+    await estabilizar(fixture);
+
+    expect(texto()).toContain('conta de demonstração');
+    expect(texto()).not.toContain('enviado para outro e-mail');
+  });
+
   it.each([
     [410, 'Este convite expirou'],
     [409, 'não pode mais ser usado'],

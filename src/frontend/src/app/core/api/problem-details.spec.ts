@@ -27,4 +27,16 @@ describe('problem-details', () => {
     expect(toApiFailure(418, null).message).toBe('Algo deu errado. Tente de novo em instantes.');
     expect(toApiFailure(0, null).message).toContain('Verifique sua conexão');
   });
+
+  it('explica o bloqueio da conta de demonstração pelo código, não pelo título', () => {
+    const falha = toApiFailure(403, {
+      status: 403,
+      title: 'Modo demonstração',
+      code: 'demo_read_only',
+    });
+
+    expect(falha.code).toBe('demo_read_only');
+    expect(falha.message).toContain('conta de demonstração');
+    expect(toApiFailure(403, { status: 403 }).message).toBe('Você não tem permissão para isso.');
+  });
 });

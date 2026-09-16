@@ -17,8 +17,9 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 - Backend: solution `Fut7Fantasy` com as camadas Api, Application, Domain e Infrastructure, EF Core com SQL Server, ASP.NET Core Identity, sessão em cookie seguro, health checks, Problem Details e testes contra SQL Server real em container.
 - Ambiente local com Docker Compose (SQL Server, Azurite e Mailpit) e script de bootstrap para Windows.
 - Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base, página de sistema e fluxos de cadastro, confirmação, login, recuperação e perfil.
-- Fluxo vertical completo em pé: navegador → Angular → API → SQL Server e Mailpit, coberto por 55 testes (backend, frontend e E2E em Playwright desktop/mobile).
-- Em andamento: organizações. A API já cobre solicitação e aprovação de organizador, equipe auxiliar por convite e isolamento entre organizações; o fluxo completo já funciona nas telas: solicitação de acesso, fila de aprovação, organizações da conta, equipe auxiliar e aceite do convite. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
+- Organizações: solicitação e aprovação de organizador, equipe auxiliar por convite (convidar, aceitar, revogar e remover), isolamento entre organizações, modo demonstração somente leitura e uma matriz de autorização verificada por teste.
+- Fluxos cobertos por 117 testes: 42 de backend contra SQL Server real, 52 de frontend e 23 E2E em Playwright desktop/mobile, lendo e-mails reais do Mailpit.
+- Próximo passo: campeonatos, com modalidade (Fut7, futsal e campo) e configuração por organização. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
 
 ## Stack planejada
 

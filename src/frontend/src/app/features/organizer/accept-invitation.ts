@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { ApiFailure } from '../../core/api/problem-details';
+import { ApiFailure, DEMO_READ_ONLY } from '../../core/api/problem-details';
 import { AuthService } from '../../core/auth/auth.service';
 import { Alert, Button, Card } from '../../shared/ui';
 import { InvitationService, PendingInvitation } from './invitation.service';
@@ -178,12 +178,9 @@ export class AcceptInvitationPage {
       error: (falha: ApiFailure) => {
         switch (falha.status) {
           case 403:
-            if (this.conta()?.roles.includes('DemoViewer')) {
+            if (falha.code === DEMO_READ_ONLY) {
               // A conta de demonstração é somente leitura: o 403 não é sobre o e-mail.
-              this.resultado.set({
-                tipo: 'erro',
-                falha: { ...falha, message: 'A conta de demonstração não aceita convites.' },
-              });
+              this.resultado.set({ tipo: 'erro', falha });
               break;
             }
             // O token continua valendo para a conta certa; não é descartado.
