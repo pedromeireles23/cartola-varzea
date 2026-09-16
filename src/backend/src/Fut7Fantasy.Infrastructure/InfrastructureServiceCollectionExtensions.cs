@@ -53,6 +53,11 @@ public static class InfrastructureServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<PlatformAdministrationOptions>()
+            .Bind(configuration.GetSection(PlatformAdministrationOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         // Relogio abstrato do proprio .NET: os testes injetam FakeTimeProvider.
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IApplicationEnvironment, HostApplicationEnvironment>();
@@ -76,6 +81,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IOrganizerApplicationService, OrganizerApplicationService>();
+        services.AddScoped<InitialPlatformAdmin>();
+        services.AddHostedService<InitialPlatformAdminGrant>();
+        services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IOrganizationTeamService, OrganizationTeamService>();
         services.AddScoped<IAuthorizationHandler, OrganizationRoleHandler>();
 

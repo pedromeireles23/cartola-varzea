@@ -25,6 +25,9 @@ public sealed class OrganizationTeamService(
     IOptions<OrganizationOptions> organizationOptions,
     ILogger<OrganizationTeamService> logger) : IOrganizationTeamService
 {
+    /// <summary>Tela do frontend que aceita o convite de auxiliar.</summary>
+    public const string InvitationPath = "/organizar/convite";
+
     private readonly AuthenticationOptions _authentication = authenticationOptions.Value;
     private readonly OrganizationOptions _organizations = organizationOptions.Value;
 
@@ -93,9 +96,11 @@ public sealed class OrganizationTeamService(
         AddAudit(invitedBy, "OrganizationAssistantInvited", invitation.Id, now);
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        // Rota da área de organização (02 §9.1). O token vai na query, nunca no
+        // caminho, para a interface poder retirá-lo da URL assim que o ler.
         var link = new Uri(
             new Uri(_authentication.PublicOrigin),
-            $"/convites/aceitar?token={Uri.EscapeDataString(token)}");
+            $"{InvitationPath}?token={Uri.EscapeDataString(token)}");
         var (subject, html, text) = OrganizationInvitationEmails.AssistantInvitation(
             organization.Name, link, invitation.ExpiresAt);
 

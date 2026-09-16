@@ -20,7 +20,7 @@ public sealed partial class OrganizationTeamFlowTests(SqlServerFixture sqlServer
 {
     private const string SenhaValida = "uma-senha-bem-longa-2026";
 
-    [GeneratedRegex(@"[?&]token=(?<token>[A-Za-z0-9_-]+)")]
+    [GeneratedRegex(@"https://testes\.local/organizar/convite\?token=(?<token>[A-Za-z0-9_-]+)")]
     private static partial Regex InvitationToken { get; }
 
     [Fact]
@@ -205,6 +205,50 @@ public sealed partial class OrganizationTeamFlowTests(SqlServerFixture sqlServer
     }
 
     [Fact]
+    public async Task MyOrganizationsListsOnlyMembershipsOfCurrentAccount()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var factory = sqlServer.CreateApi();
+        var ownerEmail = UniqueEmail("listing-owner");
+        var assistantEmail = UniqueEmail("listing-assistant");
+        var outsiderEmail = UniqueEmail("listing-outsider");
+        var ownerId = await CreateUserAsync(factory, ownerEmail);
+        var assistantId = await CreateUserAsync(factory, assistantEmail);
+        var outsiderId = await CreateUserAsync(factory, outsiderEmail);
+        var organizationId = await CreateOrganizationAsync(factory, ownerId, "Liga Listada");
+        var otherOrganizationId = await CreateOrganizationAsync(factory, outsiderId, "Liga Alheia");
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+            dbContext.OrganizationMembers.Add(OrganizationMember.CreateAssistant(
+                organizationId, assistantId, ApiFactory.FixedNow));
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        using var anonymous = factory.CreateClient();
+        using var anonymousResponse = await anonymous.GetAsync(
+            new Uri("/api/v1/organizations/mine", UriKind.Relative), cancellationToken);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymousResponse.StatusCode);
+
+        using var owner = await CreateAuthenticatedClientAsync(factory, ownerEmail, cancellationToken);
+        var ownerOrganizations = await GetMyOrganizationsAsync(owner, cancellationToken);
+        var ownerOrganization = Assert.Single(ownerOrganizations);
+        Assert.Equal(organizationId, ownerOrganization.GetProperty("id").GetGuid());
+        Assert.Equal("Owner", ownerOrganization.GetProperty("role").GetString());
+
+        using var assistant = await CreateAuthenticatedClientAsync(factory, assistantEmail, cancellationToken);
+        var assistantOrganization = Assert.Single(await GetMyOrganizationsAsync(assistant, cancellationToken));
+        Assert.Equal(organizationId, assistantOrganization.GetProperty("id").GetGuid());
+        Assert.Equal("Assistant", assistantOrganization.GetProperty("role").GetString());
+
+        using var outsider = await CreateAuthenticatedClientAsync(factory, outsiderEmail, cancellationToken);
+        var outsiderOrganization = Assert.Single(await GetMyOrganizationsAsync(outsider, cancellationToken));
+        Assert.Equal(otherOrganizationId, outsiderOrganization.GetProperty("id").GetGuid());
+    }
+
+    [Fact]
     public async Task DemoViewerCannotWriteByCallingApiDirectly()
     {
         Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
@@ -305,6 +349,15 @@ public sealed partial class OrganizationTeamFlowTests(SqlServerFixture sqlServer
             .Groups["value"].Value;
         client.DefaultRequestHeaders.Remove("X-XSRF-TOKEN");
         client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", HttpUtility.UrlDecode(requestToken));
+    }
+
+    private static async Task<List<JsonElement>> GetMyOrganizationsAsync(
+        HttpClient client,
+        CancellationToken cancellationToken)
+    {
+        var organizations = await client.GetFromJsonAsync<JsonElement>(
+            new Uri("/api/v1/organizations/mine", UriKind.Relative), cancellationToken);
+        return [.. organizations.EnumerateArray()];
     }
 
     private static string ExtractToken(string body)

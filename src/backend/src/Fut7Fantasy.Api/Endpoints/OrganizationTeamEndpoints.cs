@@ -4,12 +4,18 @@ using Fut7Fantasy.Application.Organizations;
 
 namespace Fut7Fantasy.Api.Endpoints;
 
-/// <summary>Equipe auxiliar e convites de uma organização.</summary>
+/// <summary>Organizações da conta, equipe auxiliar e convites.</summary>
 public static class OrganizationTeamEndpoints
 {
     public static IEndpointRouteBuilder MapOrganizationTeamEndpoints(this IEndpointRouteBuilder routes)
     {
         ArgumentNullException.ThrowIfNull(routes);
+
+        routes.MapGet("/api/v1/organizations/mine", GetMineAsync)
+            .RequireAuthorization()
+            .WithTags("Organizações")
+            .WithName("GetMyOrganizations")
+            .WithSummary("Lista as organizações da conta atual e o papel em cada uma.");
 
         var team = routes.MapGroup("/api/v1/organizations/{organizationId:guid}/team")
             .WithTags("Equipe da organização");
@@ -35,6 +41,11 @@ public static class OrganizationTeamEndpoints
 
         return routes;
     }
+
+    private static async Task<IResult> GetMineAsync(
+        IOrganizationService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await service.GetMineAsync(cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> GetAsync(
         Guid organizationId,

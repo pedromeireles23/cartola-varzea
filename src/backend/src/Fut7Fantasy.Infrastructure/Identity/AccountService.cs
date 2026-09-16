@@ -3,6 +3,7 @@ using System.Web;
 using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Accounts;
 using Fut7Fantasy.Infrastructure.Options;
+using Fut7Fantasy.Infrastructure.PlatformAdministration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ public sealed class AccountService(
     SignInManager<ApplicationUser> signIn,
     IEmailSender emailSender,
     ICurrentUser currentUser,
+    InitialPlatformAdmin initialAdmin,
     TimeProvider clock,
     IOptions<AuthenticationOptions> authOptions,
     ILogger<AccountService> logger) : IAccountService
@@ -91,6 +93,7 @@ public sealed class AccountService(
         }
 
         SecurityEvents.EmailConfirmed(logger, user.Id);
+        await ConcederAdministradorInicialAsync(user, cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -213,6 +216,24 @@ public sealed class AccountService(
 
         var papeis = await users.GetRolesAsync(user).ConfigureAwait(false);
         return new AccountProfile(user.Id, user.Email!, user.DisplayName, user.EmailConfirmed, [.. papeis]);
+    }
+
+    /// <summary>
+    /// A confirmação já valeu; uma falha ao conceder o administrador inicial não pode
+    /// desfazê-la. A concessão é repetida no próximo início da aplicação.
+    /// </summary>
+    private async Task ConcederAdministradorInicialAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await initialAdmin.GrantIfConfiguredAsync(user, cancellationToken).ConfigureAwait(false);
+        }
+#pragma warning disable CA1031 // Falha aqui vira log; a conta confirmada continua valendo.
+        catch (Exception exception)
+#pragma warning restore CA1031
+        {
+            PlatformAdministrationEvents.InitialAdminGrantFailed(logger, exception);
+        }
     }
 
     private async Task EnviarVerificacaoAsync(ApplicationUser user, CancellationToken cancellationToken)

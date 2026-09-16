@@ -63,6 +63,19 @@ dotnet user-secrets --project src/backend/src/Fut7Fantasy.Api set "Database:Conn
 
 O `bootstrap.ps1` já faz isso.
 
+### Administrador da plataforma
+
+Nenhum endpoint transforma uma conta em administrador. O primeiro `PlatformAdmin` vem da configuração, também em user-secrets:
+
+```bash
+dotnet user-secrets --project src/backend/src/Fut7Fantasy.Api set "PlatformAdministration:InitialAdminEmail" "voce@exemplo.local"
+```
+
+- Conta ainda não criada: cadastre-se com esse e-mail e confirme pelo link que chega no Mailpit. O papel é concedido na confirmação.
+- Conta já confirmada: reinicie a API. O papel é concedido na inicialização.
+- Saia e entre de novo depois da concessão: a mudança de privilégio encerra as sessões abertas.
+- Tirar o e-mail da configuração não retira o papel.
+
 ## Backend
 
 A solution fica em `src/backend/Fut7Fantasy.slnx`; os testes em `tests/backend/`.
