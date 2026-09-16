@@ -5,6 +5,9 @@ namespace Fut7Fantasy.Api.Security;
 /// <summary>Middlewares de segurança da borda HTTP.</summary>
 public static class SecurityMiddleware
 {
+    /// <summary>Código de erro devolvido quando a conta de demonstração tenta escrever.</summary>
+    public const string DemoReadOnlyCode = "demo_read_only";
+
     private static readonly string[] MutatingMethods = ["POST", "PUT", "PATCH", "DELETE"];
 
     /// <summary>Bloqueia mutações da conta pública de demonstração no servidor.</summary>
@@ -25,10 +28,12 @@ public static class SecurityMiddleware
                 return;
             }
 
+            // O código estável deixa a interface explicar o bloqueio sem depender do título.
             await Results.Problem(
                     title: "Modo demonstração",
                     detail: "Esta conta é somente leitura.",
-                    statusCode: StatusCodes.Status403Forbidden)
+                    statusCode: StatusCodes.Status403Forbidden,
+                    extensions: new Dictionary<string, object?> { ["code"] = DemoReadOnlyCode })
                 .ExecuteAsync(context)
                 .ConfigureAwait(false);
         });

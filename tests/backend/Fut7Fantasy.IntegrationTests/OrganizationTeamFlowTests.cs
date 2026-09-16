@@ -371,6 +371,7 @@ public sealed partial class OrganizationTeamFlowTests(SqlServerFixture sqlServer
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
         Assert.Equal("Modo demonstração", problem.GetProperty("title").GetString());
+        Assert.Equal("demo_read_only", problem.GetProperty("code").GetString());
     }
 
     private static async Task<Guid> CreateUserAsync(
