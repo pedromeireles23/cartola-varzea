@@ -142,7 +142,15 @@ O Playwright sobe backend e frontend sozinho, mas o backend precisa do SQL Serve
 
 - Um projeto `setup` cria a conta `admin-e2e@exemplo.local` antes dos demais. A API que o próprio Playwright sobe já recebe esse e-mail como administrador inicial.
 - Se uma API sua já estiver rodando, o Playwright reaproveita essa instância e a configuração dela. Nesse caso, os testes de administração são ignorados com aviso quando a conta do E2E não é administradora; no CI eles falham.
-- O E2E grava contas e solicitações fictícias no banco local. Para limpar: `docker compose down -v`, `docker compose up -d` e aplicar as migrations de novo.
+- O E2E grava contas, organizações e convites fictícios a cada execução. Para não sujar o banco de desenvolvimento, prefira rodar pelo script, que usa o banco `Fut7Fantasy_E2E` do mesmo SQL Server:
+
+  ```powershell
+  # Pare a API local antes: com a porta 5277 ocupada, o Playwright reaproveitaria ela e o banco dela.
+  powershell -ExecutionPolicy Bypass -File .\infra\scripts\e2e-local.ps1
+  powershell -ExecutionPolicy Bypass -File .\infra\scripts\e2e-local.ps1 -PlaywrightArgs 'specs/organization-team.spec.ts'
+  ```
+
+- Para limpar tudo, inclusive o banco de desenvolvimento: `docker compose down -v` e o `bootstrap.ps1` de novo.
 
 ### Migrations
 
