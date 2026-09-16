@@ -1,13 +1,13 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Fut7Fantasy.IntegrationTests;
 
-public sealed class HealthCheckTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HealthCheckTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
+    // A ApiFactory aponta para um SQL Server inexistente de proposito: liveness
+    // responde pelo processo e nao pode depender de dependencia externa.
     [Fact]
-    public async Task LivenessEndpointReturnsHealthy()
+    public async Task LivenessStaysHealthyWhenDatabaseIsUnreachable()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         using var client = factory.CreateClient();

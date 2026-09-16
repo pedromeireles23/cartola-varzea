@@ -1,4 +1,8 @@
 using System.Diagnostics;
+using Fut7Fantasy.Application;
+using Fut7Fantasy.Application.Diagnostics;
+using Fut7Fantasy.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,7 +12,11 @@ builder.Services.AddProblemDetails(options =>
             Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
 
 builder.Services.AddOpenApi();
-builder.Services.AddHealthChecks();
+
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddHealthChecks().AddInfrastructureHealthChecks();
 
 var app = builder.Build();
 
@@ -23,7 +31,20 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapHealthChecks("/health/live");
+// Liveness responde pelo processo e nao consulta dependencia alguma.
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+
+// Readiness responde pela capacidade de atender, e por isso inclui o banco.
+app.MapHealthChecks(
+    "/health/ready",
+    new HealthCheckOptions { Predicate = check => check.Tags.Contains(HealthCheckTags.Readiness) });
+
+app.MapGet(
+        "/api/v1/system/info",
+        async (GetSystemInfo getSystemInfo, CancellationToken cancellationToken) =>
+            await getSystemInfo.ExecuteAsync(cancellationToken))
+    .WithName("GetSystemInfo")
+    .WithSummary("Informação técnica pública da aplicação.");
 
 await app.RunAsync();
 

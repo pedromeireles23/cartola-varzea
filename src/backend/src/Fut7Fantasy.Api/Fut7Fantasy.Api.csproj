@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <!-- Connection string e segredos locais ficam fora do repositório, em user-secrets. -->
+    <UserSecretsId>59b9c308-739f-4b0d-a5ba-4e97efe29719</UserSecretsId>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>

@@ -1,11 +1,9 @@
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Fut7Fantasy.IntegrationTests;
 
-public sealed class OpenApiExposureTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class OpenApiExposureTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static readonly Uri OpenApiDocument = new("/openapi/v1.json", UriKind.Relative);
 

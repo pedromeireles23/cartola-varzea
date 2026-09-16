@@ -4,13 +4,11 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fut7Fantasy.IntegrationTests;
 
-public sealed class ProblemDetailsTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ProblemDetailsTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private const string ThrowingPath = "/__tests/throw";
     private const string InternalDetail = "detalhe interno que não pode vazar";
