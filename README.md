@@ -5,17 +5,20 @@
 
 > Nome provisório. Projeto de portfólio em fase de planejamento: ainda não há código executável.
 
-Plataforma web de fantasy game para campeonatos amadores de futebol, começando pelo Fut7. Organizadores cadastram campeonatos, times, atletas e súmulas; participantes montam equipes com atletas reais, disputam o ranking geral e criam ligas privadas.
+Plataforma web de fantasy game para campeonatos amadores de futebol, cobrindo Fut7, futsal e futebol de campo. Organizadores cadastram campeonatos, times, atletas e súmulas; participantes montam equipes com atletas reais, disputam o ranking geral e criam ligas privadas.
 
 A primeira versão será uma demonstração pública com dados fictícios, sem pagamentos, apostas ou premiações.
 
 ## Estado atual
 
-- Regras do MVP definidas: formação, mercado, pontuação, preços e valorização (calibrados por simulação).
-- Mapa de navegação e wireflows de baixa fidelidade em validação.
+- Regras do MVP definidas: formação por modalidade, mercado, pontuação, preços e valorização (calibrados por simulação no Fut7).
+- Mapa de navegação e wireflows de baixa fidelidade validados com um organizador de campeonato amador.
 - Repositório com CI, convenções de build e primeira decisão de arquitetura ([ADR-001](docs/adr/0001-monolito-modular.md)).
-- Backend inicial: solution `Fut7Fantasy` com as camadas Api, Application, Domain e Infrastructure, health check e testes de arquitetura e integração.
-- Próximo passo: workspace Angular, ambiente local com Docker Compose e o primeiro fluxo vertical.
+- Backend: solution `Fut7Fantasy` com as camadas Api, Application, Domain e Infrastructure, EF Core com SQL Server, health checks de liveness e readiness, Problem Details e 15 testes de arquitetura e integração (dois deles contra um SQL Server real em container).
+- Ambiente local com Docker Compose (SQL Server, Azurite e Mailpit) e script de bootstrap para Windows.
+- Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base e a primeira página consumindo a API.
+- Fluxo vertical completo em pé: navegador → Angular → API → SQL Server, coberto por 31 testes (backend, frontend e E2E em Playwright).
+- Próximo passo: identidade, sessão e conta.
 
 ## Stack planejada
 
