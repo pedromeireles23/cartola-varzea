@@ -145,15 +145,9 @@ public static class CompetitionEndpoints
             statusCode: StatusCodes.Status409Conflict),
     };
 
-    /// <summary>
-    /// Só aceita o nome da modalidade. Números passariam no <see cref="Enum.TryParse{TEnum}(string?, out TEnum)"/>
-    /// e criariam uma dependência do valor interno da enumeração.
-    /// </summary>
     private static Modality ParseModality(string? value, List<CompetitionSettingsError> errors)
     {
-        if (value is not null
-            && Enum.GetNames<Modality>().Contains(value, StringComparer.Ordinal)
-            && Enum.TryParse<Modality>(value, out var modality))
+        if (DomainRequests.TryParseName<Modality>(value, out var modality))
         {
             return modality;
         }
@@ -171,19 +165,12 @@ public static class CompetitionEndpoints
     }
 
     private static IResult ValidationProblem(IEnumerable<CompetitionSettingsError> errors) =>
-        Results.ValidationProblem(
-            errors
-                .GroupBy(
-                    // O domínio fala em TimeSpan; a API recebe minutos.
-                    error => error.Field == nameof(CompetitionSettings.MarketCloseLeadTime)
-                        ? nameof(CompetitionSettingsRequest.MarketCloseLeadTimeMinutes)
-                        : error.Field,
-                    StringComparer.Ordinal)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(error => error.Message).ToArray(),
-                    StringComparer.Ordinal),
-            title: "Dados inválidos");
+        DomainRequests.ValidationProblem(
+            errors,
+            // O domínio fala em TimeSpan; a API recebe minutos.
+            field => field == nameof(CompetitionSettings.MarketCloseLeadTime)
+                ? nameof(CompetitionSettingsRequest.MarketCloseLeadTimeMinutes)
+                : field);
 }
 
 public sealed record CompetitionSettingsRequest(

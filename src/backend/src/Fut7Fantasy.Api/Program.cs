@@ -203,6 +203,7 @@ app.MapAccountEndpoints();
 app.MapOrganizerApplicationEndpoints();
 app.MapOrganizationTeamEndpoints();
 app.MapCompetitionEndpoints();
+app.MapCompetitionStageEndpoints();
 
 await app.RunAsync();
 

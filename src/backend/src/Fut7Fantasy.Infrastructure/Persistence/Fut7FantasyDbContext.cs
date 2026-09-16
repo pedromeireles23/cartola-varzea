@@ -44,6 +44,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public DbSet<Competition> Competitions => Set<Competition>();
 
+    public DbSet<Stage> Stages => Set<Stage>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {

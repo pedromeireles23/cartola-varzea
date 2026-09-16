@@ -114,9 +114,7 @@ public sealed class CompetitionManagementService(
             return CompetitionCommandResult.Of(CompetitionCommandOutcome.NotFound);
         }
 
-        // Uma versão ilegível nunca é a atual: vale como edição feita sobre dados velhos.
-        if (!TryReadVersion(version, out var expectedVersion)
-            || !expectedVersion.AsSpan().SequenceEqual(competition.RowVersion))
+        if (!RowVersions.Matches(version, competition.RowVersion, out var expectedVersion))
         {
             return CompetitionCommandResult.Of(CompetitionCommandOutcome.Conflict);
         }
@@ -132,6 +130,9 @@ public sealed class CompetitionManagementService(
         // A comparação acima cobre quem leu antes; a versão original no UPDATE cobre quem
         // salvou entre a leitura e esta gravação.
         dbContext.Entry(competition).Property(item => item.RowVersion).OriginalValue = expectedVersion;
+
+        // Salvar os mesmos valores ainda precisa passar pela checagem de versão no UPDATE.
+        dbContext.Entry(competition).Property(item => item.UpdatedAt).IsModified = true;
         dbContext.AdministrativeAuditEntries.Add(AdministrativeAuditEntry.Create(
             RequiredUserId(),
             "CompetitionSettingsUpdated",
@@ -158,24 +159,6 @@ public sealed class CompetitionManagementService(
         var view = await GetAsync(competitionId, cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException("O campeonato gravado não pôde ser lido de volta.");
         return new CompetitionCommandResult(CompetitionCommandOutcome.Completed, view, []);
-    }
-
-    private static bool TryReadVersion(string version, out byte[] bytes)
-    {
-        bytes = [];
-        if (string.IsNullOrWhiteSpace(version))
-        {
-            return false;
-        }
-
-        var buffer = new byte[version.Length];
-        if (!Convert.TryFromBase64String(version, buffer, out var written))
-        {
-            return false;
-        }
-
-        bytes = buffer[..written];
-        return true;
     }
 
     private Guid RequiredUserId() => currentUser.Id
