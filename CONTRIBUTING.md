@@ -9,7 +9,7 @@ Obrigado pelo interesse. O projeto está em fase inicial e é mantido como portf
 | Git | 2.40 ou superior | |
 | .NET SDK | 10.0.200 (patch mais recente da faixa) | Fixado em `global.json` |
 | Docker | Engine 24 ou superior | Banco, storage e e-mail locais |
-| Node.js | 24.21.0 | Fixado em `src/frontend/.nvmrc`; o Angular 22 exige `^22.22.3 \|\| ^24.15.0 \|\| >=26` |
+| Node.js | 24.19.0 | Fixado em `src/frontend/.nvmrc`; o Angular 22 exige `^22.22.3 \|\| ^24.15.0 \|\| >=26` |
 
 ## Primeiros passos
 
