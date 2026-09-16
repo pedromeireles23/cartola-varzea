@@ -58,6 +58,13 @@ export const routes: Routes = [
           import('./features/organizer/my-organizations').then((m) => m.MyOrganizationsPage),
       },
       {
+        // Sem guard de login: a tela lê e retira o token da URL antes de pedir a entrada.
+        path: 'organizar/convite',
+        title: 'Convite para auxiliar',
+        loadComponent: () =>
+          import('./features/organizer/accept-invitation').then((m) => m.AcceptInvitationPage),
+      },
+      {
         path: 'organizar/o/:organizacao/equipe',
         title: 'Equipe da organização',
         canActivate: [authGuard],

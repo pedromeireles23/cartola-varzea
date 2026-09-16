@@ -140,3 +140,9 @@ form {
   gap: var(--space-3);
   justify-content: flex-end;
 }
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
