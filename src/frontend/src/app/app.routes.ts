@@ -48,8 +48,8 @@ export const routes: Routes = [
         loadComponent: () => import('./features/profile/profile').then((m) => m.ProfilePage),
       },
       {
-        // A área de organização usa por enquanto a casca pública, como o perfil. A
-        // navegação lateral própria (02 §9.1) chega com os campeonatos, na Fase 5.
+        // As telas de organização usam a casca pública, como o perfil. Dentro de um
+        // campeonato, a casca da área (CompetitionLayout) acrescenta a navegação lateral.
         path: 'organizar',
         pathMatch: 'full',
         title: 'Minhas organizações',
@@ -70,6 +70,51 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/organizer/organization-team').then((m) => m.OrganizationTeamPage),
+      },
+      {
+        path: 'organizar/o/:organizacao/campeonatos',
+        title: 'Campeonatos da organização',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/organizer/organization-competitions').then(
+            (m) => m.OrganizationCompetitionsPage,
+          ),
+      },
+      {
+        path: 'organizar/o/:organizacao/campeonatos/novo',
+        title: 'Novo campeonato',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/organizer/create-competition').then((m) => m.CreateCompetitionPage),
+      },
+      {
+        // O identificador é o GUID do campeonato. A URL pública (/c/:campeonato) decide
+        // entre slug e GUID junto da experiência pública.
+        path: 'organizar/c/:campeonato',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/organizer/competition-area/competition-layout').then(
+            (m) => m.CompetitionLayout,
+          ),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            title: 'Resumo',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/competition-summary').then(
+                (m) => m.CompetitionSummaryPage,
+              ),
+          },
+          {
+            path: 'configuracao',
+            title: 'Configuração',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/competition-settings').then(
+                (m) => m.CompetitionSettingsPage,
+              ),
+          },
+        ],
       },
       {
         path: 'organizar/solicitar',

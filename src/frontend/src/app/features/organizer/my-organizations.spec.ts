@@ -36,7 +36,7 @@ describe('MyOrganizationsPage', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('proprietário vê o papel e o caminho para a equipe; auxiliar não', async () => {
+  it('os dois papéis chegam aos campeonatos; só o proprietário, à equipe', async () => {
     const elemento = await abrirCom([
       { id: 'o1', name: 'Liga Própria', role: 'Owner', joinedAt: '2026-09-16T12:00:00Z' },
       { id: 'o2', name: 'Liga Ajudada', role: 'Assistant', joinedAt: '2026-09-16T12:00:00Z' },
@@ -46,10 +46,13 @@ describe('MyOrganizationsPage', () => {
     const propria = cartoes.find((cartao) => cartao.textContent?.includes('Liga Própria'))!;
     const ajudada = cartoes.find((cartao) => cartao.textContent?.includes('Liga Ajudada'))!;
 
+    const destinos = (cartao: Element) =>
+      [...cartao.querySelectorAll('a')].map((link) => link.getAttribute('href'));
+
     expect(propria.textContent).toContain('Proprietário');
-    expect(propria.querySelector('a')?.getAttribute('href')).toBe('/organizar/o/o1/equipe');
+    expect(destinos(propria)).toEqual(['/organizar/o/o1/campeonatos', '/organizar/o/o1/equipe']);
     expect(ajudada.textContent).toContain('Auxiliar');
-    expect(ajudada.querySelector('a')).toBeNull();
+    expect(destinos(ajudada)).toEqual(['/organizar/o/o2/campeonatos']);
   });
 
   it('sem organização, explica como pedir acesso ou aceitar convite', async () => {

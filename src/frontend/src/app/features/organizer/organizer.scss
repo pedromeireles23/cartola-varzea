@@ -73,6 +73,16 @@ dd {
   background-color: var(--color-brand-50);
 }
 
+// A ação principal da tela, com o peso visual do botão primário.
+.acao--principal {
+  background-color: var(--color-brand-500);
+  border-color: var(--color-brand-500);
+}
+
+.acao--principal:hover {
+  background-color: var(--color-brand-300);
+}
+
 form {
   display: flex;
   flex-direction: column;

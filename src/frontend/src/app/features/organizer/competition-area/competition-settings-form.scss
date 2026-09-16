@@ -1,0 +1,115 @@
+:host {
+  display: block;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.grupo__titulo {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-h3);
+  font-weight: 600;
+}
+
+.apoio {
+  margin: 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.opcoes {
+  display: grid;
+  gap: var(--space-3);
+}
+
+// A opção inteira é o alvo de toque, não só o círculo do rádio.
+.opcao {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  min-height: var(--touch-target);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.opcao--marcada {
+  background-color: var(--color-brand-50);
+  border-color: var(--color-brand-700);
+}
+
+.opcao:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.opcao:has(input:focus-visible) {
+  outline: 2px solid var(--color-ink-950);
+  outline-offset: 2px;
+}
+
+.opcao input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.125rem 0 0;
+  accent-color: var(--color-brand-700);
+}
+
+.opcao__texto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.opcao__nome {
+  font-weight: 600;
+}
+
+.opcao__detalhe {
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.erro {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-small);
+}
+
+.foco:empty {
+  display: none;
+}
+
+.foco:focus {
+  outline: none;
+}
+
+.foco:focus-visible {
+  border-radius: var(--radius-md);
+  outline: 3px solid var(--color-info);
+  outline-offset: 2px;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

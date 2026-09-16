@@ -41,9 +41,12 @@ const FALLBACK_MESSAGE = 'Algo deu errado. Tente de novo em instantes.';
 
 /** Códigos estáveis da API que pedem uma mensagem própria, mais precisa que a do status. */
 export const DEMO_READ_ONLY = 'demo_read_only';
+export const COMPETITION_MODALITY_LOCKED = 'competition_modality_locked';
 
 const CODE_MESSAGES: Readonly<Record<string, string>> = {
   [DEMO_READ_ONLY]: 'Esta é uma conta de demonstração: dá para navegar por tudo, mas nada é salvo.',
+  [COMPETITION_MODALITY_LOCKED]:
+    'O campeonato já foi publicado, então a modalidade não muda mais. Os outros dados podem ser alterados.',
 };
 
 export function isProblemDetails(value: unknown): value is ProblemDetails {

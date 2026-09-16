@@ -63,13 +63,16 @@ type Estado =
               </div>
             </dl>
 
-            <p class="apoio">Os campeonatos da organização aparecem aqui quando forem criados.</p>
-
-            @if (item.role === 'Owner') {
-              <a class="acao" [routerLink]="['/organizar/o', item.id, 'equipe']">
-                Gerenciar equipe
+            <div class="acoes">
+              <a class="acao" [routerLink]="['/organizar/o', item.id, 'campeonatos']">
+                Campeonatos
               </a>
-            }
+              @if (item.role === 'Owner') {
+                <a class="acao" [routerLink]="['/organizar/o', item.id, 'equipe']">
+                  Gerenciar equipe
+                </a>
+              }
+            </div>
           </app-card>
         } @empty {
           <app-card heading="Nenhuma organização ainda">

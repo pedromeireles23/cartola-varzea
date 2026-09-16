@@ -51,6 +51,13 @@ export class OrganizationService {
     return this.http.get<MyOrganization[]>(`${this.baseUrl}/organizations/mine`);
   }
 
+  /** Uma organização da conta, com o papel nela. Responde 403 para quem não é membro. */
+  get(organizationId: string): Observable<MyOrganization> {
+    return this.http.get<MyOrganization>(
+      `${this.baseUrl}/organizations/${encodeURIComponent(organizationId)}`,
+    );
+  }
+
   team(organizationId: string): Observable<OrganizationTeam> {
     return this.http.get<OrganizationTeam>(
       `${this.baseUrl}/organizations/${encodeURIComponent(organizationId)}/team`,
