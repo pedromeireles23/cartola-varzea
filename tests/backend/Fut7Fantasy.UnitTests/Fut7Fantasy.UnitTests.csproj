@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Regras puras do domínio: rodam sem banco, HTTP ou Docker. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\backend\src\Fut7Fantasy.Domain\Fut7Fantasy.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -8,5 +8,6 @@
   <Folder Name="/tests/">
     <Project Path="../../tests/backend/Fut7Fantasy.ArchitectureTests/Fut7Fantasy.ArchitectureTests.csproj" />
     <Project Path="../../tests/backend/Fut7Fantasy.IntegrationTests/Fut7Fantasy.IntegrationTests.csproj" />
+    <Project Path="../../tests/backend/Fut7Fantasy.UnitTests/Fut7Fantasy.UnitTests.csproj" />
   </Folder>
 </Solution>
