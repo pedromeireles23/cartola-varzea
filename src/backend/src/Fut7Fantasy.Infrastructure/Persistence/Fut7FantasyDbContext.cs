@@ -1,6 +1,7 @@
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.Organizations;
 using Fut7Fantasy.Domain.PlatformAdministration;
+using Fut7Fantasy.Domain.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public const string CompetitionsSchema = "competitions";
 
+    public const string SportsCatalogSchema = "sports_catalog";
+
     /// <summary>Historico de inicializacoes.</summary>
     public DbSet<StartupRecord> StartupRecords => Set<StartupRecord>();
 
@@ -45,6 +48,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
     public DbSet<Competition> Competitions => Set<Competition>();
 
     public DbSet<Stage> Stages => Set<Stage>();
+
+    public DbSet<RealTeam> RealTeams => Set<RealTeam>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)

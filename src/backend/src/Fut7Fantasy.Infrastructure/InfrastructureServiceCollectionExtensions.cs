@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.Accounts;
 using Fut7Fantasy.Application.Competitions;
 using Fut7Fantasy.Application.Organizations;
 using Fut7Fantasy.Application.PlatformAdministration;
+using Fut7Fantasy.Application.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Authorization;
 using Fut7Fantasy.Infrastructure.Competitions;
 using Fut7Fantasy.Infrastructure.Email;
@@ -11,6 +12,7 @@ using Fut7Fantasy.Infrastructure.Options;
 using Fut7Fantasy.Infrastructure.Organizations;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Fut7Fantasy.Infrastructure.PlatformAdministration;
+using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Startup;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -90,6 +92,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IAuthorizationHandler, OrganizationRoleHandler>();
         services.AddScoped<ICompetitionManagementService, CompetitionManagementService>();
         services.AddScoped<ICompetitionStageService, CompetitionStageService>();
+        services.AddScoped<IRealTeamService, RealTeamService>();
         services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
         return services;

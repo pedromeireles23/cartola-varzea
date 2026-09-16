@@ -28,12 +28,14 @@ public sealed class AuthorizationMatrixTests
         "* /health/live -> " + Anonymous,
         "* /health/ready -> " + Anonymous,
         "DELETE /api/v1/competitions/{competitionId:guid}/stages/{stageId:guid} -> competition-owner-write",
+        "DELETE /api/v1/competitions/{competitionId:guid}/teams/{teamId:guid} -> competition-owner-write",
         "DELETE /api/v1/organizations/{organizationId:guid}/team/assistants/{userId:guid} -> organization-owner-write",
         "DELETE /api/v1/organizations/{organizationId:guid}/team/invitations/{invitationId:guid}"
             + " -> organization-owner-write",
         "GET /api/v1/auth/antiforgery -> " + Anonymous,
         "GET /api/v1/competitions/{competitionId:guid}/settings -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/stages/ -> competition-member",
+        "GET /api/v1/competitions/{competitionId:guid}/teams/ -> competition-member",
         "GET /api/v1/modality-profiles -> " + Anonymous,
         "GET /api/v1/organizations/{organizationId:guid}/competitions/ -> organization-member",
         "GET /api/v1/auth/me -> " + Anonymous,
@@ -45,6 +47,7 @@ public sealed class AuthorizationMatrixTests
         "GET /api/v1/system/info -> " + Anonymous,
         "GET /openapi/{documentName}.json -> " + Anonymous,
         "POST /api/v1/competitions/{competitionId:guid}/stages/ -> competition-owner-write",
+        "POST /api/v1/competitions/{competitionId:guid}/teams/ -> competition-owner-write",
         "POST /api/v1/auth/confirm-email -> " + Anonymous,
         "POST /api/v1/auth/forgot-password -> " + Anonymous,
         "POST /api/v1/auth/login -> " + Anonymous,
@@ -60,6 +63,7 @@ public sealed class AuthorizationMatrixTests
         "PUT /api/v1/competitions/{competitionId:guid}/settings -> competition-owner-write",
         "PUT /api/v1/competitions/{competitionId:guid}/stages/order -> competition-owner-write",
         "PUT /api/v1/competitions/{competitionId:guid}/stages/{stageId:guid} -> competition-owner-write",
+        "PUT /api/v1/competitions/{competitionId:guid}/teams/{teamId:guid} -> competition-owner-write",
     ];
 
     [Fact]

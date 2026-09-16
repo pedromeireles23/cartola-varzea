@@ -1,4 +1,5 @@
 using Fut7Fantasy.Domain.Competitions;
+using Fut7Fantasy.Domain.SportsCatalog;
 
 namespace Fut7Fantasy.Api.Endpoints;
 
@@ -22,12 +23,25 @@ internal static class DomainRequests
     public static IResult ValidationProblem(
         IEnumerable<CompetitionSettingsError> errors,
         Func<string, string>? fieldName = null) =>
+        ValidationProblem(errors, error => error.Field, error => error.Message, fieldName);
+
+    /// <summary>Mesmo contrato de validação para o módulo de catálogo esportivo.</summary>
+    public static IResult SportsCatalogValidationProblem(
+        IEnumerable<SportsCatalogValidationError> errors,
+        Func<string, string>? fieldName = null) =>
+        ValidationProblem(errors, error => error.Field, error => error.Message, fieldName);
+
+    private static IResult ValidationProblem<TError>(
+        IEnumerable<TError> errors,
+        Func<TError, string> field,
+        Func<TError, string> message,
+        Func<string, string>? fieldName) =>
         Results.ValidationProblem(
             errors
-                .GroupBy(error => fieldName?.Invoke(error.Field) ?? error.Field, StringComparer.Ordinal)
+                .GroupBy(error => fieldName?.Invoke(field(error)) ?? field(error), StringComparer.Ordinal)
                 .ToDictionary(
                     group => group.Key,
-                    group => group.Select(error => error.Message).ToArray(),
+                    group => group.Select(message).ToArray(),
                     StringComparer.Ordinal),
             title: "Dados inválidos");
 }
