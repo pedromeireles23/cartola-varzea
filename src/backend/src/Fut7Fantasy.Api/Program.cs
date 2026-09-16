@@ -105,6 +105,11 @@ builder.Services.AddOptions<AccountRateLimitOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services.AddOptions<GlobalRateLimitOptions>()
+    .Bind(builder.Configuration.GetSection(GlobalRateLimitOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -122,13 +127,16 @@ builder.Services.AddRateLimiter(options =>
     });
 
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-        RateLimitPartition.GetFixedWindowLimiter(
+    {
+        var limits = context.RequestServices.GetRequiredService<IOptions<GlobalRateLimitOptions>>().Value;
+        return RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "desconhecido",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 300,
-                Window = TimeSpan.FromMinutes(1),
-            }));
+                PermitLimit = limits.PermitLimit,
+                Window = limits.Window,
+            });
+    });
 
     options.OnRejected = async (context, cancellationToken) =>
     {

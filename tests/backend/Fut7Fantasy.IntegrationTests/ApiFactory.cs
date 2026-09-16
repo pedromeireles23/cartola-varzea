@@ -50,6 +50,8 @@ public class ApiFactory : WebApplicationFactory<Program>
         // Os testes fixam o valor de produção para provar a proteção real.
         builder.UseSetting("RateLimiting:Account:PermitLimit", "10");
         builder.UseSetting("RateLimiting:Account:Window", "00:15:00");
+        builder.UseSetting("RateLimiting:Global:PermitLimit", "300");
+        builder.UseSetting("RateLimiting:Global:Window", "00:01:00");
     }
 
     /// <inheritdoc />
