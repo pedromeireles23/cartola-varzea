@@ -13,13 +13,14 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 
 - Regras do MVP definidas: formação por modalidade, mercado, pontuação, preços e valorização (calibrados por simulação no Fut7).
 - Mapa de navegação e wireflows de baixa fidelidade validados com um organizador de campeonato amador.
-- Repositório com CI, convenções de build e decisões de arquitetura registradas ([ADR-001](docs/adr/0001-monolito-modular.md) e [ADR-004](docs/adr/0004-isolamento-por-organizacao.md)).
+- Repositório com CI, convenções de build e decisões de arquitetura registradas ([ADR-001](docs/adr/0001-monolito-modular.md), [ADR-004](docs/adr/0004-isolamento-por-organizacao.md) e [ADR-008](docs/adr/0008-perfis-de-modalidade-versionados.md)).
 - Backend: solution `Fut7Fantasy` com as camadas Api, Application, Domain e Infrastructure, EF Core com SQL Server, ASP.NET Core Identity, sessão em cookie seguro, health checks, Problem Details e testes contra SQL Server real em container.
 - Ambiente local com Docker Compose (SQL Server, Azurite e Mailpit) e script de bootstrap para Windows.
 - Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base, página de sistema e fluxos de cadastro, confirmação, login, recuperação e perfil.
 - Organizações: solicitação e aprovação de organizador, equipe auxiliar por convite (convidar, aceitar, revogar e remover), isolamento entre organizações, modo demonstração somente leitura e uma matriz de autorização verificada por teste.
-- Fluxos cobertos por 117 testes: 42 de backend contra SQL Server real, 52 de frontend e 23 E2E em Playwright desktop/mobile, lendo e-mails reais do Mailpit.
-- Próximo passo: campeonatos, com modalidade (Fut7, futsal e campo) e configuração por organização. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
+- Campeonatos: criação em rascunho e configuração por organização, com modalidade (Fut7, futsal e campo) de parâmetros versionados, fuso, fechamento do mercado e prazos de resultado; edição protegida contra sobrescrita concorrente e área própria com navegação lateral.
+- Fluxos cobertos por 197 testes: 95 de backend (49 unitários e o restante contra SQL Server real), 77 de frontend e 25 E2E em Playwright desktop/mobile, lendo e-mails reais do Mailpit.
+- Próximo passo: fases do campeonato, checklist e publicação. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
 
 ## Stack planejada
 
