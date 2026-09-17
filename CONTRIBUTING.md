@@ -171,7 +171,9 @@ dotnet ef database update --project src/backend/src/Fut7Fantasy.Infrastructure `
 Remove-Item Env:\Database__ConnectionString
 ```
 
-O `dotnet ef` grava os arquivos com BOM e CRLF; normalize para UTF-8 sem BOM e LF antes de commitar, senão o `editorconfig-checker` reprova no CI. O CI também roda `dotnet ef migrations has-pending-model-changes`: mudar uma entidade sem gerar a migration correspondente quebra o build.
+O `dotnet ef` grava os arquivos com BOM, CRLF e linhas longas. Os arquivos de `Persistence/Migrations` ficam fora do `editorconfig-checker` por `Exclude` no `.editorconfig-checker.json`, justamente porque o estilo é do gerador; não reescreva o arquivo à mão para satisfazer o verificador. O CI roda `dotnet ef migrations has-pending-model-changes`: mudar uma entidade sem gerar a migration correspondente quebra o build.
+
+Antes de abrir um PR, vale rodar o mesmo verificador do CI localmente. Baixe o `editorconfig-checker` na versão fixada no `.github/workflows/ci.yml` e execute-o na raiz do repositório: ele é o único job que não tem equivalente em `dotnet format` ou `npm run lint`.
 
 Para recriar o banco local do zero: `docker compose down -v && docker compose up -d` e aplique as migrations de novo.
 

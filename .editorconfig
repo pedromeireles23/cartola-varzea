@@ -65,6 +65,9 @@ dotnet_naming_style.pascal_case.capitalization = pascal_case
 
 # Migrations são geradas pelo dotnet ef. O conteúdo é revisado no pull request, mas
 # o estilo é do gerador: marcá-las como código gerado evita reescrever o arquivo a
-# cada `migrations add` só para satisfazer analisadores.
+# cada `migrations add` só para satisfazer analisadores. O editorconfig-checker não
+# entende `generated_code`, então ele as ignora por `Exclude` no
+# `.editorconfig-checker.json`; sem isso, cada `migrations add` quebraria o CI por
+# linha longa ou BOM do gerador.
 [**/Persistence/Migrations/*.cs]
 generated_code = true

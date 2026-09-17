@@ -2,6 +2,7 @@
   "Exclude": [
     "packages\\.lock\\.json$",
     "package-lock\\.json$",
-    "\\.ico$"
+    "\\.ico$",
+    "Persistence/Migrations/.*\\.cs$"
   ]
 }
