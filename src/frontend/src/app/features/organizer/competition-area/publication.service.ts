@@ -19,6 +19,8 @@ export interface CompetitionReadiness {
   readonly competitionId: string;
   readonly status: CompetitionStatus;
   readonly publishedAt: string | null;
+  /** Endereço público, dado na publicação; nulo enquanto o campeonato nunca foi publicado. */
+  readonly slug: string | null;
   readonly canPublish: boolean;
   readonly items: readonly ReadinessItem[];
   /** Precisa voltar na publicação: o servidor recusa decidir sobre uma leitura antiga. */

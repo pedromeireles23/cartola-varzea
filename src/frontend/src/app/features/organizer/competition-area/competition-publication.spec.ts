@@ -19,6 +19,7 @@ function checklist(parcial: Partial<CompetitionReadiness> = {}): CompetitionRead
     competitionId: 'c1',
     status: 'Draft',
     publishedAt: null,
+    slug: null,
     canPublish: true,
     items: [],
     version: 'AAAAAAAAB9E=',
@@ -139,7 +140,12 @@ describe('CompetitionPublicationPage', () => {
     expect(requisicao.request.method).toBe('PUT');
     expect(requisicao.request.body).toEqual({ published: true, version: 'AAAAAAAAB9E=' });
     requisicao.flush(
-      checklist({ status: 'Published', publishedAt: '2026-09-17T12:00:00Z', version: 'NOVA' }),
+      checklist({
+        status: 'Published',
+        publishedAt: '2026-09-17T12:00:00Z',
+        slug: 'copa-da-varzea-2026',
+        version: 'NOVA',
+      }),
     );
     await fixture.whenStable();
 
@@ -148,6 +154,7 @@ describe('CompetitionPublicationPage', () => {
     await fixture.whenStable();
 
     expect(texto(fixture)).toContain('Campeonato publicado.');
+    expect(texto(fixture)).toContain('/c/copa-da-varzea-2026');
     expect(botao(fixture, 'Voltar para rascunho')).toBeDefined();
     expect(botao(fixture, 'Publicar campeonato')).toBeUndefined();
   });

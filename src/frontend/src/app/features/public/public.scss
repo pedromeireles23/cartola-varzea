@@ -1,0 +1,160 @@
+// Estilos compartilhados pelas telas públicas de campeonato.
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+h1 {
+  margin: 0;
+}
+
+.intro,
+.apoio {
+  margin: 0;
+  color: var(--color-ink-700);
+}
+
+.apoio {
+  font-size: var(--font-small);
+}
+
+.trace {
+  margin: 0;
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+.busca {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.busca app-form-field {
+  flex: 1 1 16rem;
+}
+
+.resultados {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// O cartão inteiro é o alvo de toque: o link cobre a área e o texto fica acima dele.
+.resultado {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.resultado__nome {
+  margin: 0;
+  font-size: var(--font-body);
+}
+
+.resultado__nome a::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+}
+
+.resultado__detalhe {
+  margin: 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.dados {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.dados__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dados__item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+dt {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.fase {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.fase__titulo {
+  margin: 0;
+  font-size: var(--font-body);
+}
+
+.grupos {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grupo {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-canvas);
+  border-radius: var(--radius-sm);
+}
+
+.grupo__nome {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+.times {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.time {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.time:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.time__elenco {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}

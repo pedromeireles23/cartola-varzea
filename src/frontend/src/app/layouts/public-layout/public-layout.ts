@@ -19,6 +19,7 @@ import { DemoBanner } from '../demo-banner/demo-banner';
       <div class="topo__interno">
         <a class="topo__marca" routerLink="/">Cartola Várzea</a>
         <nav class="topo__nav" aria-label="Navegação principal">
+          <a routerLink="/campeonatos">Campeonatos</a>
           <a routerLink="/sistema">Sistema</a>
           @if (conta(); as dados) {
             <a routerLink="/perfil">{{ dados.displayName }}</a>

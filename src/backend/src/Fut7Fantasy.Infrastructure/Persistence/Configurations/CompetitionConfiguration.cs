@@ -27,6 +27,11 @@ public sealed class CompetitionConfiguration : IEntityTypeConfiguration<Competit
                 "CK_Competitions_MarketCloseLeadTimeMinutes",
                 "[MarketCloseLeadTimeMinutes] BETWEEN 0"
                 + $" AND {(int)CompetitionSettings.MaxMarketCloseLeadTime.TotalMinutes}");
+
+            // Publicado sem endereço seria invisível no público e inalcançável por link.
+            table.HasCheckConstraint(
+                "CK_Competitions_PublishedHasSlug",
+                $"[Status] <> '{nameof(CompetitionStatus.Published)}' OR [Slug] IS NOT NULL");
         });
         builder.HasKey(competition => competition.Id);
         builder.Property(competition => competition.Name)
@@ -42,6 +47,7 @@ public sealed class CompetitionConfiguration : IEntityTypeConfiguration<Competit
             .HasColumnName("MarketCloseLeadTimeMinutes")
             .HasConversion(value => (int)value.TotalMinutes, minutes => TimeSpan.FromMinutes(minutes));
         builder.Property(competition => competition.Status).HasConversion<string>().HasMaxLength(24).IsRequired();
+        builder.Property(competition => competition.Slug).HasMaxLength(CompetitionSlug.MaxLength);
         builder.Property(competition => competition.RowVersion).IsRowVersion();
         builder.Ignore(competition => competition.ModalityProfile);
         builder.Ignore(competition => competition.CanChangeModality);
@@ -53,5 +59,11 @@ public sealed class CompetitionConfiguration : IEntityTypeConfiguration<Competit
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(competition => new { competition.OrganizationId, competition.UpdatedAt });
         builder.HasIndex(competition => competition.Status);
+
+        // O slug é o endereço público, então é único na plataforma inteira; o filtro
+        // deixa os rascunhos, que ainda não têm endereço, fora do índice.
+        builder.HasIndex(competition => competition.Slug)
+            .IsUnique()
+            .HasFilter("[Slug] IS NOT NULL");
     }
 }

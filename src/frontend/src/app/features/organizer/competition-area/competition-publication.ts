@@ -87,6 +87,16 @@ type Estado =
               }}
             </p>
 
+            @if (checklist()!.slug; as endereco) {
+              <p class="apoio">
+                Endereço público:
+                <a [routerLink]="['/c', endereco]">/c/{{ endereco }}</a>
+                @if (!publicado()) {
+                  — fora do ar enquanto o campeonato estiver em rascunho.
+                }
+              </p>
+            }
+
             @if (proprietario()) {
               <div class="acoes">
                 @if (publicado()) {

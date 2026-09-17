@@ -42,12 +42,14 @@ public sealed record CompetitionPublicationResult(
 public sealed record CompetitionReadinessItemView(string Code, string Severity, string Message);
 
 /// <summary>
-/// O checklist com a situação do campeonato e a versão que a publicação precisa devolver.
+/// O checklist com a situação do campeonato, o endereço público que ele ganhou ao ser
+/// publicado e a versão que a publicação precisa devolver.
 /// </summary>
 public sealed record CompetitionReadinessView(
     Guid CompetitionId,
     string Status,
     DateTimeOffset? PublishedAt,
+    string? Slug,
     bool CanPublish,
     IReadOnlyList<CompetitionReadinessItemView> Items,
     string Version)
@@ -63,6 +65,7 @@ public sealed record CompetitionReadinessView(
             competition.Id,
             competition.Status.ToString(),
             competition.PublishedAt,
+            competition.Slug,
             report.CanPublish,
             [.. report.Items.Select(item => new CompetitionReadinessItemView(
                 item.Code,

@@ -13,6 +13,9 @@ public sealed class CompetitionPublicationService(
     ICurrentUser currentUser,
     TimeProvider clock) : ICompetitionPublicationService
 {
+    /// <summary>Tentativas de gravar antes de desistir de disputar o slug.</summary>
+    private const int MaxSlugAttempts = 3;
+
     public async Task<CompetitionReadinessView?> GetReadinessAsync(
         Guid competitionId,
         CancellationToken cancellationToken)
@@ -31,6 +34,36 @@ public sealed class CompetitionPublicationService(
     }
 
     public async Task<CompetitionPublicationResult> SetPublishedAsync(
+        Guid competitionId,
+        bool published,
+        string version,
+        CancellationToken cancellationToken)
+    {
+        // Duas publicações simultâneas podem escolher o mesmo slug; o índice único
+        // derruba a segunda, que tenta o próximo sufixo com a lista já atualizada.
+        for (var attempt = 1; ; attempt++)
+        {
+            var result = await TrySetPublishedAsync(competitionId, published, version, cancellationToken)
+                .ConfigureAwait(false);
+            if (result is not null)
+            {
+                return result;
+            }
+
+            if (attempt == MaxSlugAttempts)
+            {
+                return CompetitionPublicationResult.Of(CompetitionPublicationOutcome.Conflict);
+            }
+
+            dbContext.ChangeTracker.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Uma tentativa de publicar. Devolve <c>null</c> quando o slug escolhido já tinha
+    /// dono no instante da gravação, o único caso em que repetir muda o resultado.
+    /// </summary>
+    private async Task<CompetitionPublicationResult?> TrySetPublishedAsync(
         Guid competitionId,
         bool published,
         string version,
@@ -68,7 +101,9 @@ public sealed class CompetitionPublicationService(
         var now = clock.GetUtcNow();
         if (published)
         {
-            competition.Publish(now);
+            competition.Publish(
+                now,
+                competition.Slug ?? await FreeSlugAsync(competition, cancellationToken).ConfigureAwait(false));
         }
         else
         {
@@ -91,10 +126,39 @@ public sealed class CompetitionPublicationService(
         {
             return CompetitionPublicationResult.Of(CompetitionPublicationOutcome.Conflict);
         }
+        catch (DbUpdateException)
+        {
+            // A única restrição que uma publicação pode violar é o slug único.
+            return null;
+        }
 
         return new CompetitionPublicationResult(
             CompetitionPublicationOutcome.Completed,
             CompetitionReadinessView.From(competition, report));
+    }
+
+    /// <summary>
+    /// Primeiro endereço livre a partir do nome e da temporada. Os candidatos são lidos de
+    /// uma vez, em vez de uma consulta por tentativa, porque a lista é curta.
+    /// </summary>
+    private async Task<string> FreeSlugAsync(Competition competition, CancellationToken cancellationToken)
+    {
+        var baseSlug = CompetitionSlug.Base(competition.Name, competition.Season);
+        var taken = await dbContext.Competitions
+            .AsNoTracking()
+            .Where(item => item.Slug != null && item.Slug.StartsWith(baseSlug))
+            .Select(item => item.Slug!)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        for (var attempt = 1; ; attempt++)
+        {
+            var candidate = CompetitionSlug.Variant(baseSlug, attempt);
+            if (!taken.Contains(candidate, StringComparer.OrdinalIgnoreCase))
+            {
+                return candidate;
+            }
+        }
     }
 
     /// <summary>

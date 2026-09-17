@@ -137,7 +137,7 @@ public sealed class CompetitionTests
         var competition = CreateDraft(Settings());
         var published = Now.AddHours(1);
 
-        competition.Publish(published);
+        competition.Publish(published, "copa-de-teste-2026");
 
         Assert.Equal(CompetitionStatus.Published, competition.Status);
         Assert.True(competition.IsPublished);
@@ -148,13 +148,16 @@ public sealed class CompetitionTests
         competition.Publish(published.AddDays(2));
 
         Assert.Equal(published, competition.PublishedAt);
+
+        // O endereço é dado uma vez: republicar não o renegocia.
+        Assert.Equal("copa-de-teste-2026", competition.Slug);
     }
 
     [Fact]
     public void ModalityStaysLockedAfterTheFirstPublication()
     {
         var competition = CreateDraft(Settings());
-        competition.Publish(Now.AddHours(1));
+        competition.Publish(Now.AddHours(1), "copa-de-teste-2026");
         competition.Unpublish(Now.AddHours(2));
 
         // Voltar para rascunho não devolve a modalidade: o público já viu as regras antigas.
@@ -175,8 +178,32 @@ public sealed class CompetitionTests
 
         Assert.Throws<InvalidOperationException>(() => competition.Unpublish(Now));
 
-        competition.Publish(Now);
+        competition.Publish(Now, "copa-de-teste-2026");
         Assert.Throws<InvalidOperationException>(() => competition.Publish(Now));
+    }
+
+    [Fact]
+    public void FirstPublicationRefusesAnAddressThatWouldNotWorkInAUrl()
+    {
+        var competition = CreateDraft(Settings());
+
+        Assert.Throws<ArgumentException>(() => competition.Publish(Now, null));
+        Assert.Throws<ArgumentException>(() => competition.Publish(Now, "Copa de Teste"));
+        Assert.Equal(CompetitionStatus.Draft, competition.Status);
+        Assert.Null(competition.Slug);
+    }
+
+    [Fact]
+    public void RenamingAfterPublicationKeepsTheAddressAlreadyShared()
+    {
+        var competition = CreateDraft(Settings());
+        competition.Publish(Now, "copa-de-teste-2026");
+
+        competition.Unpublish(Now.AddHours(1));
+        competition.UpdateSettings(Settings() with { Name = "Outro Nome" }, Now.AddHours(2));
+        competition.Publish(Now.AddHours(3));
+
+        Assert.Equal("copa-de-teste-2026", competition.Slug);
     }
 
     private static Competition CreateDraft(CompetitionSettings settings) =>

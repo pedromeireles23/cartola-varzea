@@ -54,6 +54,12 @@ public sealed class Competition
     /// <summary>Instante da primeira publicação; permanece depois de despublicar.</summary>
     public DateTimeOffset? PublishedAt { get; private set; }
 
+    /// <summary>
+    /// Endereço público (`/c/:campeonato`). Nasce na primeira publicação e não muda mais,
+    /// nem quando o campeonato é renomeado: link compartilhado não pode quebrar.
+    /// </summary>
+    public string? Slug { get; private set; }
+
     public Guid CreatedByUserId { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
@@ -106,11 +112,26 @@ public sealed class Competition
     /// Torna o campeonato visível ao público. O checklist de prontidão é avaliado fora do
     /// agregado, porque depende do catálogo inteiro; aqui fica apenas a transição.
     /// </summary>
-    public void Publish(DateTimeOffset publishedAt)
+    /// <param name="publishedAt">Instante da decisão.</param>
+    /// <param name="slug">
+    /// Endereço público livre, exigido só na primeira publicação. Quem garante que ele
+    /// ainda não existe é a infraestrutura, com o índice único.
+    /// </param>
+    public void Publish(DateTimeOffset publishedAt, string? slug = null)
     {
         if (IsPublished)
         {
             throw new InvalidOperationException("O campeonato já está publicado.");
+        }
+
+        if (Slug is null)
+        {
+            if (!CompetitionSlug.IsValid(slug))
+            {
+                throw new ArgumentException("A primeira publicação precisa de um slug válido.", nameof(slug));
+            }
+
+            Slug = slug;
         }
 
         Status = CompetitionStatus.Published;

@@ -203,6 +203,7 @@ app.MapAccountEndpoints();
 app.MapOrganizerApplicationEndpoints();
 app.MapOrganizationTeamEndpoints();
 app.MapCompetitionEndpoints();
+app.MapPublicCompetitionEndpoints();
 app.MapCompetitionStageEndpoints();
 app.MapRealTeamEndpoints();
 app.MapAthleteEndpoints();

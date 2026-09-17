@@ -19,6 +19,19 @@ export const routes: Routes = [
           import('./features/system-info/system-info').then((m) => m.SystemInfoPage),
       },
       {
+        path: 'campeonatos',
+        title: 'Campeonatos',
+        loadComponent: () =>
+          import('./features/public/competition-search').then((m) => m.CompetitionSearchPage),
+      },
+      {
+        // O identificador público é o slug, dado na publicação e estável desde então
+        // (decidido em 2026-09-17); o GUID continua valendo só na área de organização.
+        path: 'c/:campeonato',
+        loadComponent: () =>
+          import('./features/public/public-competition').then((m) => m.PublicCompetitionPage),
+      },
+      {
         path: 'entrar',
         title: 'Entrar',
         canActivate: [anonymousGuard],
@@ -88,8 +101,8 @@ export const routes: Routes = [
           import('./features/organizer/create-competition').then((m) => m.CreateCompetitionPage),
       },
       {
-        // O identificador é o GUID do campeonato. A URL pública (/c/:campeonato) decide
-        // entre slug e GUID junto da experiência pública.
+        // Na área de organização o identificador é o GUID; a URL pública usa o slug
+        // dado na publicação, que não muda quando o campeonato é renomeado.
         path: 'organizar/c/:campeonato',
         canActivate: [authGuard],
         loadComponent: () =>
