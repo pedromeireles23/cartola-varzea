@@ -11,6 +11,8 @@ export interface ProblemDetails {
   readonly traceId?: string;
   /** Codigo estavel de erro de dominio, quando houver. */
   readonly code?: string;
+  /** Campos próprios do erro, como a lista de linhas inválidas de uma importação. */
+  readonly [extension: string]: unknown;
 }
 
 /** Falha de API ja traduzida para algo que a interface consegue mostrar. */
@@ -20,6 +22,11 @@ export interface ApiFailure {
   readonly status: number;
   readonly traceId?: string;
   readonly code?: string;
+  /**
+   * Corpo do Problem Details, para quem precisa de um campo próprio da resposta
+   * (RFC 9457 §3.2). É dado bruto do servidor: quem lê confere o formato.
+   */
+  readonly problem?: ProblemDetails;
 }
 
 /**
@@ -67,5 +74,6 @@ export function toApiFailure(status: number, body: unknown): ApiFailure {
     status,
     traceId: problem?.traceId,
     code: problem?.code,
+    problem,
   };
 }

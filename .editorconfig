@@ -14,6 +14,12 @@ trim_trailing_whitespace = false
 [*.{ps1,cmd,bat,sln}]
 end_of_line = crlf
 
+# Os CSV de demonstração são consumidos por planilha, não por editor: o Excel em
+# português só abre com os acentos certos quando o arquivo tem BOM, e grava CRLF.
+[*.csv]
+end_of_line = crlf
+charset = utf-8-bom
+
 [*.{cs,csx}]
 indent_size = 4
 max_line_length = 120

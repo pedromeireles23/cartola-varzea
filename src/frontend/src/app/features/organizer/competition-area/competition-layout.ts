@@ -136,6 +136,14 @@ export interface CompetitionCreatedState {
               Técnicos
             </a>
             <a
+              routerLink="importacoes"
+              routerLinkActive="area__link--ativo"
+              ariaCurrentWhenActive="page"
+              class="area__link"
+            >
+              Importações
+            </a>
+            <a
               routerLink="publicacao"
               routerLinkActive="area__link--ativo"
               ariaCurrentWhenActive="page"

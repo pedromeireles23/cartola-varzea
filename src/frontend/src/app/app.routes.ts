@@ -152,6 +152,14 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'importacoes',
+            title: 'Importações',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/competition-imports').then(
+                (m) => m.CompetitionImportsPage,
+              ),
+          },
+          {
             path: 'publicacao',
             title: 'Publicação',
             loadComponent: () =>

@@ -1,6 +1,7 @@
 using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Accounts;
 using Fut7Fantasy.Application.Competitions;
+using Fut7Fantasy.Application.Importing;
 using Fut7Fantasy.Application.Organizations;
 using Fut7Fantasy.Application.PlatformAdministration;
 using Fut7Fantasy.Application.SportsCatalog;
@@ -8,6 +9,7 @@ using Fut7Fantasy.Infrastructure.Authorization;
 using Fut7Fantasy.Infrastructure.Competitions;
 using Fut7Fantasy.Infrastructure.Email;
 using Fut7Fantasy.Infrastructure.Identity;
+using Fut7Fantasy.Infrastructure.Importing;
 using Fut7Fantasy.Infrastructure.Options;
 using Fut7Fantasy.Infrastructure.Organizations;
 using Fut7Fantasy.Infrastructure.Persistence;
@@ -97,6 +99,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRealTeamService, RealTeamService>();
         services.AddScoped<IAthleteService, AthleteService>();
         services.AddScoped<ICoachService, CoachService>();
+        services.AddScoped<ICatalogImportService, CatalogImportService>();
         services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
         return services;

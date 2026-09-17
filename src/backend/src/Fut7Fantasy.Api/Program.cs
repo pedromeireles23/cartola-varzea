@@ -208,6 +208,7 @@ app.MapCompetitionStageEndpoints();
 app.MapRealTeamEndpoints();
 app.MapAthleteEndpoints();
 app.MapCoachEndpoints();
+app.MapCatalogImportEndpoints();
 
 await app.RunAsync();
 

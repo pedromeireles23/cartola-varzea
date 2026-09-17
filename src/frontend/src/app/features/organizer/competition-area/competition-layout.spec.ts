@@ -90,6 +90,7 @@ describe('CompetitionLayout', () => {
       'Times',
       'Atletas',
       'Técnicos',
+      'Importações',
       'Publicação',
       'Configuração',
     ]);
@@ -103,6 +104,7 @@ describe('CompetitionLayout', () => {
       'Times',
       'Atletas',
       'Técnicos',
+      'Importações',
       'Publicação',
     ]);
   });
