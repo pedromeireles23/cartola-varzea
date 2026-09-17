@@ -128,6 +128,14 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'rodadas',
+            title: 'Rodadas',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/competition-rounds').then(
+                (m) => m.CompetitionRoundsPage,
+              ),
+          },
+          {
             path: 'times',
             title: 'Times',
             loadComponent: () =>

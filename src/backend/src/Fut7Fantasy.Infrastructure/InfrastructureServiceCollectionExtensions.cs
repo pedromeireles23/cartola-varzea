@@ -96,6 +96,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ICompetitionStageService, CompetitionStageService>();
         services.AddScoped<ICompetitionPublicationService, CompetitionPublicationService>();
         services.AddScoped<IPublicCompetitionService, PublicCompetitionService>();
+        services.AddScoped<ICompetitionRoundService, CompetitionRoundService>();
         services.AddScoped<IRealTeamService, RealTeamService>();
         services.AddScoped<IAthleteService, AthleteService>();
         services.AddScoped<ICoachService, CoachService>();

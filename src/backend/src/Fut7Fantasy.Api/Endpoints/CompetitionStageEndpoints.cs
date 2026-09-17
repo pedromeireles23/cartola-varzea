@@ -100,6 +100,11 @@ public static class CompetitionStageEndpoints
         await service.DeleteAsync(competitionId, stageId, cancellationToken).ConfigureAwait(false) switch
         {
             StageCommandOutcome.Completed => Results.NoContent(),
+            StageCommandOutcome.DependenciesExist => Results.Problem(
+                title: "A fase tem partidas marcadas",
+                detail: "Remova as partidas desta fase antes de removê-la.",
+                statusCode: StatusCodes.Status409Conflict,
+                extensions: new Dictionary<string, object?> { ["code"] = StageDependenciesCode }),
             _ => Results.NotFound(),
         };
 
@@ -184,8 +189,9 @@ public static class CompetitionStageEndpoints
         StageCommandOutcome.Invalid => DomainRequests.ValidationProblem(result.Errors),
         StageCommandOutcome.NotFound => Results.NotFound(),
         StageCommandOutcome.DependenciesExist => Results.Problem(
-            title: "A fase já possui participantes",
-            detail: "Remova ou redistribua os times antes de trocar o formato ou remover um grupo usado.",
+            title: "A fase já tem dependências",
+            detail: "Remova ou redistribua os times, e desmarque as partidas, antes de trocar o formato "
+                + "ou remover um grupo usado.",
             statusCode: StatusCodes.Status409Conflict,
             extensions: new Dictionary<string, object?> { ["code"] = StageDependenciesCode }),
         StageCommandOutcome.LimitReached => Results.Problem(

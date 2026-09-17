@@ -66,7 +66,8 @@ export class FormField {
   private static nextId = 0;
 
   readonly label = input.required<string>();
-  readonly type = input<'text' | 'email' | 'password' | 'number'>('text');
+  /** `datetime-local` entrou com as rodadas: a data do jogo é digitada no fuso do campeonato. */
+  readonly type = input<'text' | 'email' | 'password' | 'number' | 'datetime-local'>('text');
   readonly placeholder = input('');
   readonly required = input(false);
   readonly error = input<string>();

@@ -87,6 +87,7 @@ describe('CompetitionLayout', () => {
     expect(links(dono)).toEqual([
       'Resumo',
       'Fases',
+      'Rodadas',
       'Times',
       'Atletas',
       'Técnicos',
@@ -101,6 +102,7 @@ describe('CompetitionLayout', () => {
     expect(links(auxiliar)).toEqual([
       'Resumo',
       'Fases',
+      'Rodadas',
       'Times',
       'Atletas',
       'Técnicos',

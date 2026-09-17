@@ -112,6 +112,14 @@ export interface CompetitionCreatedState {
               Fases
             </a>
             <a
+              routerLink="rodadas"
+              routerLinkActive="area__link--ativo"
+              ariaCurrentWhenActive="page"
+              class="area__link"
+            >
+              Rodadas
+            </a>
+            <a
               routerLink="times"
               routerLinkActive="area__link--ativo"
               ariaCurrentWhenActive="page"

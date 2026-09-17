@@ -100,7 +100,13 @@ public sealed class CompetitionStageService(
             .ToHashSet();
         var removesUsedGroup = participants.Any(
             participant => participant.StageGroupId is { } groupId && !keptGroupIds.Contains(groupId));
-        if (changesFormatWithParticipants || removesUsedGroup)
+
+        // Com partida marcada, trocar o formato mudaria o significado de um jogo que já
+        // tem data: o organizador precisa desmarcar a partida primeiro.
+        var hasMatches = await dbContext.Matches
+            .AnyAsync(match => match.StageId == stageId, cancellationToken)
+            .ConfigureAwait(false);
+        if (changesFormatWithParticipants || removesUsedGroup || (hasMatches && stage.Format != definition.Format))
         {
             return StageCommandResult.Of(StageCommandOutcome.DependenciesExist);
         }
@@ -140,6 +146,16 @@ public sealed class CompetitionStageService(
             if (removed is null)
             {
                 return StageCommandOutcome.NotFound;
+            }
+
+            // Remover a fase leva junto as associações de time, mas nunca partidas: uma
+            // partida marcada é um compromisso com hora, e sumir com ela em silêncio
+            // seria pior do que exigir que o organizador a remova antes.
+            if (await dbContext.Matches
+                .AnyAsync(match => match.StageId == stageId, cancellationToken)
+                .ConfigureAwait(false))
+            {
+                return StageCommandOutcome.DependenciesExist;
             }
 
             var participants = await dbContext.StageParticipants

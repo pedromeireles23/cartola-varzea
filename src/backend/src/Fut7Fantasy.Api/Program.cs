@@ -205,6 +205,7 @@ app.MapOrganizationTeamEndpoints();
 app.MapCompetitionEndpoints();
 app.MapPublicCompetitionEndpoints();
 app.MapCompetitionStageEndpoints();
+app.MapCompetitionRoundEndpoints();
 app.MapRealTeamEndpoints();
 app.MapAthleteEndpoints();
 app.MapCoachEndpoints();

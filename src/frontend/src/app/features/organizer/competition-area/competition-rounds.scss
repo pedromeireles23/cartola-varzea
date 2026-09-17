@@ -1,0 +1,56 @@
+.situacao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin: 0 0 var(--space-3);
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.partidas {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.partida {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-canvas);
+  border-radius: var(--radius-sm);
+}
+
+// Adiada ou cancelada continua visível: ela faz parte da história da rodada.
+.partida--fora {
+  opacity: 0.72;
+}
+
+.partida__times {
+  flex: 1 1 12rem;
+  font-weight: 500;
+}
+
+.partida__detalhe {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+.partida__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.formulario {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
