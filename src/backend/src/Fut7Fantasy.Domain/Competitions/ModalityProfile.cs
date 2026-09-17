@@ -90,6 +90,14 @@ public sealed class ModalityProfile
 
     public decimal CoachFallbackPrice { get; }
 
+    /// <summary>Preço inicial do atleta, respeitando nível e substituição exata opcional.</summary>
+    public decimal InitialAthletePrice(Position position, PriceTier tier, decimal? exactPrice) =>
+        SportsAssetPricing.Resolve(FallbackPrices[position], tier, exactPrice);
+
+    /// <summary>Preço inicial do técnico, respeitando nível e substituição exata opcional.</summary>
+    public decimal InitialCoachPrice(PriceTier tier, decimal? exactPrice) =>
+        SportsAssetPricing.Resolve(CoachFallbackPrice, tier, exactPrice);
+
     /// <summary>
     /// Abaixo disso, o checklist de publicação alerta que o time real tem poucos atletas
     /// inscritos para a modalidade.

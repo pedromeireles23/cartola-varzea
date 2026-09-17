@@ -47,8 +47,8 @@ type Edicao = { readonly tipo: 'nova' } | { readonly tipo: 'fase'; readonly id: 
     <div class="pagina">
       <h1>Fases</h1>
       <p class="intro">
-        Organize as fases na ordem em que acontecem. Na várzea o mata-mata costuma ser definido
-        depois dos grupos: dá para acrescentar e reordenar a qualquer momento.
+        Organize as fases na ordem do regulamento. Não existe sequência obrigatória: o campeonato
+        pode começar pelo mata-mata, ter repescagem ou usar apenas pontos corridos.
       </p>
 
       <div class="foco" tabindex="-1" #aviso>
@@ -145,8 +145,8 @@ type Edicao = { readonly tipo: 'nova' } | { readonly tipo: 'fase'; readonly id: 
             <app-card>
               @if (proprietario()) {
                 <p class="apoio">
-                  Nenhuma fase ainda. Comece pela fase de grupos ou pelo mata-mata, conforme o
-                  regulamento.
+                  Nenhuma fase ainda. Adicione a primeira etapa prevista no regulamento, seja ela
+                  grupos, repescagem, semifinal ou outra fase.
                 </p>
               } @else {
                 <p class="apoio">Nenhuma fase cadastrada ainda.</p>

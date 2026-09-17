@@ -18,10 +18,10 @@ A primeira versão será uma demonstração pública com dados fictícios, sem p
 - Ambiente local com Docker Compose (SQL Server, Azurite e Mailpit) e script de bootstrap para Windows.
 - Frontend: workspace Angular 22 zoneless com tokens do design system, layouts, componentes base, página de sistema e fluxos de cadastro, confirmação, login, recuperação e perfil.
 - Organizações: solicitação e aprovação de organizador, equipe auxiliar por convite (convidar, aceitar, revogar e remover), isolamento entre organizações, modo demonstração somente leitura e uma matriz de autorização verificada por teste.
-- Campeonatos: criação em rascunho e configuração por organização, com modalidade (Fut7, futsal e campo) de parâmetros versionados, fuso, fechamento do mercado e prazos de resultado; fases de grupos e mata-mata em ordem livre, com desempate configurável; edição protegida contra sobrescrita concorrente e área própria com navegação lateral.
-- Catálogo esportivo: cadastro manual de times reais por campeonato, com nome único, edição concorrente segura, arquivamento histórico, leitura para auxiliares e escudo textual de fallback.
-- Fluxos cobertos por 249 testes: 124 de backend (72 unitários, 5 de arquitetura e 47 contra SQL Server real), 94 de frontend e 31 E2E em Playwright desktop/mobile, lendo e-mails reais do Mailpit.
-- Próximo passo: atletas e técnicos para completar o catálogo mínimo e então implementar o checklist de prontidão e a publicação. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
+- Campeonatos: criação em rascunho e configuração por organização, com modalidade (Fut7, futsal e campo) de parâmetros versionados, fuso, fechamento do mercado e prazos de resultado; fases com nome e ordem livres nos formatos grupos ou mata-mata, sem sequência esportiva obrigatória; edição protegida contra sobrescrita concorrente e área própria com navegação lateral.
+- Catálogo esportivo: cadastro manual de times, atletas e técnico único por time, com nomes únicos, edição concorrente segura, arquivamento/desligamento histórico, inscrição sem transferência, posição, nível ou preço exato, disponibilidade, leitura para auxiliares e fallbacks textuais — inclusive `Técnico do {time}` quando não há pessoa representante.
+- Fluxos cobertos por 281 testes: 146 de backend (90 unitários, 5 de arquitetura e 51 contra SQL Server real), 102 de frontend e 33 E2E em Playwright desktop/mobile, lendo e-mails reais do Mailpit.
+- Próximo passo: associar times às fases e, nas fases de grupos, ao grupo correspondente; depois, retomar o checklist de prontidão e a publicação. Google OAuth foi adiado para uma etapa posterior antes da demonstração pública.
 
 ## Stack planejada
 

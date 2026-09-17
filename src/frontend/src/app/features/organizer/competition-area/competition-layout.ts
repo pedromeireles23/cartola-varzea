@@ -119,6 +119,22 @@ export interface CompetitionCreatedState {
             >
               Times
             </a>
+            <a
+              routerLink="atletas"
+              routerLinkActive="area__link--ativo"
+              ariaCurrentWhenActive="page"
+              class="area__link"
+            >
+              Atletas
+            </a>
+            <a
+              routerLink="tecnicos"
+              routerLinkActive="area__link--ativo"
+              ariaCurrentWhenActive="page"
+              class="area__link"
+            >
+              Técnicos
+            </a>
             @if (contexto.proprietario()) {
               <a
                 routerLink="configuracao"

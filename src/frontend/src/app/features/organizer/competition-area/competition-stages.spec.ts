@@ -102,6 +102,7 @@ describe('CompetitionStagesPage', () => {
   it('mostra as fases em ordem com grupos e desempate em texto', async () => {
     const fixture = await abrir([GRUPOS, MATA_MATA]);
 
+    expect(texto(fixture)).toContain('Não existe sequência obrigatória');
     expect(texto(fixture)).toContain('1. Fase de grupos');
     expect(texto(fixture)).toContain('Grupo A, Grupo B');
     expect(texto(fixture)).toContain('Mais vitórias');

@@ -28,8 +28,8 @@ public sealed class StageGroup
 }
 
 /// <summary>
-/// Fase do campeonato. A ordem entre fases é livre e pode mudar, porque na várzea o
-/// formato do mata-mata costuma ser definido só depois dos grupos.
+/// Fase do campeonato. Nome, formato e ordem são livres: o campeonato pode começar
+/// diretamente em mata-mata, usar pontos corridos ou combinar grupos e repescagem.
 /// </summary>
 public sealed class Stage
 {

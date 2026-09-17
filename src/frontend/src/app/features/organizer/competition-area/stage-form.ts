@@ -74,9 +74,14 @@ function criteriosIniciais(stage: Stage | null): CriterioEditavel[] {
         }
       </div>
 
+      <p class="apoio">
+        O nome e a ordem são livres. Use o que aparece no regulamento, como Repescagem, Semifinal ou
+        Final.
+      </p>
+
       <app-form-field
         label="Nome da fase"
-        placeholder="Fase de grupos"
+        placeholder="Ex.: Repescagem ou Semifinal"
         [required]="true"
         [maxLength]="nomeMax"
         [error]="erros().nome"

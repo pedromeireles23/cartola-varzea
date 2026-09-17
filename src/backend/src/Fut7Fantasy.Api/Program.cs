@@ -205,6 +205,8 @@ app.MapOrganizationTeamEndpoints();
 app.MapCompetitionEndpoints();
 app.MapCompetitionStageEndpoints();
 app.MapRealTeamEndpoints();
+app.MapAthleteEndpoints();
+app.MapCoachEndpoints();
 
 await app.RunAsync();
 

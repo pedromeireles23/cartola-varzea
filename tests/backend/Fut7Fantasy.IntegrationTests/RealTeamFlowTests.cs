@@ -86,6 +86,8 @@ public sealed class RealTeamFlowTests(SqlServerFixture sqlServer) : IClassFixtur
         var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
         Assert.Equal(2, await dbContext.RealTeams.CountAsync(
             team => team.CompetitionId == competitionId, cancellationToken));
+        Assert.Equal(2, await dbContext.Coaches.CountAsync(
+            coach => coach.CompetitionId == competitionId, cancellationToken));
         Assert.Equal(4, await dbContext.AdministrativeAuditEntries.CountAsync(
             entry => entry.ActorUserId == ownerId && entry.Action.StartsWith("RealTeam"),
             cancellationToken));
@@ -142,6 +144,9 @@ public sealed class RealTeamFlowTests(SqlServerFixture sqlServer) : IClassFixtur
         await using var scope = factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
         Assert.Single(await dbContext.RealTeams
+            .Where(item => item.CompetitionId == competitionId)
+            .ToListAsync(cancellationToken));
+        Assert.Single(await dbContext.Coaches
             .Where(item => item.CompetitionId == competitionId)
             .ToListAsync(cancellationToken));
     }

@@ -33,6 +33,9 @@ describe('CompetitionLayout', () => {
               children: [
                 { path: '', pathMatch: 'full', title: 'Resumo', component: TelaInterna },
                 { path: 'fases', title: 'Fases', component: TelaInterna },
+                { path: 'times', title: 'Times', component: TelaInterna },
+                { path: 'atletas', title: 'Atletas', component: TelaInterna },
+                { path: 'tecnicos', title: 'Técnicos', component: TelaInterna },
                 { path: 'configuracao', title: 'Configuração', component: TelaInterna },
               ],
             },
@@ -81,12 +84,19 @@ describe('CompetitionLayout', () => {
 
   it('proprietário vê Configuração na navegação; auxiliar não', async () => {
     const dono = await abrir(campeonato());
-    expect(links(dono)).toEqual(['Resumo', 'Fases', 'Times', 'Configuração']);
+    expect(links(dono)).toEqual([
+      'Resumo',
+      'Fases',
+      'Times',
+      'Atletas',
+      'Técnicos',
+      'Configuração',
+    ]);
   });
 
   it('auxiliar navega só pelo que pode usar', async () => {
     const auxiliar = await abrir(campeonato({ viewerRole: 'Assistant' }));
-    expect(links(auxiliar)).toEqual(['Resumo', 'Fases', 'Times']);
+    expect(links(auxiliar)).toEqual(['Resumo', 'Fases', 'Times', 'Atletas', 'Técnicos']);
   });
 
   it('guarda o aviso de criação para o resumo consumir uma única vez', async () => {

@@ -38,13 +38,28 @@ public sealed class StageTests
     }
 
     [Fact]
-    public void KnockoutHasNoGroupsNorTiebreakers()
+    public void CompetitionMayStartWithSemifinalAndContinueWithGroupRepescage()
     {
-        var stage = Stage.Create(Guid.NewGuid(), Guid.NewGuid(), 2, Knockout("Mata-mata"), Now);
+        var competitionId = Guid.NewGuid();
+        var semifinal = Stage.Create(Guid.NewGuid(), competitionId, 1, Knockout("Semifinal"), Now);
+        var repescage = Stage.Create(
+            Guid.NewGuid(),
+            competitionId,
+            2,
+            new StageDefinition(
+                "Repescagem",
+                StageFormat.Groups,
+                [new GroupDefinition(null, "Grupo único")],
+                StageDefinition.DefaultTiebreakers),
+            Now);
 
-        Assert.Equal(StageFormat.Knockout, stage.Format);
-        Assert.Empty(stage.Groups);
-        Assert.Empty(stage.Tiebreakers);
+        Assert.Equal("Semifinal", semifinal.Name);
+        Assert.Equal(StageFormat.Knockout, semifinal.Format);
+        Assert.Empty(semifinal.Groups);
+        Assert.Empty(semifinal.Tiebreakers);
+        Assert.Equal("Repescagem", repescage.Name);
+        Assert.Equal("Grupo único", Assert.Single(repescage.Groups).Name);
+        Assert.Equal(StageFormat.Groups, repescage.Format);
     }
 
     [Fact]

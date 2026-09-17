@@ -65,6 +65,10 @@ describe('StageForm', () => {
   it('nova fase começa como grupos A e B com o desempate padrão', async () => {
     const fixture = await abrir();
 
+    expect(elemento(fixture).textContent).toContain('O nome e a ordem são livres.');
+    expect(campo(fixture, 'Nome da fase').getAttribute('placeholder')).toBe(
+      'Ex.: Repescagem ou Semifinal',
+    );
     await escrever(fixture, 'Nome da fase', ' Primeira fase ');
     await enviar(fixture);
 

@@ -60,17 +60,17 @@ test('proprietário monta grupos e mata-mata, reordena e remove fases', async ({
     'Menos cartões vermelhos',
   ]);
 
-  // 2. Mata-mata entra depois e pode subir para antes dos grupos.
+  // 2. Uma semifinal pode virar a primeira fase: não existe sequência obrigatória.
   await page.getByRole('button', { name: 'Adicionar fase' }).click();
-  await nova.getByLabel('Nome da fase').fill('Mata-mata');
+  await nova.getByLabel('Nome da fase').fill('Semifinal');
   await nova.getByRole('radio', { name: /^Mata-mata/ }).check();
   await expect(nova.getByLabel('Quantidade de grupos')).toHaveCount(0);
   await nova.getByRole('button', { name: 'Adicionar fase' }).click();
-  await expect(page.getByRole('region', { name: '2. Mata-mata' })).toBeVisible();
+  await expect(page.getByRole('region', { name: '2. Semifinal' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Subir Mata-mata' }).click();
-  await expect(page.getByText('Mata-mata agora é a fase 1.')).toBeVisible();
-  await expect(page.getByRole('region', { name: '1. Mata-mata' })).toBeVisible();
+  await page.getByRole('button', { name: 'Subir Semifinal' }).click();
+  await expect(page.getByText('Semifinal agora é a fase 1.')).toBeVisible();
+  await expect(page.getByRole('region', { name: '1. Semifinal' })).toBeVisible();
   await expect(page.getByRole('region', { name: '2. Fase de grupos' })).toBeVisible();
 
   // 3. Editar mantém a fase e renomeia um grupo.
@@ -82,12 +82,12 @@ test('proprietário monta grupos e mata-mata, reordena e remove fases', async ({
   await expect(segunda.getByText('Grupo A, Grupo B, Grupo da Morte')).toBeVisible();
 
   // 4. Remover pede confirmação e renumera a fase seguinte.
-  await page.getByRole('button', { name: 'Remover Mata-mata' }).click();
-  const dialogo = page.getByRole('dialog', { name: 'Remover Mata-mata?' });
+  await page.getByRole('button', { name: 'Remover Semifinal' }).click();
+  const dialogo = page.getByRole('dialog', { name: 'Remover Semifinal?' });
   await dialogo.getByRole('button', { name: 'Remover fase' }).click();
-  await expect(page.getByText('Mata-mata removida.')).toBeVisible();
+  await expect(page.getByText('Semifinal removida.')).toBeVisible();
   await expect(page.getByRole('region', { name: '1. Fase de grupos' })).toBeVisible();
-  await expect(page.getByRole('region', { name: /Mata-mata/ })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: /Semifinal/ })).toHaveCount(0);
 
   // 5. A ordem sobrevive a recarregar a página.
   await page.reload();

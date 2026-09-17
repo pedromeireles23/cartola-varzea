@@ -18,7 +18,10 @@ public sealed record StageDefinition(
     public const int GroupNameMaxLength = 30;
     public const int MaxGroups = 16;
 
-    /// <summary>Uma fase a mais que o formato comum (grupos, quartas, semi e final) com folga.</summary>
+    /// <summary>
+    /// Limite operacional do MVP. Não representa uma sequência esportiva obrigatória:
+    /// nomes, formatos e ordem das fases continuam livres.
+    /// </summary>
     public const int MaxStagesPerCompetition = 10;
 
     /// <summary>A ordem usada pela maioria dos regulamentos de campeonatos no Brasil.</summary>

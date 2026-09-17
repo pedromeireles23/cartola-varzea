@@ -4,6 +4,7 @@ using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Fut7Fantasy.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(Fut7FantasyDbContext))]
-    partial class Fut7FantasyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260916225924_SportsCatalogAthletes")]
+    partial class SportsCatalogAthletes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -417,56 +420,6 @@ namespace Fut7Fantasy.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Athletes", "sports_catalog");
-                });
-
-            modelBuilder.Entity("Fut7Fantasy.Domain.SportsCatalog.Coach", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CompetitionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DisplayName")
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
-
-                    b.Property<decimal?>("InitialPriceOverride")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<string>("PriceTier")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<Guid>("RealTeamId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RealTeamId")
-                        .IsUnique();
-
-                    b.HasIndex("CompetitionId", "RealTeamId");
-
-                    b.ToTable("Coaches", "sports_catalog", t =>
-                        {
-                            t.HasCheckConstraint("CK_Coaches_InitialPriceOverride", "[InitialPriceOverride] IS NULL OR [InitialPriceOverride] BETWEEN 1 AND 30");
-                        });
                 });
 
             modelBuilder.Entity("Fut7Fantasy.Domain.SportsCatalog.RealTeam", b =>
@@ -891,21 +844,6 @@ namespace Fut7Fantasy.Infrastructure.Persistence.Migrations
                     b.HasOne("Fut7Fantasy.Domain.Competitions.Competition", null)
                         .WithMany()
                         .HasForeignKey("CompetitionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Fut7Fantasy.Domain.SportsCatalog.Coach", b =>
-                {
-                    b.HasOne("Fut7Fantasy.Domain.Competitions.Competition", null)
-                        .WithMany()
-                        .HasForeignKey("CompetitionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Fut7Fantasy.Domain.SportsCatalog.RealTeam", null)
-                        .WithOne()
-                        .HasForeignKey("Fut7Fantasy.Domain.SportsCatalog.Coach", "RealTeamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

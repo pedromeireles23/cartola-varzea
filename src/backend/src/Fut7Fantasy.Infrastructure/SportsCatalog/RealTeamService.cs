@@ -48,8 +48,16 @@ public sealed class RealTeamService(
 
             var now = clock.GetUtcNow();
             var team = RealTeam.Create(Guid.CreateVersion7(), competitionId, normalized, now);
+            var coach = Coach.Create(
+                Guid.CreateVersion7(),
+                competitionId,
+                team.Id,
+                new CoachDefinition(null, PriceTier.Regular, null),
+                now);
             dbContext.RealTeams.Add(team);
+            dbContext.Coaches.Add(coach);
             AddAudit("RealTeamCreated", team.Id, "Time real cadastrado.", now);
+            AddAudit("CoachCreated", coach.Id, "Ativo de técnico criado com o time.", now);
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return new RealTeamCommandResult(RealTeamCommandOutcome.Completed, RealTeamView.From(team), []);
         }, cancellationToken);

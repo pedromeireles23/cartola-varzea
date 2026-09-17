@@ -123,6 +123,22 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'atletas',
+            title: 'Atletas',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/competition-athletes').then(
+                (m) => m.CompetitionAthletesPage,
+              ),
+          },
+          {
+            path: 'tecnicos',
+            title: 'Técnicos',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/competition-coaches').then(
+                (m) => m.CompetitionCoachesPage,
+              ),
+          },
+          {
             path: 'configuracao',
             title: 'Configuração',
             loadComponent: () =>

@@ -51,6 +51,12 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public DbSet<RealTeam> RealTeams => Set<RealTeam>();
 
+    public DbSet<Athlete> Athletes => Set<Athlete>();
+
+    public DbSet<RosterRegistration> RosterRegistrations => Set<RosterRegistration>();
+
+    public DbSet<Coach> Coaches => Set<Coach>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {

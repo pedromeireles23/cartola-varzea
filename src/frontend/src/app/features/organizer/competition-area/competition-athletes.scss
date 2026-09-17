@@ -1,0 +1,62 @@
+.athletes {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.athlete {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.athlete--released {
+  opacity: 0.72;
+}
+
+.avatar {
+  display: grid;
+  width: 3rem;
+  aspect-ratio: 1;
+  place-items: center;
+  color: var(--color-brand-900);
+  font-weight: 700;
+  background: var(--color-brand-100);
+  border: 1px solid var(--color-brand-300);
+  border-radius: 50%;
+}
+
+.athlete__content,
+.athlete__content form,
+.athlete-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.athlete__header,
+.athlete__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.athlete__header h2,
+.athlete__meta {
+  margin: 0;
+}
+
+.athlete__header h2 {
+  font-size: var(--font-body);
+}
+
+.athlete__meta {
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-3);
+}
