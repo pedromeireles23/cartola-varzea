@@ -10,6 +10,9 @@ public static class CompetitionEndpoints
     /// <summary>Código estável de quem tenta trocar a modalidade de um campeonato publicado.</summary>
     public const string ModalityLockedCode = "competition_modality_locked";
 
+    /// <summary>Código estável de quem tenta publicar com impedimentos no checklist.</summary>
+    public const string NotReadyCode = "competition_not_ready";
+
     public static IEndpointRouteBuilder MapCompetitionEndpoints(this IEndpointRouteBuilder routes)
     {
         ArgumentNullException.ThrowIfNull(routes);
@@ -45,6 +48,15 @@ public static class CompetitionEndpoints
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("UpdateCompetitionSettings")
             .WithSummary("Substitui a configuração; exige a versão lida para detectar edição concorrente.");
+
+        competition.MapGet("/readiness", GetReadinessAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionMember)
+            .WithName("GetCompetitionReadiness")
+            .WithSummary("Checklist de prontidão para publicar, com impedimentos e alertas.");
+        competition.MapPut("/publication", SetPublicationAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
+            .WithName("SetCompetitionPublication")
+            .WithSummary("Publica ou volta o campeonato para rascunho; exige a versão lida.");
 
         return routes;
     }
@@ -129,6 +141,52 @@ public static class CompetitionEndpoints
             competitionId, settings, request.Version!, cancellationToken).ConfigureAwait(false));
     }
 
+    private static async Task<IResult> GetReadinessAsync(
+        Guid competitionId,
+        ICompetitionPublicationService service,
+        CancellationToken cancellationToken) =>
+        await service.GetReadinessAsync(competitionId, cancellationToken).ConfigureAwait(false) is { } readiness
+            ? Results.Ok(readiness)
+            : Results.NotFound();
+
+    private static async Task<IResult> SetPublicationAsync(
+        Guid competitionId,
+        CompetitionPublicationRequest request,
+        ICompetitionPublicationService service,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var errors = new List<CompetitionSettingsError>();
+        Require(request.Published, nameof(request.Published), errors);
+        Require(request.Version, nameof(request.Version), errors);
+        if (errors.Count > 0)
+        {
+            return ValidationProblem(errors);
+        }
+
+        var result = await service.SetPublishedAsync(
+            competitionId, request.Published!.Value, request.Version!, cancellationToken).ConfigureAwait(false);
+        return result.Outcome switch
+        {
+            CompetitionPublicationOutcome.Completed => Results.Ok(result.Readiness),
+            CompetitionPublicationOutcome.NotFound => Results.NotFound(),
+            CompetitionPublicationOutcome.NotReady => Results.Problem(
+                title: "Campeonato ainda não pode ser publicado",
+                detail: "Resolva os impedimentos do checklist antes de publicar.",
+                statusCode: StatusCodes.Status409Conflict,
+                extensions: new Dictionary<string, object?>
+                {
+                    ["code"] = NotReadyCode,
+                    ["readiness"] = result.Readiness,
+                }),
+            _ => Results.Problem(
+                title: "Campeonato alterado por outra pessoa",
+                detail: "Atualize a página para ver a versão atual antes de publicar.",
+                statusCode: StatusCodes.Status409Conflict),
+        };
+    }
+
     private static IResult ToResult(CompetitionCommandResult result) => result.Outcome switch
     {
         CompetitionCommandOutcome.Completed => Results.Ok(result.Competition),
@@ -181,6 +239,9 @@ public sealed record CompetitionSettingsRequest(
     int? MarketCloseLeadTimeMinutes,
     int? ResultsSlaBusinessDays,
     int? CorrectionWindowBusinessDays);
+
+/// <summary>Decisão de publicação, com a versão devolvida pela leitura.</summary>
+public sealed record CompetitionPublicationRequest(bool? Published, string? Version);
 
 /// <summary>Configuração completa, com a versão devolvida pela leitura.</summary>
 public sealed record UpdateCompetitionSettingsRequest(

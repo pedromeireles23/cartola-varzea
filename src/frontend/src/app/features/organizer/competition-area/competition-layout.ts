@@ -135,6 +135,14 @@ export interface CompetitionCreatedState {
             >
               Técnicos
             </a>
+            <a
+              routerLink="publicacao"
+              routerLinkActive="area__link--ativo"
+              ariaCurrentWhenActive="page"
+              class="area__link"
+            >
+              Publicação
+            </a>
             @if (contexto.proprietario()) {
               <a
                 routerLink="configuracao"

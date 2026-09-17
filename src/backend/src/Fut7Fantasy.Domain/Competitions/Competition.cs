@@ -51,6 +51,9 @@ public sealed class Competition
 
     public CompetitionStatus Status { get; private set; }
 
+    /// <summary>Instante da primeira publicação; permanece depois de despublicar.</summary>
+    public DateTimeOffset? PublishedAt { get; private set; }
+
     public Guid CreatedByUserId { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
@@ -63,8 +66,13 @@ public sealed class Competition
         ModalityProfiles.Find(Modality, ModalityProfileVersion)
         ?? throw new InvalidOperationException("O campeonato aponta para um perfil de modalidade inexistente.");
 
-    /// <summary>A modalidade define formação e orçamento; depois de publicar, não muda mais.</summary>
-    public bool CanChangeModality => Status == CompetitionStatus.Draft;
+    /// <summary>
+    /// A modalidade define formação e orçamento; depois da primeira publicação não muda
+    /// mais, nem se o campeonato voltar para rascunho — o público já viu as regras antigas.
+    /// </summary>
+    public bool CanChangeModality => PublishedAt is null;
+
+    public bool IsPublished => Status == CompetitionStatus.Published;
 
     public static Competition CreateDraft(
         Guid id,
@@ -92,6 +100,34 @@ public sealed class Competition
 
         Apply(settings);
         UpdatedAt = updatedAt;
+    }
+
+    /// <summary>
+    /// Torna o campeonato visível ao público. O checklist de prontidão é avaliado fora do
+    /// agregado, porque depende do catálogo inteiro; aqui fica apenas a transição.
+    /// </summary>
+    public void Publish(DateTimeOffset publishedAt)
+    {
+        if (IsPublished)
+        {
+            throw new InvalidOperationException("O campeonato já está publicado.");
+        }
+
+        Status = CompetitionStatus.Published;
+        PublishedAt ??= publishedAt;
+        UpdatedAt = publishedAt;
+    }
+
+    /// <summary>Volta o campeonato para rascunho; a modalidade continua travada.</summary>
+    public void Unpublish(DateTimeOffset unpublishedAt)
+    {
+        if (!IsPublished)
+        {
+            throw new InvalidOperationException("O campeonato não está publicado.");
+        }
+
+        Status = CompetitionStatus.Draft;
+        UpdatedAt = unpublishedAt;
     }
 
     private void Apply(CompetitionSettings settings)

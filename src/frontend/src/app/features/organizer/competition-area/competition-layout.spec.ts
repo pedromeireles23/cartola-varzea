@@ -90,13 +90,21 @@ describe('CompetitionLayout', () => {
       'Times',
       'Atletas',
       'Técnicos',
+      'Publicação',
       'Configuração',
     ]);
   });
 
   it('auxiliar navega só pelo que pode usar', async () => {
     const auxiliar = await abrir(campeonato({ viewerRole: 'Assistant' }));
-    expect(links(auxiliar)).toEqual(['Resumo', 'Fases', 'Times', 'Atletas', 'Técnicos']);
+    expect(links(auxiliar)).toEqual([
+      'Resumo',
+      'Fases',
+      'Times',
+      'Atletas',
+      'Técnicos',
+      'Publicação',
+    ]);
   });
 
   it('guarda o aviso de criação para o resumo consumir uma única vez', async () => {

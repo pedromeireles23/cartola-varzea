@@ -16,8 +16,8 @@ import {
  * Resumo do campeonato (02 §9.1, `/organizar/c/:campeonato`).
  *
  * Mostra o que a modalidade impõe e os prazos escolhidos, em linguagem de quem
- * organiza. As pendências de publicação entram aqui quando existirem times, fases e
- * o checklist.
+ * organiza. As pendências de publicação ficam na tela própria, para onde a situação
+ * aponta.
  */
 @Component({
   selector: 'app-competition-summary',
@@ -37,12 +37,12 @@ import {
         <app-card heading="Situação">
           @if (dados.status === 'Draft') {
             <p class="apoio">
-              Rascunho: só a organização vê. A publicação fica disponível quando times, atletas e
-              fases estiverem cadastrados.
+              Rascunho: só a organização vê. O checklist de publicação mostra o que ainda falta.
             </p>
           } @else {
             <p class="apoio">Publicado: o campeonato aparece para o público.</p>
           }
+          <a class="acao" routerLink="publicacao">Ver checklist de publicação</a>
         </app-card>
 
         <app-card [heading]="'Modalidade: ' + modalidade()">

@@ -131,6 +131,54 @@ public sealed class CompetitionTests
             Competition.CreateDraft(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty, Settings(), Now));
     }
 
+    [Fact]
+    public void PublishingMakesTheCompetitionPublicAndKeepsTheFirstInstant()
+    {
+        var competition = CreateDraft(Settings());
+        var published = Now.AddHours(1);
+
+        competition.Publish(published);
+
+        Assert.Equal(CompetitionStatus.Published, competition.Status);
+        Assert.True(competition.IsPublished);
+        Assert.Equal(published, competition.PublishedAt);
+        Assert.Equal(published, competition.UpdatedAt);
+
+        competition.Unpublish(published.AddDays(1));
+        competition.Publish(published.AddDays(2));
+
+        Assert.Equal(published, competition.PublishedAt);
+    }
+
+    [Fact]
+    public void ModalityStaysLockedAfterTheFirstPublication()
+    {
+        var competition = CreateDraft(Settings());
+        competition.Publish(Now.AddHours(1));
+        competition.Unpublish(Now.AddHours(2));
+
+        // Voltar para rascunho não devolve a modalidade: o público já viu as regras antigas.
+        Assert.Equal(CompetitionStatus.Draft, competition.Status);
+        Assert.False(competition.CanChangeModality);
+        Assert.Throws<InvalidOperationException>(() =>
+            competition.UpdateSettings(Settings() with { Modality = Modality.Futsal }, Now.AddHours(3)));
+
+        // O resto da configuração continua editável no rascunho.
+        competition.UpdateSettings(Settings() with { Season = "2027" }, Now.AddHours(3));
+        Assert.Equal("2027", competition.Season);
+    }
+
+    [Fact]
+    public void PublicationTransitionsRefuseTheStateTheyAreAlreadyIn()
+    {
+        var competition = CreateDraft(Settings());
+
+        Assert.Throws<InvalidOperationException>(() => competition.Unpublish(Now));
+
+        competition.Publish(Now);
+        Assert.Throws<InvalidOperationException>(() => competition.Publish(Now));
+    }
+
     private static Competition CreateDraft(CompetitionSettings settings) =>
         Competition.CreateDraft(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), settings, Now);
 

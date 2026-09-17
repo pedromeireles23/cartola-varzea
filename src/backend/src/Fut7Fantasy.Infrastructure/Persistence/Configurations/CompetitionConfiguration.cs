@@ -45,6 +45,7 @@ public sealed class CompetitionConfiguration : IEntityTypeConfiguration<Competit
         builder.Property(competition => competition.RowVersion).IsRowVersion();
         builder.Ignore(competition => competition.ModalityProfile);
         builder.Ignore(competition => competition.CanChangeModality);
+        builder.Ignore(competition => competition.IsPublished);
 
         builder.HasOne<Organization>().WithMany().HasForeignKey(competition => competition.OrganizationId)
             .OnDelete(DeleteBehavior.Restrict);
