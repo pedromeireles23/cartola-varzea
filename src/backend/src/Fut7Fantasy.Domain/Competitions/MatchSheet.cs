@@ -112,7 +112,9 @@ public sealed record MatchSheetDefinition(
         }
         else if (goalkeepers.Sum(item => item.GoalsConceded) != opponentScore)
         {
-            errors.Add(new(nameof(Appearances), "Os gols sofridos pelos goleiros precisam corresponder ao placar adversário."));
+            errors.Add(new(
+                nameof(Appearances),
+                "Os gols sofridos pelos goleiros precisam corresponder ao placar adversário."));
         }
     }
 
@@ -129,7 +131,9 @@ public sealed record MatchSheetDefinition(
 
         if (!item.DidPlay && (item.PlayedAsGoalkeeper || item.HasStatistics))
         {
-            errors.Add(new(nameof(item.DidPlay), "Atletas que não jogaram não podem ter posição em campo ou estatísticas."));
+            errors.Add(new(
+                nameof(item.DidPlay),
+                "Atletas que não jogaram não podem ter posição em campo ou estatísticas."));
         }
 
         if (!item.PlayedAsGoalkeeper && item.GoalsConceded != 0)
@@ -154,7 +158,9 @@ public sealed record MatchSheetDefinition(
 
         if (item.RedCards == 0 && item.RedCardReason is not null)
         {
-            errors.Add(new(nameof(item.RedCardReason), "O motivo da expulsão só pode ser informado com cartão vermelho."));
+            errors.Add(new(
+                nameof(item.RedCardReason),
+                "O motivo da expulsão só pode ser informado com cartão vermelho."));
         }
 
         if (item.RedCardReason == Fut7Fantasy.Domain.Competitions.RedCardReason.SecondYellow
