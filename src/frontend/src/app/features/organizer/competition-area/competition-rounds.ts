@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../../core/api/problem-details';
 import {
@@ -72,7 +73,7 @@ interface Formulario {
 @Component({
   selector: 'app-competition-rounds',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Dialog, FormField, Loading, SelectField],
+  imports: [Alert, Badge, Button, Card, Dialog, FormField, Loading, RouterLink, SelectField],
   template: `
     <div class="pagina">
       <h1>Rodadas</h1>
@@ -133,6 +134,16 @@ interface Formulario {
                       </span>
                       @if (partida.status !== 'Scheduled') {
                         <app-badge tone="neutral">{{ situacao(partida.status) }}</app-badge>
+                      }
+                      @if (
+                        partida.status === 'Scheduled' &&
+                        (rodada.phase === 'InProgress' || rodada.phase === 'UnderReview')
+                      ) {
+                        <a class="acao" [routerLink]="['../partidas', partida.id, 'sumula']">
+                          Preencher súmula<span class="sr-only">
+                            de {{ partida.homeTeamName }} contra {{ partida.awayTeamName }}</span
+                          >
+                        </a>
                       }
                       @if (proprietario()) {
                         <span class="partida__acoes">

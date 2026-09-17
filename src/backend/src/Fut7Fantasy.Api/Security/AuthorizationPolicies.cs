@@ -15,5 +15,7 @@ public static class AuthorizationPolicies
 
     public const string CompetitionMember = "competition-member";
 
+    public const string CompetitionStaffWrite = "competition-staff-write";
+
     public const string CompetitionOwnerWrite = "competition-owner-write";
 }

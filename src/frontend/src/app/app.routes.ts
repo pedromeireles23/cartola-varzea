@@ -136,6 +136,14 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'partidas/:partida/sumula',
+            title: 'Súmula da partida',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/match-sheet').then(
+                (m) => m.MatchSheetPage,
+              ),
+          },
+          {
             path: 'times',
             title: 'Times',
             loadComponent: () =>

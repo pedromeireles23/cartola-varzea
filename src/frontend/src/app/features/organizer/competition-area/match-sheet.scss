@@ -1,0 +1,79 @@
+.etapas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.etapas button {
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-ink-700);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.etapas button.ativa {
+  color: var(--color-surface);
+  background: var(--color-brand-700);
+  border-color: var(--color-brand-700);
+}
+
+.placar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: end;
+  max-width: 34rem;
+}
+
+.placar label {
+  display: grid;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+
+.placar input,
+.numero {
+  width: 5rem;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+.placar input {
+  width: 100%;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.elenco {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.elenco li {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) minmax(6rem, auto) auto auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.resumo {
+  font-size: 1.25rem;
+}
+
+@media (max-width: 44rem) {
+  .elenco li {
+    grid-template-columns: 1fr 1fr;
+  }
+}

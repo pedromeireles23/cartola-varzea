@@ -55,6 +55,12 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public DbSet<Match> Matches => Set<Match>();
 
+    public DbSet<MatchSheet> MatchSheets => Set<MatchSheet>();
+
+    public DbSet<AthleteAppearance> AthleteAppearances => Set<AthleteAppearance>();
+
+    public DbSet<StatEvent> StatEvents => Set<StatEvent>();
+
     public DbSet<RealTeam> RealTeams => Set<RealTeam>();
 
     public DbSet<Athlete> Athletes => Set<Athlete>();

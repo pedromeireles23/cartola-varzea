@@ -96,6 +96,11 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireAuthenticatedUser().AddRequirements(
             new CompetitionRoleRequirement(OrganizationRole.Owner, OrganizationRole.Assistant)));
     options.AddPolicy(
+        AuthorizationPolicies.CompetitionStaffWrite,
+        policy => policy.RequireAuthenticatedUser()
+            .RequireAssertion(context => !context.User.IsInRole(ApplicationRole.DemoViewer))
+            .AddRequirements(new CompetitionRoleRequirement(OrganizationRole.Owner, OrganizationRole.Assistant)));
+    options.AddPolicy(
         AuthorizationPolicies.CompetitionOwnerWrite,
         policy => policy.RequireAuthenticatedUser()
             .RequireAssertion(context => !context.User.IsInRole(ApplicationRole.DemoViewer))
@@ -206,6 +211,7 @@ app.MapCompetitionEndpoints();
 app.MapPublicCompetitionEndpoints();
 app.MapCompetitionStageEndpoints();
 app.MapCompetitionRoundEndpoints();
+app.MapMatchSheetEndpoints();
 app.MapRealTeamEndpoints();
 app.MapAthleteEndpoints();
 app.MapCoachEndpoints();
