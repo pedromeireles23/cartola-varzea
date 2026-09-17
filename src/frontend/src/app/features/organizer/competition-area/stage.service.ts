@@ -14,6 +14,15 @@ export interface StageGroup {
   readonly name: string;
 }
 
+export interface StageParticipant {
+  readonly id: string;
+  readonly realTeamId: string;
+  readonly realTeamName: string;
+  readonly isTeamArchived: boolean;
+  readonly stageGroupId: string | null;
+  readonly stageGroupName: string | null;
+}
+
 export interface Stage {
   readonly id: string;
   readonly name: string;
@@ -21,6 +30,7 @@ export interface Stage {
   readonly sequence: number;
   readonly groups: readonly StageGroup[];
   readonly tiebreakers: readonly TiebreakCriterion[];
+  readonly participants: readonly StageParticipant[];
   /** Precisa voltar na edição: o servidor recusa salvar sobre uma leitura antiga. */
   readonly version: string;
 }
@@ -31,6 +41,11 @@ export interface StageInput {
   readonly format: StageFormat;
   readonly groups: readonly { readonly id: string | null; readonly name: string }[];
   readonly tiebreakers: readonly TiebreakCriterion[];
+}
+
+export interface StageParticipantInput {
+  readonly realTeamId: string;
+  readonly stageGroupId: string | null;
 }
 
 /** Espelham as regras do servidor, que continua sendo quem decide. */
@@ -65,6 +80,7 @@ export const DEFAULT_TIEBREAKERS: readonly TiebreakCriterion[] = [
 ];
 
 export const STAGE_LIMIT_CODE = 'competition_stage_limit';
+export const STAGE_DEPENDENCIES_CODE = 'competition_stage_dependencies';
 
 @Injectable({ providedIn: 'root' })
 export class StageService {
@@ -101,6 +117,18 @@ export class StageService {
   /** A lista precisa ter exatamente as fases atuais; senão o servidor responde 409. */
   reorder(competitionId: string, stageIds: readonly string[]): Observable<Stage[]> {
     return this.http.put<Stage[]>(`${this.stagesUrl(competitionId)}/order`, { stageIds });
+  }
+
+  setParticipants(
+    competitionId: string,
+    stageId: string,
+    participants: readonly StageParticipantInput[],
+    version: string,
+  ): Observable<Stage> {
+    return this.http.put<Stage>(
+      `${this.stagesUrl(competitionId)}/${encodeURIComponent(stageId)}/participants`,
+      { participants, version },
+    );
   }
 
   private stagesUrl(competitionId: string): string {

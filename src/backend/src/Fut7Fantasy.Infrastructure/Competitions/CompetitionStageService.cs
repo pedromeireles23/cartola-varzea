@@ -21,7 +21,7 @@ public sealed class CompetitionStageService(
             .AsNoTracking()
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        return [.. stages.Select(StageView.From)];
+        return await ViewsAsync(stages, cancellationToken).ConfigureAwait(false);
     }
 
     public Task<StageCommandResult> CreateAsync(
@@ -88,6 +88,23 @@ public sealed class CompetitionStageService(
                 [new(nameof(StageDefinition.Groups), "Um dos grupos não pertence a esta fase.")]);
         }
 
+        var participants = await dbContext.StageParticipants
+            .AsNoTracking()
+            .Where(participant => participant.StageId == stageId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var changesFormatWithParticipants = participants.Count > 0 && stage.Format != definition.Format;
+        var keptGroupIds = definition.Groups
+            .Where(group => group.Id is not null)
+            .Select(group => group.Id!.Value)
+            .ToHashSet();
+        var removesUsedGroup = participants.Any(
+            participant => participant.StageGroupId is { } groupId && !keptGroupIds.Contains(groupId));
+        if (changesFormatWithParticipants || removesUsedGroup)
+        {
+            return StageCommandResult.Of(StageCommandOutcome.DependenciesExist);
+        }
+
         var now = clock.GetUtcNow();
         stage.Update(definition, now);
         dbContext.Entry(stage).Property(item => item.RowVersion).OriginalValue = expectedVersion;
@@ -106,7 +123,10 @@ public sealed class CompetitionStageService(
             return StageCommandResult.Of(StageCommandOutcome.Conflict);
         }
 
-        return new StageCommandResult(StageCommandOutcome.Completed, StageView.From(stage), []);
+        return new StageCommandResult(
+            StageCommandOutcome.Completed,
+            await ViewAsync(stage, cancellationToken).ConfigureAwait(false),
+            []);
     }
 
     public Task<StageCommandOutcome> DeleteAsync(
@@ -122,6 +142,11 @@ public sealed class CompetitionStageService(
                 return StageCommandOutcome.NotFound;
             }
 
+            var participants = await dbContext.StageParticipants
+                .Where(participant => participant.StageId == stageId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            dbContext.StageParticipants.RemoveRange(participants);
             dbContext.Stages.Remove(removed);
             var sequence = 1;
             foreach (var stage in stages.Where(stage => stage.Id != stageId))
@@ -149,7 +174,9 @@ public sealed class CompetitionStageService(
                 && stages.All(stage => stageIds.Contains(stage.Id));
             if (!sameStages)
             {
-                return new StageListResult(StageCommandOutcome.Conflict, [.. stages.Select(StageView.From)]);
+                return new StageListResult(
+                    StageCommandOutcome.Conflict,
+                    await ViewsAsync(stages, cancellationToken).ConfigureAwait(false));
             }
 
             foreach (var stage in stages)
@@ -161,8 +188,116 @@ public sealed class CompetitionStageService(
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return new StageListResult(
                 StageCommandOutcome.Completed,
-                [.. stages.OrderBy(stage => stage.Sequence).Select(StageView.From)]);
+                await ViewsAsync(
+                    [.. stages.OrderBy(stage => stage.Sequence)],
+                    cancellationToken).ConfigureAwait(false));
         }, cancellationToken);
+    }
+
+    public async Task<StageCommandResult> SetParticipantsAsync(
+        Guid competitionId,
+        Guid stageId,
+        IReadOnlyList<StageParticipantAssignment> participants,
+        string version,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(participants);
+        var duplicateTeams = participants
+            .GroupBy(participant => participant.RealTeamId)
+            .Any(group => group.Count() > 1);
+        if (duplicateTeams || participants.Any(participant => participant.RealTeamId == Guid.Empty))
+        {
+            return InvalidParticipants("Cada time pode aparecer uma única vez na fase.");
+        }
+
+        var stage = await StagesOf(competitionId)
+            .SingleOrDefaultAsync(item => item.Id == stageId, cancellationToken)
+            .ConfigureAwait(false);
+        if (stage is null)
+        {
+            return StageCommandResult.Of(StageCommandOutcome.NotFound);
+        }
+
+        if (!RowVersions.Matches(version, stage.RowVersion, out var expectedVersion))
+        {
+            return StageCommandResult.Of(StageCommandOutcome.Conflict);
+        }
+
+        var current = await dbContext.StageParticipants
+            .Where(participant => participant.StageId == stageId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var requestedTeamIds = participants.Select(participant => participant.RealTeamId).ToHashSet();
+        var teams = await dbContext.RealTeams
+            .Where(team => team.CompetitionId == competitionId && requestedTeamIds.Contains(team.Id))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var currentTeamIds = current.Select(participant => participant.RealTeamId).ToHashSet();
+        if (teams.Count != requestedTeamIds.Count
+            || teams.Any(team => team.IsArchived && !currentTeamIds.Contains(team.Id)))
+        {
+            return InvalidParticipants("Escolha apenas times ativos deste campeonato.");
+        }
+
+        var stageGroupIds = stage.Groups.Select(group => group.Id).ToHashSet();
+        if (stage.Format == StageFormat.Groups
+            && participants.Any(
+                participant => participant.StageGroupId is not { } groupId
+                    || !stageGroupIds.Contains(groupId)))
+        {
+            return InvalidParticipants("Escolha um grupo desta fase para cada time.");
+        }
+
+        if (stage.Format == StageFormat.Knockout
+            && participants.Any(participant => participant.StageGroupId is not null))
+        {
+            return InvalidParticipants("Times do mata-mata não pertencem a grupos.");
+        }
+
+        var now = clock.GetUtcNow();
+        dbContext.StageParticipants.RemoveRange(
+            current.Where(participant => !requestedTeamIds.Contains(participant.RealTeamId)));
+        foreach (var assignment in participants)
+        {
+            var existing = current.SingleOrDefault(
+                participant => participant.RealTeamId == assignment.RealTeamId);
+            if (existing is null)
+            {
+                dbContext.StageParticipants.Add(StageParticipant.Create(
+                    Guid.CreateVersion7(),
+                    stageId,
+                    assignment.RealTeamId,
+                    assignment.StageGroupId,
+                    now));
+            }
+            else if (existing.StageGroupId != assignment.StageGroupId)
+            {
+                existing.AssignToGroup(assignment.StageGroupId, now);
+            }
+        }
+
+        stage.MarkParticipantsChanged(now);
+        dbContext.Entry(stage).Property(item => item.RowVersion).OriginalValue = expectedVersion;
+        dbContext.Entry(stage).Property(item => item.UpdatedAt).IsModified = true;
+        AddAudit(
+            "CompetitionStageParticipantsUpdated",
+            stage.Id,
+            "Times participantes da fase alterados.",
+            now);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return StageCommandResult.Of(StageCommandOutcome.Conflict);
+        }
+
+        return new StageCommandResult(
+            StageCommandOutcome.Completed,
+            await ViewAsync(stage, cancellationToken).ConfigureAwait(false),
+            []);
     }
 
     private IQueryable<Stage> StagesOf(Guid competitionId) =>
@@ -170,6 +305,66 @@ public sealed class CompetitionStageService(
             .Include(GroupsNavigation)
             .Where(stage => stage.CompetitionId == competitionId)
             .OrderBy(stage => stage.Sequence);
+
+    private async Task<StageView> ViewAsync(Stage stage, CancellationToken cancellationToken) =>
+        (await ViewsAsync([stage], cancellationToken).ConfigureAwait(false)).Single();
+
+    private async Task<IReadOnlyList<StageView>> ViewsAsync(
+        List<Stage> stages,
+        CancellationToken cancellationToken)
+    {
+        if (stages.Count == 0)
+        {
+            return [];
+        }
+
+        var stageIds = stages.Select(stage => stage.Id).ToArray();
+        var rows = await (
+            from participant in dbContext.StageParticipants.AsNoTracking()
+            join team in dbContext.RealTeams.AsNoTracking()
+                on participant.RealTeamId equals team.Id
+            join groupItem in dbContext.Set<StageGroup>().AsNoTracking()
+                on participant.StageGroupId equals groupItem.Id into participantGroups
+            from groupItem in participantGroups.DefaultIfEmpty()
+            where stageIds.Contains(participant.StageId)
+            select new
+            {
+                participant.Id,
+                participant.StageId,
+                participant.RealTeamId,
+                RealTeamName = team.Name,
+                team.ArchivedAt,
+                participant.StageGroupId,
+                StageGroupName = groupItem == null ? null : groupItem.Name,
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return
+        [
+            .. stages
+                .OrderBy(stage => stage.Sequence)
+                .Select(stage => StageView.From(
+                    stage,
+                    [.. rows
+                        .Where(row => row.StageId == stage.Id)
+                        .OrderBy(row => row.StageGroupName)
+                        .ThenBy(row => row.RealTeamName)
+                        .Select(row => new StageParticipantView(
+                            row.Id,
+                            row.RealTeamId,
+                            row.RealTeamName,
+                            row.ArchivedAt is not null,
+                            row.StageGroupId,
+                            row.StageGroupName))]))
+        ];
+    }
+
+    private static StageCommandResult InvalidParticipants(string message) =>
+        new(
+            StageCommandOutcome.Invalid,
+            null,
+            [new("Participants", message)]);
 
     /// <summary>
     /// Serializa as operações que mexem na ordem das fases de um mesmo campeonato. A trava

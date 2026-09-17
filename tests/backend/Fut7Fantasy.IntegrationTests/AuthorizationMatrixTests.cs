@@ -68,6 +68,7 @@ public sealed class AuthorizationMatrixTests
         "PUT /api/v1/competitions/{competitionId:guid}/athletes/{athleteId:guid} -> competition-owner-write",
         "PUT /api/v1/competitions/{competitionId:guid}/coaches/{coachId:guid} -> competition-owner-write",
         "PUT /api/v1/competitions/{competitionId:guid}/stages/order -> competition-owner-write",
+        "PUT /api/v1/competitions/{competitionId:guid}/stages/{stageId:guid}/participants -> competition-owner-write",
         "PUT /api/v1/competitions/{competitionId:guid}/stages/{stageId:guid} -> competition-owner-write",
         "PUT /api/v1/competitions/{competitionId:guid}/teams/{teamId:guid} -> competition-owner-write",
     ];

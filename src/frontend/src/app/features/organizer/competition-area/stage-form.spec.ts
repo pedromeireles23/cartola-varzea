@@ -13,6 +13,7 @@ const FASE_DE_GRUPOS: Stage = {
     { id: 'g2', name: 'Grupo B' },
   ],
   tiebreakers: ['GoalDifference', 'Wins'],
+  participants: [],
   version: 'AAAAAAAAB9E=',
 };
 

@@ -32,11 +32,17 @@ test('proprietário monta grupos e mata-mata, reordena e remove fases', async ({
   await page.getByRole('button', { name: 'Criar campeonato' }).click();
   await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}$/, { timeout: 15_000 });
 
+  const navigation = page.getByRole('navigation', { name: 'Navegação do campeonato' });
+  await navigation.getByRole('link', { name: 'Times' }).click();
+  for (const nome of ['União da Vila', 'Estrela do Bairro']) {
+    await page.getByRole('button', { name: 'Adicionar time' }).click();
+    await page.getByLabel('Nome do time').fill(nome);
+    await page.getByRole('button', { name: 'Adicionar time' }).click();
+    await expect(page.getByText(`${nome} adicionado.`)).toBeVisible();
+  }
+
   // 1. Fase de grupos com três grupos e desempate ajustado.
-  await page
-    .getByRole('navigation', { name: 'Navegação do campeonato' })
-    .getByRole('link', { name: 'Fases' })
-    .click();
+  await navigation.getByRole('link', { name: 'Fases' }).click();
   await expect(page.getByRole('heading', { name: 'Fases', level: 1 })).toBeVisible();
   await expect(page.getByText('Nenhuma fase ainda.')).toBeVisible();
   await page.getByRole('button', { name: 'Adicionar fase' }).click();
@@ -59,6 +65,16 @@ test('proprietário monta grupos e mata-mata, reordena e remove fases', async ({
     'Mais gols marcados',
     'Menos cartões vermelhos',
   ]);
+
+  // Os times são confirmados por fase; em grupos, cada um recebe um grupo da própria fase.
+  await grupos.getByRole('button', { name: 'Gerenciar times de Fase de grupos' }).click();
+  await grupos.getByRole('checkbox', { name: 'União da Vila' }).check();
+  await grupos.getByRole('checkbox', { name: 'Estrela do Bairro' }).check();
+  await grupos.getByLabel('Grupo de Estrela do Bairro').selectOption({ label: 'Grupo B' });
+  await grupos.getByRole('button', { name: 'Salvar times' }).click();
+  await expect(page.getByText('Times de Fase de grupos salvos.')).toBeVisible();
+  await expect(grupos.getByText('União da Vila — Grupo A')).toBeVisible();
+  await expect(grupos.getByText('Estrela do Bairro — Grupo B')).toBeVisible();
 
   // 2. Uma semifinal pode virar a primeira fase: não existe sequência obrigatória.
   await page.getByRole('button', { name: 'Adicionar fase' }).click();

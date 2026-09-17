@@ -8,9 +8,11 @@ import { API_BASE_URL } from '../../../core/config/api-base-url';
 import { CompetitionContext } from './competition-context';
 import { campeonato } from './competition-fixtures';
 import { CompetitionStagesPage } from './competition-stages';
+import { RealTeam } from './real-team.service';
 import { Stage } from './stage.service';
 
 const STAGES = '/api/v1/competitions/c1/stages';
+const TEAMS = '/api/v1/competitions/c1/teams';
 
 function fase(parcial: Partial<Stage>): Stage {
   return {
@@ -23,6 +25,7 @@ function fase(parcial: Partial<Stage>): Stage {
       { id: 'g2', name: 'Grupo B' },
     ],
     tiebreakers: ['Wins', 'GoalDifference'],
+    participants: [],
     version: 'AAAAAAAAB9E=',
     ...parcial,
   };
@@ -37,6 +40,17 @@ const MATA_MATA = fase({
   groups: [],
   tiebreakers: [],
 });
+
+function time(partial: Partial<RealTeam> = {}): RealTeam {
+  return {
+    id: 't1',
+    name: 'União da Vila',
+    isArchived: false,
+    updatedAt: '2026-09-17T00:00:00Z',
+    version: 'AAAAAAAAB8E=',
+    ...partial,
+  };
+}
 
 async function estabilizar(fixture: ComponentFixture<CompetitionStagesPage>): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -78,11 +92,13 @@ describe('CompetitionStagesPage', () => {
   async function abrir(
     fases: Stage[],
     papel: 'Owner' | 'Assistant' = 'Owner',
+    times: RealTeam[] = [],
   ): Promise<ComponentFixture<CompetitionStagesPage>> {
     TestBed.inject(CompetitionContext).replace(campeonato({ viewerRole: papel }));
     const fixture = TestBed.createComponent(CompetitionStagesPage);
     await fixture.whenStable();
     http.expectOne(STAGES).flush(fases);
+    http.expectOne(TEAMS).flush(times);
     await fixture.whenStable();
     return fixture;
   }
@@ -159,6 +175,7 @@ describe('CompetitionStagesPage', () => {
     await estabilizar(fixture);
 
     http.expectOne(STAGES).flush([fase({ name: 'Primeira fase' })]);
+    http.expectOne(TEAMS).flush([]);
     await estabilizar(fixture);
     expect(texto(fixture)).toContain('Primeira fase adicionada.');
     expect(texto(fixture)).toContain('1. Primeira fase');
@@ -180,6 +197,7 @@ describe('CompetitionStagesPage', () => {
     await estabilizar(fixture);
 
     http.expectOne(STAGES).flush([fase({ name: 'Grupos renomeados' })]);
+    http.expectOne(TEAMS).flush([]);
     await estabilizar(fixture);
     expect(texto(fixture)).toContain('As fases foram alteradas por outra pessoa');
     expect(texto(fixture)).toContain('1. Grupos renomeados');
@@ -201,8 +219,67 @@ describe('CompetitionStagesPage', () => {
     await estabilizar(fixture);
 
     http.expectOne(STAGES).flush([GRUPOS]);
+    http.expectOne(TEAMS).flush([]);
     await estabilizar(fixture);
     expect(texto(fixture)).toContain('Mata-mata removida.');
     expect(texto(fixture)).not.toContain('2. Mata-mata');
+  });
+
+  it('distribui times nos grupos e mostra a confirmação na fase', async () => {
+    const times = [time(), time({ id: 't2', name: 'Estrela do Bairro' })];
+    const fixture = await abrir([GRUPOS], 'Owner', times);
+
+    botao(fixture, 'Gerenciar times de Fase de grupos').click();
+    await estabilizar(fixture);
+    const form = (fixture.nativeElement as HTMLElement).querySelector('.participantes-form')!;
+    const checkboxes = form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    checkboxes[0]!.click();
+    checkboxes[1]!.click();
+    await estabilizar(fixture);
+    const selects = form.querySelectorAll<HTMLSelectElement>('select');
+    selects[1]!.value = 'g2';
+    selects[1]!.dispatchEvent(new Event('change'));
+    form.dispatchEvent(new Event('submit'));
+    await estabilizar(fixture);
+
+    const pedido = http.expectOne(`${STAGES}/s1/participants`);
+    expect(pedido.request.method).toBe('PUT');
+    expect(pedido.request.body).toEqual({
+      participants: [
+        { realTeamId: 't1', stageGroupId: 'g1' },
+        { realTeamId: 't2', stageGroupId: 'g2' },
+      ],
+      version: 'AAAAAAAAB9E=',
+    });
+    const saved = fase({
+      version: 'AAAAAAAAB9F=',
+      participants: [
+        {
+          id: 'p1',
+          realTeamId: 't1',
+          realTeamName: 'União da Vila',
+          isTeamArchived: false,
+          stageGroupId: 'g1',
+          stageGroupName: 'Grupo A',
+        },
+        {
+          id: 'p2',
+          realTeamId: 't2',
+          realTeamName: 'Estrela do Bairro',
+          isTeamArchived: false,
+          stageGroupId: 'g2',
+          stageGroupName: 'Grupo B',
+        },
+      ],
+    });
+    pedido.flush(saved);
+    await estabilizar(fixture);
+    http.expectOne(STAGES).flush([saved]);
+    http.expectOne(TEAMS).flush(times);
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('Times de Fase de grupos salvos.');
+    expect(texto(fixture)).toContain('União da Vila — Grupo A');
+    expect(texto(fixture)).toContain('Estrela do Bairro — Grupo B');
   });
 });

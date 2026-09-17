@@ -10,6 +10,8 @@ public static class CompetitionStageEndpoints
     /// <summary>Código estável de quem tenta passar do limite de fases.</summary>
     public const string StageLimitCode = "competition_stage_limit";
 
+    public const string StageDependenciesCode = "competition_stage_dependencies";
+
     public static IEndpointRouteBuilder MapCompetitionStageEndpoints(this IEndpointRouteBuilder routes)
     {
         ArgumentNullException.ThrowIfNull(routes);
@@ -29,6 +31,10 @@ public static class CompetitionStageEndpoints
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("UpdateCompetitionStage")
             .WithSummary("Substitui a fase; exige a versão lida.");
+        stages.MapPut("/{stageId:guid}/participants", SetParticipantsAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
+            .WithName("SetCompetitionStageParticipants")
+            .WithSummary("Substitui os times da fase e seus grupos; exige a versão lida.");
         stages.MapDelete("/{stageId:guid}", DeleteAsync)
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("DeleteCompetitionStage")
@@ -97,6 +103,37 @@ public static class CompetitionStageEndpoints
             _ => Results.NotFound(),
         };
 
+    private static async Task<IResult> SetParticipantsAsync(
+        Guid competitionId,
+        Guid stageId,
+        StageParticipantsRequest request,
+        ICompetitionStageService service,
+        CancellationToken cancellationToken)
+    {
+        if (request.Participants is null)
+        {
+            return DomainRequests.ValidationProblem(
+                [new(nameof(StageParticipantsRequest.Participants), "Informe os times da fase.")]);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Version))
+        {
+            return DomainRequests.ValidationProblem(
+                [new(nameof(StageParticipantsRequest.Version), "Informe a versão lida.")]);
+        }
+
+        var assignments = request.Participants.Select(
+            participant => new StageParticipantAssignment(
+                participant.RealTeamId,
+                participant.StageGroupId));
+        return ToResult(await service.SetParticipantsAsync(
+            competitionId,
+            stageId,
+            [.. assignments],
+            request.Version,
+            cancellationToken).ConfigureAwait(false));
+    }
+
     private static async Task<IResult> ReorderAsync(
         Guid competitionId,
         ReorderStagesRequest request,
@@ -146,6 +183,11 @@ public static class CompetitionStageEndpoints
         StageCommandOutcome.Completed => Results.Ok(result.Stage),
         StageCommandOutcome.Invalid => DomainRequests.ValidationProblem(result.Errors),
         StageCommandOutcome.NotFound => Results.NotFound(),
+        StageCommandOutcome.DependenciesExist => Results.Problem(
+            title: "A fase já possui participantes",
+            detail: "Remova ou redistribua os times antes de trocar o formato ou remover um grupo usado.",
+            statusCode: StatusCodes.Status409Conflict,
+            extensions: new Dictionary<string, object?> { ["code"] = StageDependenciesCode }),
         StageCommandOutcome.LimitReached => Results.Problem(
             title: "Limite de fases",
             detail: $"Um campeonato tem no máximo {StageDefinition.MaxStagesPerCompetition} fases.",
@@ -166,3 +208,9 @@ public sealed record StageRequest(
 public sealed record StageGroupRequest(Guid? Id, string? Name);
 
 public sealed record ReorderStagesRequest(IReadOnlyList<Guid>? StageIds);
+
+public sealed record StageParticipantsRequest(
+    IReadOnlyList<StageParticipantRequest>? Participants,
+    string? Version);
+
+public sealed record StageParticipantRequest(Guid RealTeamId, Guid? StageGroupId);

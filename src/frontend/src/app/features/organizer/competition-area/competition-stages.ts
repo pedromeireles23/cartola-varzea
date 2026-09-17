@@ -9,28 +9,40 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { forkJoin } from 'rxjs';
 
 import { ApiFailure } from '../../../core/api/problem-details';
 import { Alert, Badge, Button, Card, Dialog, Loading } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
+import { RealTeam, RealTeamService } from './real-team.service';
 import { StageForm } from './stage-form';
 import {
   FORMAT_LABELS,
   MAX_STAGES,
+  STAGE_DEPENDENCIES_CODE,
   STAGE_LIMIT_CODE,
   Stage,
   StageInput,
+  StageParticipantInput,
   StageService,
   TIEBREAK_LABELS,
 } from './stage.service';
 
 type Estado =
   | { readonly tipo: 'carregando' }
-  | { readonly tipo: 'pronto'; readonly fases: readonly Stage[] }
+  | {
+      readonly tipo: 'pronto';
+      readonly fases: readonly Stage[];
+      readonly times: readonly RealTeam[];
+    }
   | { readonly tipo: 'erro'; readonly falha: ApiFailure };
 
 /** Qual formulário está aberto: nenhum, o de nova fase ou o de uma fase existente. */
-type Edicao = { readonly tipo: 'nova' } | { readonly tipo: 'fase'; readonly id: string } | null;
+type Edicao =
+  | { readonly tipo: 'nova' }
+  | { readonly tipo: 'fase'; readonly id: string }
+  | { readonly tipo: 'participantes'; readonly id: string }
+  | null;
 
 /**
  * Fases do campeonato (02 §9.1, `/organizar/c/:campeonato/fases`).
@@ -113,10 +125,86 @@ type Edicao = { readonly tipo: 'nova' } | { readonly tipo: 'fase'; readonly id: 
                       </dd>
                     </div>
                   }
+                  <div class="dados__item">
+                    <dt>Times nesta fase</dt>
+                    <dd>
+                      @if (fase.participants.length > 0) {
+                        <ul class="participantes-resumo">
+                          @for (participante of fase.participants; track participante.id) {
+                            <li>
+                              {{ participante.realTeamName }}
+                              @if (participante.stageGroupName) {
+                                — {{ participante.stageGroupName }}
+                              }
+                              @if (participante.isTeamArchived) {
+                                <app-badge tone="neutral">Arquivado</app-badge>
+                              }
+                            </li>
+                          }
+                        </ul>
+                      } @else {
+                        <span class="apoio">Nenhum time confirmado nesta fase.</span>
+                      }
+                    </dd>
+                  </div>
                 </dl>
 
-                @if (proprietario()) {
+                @if (editandoParticipantes(fase.id)) {
+                  <form class="participantes-form" (submit)="salvarParticipantes($event, fase)">
+                    <fieldset>
+                      <legend>Selecione os times</legend>
+                      @for (time of timesDaFase(fase); track time.id) {
+                        <div class="participante-linha">
+                          <label class="participante-escolha">
+                            <input
+                              type="checkbox"
+                              [checked]="timeSelecionado(time.id)"
+                              (change)="alternarTime($event, fase, time.id)"
+                            />
+                            <span>{{ time.name }}</span>
+                            @if (time.isArchived) {
+                              <app-badge tone="neutral">Arquivado</app-badge>
+                            }
+                          </label>
+                          @if (fase.format === 'Groups' && timeSelecionado(time.id)) {
+                            <label class="participante-grupo">
+                              <span>Grupo de {{ time.name }}</span>
+                              <select
+                                [value]="grupoSelecionado(time.id)"
+                                (change)="alterarGrupo($event, time.id)"
+                              >
+                                @for (grupo of fase.groups; track grupo.id) {
+                                  <option [value]="grupo.id">{{ grupo.name }}</option>
+                                }
+                              </select>
+                            </label>
+                          }
+                        </div>
+                      } @empty {
+                        <p class="apoio">
+                          Cadastre ao menos um time ativo antes de montar esta fase.
+                        </p>
+                      }
+                    </fieldset>
+                    @if (erroParticipantes()) {
+                      <app-alert tone="danger">{{ erroParticipantes() }}</app-alert>
+                    }
+                    <div class="acoes">
+                      <app-button type="submit" [loading]="salvando()">Salvar times</app-button>
+                      <app-button
+                        variant="ghost"
+                        [disabled]="salvando()"
+                        (pressed)="fecharFormulario()"
+                      >
+                        Cancelar
+                      </app-button>
+                    </div>
+                  </form>
+                } @else if (proprietario()) {
                   <div class="acoes">
+                    <app-button variant="secondary" (pressed)="abrirParticipantes(fase)">
+                      Gerenciar times<span class="sr-only"> de {{ fase.name }}</span>
+                    </app-button>
                     <app-button variant="secondary" (pressed)="abrirEdicao(fase)">
                       Editar<span class="sr-only"> {{ fase.name }}</span>
                     </app-button>
@@ -184,7 +272,10 @@ type Edicao = { readonly tipo: 'nova' } | { readonly tipo: 'fase'; readonly id: 
         [open]="removendo() !== null"
         (dismissed)="cancelarRemocao()"
       >
-        <p>As fases seguintes sobem uma posição. Os grupos desta fase deixam de existir.</p>
+        <p>
+          As fases seguintes sobem uma posição. Grupos e associações de times desta fase deixam de
+          existir.
+        </p>
         @if (falhaAoRemover()) {
           <app-alert tone="danger">{{ falhaAoRemover() }}</app-alert>
         }
@@ -199,10 +290,11 @@ type Edicao = { readonly tipo: 'nova' } | { readonly tipo: 'fase'; readonly id: 
       </app-dialog>
     }
   `,
-  styleUrls: ['../organizer.scss', './competition-pages.scss'],
+  styleUrls: ['../organizer.scss', './competition-pages.scss', './competition-stages.scss'],
 })
 export class CompetitionStagesPage {
   private readonly service = inject(StageService);
+  private readonly teamService = inject(RealTeamService);
   private readonly injector = inject(Injector);
   private readonly aviso = viewChild<ElementRef<HTMLElement>>('aviso');
 
@@ -216,6 +308,8 @@ export class CompetitionStagesPage {
   protected readonly ocupado = signal(false);
   protected readonly removendo = signal<Stage | null>(null);
   protected readonly falhaAoRemover = signal<string | null>(null);
+  protected readonly selecaoParticipantes = signal<Readonly<Record<string, string | null>>>({});
+  protected readonly erroParticipantes = signal<string | null>(null);
   protected readonly retorno = signal<{
     readonly tom: 'success' | 'warning' | 'danger';
     readonly texto: string;
@@ -224,6 +318,11 @@ export class CompetitionStagesPage {
   protected readonly fases = computed(() => {
     const atual = this.estado();
     return atual.tipo === 'pronto' ? atual.fases : [];
+  });
+
+  protected readonly times = computed(() => {
+    const atual = this.estado();
+    return atual.tipo === 'pronto' ? atual.times : [];
   });
 
   constructor() {
@@ -256,14 +355,22 @@ export class CompetitionStagesPage {
     return atual?.tipo === 'fase' && atual.id === id;
   }
 
+  protected editandoParticipantes(id: string): boolean {
+    const atual = this.edicao();
+    return atual?.tipo === 'participantes' && atual.id === id;
+  }
+
   /** Recarrega sem voltar ao estado de carregamento quando a lista já está na tela. */
   protected carregar(): void {
     if (this.estado().tipo !== 'pronto') {
       this.estado.set({ tipo: 'carregando' });
     }
 
-    this.service.list(this.campeonatoId).subscribe({
-      next: (fases) => this.estado.set({ tipo: 'pronto', fases }),
+    forkJoin({
+      fases: this.service.list(this.campeonatoId),
+      times: this.teamService.list(this.campeonatoId),
+    }).subscribe({
+      next: ({ fases, times }) => this.estado.set({ tipo: 'pronto', fases, times }),
       error: (falha: ApiFailure) => this.estado.set({ tipo: 'erro', falha }),
     });
   }
@@ -278,8 +385,72 @@ export class CompetitionStagesPage {
     this.edicao.set({ tipo: 'fase', id: fase.id });
   }
 
+  protected abrirParticipantes(fase: Stage): void {
+    this.retorno.set(null);
+    this.erroParticipantes.set(null);
+    this.selecaoParticipantes.set(
+      Object.fromEntries(
+        fase.participants.map((participant) => [participant.realTeamId, participant.stageGroupId]),
+      ),
+    );
+    this.edicao.set({ tipo: 'participantes', id: fase.id });
+  }
+
   protected fecharFormulario(): void {
     this.edicao.set(null);
+    this.erroParticipantes.set(null);
+  }
+
+  protected timesDaFase(fase: Stage): readonly RealTeam[] {
+    const participantTeamIds = new Set(
+      fase.participants.map((participant) => participant.realTeamId),
+    );
+    return this.times().filter((team) => !team.isArchived || participantTeamIds.has(team.id));
+  }
+
+  protected timeSelecionado(teamId: string): boolean {
+    return Object.prototype.hasOwnProperty.call(this.selecaoParticipantes(), teamId);
+  }
+
+  protected grupoSelecionado(teamId: string): string {
+    return this.selecaoParticipantes()[teamId] ?? '';
+  }
+
+  protected alternarTime(event: Event, fase: Stage, teamId: string): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const selection = { ...this.selecaoParticipantes() };
+    if (checked) {
+      selection[teamId] = fase.format === 'Groups' ? (fase.groups[0]?.id ?? null) : null;
+    } else {
+      delete selection[teamId];
+    }
+    this.selecaoParticipantes.set(selection);
+    this.erroParticipantes.set(null);
+  }
+
+  protected alterarGrupo(event: Event, teamId: string): void {
+    this.selecaoParticipantes.update((current) => ({
+      ...current,
+      [teamId]: (event.target as HTMLSelectElement).value,
+    }));
+    this.erroParticipantes.set(null);
+  }
+
+  protected salvarParticipantes(event: Event, fase: Stage): void {
+    event.preventDefault();
+    const participants: StageParticipantInput[] = Object.entries(this.selecaoParticipantes()).map(
+      ([realTeamId, stageGroupId]) => ({ realTeamId, stageGroupId }),
+    );
+    if (fase.format === 'Groups' && participants.some((participant) => !participant.stageGroupId)) {
+      this.erroParticipantes.set('Escolha um grupo para cada time selecionado.');
+      return;
+    }
+
+    this.salvando.set(true);
+    this.service.setParticipants(this.campeonatoId, fase.id, participants, fase.version).subscribe({
+      next: (salva) => this.concluir(`Times de ${salva.name} salvos.`),
+      error: (falha: ApiFailure) => this.tratarFalha(falha),
+    });
   }
 
   protected criar(entrada: StageInput): void {
@@ -312,7 +483,7 @@ export class CompetitionStagesPage {
     this.service.reorder(this.campeonatoId, ordem).subscribe({
       next: (fases) => {
         this.ocupado.set(false);
-        this.estado.set({ tipo: 'pronto', fases });
+        this.estado.set({ tipo: 'pronto', fases, times: this.times() });
         this.avisar('success', `${fase.name} agora é a fase ${destino + 1}.`);
       },
       error: (falha: ApiFailure) => {
@@ -368,6 +539,13 @@ export class CompetitionStagesPage {
 
   private tratarFalha(falha: ApiFailure): void {
     this.salvando.set(false);
+    if (falha.code === STAGE_DEPENDENCIES_CODE) {
+      this.avisar(
+        'warning',
+        'Esta fase já possui times. Redistribua ou remova os participantes antes de mudar o formato ou excluir um grupo usado.',
+      );
+      return;
+    }
     if (falha.status === 409 && falha.code !== STAGE_LIMIT_CODE) {
       // Outra aba ou outra pessoa mexeu nas fases: a lista atual vale mais que a edição.
       this.edicao.set(null);

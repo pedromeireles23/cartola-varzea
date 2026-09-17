@@ -126,6 +126,14 @@ public sealed class Stage
         Sequence = sequence;
     }
 
+    /// <summary>
+    /// Faz a versão da fase avançar quando somente sua lista de participantes muda.
+    /// </summary>
+    public void MarkParticipantsChanged(DateTimeOffset updatedAt)
+    {
+        UpdatedAt = updatedAt;
+    }
+
     private void Apply(StageDefinition definition)
     {
         if (definition.Validate() is [var first, ..])

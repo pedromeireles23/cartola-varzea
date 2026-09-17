@@ -35,6 +35,17 @@ public interface ICompetitionStageService
         Guid competitionId,
         IReadOnlyList<Guid> stageIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Substitui atomicamente os times da fase. A versão da fase impede que duas
+    /// pessoas sobrescrevam a distribuição uma da outra.
+    /// </summary>
+    Task<StageCommandResult> SetParticipantsAsync(
+        Guid competitionId,
+        Guid stageId,
+        IReadOnlyList<StageParticipantAssignment> participants,
+        string version,
+        CancellationToken cancellationToken);
 }
 
 public enum StageCommandOutcome
@@ -44,6 +55,7 @@ public enum StageCommandOutcome
     NotFound,
     Conflict,
     LimitReached,
+    DependenciesExist,
 }
 
 public sealed record StageCommandResult(
@@ -64,9 +76,12 @@ public sealed record StageView(
     int Sequence,
     IReadOnlyList<StageGroupView> Groups,
     IReadOnlyList<string> Tiebreakers,
+    IReadOnlyList<StageParticipantView> Participants,
     string Version)
 {
-    public static StageView From(Stage stage)
+    public static StageView From(
+        Stage stage,
+        IReadOnlyList<StageParticipantView>? participants = null)
     {
         ArgumentNullException.ThrowIfNull(stage);
         return new StageView(
@@ -76,8 +91,19 @@ public sealed record StageView(
             stage.Sequence,
             [.. stage.Groups.Select(group => new StageGroupView(group.Id, group.Name))],
             [.. stage.Tiebreakers.Select(criterion => criterion.ToString())],
+            participants ?? [],
             Convert.ToBase64String(stage.RowVersion));
     }
 }
 
 public sealed record StageGroupView(Guid Id, string Name);
+
+public sealed record StageParticipantAssignment(Guid RealTeamId, Guid? StageGroupId);
+
+public sealed record StageParticipantView(
+    Guid Id,
+    Guid RealTeamId,
+    string RealTeamName,
+    bool IsTeamArchived,
+    Guid? StageGroupId,
+    string? StageGroupName);
