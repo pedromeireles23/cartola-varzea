@@ -24,7 +24,13 @@ public sealed class AthleteService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return [.. rows.Select(row => AthleteView.From(row.Athlete, row.Registration, row.Team, profile))];
+        var eliminated = await CatalogAvailability.EliminatedTeamsAsync(dbContext, competitionId, cancellationToken)
+            .ConfigureAwait(false);
+        return
+        [
+            .. rows.Select(row => AthleteView.From(
+                row.Athlete, row.Registration, row.Team, profile, eliminated.Contains(row.Team.Id))),
+        ];
     }
 
     public Task<AthleteCommandResult> CreateAsync(
@@ -69,9 +75,13 @@ public sealed class AthleteService(
             AddAudit("AthleteCreated", athlete.Id, "Atleta cadastrado e inscrito no time.", now);
 
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            var eliminated = await CatalogAvailability.EliminatedTeamsAsync(
+                    dbContext, competitionId, cancellationToken)
+                .ConfigureAwait(false);
             return new AthleteCommandResult(
                 AthleteCommandOutcome.Completed,
-                AthleteView.From(athlete, registration, team, competition.ModalityProfile),
+                AthleteView.From(
+                    athlete, registration, team, competition.ModalityProfile, eliminated.Contains(team.Id)),
                 []);
         }, cancellationToken);
     }
@@ -144,9 +154,11 @@ public sealed class AthleteService(
         }
 
         var profile = await ProfileAsync(competitionId, cancellationToken).ConfigureAwait(false);
+        var eliminated = await CatalogAvailability.EliminatedTeamsAsync(dbContext, competitionId, cancellationToken)
+            .ConfigureAwait(false);
         return new AthleteCommandResult(
             AthleteCommandOutcome.Completed,
-            AthleteView.From(row.Athlete, row.Registration, row.Team, profile),
+            AthleteView.From(row.Athlete, row.Registration, row.Team, profile, eliminated.Contains(row.Team.Id)),
             []);
     }
 

@@ -22,7 +22,9 @@ public sealed class CoachService(
             .AsNoTracking()
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        return [.. rows.Select(row => CoachView.From(row.Coach, row.Team, profile))];
+        var eliminated = await CatalogAvailability.EliminatedTeamsAsync(dbContext, competitionId, cancellationToken)
+            .ConfigureAwait(false);
+        return [.. rows.Select(row => CoachView.From(row.Coach, row.Team, profile, eliminated.Contains(row.Team.Id)))];
     }
 
     public async Task<CoachCommandResult> UpdateAsync(
@@ -67,9 +69,11 @@ public sealed class CoachService(
         }
 
         var profile = await ProfileAsync(competitionId, cancellationToken).ConfigureAwait(false);
+        var eliminated = await CatalogAvailability.EliminatedTeamsAsync(dbContext, competitionId, cancellationToken)
+            .ConfigureAwait(false);
         return new CoachCommandResult(
             CoachCommandOutcome.Completed,
-            CoachView.From(row.Coach, row.Team, profile),
+            CoachView.From(row.Coach, row.Team, profile, eliminated.Contains(row.Team.Id)),
             []);
     }
 

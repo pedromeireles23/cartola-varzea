@@ -15,6 +15,8 @@ export interface Coach {
   readonly initialPriceOverride: number | null;
   readonly initialPrice: number;
   readonly isAvailable: boolean;
+  /** O time ficou de fora da fase mais adiantada já confirmada. */
+  readonly isEliminated: boolean;
   readonly updatedAt: string;
   readonly version: string;
 }

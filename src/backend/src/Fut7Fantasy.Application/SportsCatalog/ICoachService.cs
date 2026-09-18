@@ -42,10 +42,11 @@ public sealed record CoachView(
     decimal? InitialPriceOverride,
     decimal InitialPrice,
     bool IsAvailable,
+    bool IsEliminated,
     DateTimeOffset UpdatedAt,
     string Version)
 {
-    public static CoachView From(Coach coach, RealTeam team, ModalityProfile profile)
+    public static CoachView From(Coach coach, RealTeam team, ModalityProfile profile, bool teamEliminated)
     {
         ArgumentNullException.ThrowIfNull(coach);
         ArgumentNullException.ThrowIfNull(team);
@@ -60,7 +61,8 @@ public sealed record CoachView(
             coach.PriceTier.ToString(),
             coach.InitialPriceOverride,
             profile.InitialCoachPrice(coach.PriceTier, coach.InitialPriceOverride),
-            !team.IsArchived,
+            !team.IsArchived && !teamEliminated,
+            teamEliminated,
             coach.UpdatedAt,
             Convert.ToBase64String(coach.RowVersion));
     }

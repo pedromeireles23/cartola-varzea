@@ -23,6 +23,7 @@ function coach(partial: Partial<Coach> = {}): Coach {
     initialPriceOverride: null,
     initialPrice: 8,
     isAvailable: true,
+    isEliminated: false,
     updatedAt: '2026-09-17T00:00:00Z',
     version: 'AAAAAAAAB9E=',
     ...partial,

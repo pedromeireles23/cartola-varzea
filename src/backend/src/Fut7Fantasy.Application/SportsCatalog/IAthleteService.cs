@@ -58,6 +58,7 @@ public sealed record AthleteView(
     decimal? InitialPriceOverride,
     decimal InitialPrice,
     bool IsAvailable,
+    bool IsEliminated,
     string Status,
     DateTimeOffset UpdatedAt,
     string Version)
@@ -66,7 +67,8 @@ public sealed record AthleteView(
         Athlete athlete,
         RosterRegistration registration,
         RealTeam team,
-        ModalityProfile profile)
+        ModalityProfile profile,
+        bool teamEliminated)
     {
         ArgumentNullException.ThrowIfNull(athlete);
         ArgumentNullException.ThrowIfNull(registration);
@@ -85,7 +87,8 @@ public sealed record AthleteView(
                 athlete.Position,
                 registration.PriceTier,
                 registration.InitialPriceOverride),
-            registration.IsActive && !team.IsArchived,
+            registration.IsActive && !team.IsArchived && !teamEliminated,
+            teamEliminated,
             registration.Status.ToString(),
             athlete.UpdatedAt,
             Convert.ToBase64String(athlete.RowVersion));

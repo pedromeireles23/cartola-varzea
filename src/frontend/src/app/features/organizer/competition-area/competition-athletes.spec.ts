@@ -25,6 +25,7 @@ function athlete(partial: Partial<Athlete> = {}): Athlete {
     initialPriceOverride: null,
     initialPrice: 11,
     isAvailable: true,
+    isEliminated: false,
     status: 'Active',
     updatedAt: '2026-09-16T22:00:00Z',
     version: 'AAAAAAAAB9E=',
@@ -122,6 +123,7 @@ describe('CompetitionAthletesPage', () => {
     const fixture = await open([
       athlete(),
       athlete({ id: 'a2', sportingName: 'Caio', status: 'Released', isAvailable: false }),
+      athlete({ id: 'a3', sportingName: 'Duda', isAvailable: false, isEliminated: true }),
     ]);
 
     expect(text(fixture)).toContain('Bia');
@@ -131,6 +133,7 @@ describe('CompetitionAthletesPage', () => {
     expect(text(fixture)).toContain('Disponível');
     expect(text(fixture)).toContain('Caio');
     expect(text(fixture)).toContain('Desligado');
+    expect(text(fixture)).toContain('Time eliminado');
   });
 
   it('auxiliar só lê o catálogo', async () => {

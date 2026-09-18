@@ -152,6 +152,8 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
                         <h2>{{ athlete.sportingName }}</h2>
                         @if (athlete.status === 'Released') {
                           <app-badge tone="neutral">Desligado</app-badge>
+                        } @else if (athlete.isEliminated) {
+                          <app-badge tone="neutral">Time eliminado</app-badge>
                         } @else if (!athlete.isAvailable) {
                           <app-badge tone="warning">Indisponível</app-badge>
                         } @else {

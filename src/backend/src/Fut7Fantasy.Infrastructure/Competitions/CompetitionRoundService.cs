@@ -3,7 +3,9 @@ using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Competitions;
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.PlatformAdministration;
+using Fut7Fantasy.Domain.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Persistence;
+using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fut7Fantasy.Infrastructure.Competitions;
@@ -333,8 +335,39 @@ public sealed class CompetitionRoundService(
             return RoundCommandResult.Invalid(new RoundError("MarketCloseAt", exception.Message));
         }
 
+        await LockPositionsAsync(competition.Id, now, cancellationToken).ConfigureAwait(false);
         AddAudit("CompetitionRoundMarketOpened", round.Id, "Mercado da rodada aberto.", now);
         return null;
+    }
+
+    /// <summary>
+    /// A posição do atleta trava na primeira abertura de mercado em que ele estava
+    /// disponível (01 §9): a partir daí alguém pode tê-lo escalado naquela posição.
+    /// </summary>
+    private async Task LockPositionsAsync(
+        Guid competitionId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var eliminated = await CatalogAvailability.EliminatedTeamsAsync(dbContext, competitionId, cancellationToken)
+            .ConfigureAwait(false);
+        var candidates = await (
+                from athlete in dbContext.Athletes
+                join registration in dbContext.RosterRegistrations on athlete.Id equals registration.AthleteId
+                join team in dbContext.RealTeams on registration.RealTeamId equals team.Id
+                where athlete.CompetitionId == competitionId
+                    && registration.CompetitionId == competitionId
+                    && registration.Status == RosterRegistrationStatus.Active
+                    && team.ArchivedAt == null
+                    && athlete.FirstMarketAvailableAt == null
+                select new { Athlete = athlete, TeamId = team.Id })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        foreach (var candidate in candidates.Where(item => !eliminated.Contains(item.TeamId)))
+        {
+            candidate.Athlete.MarkMarketAvailable(now);
+        }
     }
 
     private RoundCommandResult? Reopen(Round round, DateTimeOffset now)

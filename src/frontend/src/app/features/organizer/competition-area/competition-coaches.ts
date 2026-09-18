@@ -136,6 +136,8 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
                         <h2>{{ coach.effectiveName }}</h2>
                         @if (coach.isAvailable) {
                           <app-badge tone="success">Disponível</app-badge>
+                        } @else if (coach.isEliminated) {
+                          <app-badge tone="neutral">Time eliminado</app-badge>
                         } @else {
                           <app-badge tone="warning">Indisponível</app-badge>
                         }
