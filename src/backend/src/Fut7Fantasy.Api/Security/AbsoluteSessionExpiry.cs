@@ -11,7 +11,7 @@ namespace Fut7Fantasy.Api.Security;
 /// </summary>
 public static class AbsoluteSessionExpiry
 {
-    private const string DeadlineKey = ".fut7fantasy.absolute-expiry";
+    private const string DeadlineItem = ".fut7fantasy.absolute-expiry";
 
     /// <summary>
     /// Encadeia os eventos do cookie sem substituir os anteriores; o do Identity é o
@@ -27,10 +27,10 @@ public static class AbsoluteSessionExpiry
         options.Events.OnSigningIn = async context =>
         {
             // Uma reemissão (troca de papel, por exemplo) mantém o prazo da entrada.
-            if (!context.Properties.Items.ContainsKey(DeadlineKey))
+            if (!context.Properties.Items.ContainsKey(DeadlineItem))
             {
                 var deadline = Now(context.HttpContext).Add(lifetime);
-                context.Properties.Items[DeadlineKey] = deadline.ToString("O", CultureInfo.InvariantCulture);
+                context.Properties.Items[DeadlineItem] = deadline.ToString("O", CultureInfo.InvariantCulture);
             }
 
             await onSigningIn(context).ConfigureAwait(false);
@@ -39,7 +39,7 @@ public static class AbsoluteSessionExpiry
         options.Events.OnValidatePrincipal = async context =>
         {
             // Sem prazo registrado a sessão é recusada: falhar fechado custa só uma entrada.
-            if (!context.Properties.Items.TryGetValue(DeadlineKey, out var text)
+            if (!context.Properties.Items.TryGetValue(DeadlineItem, out var text)
                 || !DateTimeOffset.TryParseExact(
                     text, "O", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var deadline)
                 || Now(context.HttpContext) >= deadline)

@@ -2,3 +2,5 @@
 6ff7486262132d8a7144e59b756a1be41d1d6083:tests/backend/Fut7Fantasy.IntegrationTests/OrganizerApplicationFlowTests.cs:generic-api-key:19
 # Falso positivo: senha fictícia dos testes, marcada só pelo nome ValidPassword; a constante voltou a se chamar SenhaValida.
 8cd6c2ec3d2657c973301074019c0596cca4fc45:tests/backend/Fut7Fantasy.IntegrationTests/TestAccounts.cs:generic-api-key:19
+# Falso positivo: nome do item do ticket de sessão (".fut7fantasy.absolute-expiry"), marcado só pelo nome DeadlineKey; a constante passou a se chamar DeadlineItem.
+7a317d1bd9518dbc098a16fa6849023ba03610ac:src/backend/src/Fut7Fantasy.Api/Security/AbsoluteSessionExpiry.cs:generic-api-key:14
