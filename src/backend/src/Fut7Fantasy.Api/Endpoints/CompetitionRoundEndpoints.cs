@@ -24,6 +24,10 @@ public static class CompetitionRoundEndpoints
             .RequireAuthorization(AuthorizationPolicies.CompetitionMember)
             .WithName("ListCompetitionRounds")
             .WithSummary("Rodadas em ordem, com as partidas e o fechamento do mercado.");
+        rounds.MapGet("/{roundId:guid}/review", ReviewAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionMember)
+            .WithName("ReviewCompetitionRound")
+            .WithSummary("Consolida súmulas e pendências da rodada para conferência.");
         rounds.MapPost("/", CreateAsync)
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("CreateCompetitionRound")
@@ -39,7 +43,7 @@ public static class CompetitionRoundEndpoints
         rounds.MapPut("/{roundId:guid}/status", ChangeStatusAsync)
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("ChangeCompetitionRoundStatus")
-            .WithSummary("Abre o mercado, volta para rascunho ou cancela a rodada.");
+            .WithSummary("Abre o mercado, inicia a revisão, volta para rascunho ou cancela a rodada.");
         rounds.MapPost("/{roundId:guid}/matches", AddMatchAsync)
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("AddCompetitionMatch")
@@ -61,6 +65,17 @@ public static class CompetitionRoundEndpoints
         ICompetitionRoundService service,
         CancellationToken cancellationToken) =>
         Results.Ok(await service.ListAsync(competitionId, cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> ReviewAsync(
+        Guid competitionId,
+        Guid roundId,
+        ICompetitionRoundService service,
+        CancellationToken cancellationToken)
+    {
+        var review = await service.ReviewAsync(competitionId, roundId, cancellationToken)
+            .ConfigureAwait(false);
+        return review is null ? Results.NotFound() : Results.Ok(review);
+    }
 
     private static async Task<IResult> CreateAsync(
         Guid competitionId,
@@ -130,7 +145,7 @@ public static class CompetitionRoundEndpoints
             return DomainRequests.ValidationProblem(
                 [new CompetitionSettingsError(
                     nameof(RoundStatusRequest.Transition),
-                    "Escolha abrir o mercado, voltar para rascunho ou cancelar.")],
+                    "Escolha abrir o mercado, enviar para revisão, voltar para rascunho ou cancelar.")],
                 field => field);
         }
 
@@ -228,7 +243,7 @@ public static class CompetitionRoundEndpoints
 
 public sealed record RoundRequest(string? Name, string? Version);
 
-/// <summary>`OpenMarket`, `ReopenForEditing` ou `Cancel`.</summary>
+/// <summary>`OpenMarket`, `ReopenForEditing`, `SendToReview` ou `Cancel`.</summary>
 public sealed record RoundStatusRequest(string? Transition, string? Version);
 
 /// <summary>

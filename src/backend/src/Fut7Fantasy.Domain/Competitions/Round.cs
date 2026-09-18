@@ -158,6 +158,22 @@ public sealed class Round
         UpdatedAt = now;
     }
 
+    /// <summary>
+    /// Encerra o lançamento normal e coloca os fatos esportivos em conferência. As
+    /// pendências das súmulas são verificadas pelo caso de uso antes desta transição.
+    /// </summary>
+    public void BeginReview(DateTimeOffset now)
+    {
+        EnsureTransition(RoundStatus.UnderReview);
+        if (PhaseAt(now) != RoundPhase.InProgress)
+        {
+            throw new InvalidOperationException("A rodada só entra em revisão depois do início das partidas.");
+        }
+
+        Status = RoundStatus.UnderReview;
+        UpdatedAt = now;
+    }
+
     /// <summary>Verdadeiro quando o relógio já passou do fechamento do mercado.</summary>
     public bool MarketIsClosed(DateTimeOffset now) =>
         Status == RoundStatus.MarketOpen && MarketCloseAt is { } closeAt && now >= closeAt;

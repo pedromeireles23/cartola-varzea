@@ -77,6 +77,20 @@ public sealed class RoundTests
     }
 
     [Fact]
+    public void ReviewStartsOnlyAfterTheFirstMatchBegins()
+    {
+        var round = Create();
+        var kickoff = Now.AddDays(2);
+        round.OpenMarket(kickoff, OneHour, Now);
+
+        Assert.Throws<InvalidOperationException>(() => round.BeginReview(kickoff.AddTicks(-1)));
+
+        round.BeginReview(kickoff);
+        Assert.Equal(RoundStatus.UnderReview, round.Status);
+        Assert.Equal(RoundPhase.UnderReview, round.PhaseAt(kickoff));
+    }
+
+    [Fact]
     public void CancellingIsFinal()
     {
         var round = Create();

@@ -36,6 +36,17 @@ public sealed class MatchSheetFlowTests(SqlServerFixture sqlServer) : IClassFixt
         var world = await BuildAsync(owner, organizationId, cancellationToken);
         clock.Advance(TimeSpan.FromHours(3));
 
+        var pendingReview = await assistant.GetFromJsonAsync<JsonElement>(
+            Review(world.CompetitionId, world.RoundId), cancellationToken);
+        Assert.False(pendingReview.GetProperty("ready").GetBoolean());
+        Assert.Contains(pendingReview.GetProperty("pending").EnumerateArray(), item =>
+            item.GetProperty("code").GetString() == "sheet_missing");
+        using var blockedReview = await owner.PutAsJsonAsync(
+            Status(world.CompetitionId, world.RoundId),
+            new { transition = "SendToReview", version = Version(pendingReview) },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, blockedReview.StatusCode);
+
         var initial = await assistant.GetFromJsonAsync<JsonElement>(
             Sheet(world.CompetitionId, world.MatchId), cancellationToken);
         Assert.Null(initial.GetProperty("version").GetString());
@@ -81,12 +92,59 @@ public sealed class MatchSheetFlowTests(SqlServerFixture sqlServer) : IClassFixt
             athlete.GetProperty("athleteId").GetGuid() == world.HomeGoalkeeper
             && athlete.GetProperty("goalsConceded").GetInt32() == 1);
 
+        var review = await assistant.GetFromJsonAsync<JsonElement>(
+            Review(world.CompetitionId, world.RoundId), cancellationToken);
+        Assert.True(review.GetProperty("ready").GetBoolean());
+        Assert.Equal(1, review.GetProperty("scheduledMatches").GetInt32());
+        Assert.Equal(1, review.GetProperty("completedSheets").GetInt32());
+        var reviewedMatch = review.GetProperty("matches")[0];
+        Assert.Equal(2, reviewedMatch.GetProperty("homeScore").GetInt32());
+        Assert.Equal(4, reviewedMatch.GetProperty("participants").GetInt32());
+        Assert.Contains(reviewedMatch.GetProperty("events").EnumerateArray(), item =>
+            item.GetProperty("type").GetString() == "Goal"
+            && item.GetProperty("quantity").GetInt32() == 3);
+
+        using var forbidden = await assistant.PutAsJsonAsync(
+            Status(world.CompetitionId, world.RoundId),
+            new { transition = "SendToReview", version = Version(review) },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+
+        using var submitted = await owner.PutAsJsonAsync(
+            Status(world.CompetitionId, world.RoundId),
+            new { transition = "SendToReview", version = Version(review) },
+            cancellationToken);
+        submitted.EnsureSuccessStatusCode();
+        var underReview = await submitted.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        Assert.Equal("UnderReview", underReview.GetProperty("phase").GetString());
+
+        // Mesmo um dado legado ou corrompido fora da API volta a passar pela regra de
+        // domínio na revisão; a tela não confia apenas no fato de a súmula existir.
+        await using (var mutationScope = factory.Services.CreateAsyncScope())
+        {
+            var mutationDb = mutationScope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+            var goal = await mutationDb.StatEvents.SingleAsync(
+                item => item.CompetitionId == world.CompetitionId
+                    && item.AthleteId == world.HomeForward,
+                cancellationToken);
+            mutationDb.Entry(goal).Property(item => item.Quantity).CurrentValue = 9;
+            await mutationDb.SaveChangesAsync(cancellationToken);
+        }
+
+        var invalidReview = await assistant.GetFromJsonAsync<JsonElement>(
+            Review(world.CompetitionId, world.RoundId), cancellationToken);
+        Assert.False(invalidReview.GetProperty("ready").GetBoolean());
+        Assert.Contains(invalidReview.GetProperty("pending").EnumerateArray(), item =>
+            item.GetProperty("code").GetString() == "sheet_invalid");
+
         await using var scope = factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
         Assert.Equal(2, await dbContext.StatEvents.CountAsync(
             item => item.CompetitionId == world.CompetitionId, cancellationToken));
         Assert.Equal(1, await dbContext.AdministrativeAuditEntries.CountAsync(
             item => item.Action == "CompetitionMatchSheetSaved", cancellationToken));
+        Assert.Equal(1, await dbContext.AdministrativeAuditEntries.CountAsync(
+            item => item.Action == "CompetitionRoundUnderReview", cancellationToken));
     }
 
     private static async Task<World> BuildAsync(
@@ -166,7 +224,7 @@ public sealed class MatchSheetFlowTests(SqlServerFixture sqlServer) : IClassFixt
             new { transition = "OpenMarket", version = Version(withMatch) },
             cancellationToken);
         opened.EnsureSuccessStatusCode();
-        return new(competitionId, matchId, homeGoalkeeper, homeForward, awayForward);
+        return new(competitionId, Id(round), matchId, homeGoalkeeper, homeForward, awayForward);
     }
 
     private static async Task<Guid> CreateTeamAsync(
@@ -206,12 +264,19 @@ public sealed class MatchSheetFlowTests(SqlServerFixture sqlServer) : IClassFixt
     private static string Sheet(Guid competitionId, Guid matchId) =>
         $"/api/v1/competitions/{competitionId}/matches/{matchId}/sheet";
 
+    private static string Review(Guid competitionId, Guid roundId) =>
+        $"/api/v1/competitions/{competitionId}/rounds/{roundId}/review";
+
+    private static string Status(Guid competitionId, Guid roundId) =>
+        $"/api/v1/competitions/{competitionId}/rounds/{roundId}/status";
+
     private static Guid Id(JsonElement item) => item.GetProperty("id").GetGuid();
 
     private static string? Version(JsonElement item) => item.GetProperty("version").GetString();
 
     private sealed record World(
         Guid CompetitionId,
+        Guid RoundId,
         Guid MatchId,
         Guid HomeGoalkeeper,
         Guid HomeForward,

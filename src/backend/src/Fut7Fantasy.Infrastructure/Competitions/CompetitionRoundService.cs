@@ -30,6 +30,27 @@ public sealed class CompetitionRoundService(
         return await ViewsAsync(competition, rounds, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<RoundReviewView?> ReviewAsync(
+        Guid competitionId,
+        Guid roundId,
+        CancellationToken cancellationToken)
+    {
+        var competition = await CompetitionAsync(competitionId, cancellationToken).ConfigureAwait(false);
+        if (competition is null)
+        {
+            return null;
+        }
+
+        var round = await RoundsOf(competitionId)
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == roundId, cancellationToken)
+            .ConfigureAwait(false);
+        return round is null
+            ? null
+            : await BuildReviewAsync(competition, round, clock.GetUtcNow(), cancellationToken)
+                .ConfigureAwait(false);
+    }
+
     public Task<RoundCommandResult> CreateAsync(
         Guid competitionId,
         RoundDefinition definition,
@@ -133,7 +154,11 @@ public sealed class CompetitionRoundService(
         {
             RoundTransition.OpenMarket => OpenMarketAsync(competition, round, now, cancellationToken),
             RoundTransition.ReopenForEditing => Task.FromResult(Reopen(round, now)),
-            _ => Task.FromResult(CancelRound(round, now)),
+            RoundTransition.SendToReview => BeginReviewAsync(
+                competition, round, now, cancellationToken),
+            RoundTransition.Cancel => Task.FromResult(CancelRound(round, now)),
+            _ => Task.FromResult<RoundCommandResult?>(
+                RoundCommandResult.Invalid(new RoundError("Transition", "Transição desconhecida."))),
         }, cancellationToken);
 
     public Task<RoundCommandResult> AddMatchAsync(
@@ -342,6 +367,32 @@ public sealed class CompetitionRoundService(
         return null;
     }
 
+    private async Task<RoundCommandResult?> BeginReviewAsync(
+        Competition competition,
+        Round round,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var review = await BuildReviewAsync(competition, round, now, cancellationToken).ConfigureAwait(false);
+        if (review.Pending.Count > 0)
+        {
+            return RoundCommandResult.Invalid(
+                [.. review.Pending.Select(item => new RoundError("Review", item.Message))]);
+        }
+
+        try
+        {
+            round.BeginReview(now);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return RoundCommandResult.Invalid(new RoundError("Status", exception.Message));
+        }
+
+        AddAudit("CompetitionRoundUnderReview", round.Id, "Rodada enviada para revisão.", now);
+        return null;
+    }
+
     /// <summary>
     /// Converte o horário local e monta a definição. O fuso é o do campeonato, não o de
     /// quem está com o navegador aberto.
@@ -484,6 +535,157 @@ public sealed class CompetitionRoundService(
             .Where(round => round.CompetitionId == competitionId)
             .OrderBy(round => round.Sequence);
 
+    private async Task<RoundReviewView> BuildReviewAsync(
+        Competition competition,
+        Round round,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var matches = await (
+            from match in dbContext.Matches.AsNoTracking()
+            join home in dbContext.RealTeams.AsNoTracking() on match.HomeTeamId equals home.Id
+            join away in dbContext.RealTeams.AsNoTracking() on match.AwayTeamId equals away.Id
+            where match.CompetitionId == competition.Id && match.RoundId == round.Id
+            orderby match.KickoffAt, home.Name
+            select new ReviewMatchRow(
+                match.Id,
+                match.HomeTeamId,
+                home.Name,
+                match.AwayTeamId,
+                away.Name,
+                match.KickoffAt,
+                match.Status))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var matchIds = matches.Select(item => item.Id).ToArray();
+        var sheets = await dbContext.MatchSheets
+            .AsNoTracking()
+            .Where(item => item.CompetitionId == competition.Id && matchIds.Contains(item.MatchId))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var sheetIds = sheets.Select(item => item.Id).ToArray();
+        var appearances = await dbContext.AthleteAppearances
+            .AsNoTracking()
+            .Where(item => item.CompetitionId == competition.Id && sheetIds.Contains(item.MatchSheetId))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var events = await dbContext.StatEvents
+            .AsNoTracking()
+            .Where(item => item.CompetitionId == competition.Id && sheetIds.Contains(item.MatchSheetId))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var sheetsByMatch = sheets.ToDictionary(item => item.MatchId);
+        var appearancesBySheet = appearances.ToLookup(item => item.MatchSheetId);
+        var eventsBySheet = events.ToLookup(item => item.MatchSheetId);
+        var pending = new List<RoundReviewPendingView>();
+        if (!matches.Any(item => item.Status == MatchStatus.Scheduled))
+        {
+            pending.Add(new(
+                "no_scheduled_matches",
+                "A rodada precisa ter ao menos uma partida marcada para entrar em revisão.",
+                null));
+        }
+
+        var views = new List<RoundReviewMatchView>();
+        foreach (var match in matches)
+        {
+            var requiresSheet = match.Status == MatchStatus.Scheduled;
+            sheetsByMatch.TryGetValue(match.Id, out var sheet);
+            if (requiresSheet && match.KickoffAt > now)
+            {
+                pending.Add(new(
+                    "match_not_started",
+                    $"{match.HomeTeamName} × {match.AwayTeamName} ainda não começou.",
+                    match.Id));
+            }
+
+            if (requiresSheet && sheet is null)
+            {
+                pending.Add(new(
+                    "sheet_missing",
+                    $"Preencha a súmula de {match.HomeTeamName} × {match.AwayTeamName}.",
+                    match.Id));
+            }
+
+            var sheetAppearances = sheet is null ? [] : appearancesBySheet[sheet.Id].ToArray();
+            var sheetEvents = sheet is null ? [] : eventsBySheet[sheet.Id].ToArray();
+            if (requiresSheet && sheet is not null)
+            {
+                foreach (var error in ValidateSheet(match, sheet, sheetAppearances, sheetEvents))
+                {
+                    pending.Add(new(
+                        "sheet_invalid",
+                        $"{match.HomeTeamName} × {match.AwayTeamName}: {error.Message}",
+                        match.Id));
+                }
+            }
+
+            views.Add(new(
+                match.Id,
+                match.HomeTeamName,
+                match.AwayTeamName,
+                CompetitionClock.ToLocalText(match.KickoffAt, competition.TimeZoneId),
+                match.Status.ToString(),
+                requiresSheet,
+                sheet is not null,
+                sheet?.HomeScore,
+                sheet?.AwayScore,
+                sheetAppearances.Count(item => item.DidPlay),
+                [.. sheetEvents
+                    .GroupBy(item => item.Type)
+                    .OrderBy(group => group.Key)
+                    .Select(group => new RoundReviewEventView(
+                        group.Key.ToString(), group.Sum(item => item.Quantity))) ]));
+        }
+
+        var scheduled = matches.Count(item => item.Status == MatchStatus.Scheduled);
+        return new(
+            round.Id,
+            round.Name,
+            round.PhaseAt(now).ToString(),
+            scheduled,
+            matches.Count(item => item.Status == MatchStatus.Scheduled && sheetsByMatch.ContainsKey(item.Id)),
+            pending.Count == 0,
+            views,
+            pending,
+            Convert.ToBase64String(round.RowVersion));
+    }
+
+    private static IReadOnlyList<MatchSheetError> ValidateSheet(
+        ReviewMatchRow match,
+        MatchSheet sheet,
+        IReadOnlyCollection<AthleteAppearance> appearances,
+        IReadOnlyCollection<StatEvent> events)
+    {
+        var definitions = appearances.Select(appearance =>
+        {
+            var athleteEvents = events.Where(item => item.AthleteId == appearance.AthleteId).ToArray();
+            var redCard = athleteEvents.FirstOrDefault(item => item.Type == StatEventType.RedCard);
+            return new MatchSheetAppearanceDefinition(
+                appearance.AthleteId,
+                appearance.RealTeamId,
+                appearance.Position,
+                appearance.DidPlay,
+                appearance.PlayedAsGoalkeeper,
+                appearance.GoalsConceded,
+                Quantity(athleteEvents, StatEventType.Goal),
+                Quantity(athleteEvents, StatEventType.Assist),
+                Quantity(athleteEvents, StatEventType.GoalkeeperSave),
+                Quantity(athleteEvents, StatEventType.PenaltySave),
+                Quantity(athleteEvents, StatEventType.YellowCard),
+                Quantity(athleteEvents, StatEventType.RedCard),
+                redCard?.RedCardReason,
+                Quantity(athleteEvents, StatEventType.OwnGoal),
+                Quantity(athleteEvents, StatEventType.PenaltyMiss));
+        }).ToArray();
+        return new MatchSheetDefinition(sheet.HomeScore, sheet.AwayScore, definitions)
+            .Validate(match.HomeTeamId, match.AwayTeamId);
+    }
+
+    private static int Quantity(IEnumerable<StatEvent> events, StatEventType type) =>
+        events.Where(item => item.Type == type).Sum(item => item.Quantity);
+
     private async Task<RoundCommandResult> CompletedAsync(
         Competition competition,
         Round round,
@@ -573,6 +775,15 @@ public sealed class CompetitionRoundService(
             targetId,
             reason,
             occurredAt));
+
+    private sealed record ReviewMatchRow(
+        Guid Id,
+        Guid HomeTeamId,
+        string HomeTeamName,
+        Guid AwayTeamId,
+        string AwayTeamName,
+        DateTimeOffset KickoffAt,
+        MatchStatus Status);
 
     /// <summary>
     /// Serializa as operações que mexem na ordem das rodadas de um mesmo campeonato,

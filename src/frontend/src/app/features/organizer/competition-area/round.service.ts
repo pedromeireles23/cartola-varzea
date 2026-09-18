@@ -20,7 +20,7 @@ export type RoundPhase =
 
 export type MatchStatus = 'Scheduled' | 'Postponed' | 'Cancelled';
 
-export type RoundTransition = 'OpenMarket' | 'ReopenForEditing' | 'Cancel';
+export type RoundTransition = 'OpenMarket' | 'ReopenForEditing' | 'SendToReview' | 'Cancel';
 
 export interface Match {
   readonly id: string;
@@ -47,6 +47,43 @@ export interface Round {
   readonly marketCloseLocal: string | null;
   readonly matches: readonly Match[];
   /** Precisa voltar na edição: o servidor recusa salvar sobre uma leitura antiga. */
+  readonly version: string;
+}
+
+export interface RoundReviewEvent {
+  readonly type: string;
+  readonly quantity: number;
+}
+
+export interface RoundReviewMatch {
+  readonly matchId: string;
+  readonly homeTeamName: string;
+  readonly awayTeamName: string;
+  readonly kickoffLocal: string;
+  readonly status: MatchStatus;
+  readonly requiresSheet: boolean;
+  readonly hasSheet: boolean;
+  readonly homeScore: number | null;
+  readonly awayScore: number | null;
+  readonly participants: number;
+  readonly events: readonly RoundReviewEvent[];
+}
+
+export interface RoundReviewPending {
+  readonly code: string;
+  readonly message: string;
+  readonly matchId: string | null;
+}
+
+export interface RoundReview {
+  readonly roundId: string;
+  readonly roundName: string;
+  readonly phase: RoundPhase;
+  readonly scheduledMatches: number;
+  readonly completedSheets: number;
+  readonly ready: boolean;
+  readonly matches: readonly RoundReviewMatch[];
+  readonly pending: readonly RoundReviewPending[];
   readonly version: string;
 }
 
@@ -91,6 +128,10 @@ export class RoundService {
 
   list(competitionId: string): Observable<Round[]> {
     return this.http.get<Round[]>(this.roundsUrl(competitionId));
+  }
+
+  review(competitionId: string, roundId: string): Observable<RoundReview> {
+    return this.http.get<RoundReview>(`${this.roundUrl(competitionId, roundId)}/review`);
   }
 
   create(competitionId: string, name: string): Observable<Round> {

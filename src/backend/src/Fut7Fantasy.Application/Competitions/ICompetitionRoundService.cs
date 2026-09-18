@@ -10,6 +10,11 @@ public interface ICompetitionRoundService
 {
     Task<IReadOnlyList<RoundView>> ListAsync(Guid competitionId, CancellationToken cancellationToken);
 
+    Task<RoundReviewView?> ReviewAsync(
+        Guid competitionId,
+        Guid roundId,
+        CancellationToken cancellationToken);
+
     /// <summary>Acrescenta a rodada ao fim da ordem, em rascunho.</summary>
     Task<RoundCommandResult> CreateAsync(
         Guid competitionId,
@@ -69,6 +74,7 @@ public enum RoundTransition
 {
     OpenMarket,
     ReopenForEditing,
+    SendToReview,
     Cancel,
 }
 
@@ -130,3 +136,32 @@ public sealed record RoundView(
     string? MarketCloseLocal,
     IReadOnlyList<MatchView> Matches,
     string Version);
+
+/// <summary>Conferência dos fatos da rodada antes da apuração e publicação.</summary>
+public sealed record RoundReviewView(
+    Guid RoundId,
+    string RoundName,
+    string Phase,
+    int ScheduledMatches,
+    int CompletedSheets,
+    bool Ready,
+    IReadOnlyList<RoundReviewMatchView> Matches,
+    IReadOnlyList<RoundReviewPendingView> Pending,
+    string Version);
+
+public sealed record RoundReviewMatchView(
+    Guid MatchId,
+    string HomeTeamName,
+    string AwayTeamName,
+    string KickoffLocal,
+    string Status,
+    bool RequiresSheet,
+    bool HasSheet,
+    int? HomeScore,
+    int? AwayScore,
+    int Participants,
+    IReadOnlyList<RoundReviewEventView> Events);
+
+public sealed record RoundReviewEventView(string Type, int Quantity);
+
+public sealed record RoundReviewPendingView(string Code, string Message, Guid? MatchId);

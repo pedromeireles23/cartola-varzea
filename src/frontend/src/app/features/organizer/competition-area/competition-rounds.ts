@@ -79,7 +79,7 @@ interface Formulario {
       <h1>Rodadas</h1>
       <p class="intro">
         Uma rodada é um conjunto de partidas com um mercado só. Marque os jogos com a rodada em
-        rascunho e abra o mercado quando a lista estiver fechada.
+        rascunho, abra o mercado e confira as súmulas juntas depois dos jogos.
       </p>
 
       <div class="foco" tabindex="-1" #aviso>
@@ -166,6 +166,14 @@ interface Formulario {
                 </ul>
               } @else {
                 <p class="apoio">Nenhuma partida marcada nesta rodada.</p>
+              }
+
+              @if (rodada.phase === 'InProgress' || rodada.phase === 'UnderReview') {
+                <p>
+                  <a class="acao" [routerLink]="[rodada.id, 'revisao']">
+                    Revisar rodada<span class="sr-only"> {{ rodada.name }}</span>
+                  </a>
+                </p>
               }
 
               @if (formularioDe(rodada.id); as aberto) {

@@ -136,6 +136,14 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'rodadas/:rodada/revisao',
+            title: 'Revisão da rodada',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/round-review').then(
+                (m) => m.RoundReviewPage,
+              ),
+          },
+          {
             path: 'partidas/:partida/sumula',
             title: 'Súmula da partida',
             loadComponent: () =>

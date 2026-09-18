@@ -267,9 +267,13 @@ describe('CompetitionRoundsPage', () => {
   });
 
   it('auxiliar lê as rodadas sem receber nenhuma ação', async () => {
-    const fixture = await abrir([rodada({ matches: [partida()] })], 'Assistant');
+    const fixture = await abrir(
+      [rodada({ status: 'MarketOpen', phase: 'InProgress', matches: [partida()] })],
+      'Assistant',
+    );
 
     expect(texto(fixture)).toContain('Alpha × Beta');
+    expect(texto(fixture)).toContain('Revisar rodada');
     expect(botao(fixture, 'Adicionar rodada')).toBeUndefined();
     expect(botao(fixture, 'Adicionar partida')).toBeUndefined();
     expect(botao(fixture, 'Abrir mercado')).toBeUndefined();
