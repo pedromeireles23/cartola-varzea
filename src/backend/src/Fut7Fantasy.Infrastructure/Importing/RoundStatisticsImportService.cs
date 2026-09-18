@@ -108,11 +108,11 @@ public sealed class RoundStatisticsImportService(
         var now = clock.GetUtcNow();
         var phase = round.PhaseAt(now);
         var games = await GamesAsync(round, cancellationToken).ConfigureAwait(false);
-        var gamesByPair = games.ToLookup(game => Pair(game.HomeName, game.AwayName), StringComparer.OrdinalIgnoreCase);
+        var gamesByPair = games.ToLookup(game => Pair(game.HomeName, game.AwayName));
         List<SheetPlan> plans = [];
 
         var groups = parsed.Rows
-            .GroupBy(row => Pair(row.HomeTeamName, row.AwayTeamName), StringComparer.OrdinalIgnoreCase)
+            .GroupBy(row => Pair(row.HomeTeamName, row.AwayTeamName))
             .OrderBy(group => group.Min(row => row.Line));
         foreach (var group in groups)
         {
@@ -436,7 +436,9 @@ public sealed class RoundStatisticsImportService(
             cancellationToken);
     }
 
-    private static string Pair(string home, string away) => $"{home}{away}";
+    /// <summary>Chave do jogo pelos nomes, sem diferença de maiúsculas.</summary>
+    private static (string Home, string Away) Pair(string home, string away) =>
+        (home.ToUpperInvariant(), away.ToUpperInvariant());
 
     private sealed record Game(Match Match, string HomeName, string AwayName);
 
