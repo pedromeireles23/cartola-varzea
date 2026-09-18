@@ -36,6 +36,13 @@ export function campeonato(parcial: Partial<CompetitionDetails> = {}): Competiti
     marketCloseLeadTimeMinutes: 60,
     resultsSlaBusinessDays: 2,
     correctionWindowBusinessDays: 3,
+    registrationDeadlineLocal: null,
+    registrationWindow: {
+      closesAtLocal: null,
+      source: 'NotYetDefined',
+      roundName: null,
+      isOpen: true,
+    },
     canChangeModality: true,
     modalityProfile: PERFIS[0],
     createdAt: '2026-09-16T12:00:00Z',

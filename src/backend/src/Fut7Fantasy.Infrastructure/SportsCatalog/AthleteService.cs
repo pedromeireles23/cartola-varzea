@@ -59,6 +59,13 @@ public sealed class AthleteService(
                 return AthleteCommandResult.Of(AthleteCommandOutcome.TeamUnavailable);
             }
 
+            var window = await CatalogAvailability.RegistrationWindowAsync(dbContext, competition, cancellationToken)
+                .ConfigureAwait(false);
+            if (!window.IsOpenAt(clock.GetUtcNow()))
+            {
+                return AthleteCommandResult.Of(AthleteCommandOutcome.RegistrationClosed);
+            }
+
             var normalized = definition.Normalized();
             if (await NameExistsAsync(competitionId, normalized.SportingName, null, cancellationToken)
                 .ConfigureAwait(false))

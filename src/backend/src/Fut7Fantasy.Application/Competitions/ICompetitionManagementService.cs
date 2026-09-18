@@ -71,8 +71,23 @@ public sealed record CompetitionDetailsView(
     int MarketCloseLeadTimeMinutes,
     int ResultsSlaBusinessDays,
     int CorrectionWindowBusinessDays,
+    string? RegistrationDeadlineLocal,
+    RegistrationWindowView RegistrationWindow,
     bool CanChangeModality,
     ModalityProfileView ModalityProfile,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     string Version);
+
+/// <summary>
+/// O prazo de inscrição que vale agora, já escrito no fuso do campeonato.
+/// </summary>
+/// <param name="ClosesAtLocal">Fechamento, ou nulo enquanto ainda não há data.</param>
+/// <param name="Source">`Configured`, `FirstStageLastRound` ou `NotYetDefined`.</param>
+/// <param name="RoundName">Rodada que define o prazo padrão.</param>
+/// <param name="IsOpen">Se um atleta novo ainda pode ser inscrito agora.</param>
+public sealed record RegistrationWindowView(
+    string? ClosesAtLocal,
+    string Source,
+    string? RoundName,
+    bool IsOpen);

@@ -114,6 +114,131 @@ public sealed class CatalogAvailabilityFlowTests(SqlServerFixture sqlServer) : I
         Assert.Equal(HttpStatusCode.OK, eliminatedChange.StatusCode);
     }
 
+    [Fact]
+    public async Task RegistrationClosesWithTheFirstStageLastRoundAndTheOrganizerCanExtendIt()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = sqlServer.CreateApi(new CapturingEmailSender(), services =>
+        {
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton<TimeProvider>(clock);
+        });
+        var ownerEmail = UniqueEmail("deadline-owner");
+        var ownerId = await CreateUserAsync(factory, ownerEmail);
+        var organizationId = await CreateOrganizationAsync(factory, ownerId, "Liga do Prazo");
+        using var owner = await CreateAuthenticatedClientAsync(factory, ownerEmail, cancellationToken);
+
+        var competitionId = await PostIdAsync(
+            owner,
+            $"/api/v1/organizations/{organizationId}/competitions",
+            new { name = "Copa do Prazo", season = "2026", modality = "Fut7" },
+            cancellationToken);
+        var teams = new Dictionary<string, Guid>(StringComparer.Ordinal)
+        {
+            ["Aurora"] = await PostIdAsync(
+                owner, $"/api/v1/competitions/{competitionId}/teams", new { name = "Aurora" }, cancellationToken),
+            ["Estrela"] = await PostIdAsync(
+                owner, $"/api/v1/competitions/{competitionId}/teams", new { name = "Estrela" }, cancellationToken),
+        };
+        var groups = await CreateStageAsync(owner, competitionId, "Grupos", "Groups", cancellationToken);
+        await ConfirmAsync(owner, competitionId, groups, ["Aurora", "Estrela"], teams, cancellationToken);
+
+        // Sem rodada da primeira fase ainda não há prazo.
+        var settings = await SettingsAsync(owner, competitionId, cancellationToken);
+        Assert.Equal("NotYetDefined", settings.GetProperty("registrationWindow").GetProperty("source").GetString());
+        Assert.True(settings.GetProperty("registrationWindow").GetProperty("isOpen").GetBoolean());
+
+        var kickoffLocal = ApiFactory.FixedNow.AddDays(2).ToOffset(TimeSpan.FromHours(-3))
+            .ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+        var round = await owner.PostAsJsonAsync(
+            $"/api/v1/competitions/{competitionId}/rounds", new { name = "Rodada 1" }, cancellationToken);
+        round.EnsureSuccessStatusCode();
+        var created = await round.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        var roundId = created.GetProperty("id").GetGuid();
+        using var match = await owner.PostAsJsonAsync(
+            $"/api/v1/competitions/{competitionId}/rounds/{roundId}/matches",
+            new
+            {
+                stageId = groups.GetProperty("id").GetGuid(),
+                homeTeamId = teams["Aurora"],
+                awayTeamId = teams["Estrela"],
+                kickoffLocal,
+                version = created.GetProperty("version").GetString(),
+            },
+            cancellationToken);
+        match.EnsureSuccessStatusCode();
+        var withMatch = await match.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        using var opened = await owner.PutAsJsonAsync(
+            $"/api/v1/competitions/{competitionId}/rounds/{roundId}/status",
+            new { transition = "OpenMarket", version = withMatch.GetProperty("version").GetString() },
+            cancellationToken);
+        opened.EnsureSuccessStatusCode();
+
+        // Com o mercado aberto, o prazo padrão é o fechamento dele, no fuso do campeonato.
+        settings = await SettingsAsync(owner, competitionId, cancellationToken);
+        var window = settings.GetProperty("registrationWindow");
+        Assert.Equal("FirstStageLastRound", window.GetProperty("source").GetString());
+        Assert.Equal("Rodada 1", window.GetProperty("roundName").GetString());
+        Assert.Equal(kickoffLocal, window.GetProperty("closesAtLocal").GetString());
+
+        clock.Advance(TimeSpan.FromDays(3));
+        using var late = await owner.PostAsJsonAsync(
+            $"/api/v1/competitions/{competitionId}/athletes",
+            new { sportingName = "Tardia", position = "Forward", realTeamId = teams["Aurora"], priceTier = "Regular" },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.Conflict, late.StatusCode);
+        Assert.Contains("athlete_registration_closed", await late.Content.ReadAsStringAsync(cancellationToken));
+
+        var lateImport = await ImportRequests.PostAsync(owner, competitionId, "atletas", ImportRequests.Csv(
+            """
+            nome_esportivo;time;posicao;nivel_preco;preco_exato
+            Tardia;Aurora;atacante;;
+            """), cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, lateImport.Status);
+        Assert.Contains(
+            "prazo de inscrição terminou",
+            ImportRequests.Issues(lateImport.Body).Single().GetProperty("message").GetString()!,
+            StringComparison.Ordinal);
+
+        // O organizador estende o prazo nas configurações, e a inscrição volta a abrir.
+        var extended = ApiFactory.FixedNow.AddDays(10).ToOffset(TimeSpan.FromHours(-3))
+            .ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+        using var saved = await owner.PutAsJsonAsync(
+            $"/api/v1/competitions/{competitionId}/settings",
+            new
+            {
+                name = settings.GetProperty("name").GetString(),
+                season = settings.GetProperty("season").GetString(),
+                modality = settings.GetProperty("modality").GetString(),
+                timeZoneId = settings.GetProperty("timeZoneId").GetString(),
+                marketCloseLeadTimeMinutes = settings.GetProperty("marketCloseLeadTimeMinutes").GetInt32(),
+                resultsSlaBusinessDays = settings.GetProperty("resultsSlaBusinessDays").GetInt32(),
+                correctionWindowBusinessDays = settings.GetProperty("correctionWindowBusinessDays").GetInt32(),
+                registrationDeadlineLocal = extended,
+                version = settings.GetProperty("version").GetString(),
+            },
+            cancellationToken);
+        saved.EnsureSuccessStatusCode();
+        var afterSave = await saved.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        Assert.Equal(extended, afterSave.GetProperty("registrationDeadlineLocal").GetString());
+        Assert.Equal("Configured", afterSave.GetProperty("registrationWindow").GetProperty("source").GetString());
+
+        using var accepted = await owner.PostAsJsonAsync(
+            $"/api/v1/competitions/{competitionId}/athletes",
+            new { sportingName = "Tardia", position = "Forward", realTeamId = teams["Aurora"], priceTier = "Regular" },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.Created, accepted.StatusCode);
+    }
+
+    private static Task<JsonElement> SettingsAsync(
+        HttpClient owner,
+        Guid competitionId,
+        CancellationToken cancellationToken) =>
+        owner.GetFromJsonAsync<JsonElement>($"/api/v1/competitions/{competitionId}/settings", cancellationToken);
+
     private static Task<HttpResponseMessage> ChangePositionAsync(
         HttpClient owner,
         Guid competitionId,

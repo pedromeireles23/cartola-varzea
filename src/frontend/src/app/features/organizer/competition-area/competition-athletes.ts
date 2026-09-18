@@ -37,6 +37,7 @@ import {
   AthleteService,
   PriceTier,
 } from './athlete.service';
+import { registrationWindowText } from '../competition.service';
 import { CompetitionContext } from './competition-context';
 import { RealTeam, RealTeamService } from './real-team.service';
 
@@ -96,6 +97,13 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
         o histórico e deixa o atleta indisponível para novas compras.
       </p>
 
+      @if (inscricaoEncerrada(); as texto) {
+        <app-alert tone="warning">
+          Inscrições {{ texto }} Atletas já inscritos continuam editáveis; para inscrever novos,
+          estenda o prazo na configuração.
+        </app-alert>
+      }
+
       <div class="foco" tabindex="-1" #aviso>
         @if (retorno(); as resultado) {
           <app-alert [tone]="resultado.tom">{{ resultado.texto }}</app-alert>
@@ -124,7 +132,10 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
             </app-card>
           } @else if (proprietario()) {
             <div class="acoes">
-              <app-button [disabled]="timesAtivos().length === 0" (pressed)="abrirNovo()">
+              <app-button
+                [disabled]="timesAtivos().length === 0 || inscricaoEncerrada() !== null"
+                (pressed)="abrirNovo()"
+              >
                 Adicionar atleta
               </app-button>
             </div>
@@ -284,6 +295,12 @@ export class CompetitionAthletesPage {
 
   protected readonly contexto = inject(CompetitionContext);
   protected readonly proprietario = this.contexto.proprietario;
+
+  /** Frase do prazo quando ele já passou; nulo com as inscrições abertas. */
+  protected readonly inscricaoEncerrada = computed(() => {
+    const janela = this.contexto.campeonato()?.registrationWindow;
+    return janela && !janela.isOpen ? registrationWindowText(janela).toLowerCase() : null;
+  });
   protected readonly nomeMax = ATHLETE_NAME_MAX;
   protected readonly positionOptions = POSITION_OPTIONS;
   protected readonly priceTierOptions = PRICE_TIER_OPTIONS;

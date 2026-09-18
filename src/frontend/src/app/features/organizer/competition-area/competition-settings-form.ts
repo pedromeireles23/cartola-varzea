@@ -152,6 +152,12 @@ type Campo = 'nome' | 'temporada' | 'modalidade' | 'prazo' | 'janela' | 'anteced
           [error]="erros().janela"
           [(value)]="janela"
         />
+        <app-form-field
+          label="Prazo de inscrição de atletas (opcional)"
+          type="datetime-local"
+          hint="No fuso do campeonato. Vazio usa o padrão: fechamento do mercado da última rodada da primeira fase."
+          [(value)]="inscricao"
+        />
       </fieldset>
 
       <div class="acoes">
@@ -201,6 +207,10 @@ export class CompetitionSettingsForm {
     String(
       this.initial()?.correctionWindowBusinessDays ?? DEFAULT_SETTINGS.correctionWindowBusinessDays,
     ),
+  );
+
+  protected readonly inscricao = linkedSignal(
+    () => this.initial()?.registrationDeadlineLocal ?? '',
   );
 
   protected readonly erros = signal<Partial<Record<Campo, string>>>({});
@@ -277,6 +287,7 @@ export class CompetitionSettingsForm {
       marketCloseLeadTimeMinutes: antecedencia,
       resultsSlaBusinessDays: prazo,
       correctionWindowBusinessDays: janela,
+      registrationDeadlineLocal: this.inscricao().trim() || null,
     });
   }
 

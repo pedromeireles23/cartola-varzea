@@ -49,6 +49,9 @@ public sealed class Competition
 
     public int CorrectionWindowBusinessDays { get; private set; }
 
+    /// <summary>Prazo de inscrição escolhido pelo organizador; nulo usa o padrão.</summary>
+    public DateTimeOffset? RegistrationDeadline { get; private set; }
+
     public CompetitionStatus Status { get; private set; }
 
     /// <summary>Instante da primeira publicação; permanece depois de despublicar.</summary>
@@ -173,5 +176,6 @@ public sealed class Competition
         MarketCloseLeadTime = normalized.MarketCloseLeadTime;
         ResultsSlaBusinessDays = normalized.ResultsSlaBusinessDays;
         CorrectionWindowBusinessDays = normalized.CorrectionWindowBusinessDays;
+        RegistrationDeadline = normalized.RegistrationDeadlineUtc();
     }
 }

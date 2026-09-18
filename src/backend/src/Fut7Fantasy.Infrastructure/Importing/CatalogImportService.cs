@@ -4,6 +4,7 @@ using Fut7Fantasy.Domain.Importing;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Domain.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Persistence;
+using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fut7Fantasy.Infrastructure.Importing;
@@ -170,6 +171,14 @@ public sealed partial class CatalogImportService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         var byName = current.ToDictionary(row => row.Athlete.SportingName, StringComparer.OrdinalIgnoreCase);
+        var competition = await dbContext.Competitions
+            .AsNoTracking()
+            .SingleAsync(item => item.Id == competitionId, cancellationToken)
+            .ConfigureAwait(false);
+        var registrationOpen = (await CatalogAvailability
+                .RegistrationWindowAsync(dbContext, competition, cancellationToken)
+                .ConfigureAwait(false))
+            .IsOpenAt(clock.GetUtcNow());
 
         List<ImportIssue> issues = [];
         List<(AthleteImportRow Row, Guid TeamId)> created = [];
@@ -192,6 +201,17 @@ public sealed partial class CatalogImportService(
                 if (team.IsArchived)
                 {
                     issues.Add(new(row.Line, "time", $"`{row.TeamName}` está arquivado e não recebe atletas."));
+                    continue;
+                }
+
+                // Atleta já inscrito continua podendo ser corrigido; só a inscrição nova fecha.
+                if (!registrationOpen)
+                {
+                    issues.Add(new(
+                        row.Line,
+                        "nome_esportivo",
+                        $"O prazo de inscrição terminou, então `{row.SportingName}` não pode ser inscrito. "
+                        + "Estenda o prazo nas configurações para importar atletas novos."));
                     continue;
                 }
 

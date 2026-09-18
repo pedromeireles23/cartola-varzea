@@ -49,6 +49,16 @@ export interface CompetitionSettings {
   readonly marketCloseLeadTimeMinutes: number;
   readonly resultsSlaBusinessDays: number;
   readonly correctionWindowBusinessDays: number;
+  /** Prazo de inscrição escolhido, como `2026-10-04T18:00`; vazio usa o padrão. */
+  readonly registrationDeadlineLocal?: string | null;
+}
+
+/** O prazo de inscrição que vale agora, já no fuso do campeonato. */
+export interface RegistrationWindow {
+  readonly closesAtLocal: string | null;
+  readonly source: 'Configured' | 'FirstStageLastRound' | 'NotYetDefined';
+  readonly roundName: string | null;
+  readonly isOpen: boolean;
 }
 
 export interface CompetitionDetails extends CompetitionSettings {
@@ -59,6 +69,7 @@ export interface CompetitionDetails extends CompetitionSettings {
   readonly status: CompetitionStatus;
   readonly canChangeModality: boolean;
   readonly modalityProfile: ModalityProfile;
+  readonly registrationWindow: RegistrationWindow;
   readonly createdAt: string;
   readonly updatedAt: string;
   /** Precisa voltar na edição: o servidor recusa salvar sobre uma leitura antiga. */
@@ -79,6 +90,32 @@ export const DEFAULT_SETTINGS: Omit<CompetitionSettings, 'name' | 'season' | 'mo
   resultsSlaBusinessDays: 2,
   correctionWindowBusinessDays: 3,
 };
+
+/** Explica o prazo de inscrição em uma frase, do jeito que a organização decide. */
+export function registrationWindowText(window: RegistrationWindow): string {
+  const quando = window.closesAtLocal ? localText(window.closesAtLocal) : null;
+  if (!window.isOpen) {
+    return `Encerradas em ${quando}.`;
+  }
+
+  switch (window.source) {
+    case 'Configured':
+      return `Abertas até ${quando}, prazo definido pela organização.`;
+    case 'FirstStageLastRound':
+      return quando
+        ? `Abertas até ${quando}, fechamento do mercado de ${window.roundName}.`
+        : `Abertas até o fechamento do mercado de ${window.roundName}, que ainda não abriu.`;
+    default:
+      return 'Abertas. O prazo será o fechamento do mercado da última rodada da primeira fase.';
+  }
+}
+
+/** `2026-10-04T18:00` vira `04/10/2026 18:00`, sem conta de fuso no navegador. */
+function localText(local: string): string {
+  const [data, hora] = local.split('T');
+  const [ano, mes, dia] = data.split('-');
+  return `${dia}/${mes}/${ano} ${hora}`;
+}
 
 export const MODALITY_LABELS: Readonly<Record<Modality, string>> = {
   Fut7: 'Fut7',

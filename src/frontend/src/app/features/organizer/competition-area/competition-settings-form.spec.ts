@@ -119,7 +119,25 @@ describe('CompetitionSettingsForm', () => {
         marketCloseLeadTimeMinutes: 120,
         resultsSlaBusinessDays: 4,
         correctionWindowBusinessDays: 3,
+        registrationDeadlineLocal: null,
       },
+    ]);
+  });
+
+  it('envia o prazo de inscrição escolhido e volta ao padrão quando apagado', async () => {
+    const fixture = await abrir({
+      initial: campeonato({ registrationDeadlineLocal: '2026-10-04T18:00' }),
+    });
+    expect(campo(fixture, 'Prazo de inscrição').value).toBe('2026-10-04T18:00');
+
+    escrever(fixture, 'Prazo de inscrição', '2026-10-11T18:00');
+    await enviar(fixture);
+    escrever(fixture, 'Prazo de inscrição', '');
+    await enviar(fixture);
+
+    expect(enviados.map((item) => item.registrationDeadlineLocal)).toEqual([
+      '2026-10-11T18:00',
+      null,
     ]);
   });
 

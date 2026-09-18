@@ -11,6 +11,8 @@ public static class AthleteEndpoints
     public const string TransferNotAllowedCode = "athlete_transfer_not_allowed";
     public const string PositionLockedCode = "athlete_position_locked";
 
+    public const string RegistrationClosedCode = "athlete_registration_closed";
+
     public static IEndpointRouteBuilder MapAthleteEndpoints(this IEndpointRouteBuilder routes)
     {
         ArgumentNullException.ThrowIfNull(routes);
@@ -152,6 +154,11 @@ public static class AthleteEndpoints
             "Posição já utilizada no mercado",
             "A posição não pode mudar depois que o atleta fica disponível no mercado.",
             PositionLockedCode),
+        AthleteCommandOutcome.RegistrationClosed => Conflict(
+            "Inscrições encerradas",
+            "O prazo de inscrição deste campeonato terminou. Para inscrever mais atletas, "
+            + "estenda o prazo nas configurações.",
+            RegistrationClosedCode),
         _ => Conflict(
             "Atleta alterado por outra pessoa",
             "Atualize a lista antes de salvar de novo.",

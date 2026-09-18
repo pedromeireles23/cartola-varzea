@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.Competitions;
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Infrastructure.Persistence;
+using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fut7Fantasy.Infrastructure.Competitions;
@@ -74,6 +75,8 @@ public sealed class CompetitionManagementService(
         }
 
         var item = found.Competition;
+        var window = await CatalogAvailability.RegistrationWindowAsync(dbContext, item, cancellationToken)
+            .ConfigureAwait(false);
         return new CompetitionDetailsView(
             item.Id,
             item.OrganizationId,
@@ -87,6 +90,14 @@ public sealed class CompetitionManagementService(
             (int)item.MarketCloseLeadTime.TotalMinutes,
             item.ResultsSlaBusinessDays,
             item.CorrectionWindowBusinessDays,
+            item.RegistrationDeadline is { } deadline
+                ? CompetitionClock.ToLocalText(deadline, item.TimeZoneId)
+                : null,
+            new RegistrationWindowView(
+                window.ClosesAt is { } closesAt ? CompetitionClock.ToLocalText(closesAt, item.TimeZoneId) : null,
+                window.Source.ToString(),
+                window.RoundName,
+                window.IsOpenAt(clock.GetUtcNow())),
             item.CanChangeModality,
             ModalityProfileView.From(item.ModalityProfile),
             item.CreatedAt,

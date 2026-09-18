@@ -38,6 +38,9 @@ public enum AthleteCommandOutcome
     TeamUnavailable,
     TransferNotAllowed,
     PositionLocked,
+
+    /// <summary>O prazo de inscrição do campeonato terminou; só atleta novo é recusado.</summary>
+    RegistrationClosed,
 }
 
 public sealed record AthleteCommandResult(

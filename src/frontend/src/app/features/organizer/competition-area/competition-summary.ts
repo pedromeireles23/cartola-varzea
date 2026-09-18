@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 
 import { Alert, Card } from '../../../shared/ui';
-import { MODALITY_LABELS } from '../competition.service';
+import { MODALITY_LABELS, registrationWindowText } from '../competition.service';
 import { CompetitionContext } from './competition-context';
 import {
   businessDaysText,
@@ -119,6 +119,10 @@ import {
                 {{ diasUteis(dados.correctionWindowBusinessDays) }} após o fechamento do mercado
               </dd>
             </div>
+            <div class="dados__item">
+              <dt>Inscrição de atletas</dt>
+              <dd>{{ inscricao() }}</dd>
+            </div>
           </dl>
 
           @if (contexto.proprietario()) {
@@ -151,6 +155,11 @@ export class CompetitionSummaryPage {
   protected readonly antecedencia = computed(() =>
     leadTimeLabel(this.campeonato()?.marketCloseLeadTimeMinutes ?? 0),
   );
+
+  protected readonly inscricao = computed(() => {
+    const atual = this.campeonato();
+    return atual ? registrationWindowText(atual.registrationWindow) : '';
+  });
 
   protected diasUteis(dias: number): string {
     return businessDaysText(dias);

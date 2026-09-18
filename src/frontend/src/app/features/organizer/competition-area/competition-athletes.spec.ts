@@ -136,6 +136,24 @@ describe('CompetitionAthletesPage', () => {
     expect(text(fixture)).toContain('Time eliminado');
   });
 
+  it('avisa das inscrições encerradas e não oferece atleta novo', async () => {
+    const fixture = await open([athlete()]);
+    TestBed.inject(CompetitionContext).replace(
+      campeonato({
+        registrationWindow: {
+          closesAtLocal: '2026-09-20T09:30',
+          source: 'FirstStageLastRound',
+          roundName: 'Rodada 1',
+          isOpen: false,
+        },
+      }),
+    );
+    await fixture.whenStable();
+
+    expect(text(fixture)).toContain('Inscrições encerradas em 20/09/2026 09:30.');
+    expect(button(fixture, 'Adicionar atleta')?.disabled).toBe(true);
+  });
+
   it('auxiliar só lê o catálogo', async () => {
     const fixture = await open([athlete()], [team()], 'Assistant');
 

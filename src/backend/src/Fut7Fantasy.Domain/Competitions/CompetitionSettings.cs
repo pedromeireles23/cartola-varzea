@@ -6,6 +6,10 @@ public sealed record CompetitionSettingsError(string Field, string Message);
 /// <summary>
 /// Dados configuráveis do campeonato. As regras ficam aqui, e não só na API, para que
 /// a API e o agregado recusem exatamente os mesmos valores.
+///
+/// <see cref="RegistrationDeadlineLocal"/> é o prazo de inscrição escolhido pelo
+/// organizador, como `2026-10-04T18:00` no fuso do campeonato; vazio usa o padrão de
+/// <see cref="RegistrationWindow"/>.
 /// </summary>
 public sealed record CompetitionSettings(
     string Name,
@@ -14,7 +18,8 @@ public sealed record CompetitionSettings(
     string TimeZoneId,
     TimeSpan MarketCloseLeadTime,
     int ResultsSlaBusinessDays,
-    int CorrectionWindowBusinessDays)
+    int CorrectionWindowBusinessDays,
+    string? RegistrationDeadlineLocal = null)
 {
     public const int NameMinLength = 3;
     public const int NameMaxLength = 120;
@@ -45,7 +50,20 @@ public sealed record CompetitionSettings(
         Name = Name?.Trim() ?? string.Empty,
         Season = Season?.Trim() ?? string.Empty,
         TimeZoneId = TimeZoneId?.Trim() ?? string.Empty,
+        RegistrationDeadlineLocal = string.IsNullOrWhiteSpace(RegistrationDeadlineLocal)
+            ? null
+            : RegistrationDeadlineLocal.Trim(),
     };
+
+    /// <summary>O prazo configurado em UTC, ou nulo quando vale o padrão.</summary>
+    public DateTimeOffset? RegistrationDeadlineUtc()
+    {
+        var normalized = Normalized();
+        return normalized.RegistrationDeadlineLocal is { } local
+            && CompetitionClock.TryToUtc(local, normalized.TimeZoneId, out var utc, out _)
+                ? utc
+                : null;
+    }
 
     public IReadOnlyList<CompetitionSettingsError> Validate()
     {
@@ -98,6 +116,17 @@ public sealed record CompetitionSettings(
             errors.Add(new(
                 nameof(CorrectionWindowBusinessDays),
                 $"A janela de correção vai de {MinBusinessDays} a {MaxBusinessDays} dias úteis."));
+        }
+
+        if (normalized.RegistrationDeadlineLocal is { } deadline
+            && IsSupportedTimeZone(normalized.TimeZoneId)
+            && !CompetitionClock.TryToUtc(deadline, normalized.TimeZoneId, out _, out var failure))
+        {
+            errors.Add(new(
+                nameof(RegistrationDeadlineLocal),
+                failure == LocalTimeFailure.DoesNotExist
+                    ? "Esse horário não existe no fuso do campeonato, por causa do horário de verão."
+                    : "Informe a data e a hora do prazo de inscrição."));
         }
 
         return errors;

@@ -90,7 +90,8 @@ public static class CompetitionEndpoints
             request.TimeZoneId ?? CompetitionSettings.DefaultTimeZoneId,
             TimeSpan.FromMinutes(request.MarketCloseLeadTimeMinutes ?? 0),
             request.ResultsSlaBusinessDays ?? CompetitionSettings.DefaultResultsSlaBusinessDays,
-            request.CorrectionWindowBusinessDays ?? CompetitionSettings.DefaultCorrectionWindowBusinessDays);
+            request.CorrectionWindowBusinessDays ?? CompetitionSettings.DefaultCorrectionWindowBusinessDays,
+            request.RegistrationDeadlineLocal);
 
         var result = await service.CreateDraftAsync(organizationId, settings, cancellationToken)
             .ConfigureAwait(false);
@@ -135,7 +136,8 @@ public static class CompetitionEndpoints
             request.TimeZoneId!,
             TimeSpan.FromMinutes(request.MarketCloseLeadTimeMinutes!.Value),
             request.ResultsSlaBusinessDays!.Value,
-            request.CorrectionWindowBusinessDays!.Value);
+            request.CorrectionWindowBusinessDays!.Value,
+            request.RegistrationDeadlineLocal);
 
         return ToResult(await service.UpdateSettingsAsync(
             competitionId, settings, request.Version!, cancellationToken).ConfigureAwait(false));
@@ -238,7 +240,8 @@ public sealed record CompetitionSettingsRequest(
     string? TimeZoneId,
     int? MarketCloseLeadTimeMinutes,
     int? ResultsSlaBusinessDays,
-    int? CorrectionWindowBusinessDays);
+    int? CorrectionWindowBusinessDays,
+    string? RegistrationDeadlineLocal = null);
 
 /// <summary>Decisão de publicação, com a versão devolvida pela leitura.</summary>
 public sealed record CompetitionPublicationRequest(bool? Published, string? Version);
@@ -252,4 +255,5 @@ public sealed record UpdateCompetitionSettingsRequest(
     int? MarketCloseLeadTimeMinutes,
     int? ResultsSlaBusinessDays,
     int? CorrectionWindowBusinessDays,
-    string? Version);
+    string? Version,
+    string? RegistrationDeadlineLocal = null);
