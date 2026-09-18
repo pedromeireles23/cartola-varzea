@@ -4,6 +4,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiFailure } from '../../../core/api/problem-details';
 import { Alert, Badge, Button, Card, Loading } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
+import { ImportUpload } from './import-upload';
+import { ImportService } from './import.service';
 import {
   MATCH_STATUS_LABELS,
   PHASE_LABELS,
@@ -31,7 +33,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-round-review',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Loading, RouterLink],
+  imports: [Alert, Badge, Button, Card, ImportUpload, Loading, RouterLink],
   template: `
     <div class="pagina">
       <a class="voltar" routerLink="../..">← Voltar para rodadas</a>
@@ -100,6 +102,26 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
             }
           </app-card>
 
+          @if (acceptsSheets()) {
+            <app-card heading="Súmulas por planilha">
+              <p class="support">
+                A planilha da rodada já vem com os jogos, o elenco de cada time e o que já foi
+                lançado. Preencha, confira e importe todas as súmulas de uma vez. O placar sai dos
+                gols e gols contra, e um jogo que já tem súmula é substituído: a conferência avisa
+                antes.
+              </p>
+              <a class="acao" [href]="statisticsTemplateUrl()" download>
+                Baixar planilha da rodada
+              </a>
+            </app-card>
+            <app-import-upload
+              [previewUrl]="statisticsPreviewUrl()"
+              [commitUrl]="statisticsCommitUrl()"
+              contagem="sumulas"
+              (importado)="load(true)"
+            />
+          }
+
           <h2>Partidas</h2>
           <div class="matches">
             @for (match of review()!.matches; track match.matchId) {
@@ -147,6 +169,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 })
 export class RoundReviewPage {
   private readonly service = inject(RoundService);
+  private readonly imports = inject(ImportService);
   private readonly route = inject(ActivatedRoute);
   protected readonly context = inject(CompetitionContext);
   protected readonly owner = this.context.proprietario;
@@ -161,6 +184,24 @@ export class RoundReviewPage {
     return current.kind === 'ready' ? current.review : null;
   });
 
+  /** Súmula só é lançada depois do início dos jogos e antes da publicação. */
+  protected readonly acceptsSheets = computed(() => {
+    const phase = this.review()?.phase;
+    return phase === 'InProgress' || phase === 'UnderReview';
+  });
+
+  protected readonly statisticsTemplateUrl = computed(() =>
+    this.imports.statisticsTemplateUrl(this.competitionId, this.roundId),
+  );
+
+  protected readonly statisticsPreviewUrl = computed(() =>
+    this.imports.statisticsPreviewUrl(this.competitionId, this.roundId),
+  );
+
+  protected readonly statisticsCommitUrl = computed(() =>
+    this.imports.statisticsCommitUrl(this.competitionId, this.roundId),
+  );
+
   constructor() {
     this.load();
   }
@@ -170,8 +211,12 @@ export class RoundReviewPage {
     return current.kind === 'error' ? current.failure : null;
   }
 
-  protected load(): void {
-    this.state.set({ kind: 'loading' });
+  /**
+   * Com `quiet`, a revisão é atualizada sem passar pelo carregando: depois de importar,
+   * a tela precisa continuar mostrando o resultado da importação.
+   */
+  protected load(quiet = false): void {
+    if (!quiet) this.state.set({ kind: 'loading' });
     this.service.review(this.competitionId, this.roundId).subscribe({
       next: (review) => this.state.set({ kind: 'ready', review }),
       error: (failure: ApiFailure) => this.state.set({ kind: 'error', failure }),

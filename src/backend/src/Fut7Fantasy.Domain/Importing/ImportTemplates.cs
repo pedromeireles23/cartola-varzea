@@ -9,6 +9,7 @@ public enum ImportKind
     Athletes = 2,
     Coaches = 3,
     Matches = 4,
+    MatchStatistics = 5,
 }
 
 /// <param name="Name">Nome exato da coluna no cabeçalho.</param>
@@ -64,16 +65,24 @@ public sealed class CsvTemplate
         ImportKind.Athletes => "atletas",
         ImportKind.Coaches => "tecnicos",
         ImportKind.Matches => "partidas",
+        ImportKind.MatchStatistics => "estatisticas",
         _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Tipo de importação desconhecido."),
     };
 
     /// <summary>Arquivo modelo pronto para abrir na planilha, com as linhas de exemplo.</summary>
-    public string Render(char delimiter = DefaultDelimiter)
+    public string Render(char delimiter = DefaultDelimiter) => Render(SampleRows, delimiter);
+
+    /// <summary>
+    /// Arquivo com o cabeçalho do modelo e as linhas informadas. É assim que sai o modelo
+    /// já preenchido com os jogos e os elencos de uma rodada.
+    /// </summary>
+    public string Render(IEnumerable<IReadOnlyList<string>> rows, char delimiter = DefaultDelimiter)
     {
+        ArgumentNullException.ThrowIfNull(rows);
         var builder = new StringBuilder();
         builder.AppendJoin(delimiter, Columns.Select(column => CsvText.Cell(column.Name, delimiter)));
         builder.Append("\r\n");
-        foreach (var row in SampleRows)
+        foreach (var row in rows)
         {
             builder.AppendJoin(delimiter, row.Select(cell => CsvText.Cell(cell, delimiter)));
             builder.Append("\r\n");
@@ -166,7 +175,53 @@ public static class ImportTemplates
             ["Rodada 2", "Primeira fase", "Estrela do Bairro", "Grêmio da Rua 9", "27/09/2026", "09:30"],
         ]);
 
-    public static IReadOnlyList<CsvTemplate> Current { get; } = [TeamsV1, AthletesV1, CoachesV1, MatchesV1];
+    /// <summary>
+    /// Estatísticas de uma rodada, uma linha por atleta e partida. O modelo que a tela
+    /// baixa já vem com os jogos e os elencos da rodada; estas linhas são só o exemplo
+    /// da documentação. Atleta fora do arquivo conta como quem não jogou.
+    /// </summary>
+    private static readonly CsvTemplate MatchStatisticsV1 = new(
+        ImportKind.MatchStatistics,
+        1,
+        "estatísticas",
+        [
+            new("mandante", true, "Time mandante do jogo, como está na rodada.", "União da Vila"),
+            new("visitante", true, "Time visitante do jogo, como está na rodada.", "Estrela do Bairro"),
+            new("atleta", true, "Nome esportivo do atleta, de um dos dois times.", "Bia"),
+            new("time", false, "Time do atleta. Só para conferência; se preenchido, precisa bater.", "União da Vila"),
+            new("jogou", true, "sim ou nao. Quem não jogou não pode ter estatística.", "sim"),
+            new("goleiro", false, "sim se atuou como goleiro. Vazio é nao.", "nao"),
+            new(
+                "gols_sofridos",
+                false,
+                "Só para goleiro. Vazio com um goleiro só no time usa o placar do adversário.",
+                ""),
+            new("gols", false, "Gols marcados. Vazio é 0. O placar sai da soma dos gols e gols contra.", "2"),
+            new("assistencias", false, "Assistências. Vazio é 0.", "0"),
+            new("defesas", false, "Defesas do goleiro. Vazio é 0.", "0"),
+            new("penaltis_defendidos", false, "Pênaltis defendidos. Vazio é 0.", "0"),
+            new("amarelos", false, "Cartões amarelos, de 0 a 2. Vazio é 0.", "1"),
+            new("vermelho", false, "direto ou segundo amarelo. Vazio é sem expulsão.", ""),
+            new("gols_contra", false, "Gols contra. Contam para o placar do adversário. Vazio é 0.", "0"),
+            new("penaltis_perdidos", false, "Pênaltis perdidos. Vazio é 0.", "0"),
+        ],
+        [
+            [
+                "União da Vila", "Estrela do Bairro", "Bia", "União da Vila", "sim", "nao", "",
+                "2", "0", "0", "0", "1", "", "0", "0",
+            ],
+            [
+                "União da Vila", "Estrela do Bairro", "Nena", "União da Vila", "sim", "sim", "",
+                "0", "0", "4", "0", "0", "", "0", "0",
+            ],
+            [
+                "União da Vila", "Estrela do Bairro", "Tatá", "Estrela do Bairro", "sim", "nao", "",
+                "1", "0", "0", "0", "2", "segundo amarelo", "0", "0",
+            ],
+        ]);
+
+    public static IReadOnlyList<CsvTemplate> Current { get; } =
+        [TeamsV1, AthletesV1, CoachesV1, MatchesV1, MatchStatisticsV1];
 
     public static CsvTemplate For(ImportKind kind) =>
         Current.SingleOrDefault(template => template.Kind == kind)

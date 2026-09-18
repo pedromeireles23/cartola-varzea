@@ -105,6 +105,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IAthleteService, AthleteService>();
         services.AddScoped<ICoachService, CoachService>();
         services.AddScoped<ICatalogImportService, CatalogImportService>();
+        services.AddScoped<IRoundStatisticsImportService, RoundStatisticsImportService>();
         services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
         return services;

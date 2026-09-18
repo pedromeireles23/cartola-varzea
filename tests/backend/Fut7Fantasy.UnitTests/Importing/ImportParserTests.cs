@@ -1,4 +1,5 @@
 using System.Text;
+using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.Importing;
 using Fut7Fantasy.Domain.SportsCatalog;
 
@@ -194,6 +195,64 @@ public sealed class ImportParserTests
             [(4, "mandante"), (5, "visitante"), (6, "data"), (6, "hora")],
             parsed.Issues.Select(issue => (issue.Line, issue.Column)));
         Assert.Equal(["Estrela do Bairro"], parsed.Rows.Select(row => row.HomeTeamName));
+    }
+
+    [Fact]
+    public void StatisticsReadWhatTheOrganizerTypesAndBlankCountsAreZero()
+    {
+        var parsed = ImportParser.MatchStatistics(Read(
+            """
+            mandante;visitante;atleta;jogou;goleiro;gols_sofridos;gols;amarelos;vermelho
+            União;Estrela;Bia;Sim;;;2;;
+            União;Estrela;Nena;S;SIM;3;;;
+            União;Estrela;Tatá;não;;;;;
+            União;Estrela;Duda;sim;n;;;2;Segundo Amarelo
+            União;Estrela;Rê;sim;;;;;direto
+            """));
+
+        Assert.True(parsed.IsValid);
+        Assert.Equal([true, true, false, true, true], parsed.Rows.Select(row => row.DidPlay));
+        Assert.Equal([false, true, false, false, false], parsed.Rows.Select(row => row.PlayedAsGoalkeeper));
+
+        // Vazio em gols sofridos é "calcular"; nas outras contagens, zero.
+        Assert.Null(parsed.Rows[0].GoalsConceded);
+        Assert.Equal(3, parsed.Rows[1].GoalsConceded);
+        Assert.Equal(0, parsed.Rows[1].Goals);
+        Assert.Equal(
+            [null, null, null, RedCardReason.SecondYellow, RedCardReason.Direct],
+            parsed.Rows.Select(row => row.RedCard));
+
+        // As colunas opcionais podem faltar no arquivo; `time` não é obrigatória.
+        Assert.All(parsed.Rows, row => Assert.Null(row.TeamName));
+    }
+
+    [Fact]
+    public void StatisticsRejectWhatIsNotACountOrAnAnswer()
+    {
+        var parsed = ImportParser.MatchStatistics(Read(
+            """
+            mandante;visitante;atleta;jogou;gols;vermelho
+            União;Estrela;Bia;talvez;;
+            União;Estrela;Nena;sim;-1;
+            União;Estrela;Tatá;sim;1,5;
+            União;Estrela;Duda;sim;;amarelo
+            União;Estrela;Bia;sim;;
+            """));
+
+        Assert.Equal(
+            [(2, "jogou"), (3, "gols"), (4, "gols"), (5, "vermelho")],
+            parsed.Issues.Select(issue => (issue.Line, issue.Column)));
+        Assert.Equal(["Bia"], parsed.Rows.Select(row => row.AthleteName));
+    }
+
+    [Theory]
+    [InlineData("YellowCards", "amarelos")]
+    [InlineData("RedCardReason", "vermelho")]
+    [InlineData("GoalsConceded", "gols_sofridos")]
+    [InlineData("DidPlay", "jogou")]
+    public void SheetFieldsPointAtTheirSpreadsheetColumn(string field, string column)
+    {
+        Assert.Equal(column, ImportParser.StatisticsColumnFor(field));
     }
 
     private static string Message(ImportParseResult<AthleteImportRow> parsed, int line) =>

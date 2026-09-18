@@ -39,6 +39,29 @@ public sealed record MatchImportRow(
     string AwayTeamName,
     string KickoffLocal);
 
+/// <summary>
+/// Uma linha de estatística: um atleta num jogo da rodada. O jogo é apontado por
+/// mandante e visitante; <see cref="GoalsConceded"/> nulo significa "calcular", o que só
+/// funciona com um goleiro só no time.
+/// </summary>
+public sealed record MatchStatisticsImportRow(
+    int Line,
+    string HomeTeamName,
+    string AwayTeamName,
+    string AthleteName,
+    string? TeamName,
+    bool DidPlay,
+    bool PlayedAsGoalkeeper,
+    int? GoalsConceded,
+    int Goals,
+    int Assists,
+    int GoalkeeperSaves,
+    int PenaltySaves,
+    int YellowCards,
+    RedCardReason? RedCard,
+    int OwnGoals,
+    int PenaltyMisses);
+
 /// <summary>Resultado da leitura: as linhas boas e todos os problemas encontrados.</summary>
 public sealed record ImportParseResult<TRow>(IReadOnlyList<TRow> Rows, IReadOnlyList<ImportIssue> Issues)
 {
@@ -72,6 +95,38 @@ public static class ImportParser
         ["destaque"] = PriceTier.Star,
         ["regular"] = PriceTier.Regular,
         ["basico"] = PriceTier.Basic,
+    };
+
+    private static readonly Dictionary<string, bool> YesNo = new(StringComparer.Ordinal)
+    {
+        ["sim"] = true,
+        ["s"] = true,
+        ["nao"] = false,
+        ["n"] = false,
+    };
+
+    private static readonly Dictionary<string, RedCardReason> RedCards = new(StringComparer.Ordinal)
+    {
+        ["direto"] = RedCardReason.Direct,
+        ["segundo amarelo"] = RedCardReason.SecondYellow,
+        ["segundo_amarelo"] = RedCardReason.SecondYellow,
+    };
+
+    /// <summary>Coluna da planilha de cada campo da súmula, para o erro apontar a célula.</summary>
+    private static readonly Dictionary<string, string> StatisticsColumns = new(StringComparer.Ordinal)
+    {
+        [nameof(MatchSheetAppearanceDefinition.DidPlay)] = "jogou",
+        [nameof(MatchSheetAppearanceDefinition.PlayedAsGoalkeeper)] = "goleiro",
+        [nameof(MatchSheetAppearanceDefinition.GoalsConceded)] = "gols_sofridos",
+        [nameof(MatchSheetAppearanceDefinition.Goals)] = "gols",
+        [nameof(MatchSheetAppearanceDefinition.Assists)] = "assistencias",
+        [nameof(MatchSheetAppearanceDefinition.GoalkeeperSaves)] = "defesas",
+        [nameof(MatchSheetAppearanceDefinition.PenaltySaves)] = "penaltis_defendidos",
+        [nameof(MatchSheetAppearanceDefinition.YellowCards)] = "amarelos",
+        [nameof(MatchSheetAppearanceDefinition.RedCards)] = "vermelho",
+        [nameof(MatchSheetAppearanceDefinition.RedCardReason)] = "vermelho",
+        [nameof(MatchSheetAppearanceDefinition.OwnGoals)] = "gols_contra",
+        [nameof(MatchSheetAppearanceDefinition.PenaltyMisses)] = "penaltis_perdidos",
     };
 
     /// <summary>
@@ -169,6 +224,66 @@ public static class ImportParser
 
             return team is null ? null : new CoachImportRow(row.Line, team, name, tier, price);
         }, row => row.TeamName, "time");
+    }
+
+    /// <summary>Coluna do arquivo de estatísticas que corresponde a um campo da súmula.</summary>
+    public static string StatisticsColumnFor(string field) =>
+        StatisticsColumns.GetValueOrDefault(field, "atleta");
+
+    /// <summary>
+    /// Estatísticas de uma rodada. Aqui só se lê o que foi escrito; as regras da súmula
+    /// (cartões, goleiro, placar) são do domínio e rodam depois, por partida.
+    /// </summary>
+    public static ImportParseResult<MatchStatisticsImportRow> MatchStatistics(CsvDocument document)
+    {
+        var template = ImportTemplates.For(ImportKind.MatchStatistics);
+        return Map(template, document, (row, cells, issues) =>
+        {
+            var home = Required(
+                cells, "mandante", row, issues, RealTeamDefinition.NameMinLength, RealTeamDefinition.NameMaxLength);
+            var away = Required(
+                cells, "visitante", row, issues, RealTeamDefinition.NameMinLength, RealTeamDefinition.NameMaxLength);
+            var athlete = Required(
+                cells,
+                "atleta",
+                row,
+                issues,
+                AthleteDefinition.SportingNameMinLength,
+                AthleteDefinition.SportingNameMaxLength);
+            var team = Optional(
+                cells, "time", row, issues, RealTeamDefinition.NameMinLength, RealTeamDefinition.NameMaxLength);
+            var didPlay = Enumerated(cells, "jogou", row, issues, YesNo, required: true);
+            var goalkeeper = Enumerated(cells, "goleiro", row, issues, YesNo, required: false) ?? false;
+            var conceded = Count(cells, "gols_sofridos", row, issues, emptyIsZero: false);
+            var goals = Count(cells, "gols", row, issues);
+            var assists = Count(cells, "assistencias", row, issues);
+            var saves = Count(cells, "defesas", row, issues);
+            var penaltySaves = Count(cells, "penaltis_defendidos", row, issues);
+            var yellows = Count(cells, "amarelos", row, issues);
+            var red = Enumerated(cells, "vermelho", row, issues, RedCards, required: false);
+            var ownGoals = Count(cells, "gols_contra", row, issues);
+            var penaltyMisses = Count(cells, "penaltis_perdidos", row, issues);
+
+            return home is null || away is null || athlete is null || didPlay is null
+                ? null
+                : new MatchStatisticsImportRow(
+                    row.Line,
+                    home,
+                    away,
+                    athlete,
+                    team,
+                    didPlay.Value,
+                    goalkeeper,
+                    conceded,
+                    goals ?? 0,
+                    assists ?? 0,
+                    saves ?? 0,
+                    penaltySaves ?? 0,
+                    yellows ?? 0,
+                    red,
+                    ownGoals ?? 0,
+                    penaltyMisses ?? 0);
+        }, row => $"{row.AthleteName} em {row.HomeTeamName} x {row.AwayTeamName}", "atleta");
     }
 
     /// <summary>
@@ -279,8 +394,35 @@ public static class ImportParser
         AthleteImportRow athlete => athlete.Line,
         CoachImportRow coach => coach.Line,
         MatchImportRow match => match.Line,
+        MatchStatisticsImportRow statistics => statistics.Line,
         _ => 0,
     };
+
+    /// <summary>
+    /// Quantidade inteira de 0 a 999. Vazio vale 0, a não ser quando vazio tem outro
+    /// sentido, como os gols sofridos que o servidor calcula.
+    /// </summary>
+    private static int? Count(
+        IReadOnlyDictionary<string, string> cells,
+        string column,
+        CsvRow row,
+        List<ImportIssue> issues,
+        bool emptyIsZero = true)
+    {
+        var raw = cells.GetValueOrDefault(column, string.Empty).Trim();
+        if (raw.Length == 0)
+        {
+            return emptyIsZero ? 0 : null;
+        }
+
+        if (int.TryParse(raw, NumberStyles.None, CultureInfo.InvariantCulture, out var value) && value <= 999)
+        {
+            return value;
+        }
+
+        issues.Add(new(row.Line, column, $"`{raw}` não vale em `{column}`. Use um número inteiro, como 0 ou 2."));
+        return null;
+    }
 
     /// <summary>`20/09/2026` é o que a planilha em português grava; `2026-09-20` também vale.</summary>
     private static DateOnly? Date(

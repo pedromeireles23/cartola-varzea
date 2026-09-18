@@ -1,4 +1,3 @@
-using System.Data;
 using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Importing;
 using Fut7Fantasy.Domain.Importing;
@@ -55,7 +54,7 @@ public sealed partial class CatalogImportService(
 
         // A trava na linha do campeonato serializa importações do mesmo campeonato: sem
         // ela, dois arquivos simultâneos criariam o mesmo time duas vezes.
-        return await InCompetitionLockAsync(competitionId, async () => kind switch
+        return await CompetitionLock.RunAsync(dbContext, competitionId, async () => kind switch
         {
             ImportKind.Teams => await TeamsAsync(competitionId, read.Document, apply, cancellationToken)
                 .ConfigureAwait(false),
@@ -382,7 +381,8 @@ public sealed partial class CatalogImportService(
         return Completed(summary) with { Notes = notes ?? [] };
     }
 
-    private static string Explain(CsvFailure failure, int line) => failure switch
+    /// <summary>Por que um arquivo nem chegou a ser lido, em linguagem de quem usa planilha.</summary>
+    internal static string Explain(CsvFailure failure, int line) => failure switch
     {
         CsvFailure.Empty => "O arquivo está vazio.",
         CsvFailure.TooLarge =>
@@ -399,36 +399,4 @@ public sealed partial class CatalogImportService(
             $"As aspas abertas na linha {line} não foram fechadas.",
         _ => "Não foi possível ler o arquivo.",
     };
-
-    /// <summary>
-    /// Serializa as importações de um mesmo campeonato. A trava fica na linha do
-    /// campeonato, como no cadastro manual: read committed com UPDLOCK, sem range locks.
-    /// </summary>
-    private Task<T> InCompetitionLockAsync<T>(
-        Guid competitionId,
-        Func<Task<T>> operation,
-        CancellationToken cancellationToken)
-    {
-        var strategy = dbContext.Database.CreateExecutionStrategy();
-        return strategy.ExecuteAsync(async () =>
-        {
-            dbContext.ChangeTracker.Clear();
-            await using var transaction = await dbContext.Database
-                .BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken)
-                .ConfigureAwait(false);
-
-            await dbContext.Competitions
-                .FromSql($"""
-                    SELECT * FROM [competitions].[Competitions] WITH (UPDLOCK, ROWLOCK)
-                    WHERE [Id] = {competitionId}
-                    """)
-                .AsNoTracking()
-                .SingleAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            var result = await operation().ConfigureAwait(false);
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-            return result;
-        });
-    }
 }

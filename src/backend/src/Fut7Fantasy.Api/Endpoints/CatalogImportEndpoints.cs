@@ -55,6 +55,27 @@ public static class CatalogImportEndpoints
             .WithSummary("Revalida o arquivo e grava tudo, ou nada, em transação única.")
             .WithMetadata(new RequestSizeLimitMetadata());
 
+        // Estatísticas são da rodada, e quem lança súmula também importa: proprietário e
+        // auxiliar, como no editor da partida.
+        var statistics = routes
+            .MapGroup("/api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/imports/estatisticas")
+            .WithTags("Importação");
+
+        statistics.MapGet("/template", DownloadStatisticsAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionMember)
+            .WithName("DownloadRoundStatisticsTemplate")
+            .WithSummary("Baixa o modelo preenchido com os jogos e os elencos da rodada.");
+        statistics.MapPost("/preview", PreviewStatisticsAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionStaffWrite)
+            .WithName("PreviewRoundStatisticsImport")
+            .WithSummary("Lê o arquivo e mostra placares e súmulas que mudariam, sem gravar nada.")
+            .WithMetadata(new RequestSizeLimitMetadata());
+        statistics.MapPost("/", CommitStatisticsAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionStaffWrite)
+            .WithName("CommitRoundStatisticsImport")
+            .WithSummary("Revalida o arquivo e grava todas as súmulas, ou nenhuma.")
+            .WithMetadata(new RequestSizeLimitMetadata());
+
         return routes;
     }
 
@@ -66,12 +87,49 @@ public static class CatalogImportEndpoints
         }
 
         var template = ImportTemplates.For(parsed);
+        return CsvFile(template.Render(), template.FileName);
+    }
 
-        // BOM porque o Excel no Windows assume ANSI sem ele e estraga os acentos.
+    private static async Task<IResult> DownloadStatisticsAsync(
+        Guid competitionId,
+        Guid roundId,
+        IRoundStatisticsImportService service,
+        CancellationToken cancellationToken) =>
+        await service.TemplateAsync(competitionId, roundId, cancellationToken).ConfigureAwait(false) is { } file
+            ? CsvFile(file.Content, file.FileName)
+            : Results.NotFound();
+
+    /// <summary>BOM porque o Excel no Windows assume ANSI sem ele e estraga os acentos.</summary>
+    private static IResult CsvFile(string content, string fileName)
+    {
         var bytes = Encoding.UTF8.GetPreamble()
-            .Concat(Encoding.UTF8.GetBytes(template.Render()))
+            .Concat(Encoding.UTF8.GetBytes(content))
             .ToArray();
-        return Results.File(bytes, "text/csv; charset=utf-8", template.FileName);
+        return Results.File(bytes, "text/csv; charset=utf-8", fileName);
+    }
+
+    private static async Task<IResult> PreviewStatisticsAsync(
+        Guid competitionId,
+        Guid roundId,
+        HttpRequest request,
+        IRoundStatisticsImportService service,
+        CancellationToken cancellationToken)
+    {
+        var (content, rejected) = await ReadFileAsync(request, cancellationToken).ConfigureAwait(false);
+        return rejected ?? Respond(
+            await service.PreviewAsync(competitionId, roundId, content, cancellationToken).ConfigureAwait(false));
+    }
+
+    private static async Task<IResult> CommitStatisticsAsync(
+        Guid competitionId,
+        Guid roundId,
+        HttpRequest request,
+        IRoundStatisticsImportService service,
+        CancellationToken cancellationToken)
+    {
+        var (content, rejected) = await ReadFileAsync(request, cancellationToken).ConfigureAwait(false);
+        return rejected ?? Respond(
+            await service.CommitAsync(competitionId, roundId, content, cancellationToken).ConfigureAwait(false));
     }
 
     private static Task<IResult> PreviewAsync(
@@ -104,21 +162,41 @@ public static class CatalogImportEndpoints
             return Results.NotFound();
         }
 
+        var (content, rejected) = await ReadFileAsync(request, cancellationToken).ConfigureAwait(false);
+        if (rejected is not null)
+        {
+            return rejected;
+        }
+
+        return Respond(apply
+            ? await service.CommitAsync(competitionId, parsed, content, cancellationToken).ConfigureAwait(false)
+            : await service.PreviewAsync(competitionId, parsed, content, cancellationToken).ConfigureAwait(false));
+    }
+
+    /// <summary>
+    /// Lê o arquivo do formulário para a memória, dentro do limite. Devolve a recusa
+    /// pronta quando nem há arquivo para ler.
+    /// </summary>
+    private static async Task<(byte[] Content, IResult? Rejected)> ReadFileAsync(
+        HttpRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
         if (!request.HasFormContentType)
         {
-            return Rejected($"Envie o arquivo no campo `{FormField}` de um formulário.");
+            return ([], Rejected($"Envie o arquivo no campo `{FormField}` de um formulário."));
         }
 
         var form = await request.ReadFormAsync(cancellationToken).ConfigureAwait(false);
         var file = form.Files[FormField];
         if (file is null || file.Length == 0)
         {
-            return Rejected("Escolha um arquivo CSV.");
+            return ([], Rejected("Escolha um arquivo CSV."));
         }
 
         if (file.Length > CsvLimits.MaxBytes)
         {
-            return Rejected($"O arquivo passa de {CsvLimits.MaxBytes / 1024} KB. Divida a planilha em partes.");
+            return ([], Rejected($"O arquivo passa de {CsvLimits.MaxBytes / 1024} KB. Divida a planilha em partes."));
         }
 
         // O nome do arquivo enviado nunca vira caminho nem nome interno (04 §9).
@@ -128,12 +206,11 @@ public static class CatalogImportEndpoints
             await stream.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
 
-        var content = buffer.ToArray();
-        var result = apply
-            ? await service.CommitAsync(competitionId, parsed, content, cancellationToken).ConfigureAwait(false)
-            : await service.PreviewAsync(competitionId, parsed, content, cancellationToken).ConfigureAwait(false);
+        return (buffer.ToArray(), null);
+    }
 
-        return result.Outcome switch
+    private static IResult Respond(ImportResult result) =>
+        result.Outcome switch
         {
             ImportOutcome.Completed => Results.Ok(result),
             ImportOutcome.NotFound => Results.NotFound(),
@@ -148,7 +225,6 @@ public static class CatalogImportEndpoints
                     ["issues"] = result.Issues,
                 }),
         };
-    }
 
     private static IResult Rejected(string detail) => Results.Problem(
         title: "Arquivo recusado",

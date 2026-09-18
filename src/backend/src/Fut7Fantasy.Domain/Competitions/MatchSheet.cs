@@ -50,6 +50,55 @@ public sealed record MatchSheetAppearanceDefinition(
         || OwnGoals != 0
         || PenaltyMisses != 0;
 
+    /// <summary>
+    /// Regras que dependem só deste atleta. Ficam aqui, e não na súmula inteira, para que
+    /// a importação aponte a linha da planilha em que o erro está.
+    /// </summary>
+    public IReadOnlyList<MatchSheetError> Validate()
+    {
+        var errors = new List<MatchSheetError>();
+        if (!DidPlay && (PlayedAsGoalkeeper || HasStatistics))
+        {
+            errors.Add(new(
+                nameof(DidPlay),
+                "Atletas que não jogaram não podem ter posição em campo ou estatísticas."));
+        }
+
+        if (!PlayedAsGoalkeeper && GoalsConceded != 0)
+        {
+            errors.Add(new(nameof(GoalsConceded), "Somente goleiros podem registrar gols sofridos."));
+        }
+
+        MatchSheetDefinition.Range(GoalsConceded, 0, 99, nameof(GoalsConceded), errors);
+        MatchSheetDefinition.Range(Goals, 0, 99, nameof(Goals), errors);
+        MatchSheetDefinition.Range(Assists, 0, 99, nameof(Assists), errors);
+        MatchSheetDefinition.Range(GoalkeeperSaves, 0, 999, nameof(GoalkeeperSaves), errors);
+        MatchSheetDefinition.Range(PenaltySaves, 0, 99, nameof(PenaltySaves), errors);
+        MatchSheetDefinition.Range(YellowCards, 0, 2, nameof(YellowCards), errors);
+        MatchSheetDefinition.Range(RedCards, 0, 1, nameof(RedCards), errors);
+        MatchSheetDefinition.Range(OwnGoals, 0, 99, nameof(OwnGoals), errors);
+        MatchSheetDefinition.Range(PenaltyMisses, 0, 99, nameof(PenaltyMisses), errors);
+
+        if (RedCards == 1 && RedCardReason is null)
+        {
+            errors.Add(new(nameof(RedCardReason), "Informe se a expulsão foi direta ou por segundo amarelo."));
+        }
+
+        if (RedCards == 0 && RedCardReason is not null)
+        {
+            errors.Add(new(
+                nameof(RedCardReason),
+                "O motivo da expulsão só pode ser informado com cartão vermelho."));
+        }
+
+        if (RedCardReason == Competitions.RedCardReason.SecondYellow && YellowCards != 2)
+        {
+            errors.Add(new(nameof(YellowCards), "Expulsão por segundo amarelo exige dois cartões amarelos."));
+        }
+
+        return errors;
+    }
+
     public IEnumerable<StatEventDefinition> Events()
     {
         if (Goals > 0) yield return new(StatEventType.Goal, Goals, null);
@@ -85,7 +134,12 @@ public sealed record MatchSheetDefinition(
 
         foreach (var appearance in Appearances)
         {
-            ValidateAppearance(appearance, homeTeamId, awayTeamId, errors);
+            if (appearance.RealTeamId != homeTeamId && appearance.RealTeamId != awayTeamId)
+            {
+                errors.Add(new(nameof(appearance.RealTeamId), "O atleta não pertence a um dos times da partida."));
+            }
+
+            errors.AddRange(appearance.Validate());
         }
 
         ValidateTeam(homeTeamId, HomeScore, AwayScore, errors);
@@ -118,59 +172,7 @@ public sealed record MatchSheetDefinition(
         }
     }
 
-    private static void ValidateAppearance(
-        MatchSheetAppearanceDefinition item,
-        Guid homeTeamId,
-        Guid awayTeamId,
-        List<MatchSheetError> errors)
-    {
-        if (item.RealTeamId != homeTeamId && item.RealTeamId != awayTeamId)
-        {
-            errors.Add(new(nameof(item.RealTeamId), "O atleta não pertence a um dos times da partida."));
-        }
-
-        if (!item.DidPlay && (item.PlayedAsGoalkeeper || item.HasStatistics))
-        {
-            errors.Add(new(
-                nameof(item.DidPlay),
-                "Atletas que não jogaram não podem ter posição em campo ou estatísticas."));
-        }
-
-        if (!item.PlayedAsGoalkeeper && item.GoalsConceded != 0)
-        {
-            errors.Add(new(nameof(item.GoalsConceded), "Somente goleiros podem registrar gols sofridos."));
-        }
-
-        Range(item.GoalsConceded, 0, 99, nameof(item.GoalsConceded), errors);
-        Range(item.Goals, 0, 99, nameof(item.Goals), errors);
-        Range(item.Assists, 0, 99, nameof(item.Assists), errors);
-        Range(item.GoalkeeperSaves, 0, 999, nameof(item.GoalkeeperSaves), errors);
-        Range(item.PenaltySaves, 0, 99, nameof(item.PenaltySaves), errors);
-        Range(item.YellowCards, 0, 2, nameof(item.YellowCards), errors);
-        Range(item.RedCards, 0, 1, nameof(item.RedCards), errors);
-        Range(item.OwnGoals, 0, 99, nameof(item.OwnGoals), errors);
-        Range(item.PenaltyMisses, 0, 99, nameof(item.PenaltyMisses), errors);
-
-        if (item.RedCards == 1 && item.RedCardReason is null)
-        {
-            errors.Add(new(nameof(item.RedCardReason), "Informe se a expulsão foi direta ou por segundo amarelo."));
-        }
-
-        if (item.RedCards == 0 && item.RedCardReason is not null)
-        {
-            errors.Add(new(
-                nameof(item.RedCardReason),
-                "O motivo da expulsão só pode ser informado com cartão vermelho."));
-        }
-
-        if (item.RedCardReason == Fut7Fantasy.Domain.Competitions.RedCardReason.SecondYellow
-            && item.YellowCards != 2)
-        {
-            errors.Add(new(nameof(item.YellowCards), "Expulsão por segundo amarelo exige dois cartões amarelos."));
-        }
-    }
-
-    private static void Range(int value, int minimum, int maximum, string field, List<MatchSheetError> errors)
+    internal static void Range(int value, int minimum, int maximum, string field, List<MatchSheetError> errors)
     {
         if (value < minimum || value > maximum)
         {

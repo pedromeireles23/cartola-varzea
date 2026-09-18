@@ -140,4 +140,56 @@ describe('RoundReviewPage', () => {
     expect(text(fixture)).toContain('Em apuração');
     expect(button(fixture, 'Enviar para revisão')).toBeUndefined();
   });
+
+  it('importa as súmulas da rodada pela planilha e atualiza a conferência sem sumir o resultado', async () => {
+    const fixture = await open(review({ completedSheets: 0, ready: false }), 'Assistant');
+    const element = fixture.nativeElement as HTMLElement;
+
+    const link = [...element.querySelectorAll('a')].find(
+      (item) => item.textContent?.trim() === 'Baixar planilha da rodada',
+    );
+    expect(link?.getAttribute('href')).toBe(
+      '/api/v1/competitions/c1/rounds/r1/imports/estatisticas/template',
+    );
+
+    const arquivo = new File(['mandante;visitante\r\n'], 'rodada.csv', { type: 'text/csv' });
+    const entrada = element.querySelector('input[type=file]')!;
+    Object.defineProperty(entrada, 'files', { configurable: true, value: [arquivo] });
+    entrada.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    const resultado = {
+      outcome: 'Completed',
+      summary: { rows: 4, created: 1, updated: 0, unchanged: 0 },
+      issues: [],
+      rejectionMessage: null,
+      notes: ['Aurora 2 x 1 Estrela: súmula nova.'],
+    };
+    button(fixture, 'Conferir arquivo')?.click();
+    await fixture.whenStable();
+    http
+      .expectOne('/api/v1/competitions/c1/rounds/r1/imports/estatisticas/preview')
+      .flush(resultado);
+    await fixture.whenStable();
+    expect(text(fixture)).toContain(
+      '4 linhas lidas: 1 súmula nova, 0 a substituir, 0 sem mudança.',
+    );
+    expect(text(fixture)).toContain('Aurora 2 x 1 Estrela: súmula nova.');
+
+    button(fixture, 'Importar')?.click();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/competitions/c1/rounds/r1/imports/estatisticas').flush(resultado);
+    await fixture.whenStable();
+    http.expectOne(URL).flush(review());
+    await fixture.whenStable();
+
+    expect(text(fixture)).toContain('Importado');
+    expect(text(fixture)).toContain('1 de 1');
+  });
+
+  it('não oferece a planilha antes do início dos jogos', async () => {
+    const fixture = await open(review({ phase: 'MarketOpen' }));
+
+    expect(text(fixture)).not.toContain('Súmulas por planilha');
+  });
 });

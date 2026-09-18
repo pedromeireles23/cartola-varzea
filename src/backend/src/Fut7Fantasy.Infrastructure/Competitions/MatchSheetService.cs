@@ -13,6 +13,8 @@ public sealed class MatchSheetService(
     ICurrentUser currentUser,
     TimeProvider clock) : IMatchSheetService
 {
+    private readonly MatchSheetStore _store = new(dbContext);
+
     public async Task<MatchSheetView?> GetAsync(
         Guid competitionId,
         Guid matchId,
@@ -45,7 +47,7 @@ public sealed class MatchSheetService(
             return MatchSheetCommandResult.Of(MatchSheetCommandOutcome.StatusLocked);
         }
 
-        var roster = await RosterAsync(context, cancellationToken).ConfigureAwait(false);
+        var roster = await _store.RosterAsync(context.Match, cancellationToken).ConfigureAwait(false);
         var rosterByAthlete = roster.ToDictionary(item => item.AthleteId);
         var definitions = new List<MatchSheetAppearanceDefinition>();
         var errors = new List<MatchSheetError>();
@@ -97,8 +99,8 @@ public sealed class MatchSheetService(
                 "Informe a participação de todos os atletas elegíveis para a partida."));
         }
 
-        NormalizeSingleGoalkeeper(definitions, context.Match.HomeTeamId, input.AwayScore);
-        NormalizeSingleGoalkeeper(definitions, context.Match.AwayTeamId, input.HomeScore);
+        MatchSheetStore.NormalizeSingleGoalkeeper(definitions, context.Match.HomeTeamId, input.AwayScore);
+        MatchSheetStore.NormalizeSingleGoalkeeper(definitions, context.Match.AwayTeamId, input.HomeScore);
         var definition = new MatchSheetDefinition(input.HomeScore, input.AwayScore, definitions);
         errors.AddRange(definition.Validate(context.Match.HomeTeamId, context.Match.AwayTeamId));
         if (errors.Count > 0)
@@ -131,10 +133,10 @@ public sealed class MatchSheetService(
 
             dbContext.Entry(sheet).Property(item => item.RowVersion).OriginalValue = expectedVersion;
             sheet.UpdateScore(input.HomeScore, input.AwayScore, now);
-            await ReplaceDetailsAsync(sheet, cancellationToken).ConfigureAwait(false);
+            await _store.ReplaceDetailsAsync(sheet, cancellationToken).ConfigureAwait(false);
         }
 
-        AddDetails(sheet, definitions);
+        _store.AddDetails(sheet, definitions);
         AddAudit(sheet, now);
         try
         {
@@ -170,32 +172,11 @@ public sealed class MatchSheetService(
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
-    private async Task<List<RosterRow>> RosterAsync(
-        MatchContext context,
-        CancellationToken cancellationToken) =>
-        await (
-            from registration in dbContext.RosterRegistrations.AsNoTracking()
-            join athlete in dbContext.Athletes.AsNoTracking() on registration.AthleteId equals athlete.Id
-            where registration.CompetitionId == context.Match.CompetitionId
-                && athlete.CompetitionId == context.Match.CompetitionId
-                && registration.RegisteredAt <= context.Match.KickoffAt
-                && (registration.ReleasedAt == null || registration.ReleasedAt >= context.Match.KickoffAt)
-                && (registration.RealTeamId == context.Match.HomeTeamId
-                    || registration.RealTeamId == context.Match.AwayTeamId)
-            orderby registration.RealTeamId, athlete.SportingName
-            select new RosterRow(
-                athlete.Id,
-                registration.RealTeamId,
-                athlete.SportingName,
-                athlete.Position))
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-
     private async Task<MatchSheetView> ViewAsync(
         MatchContext context,
         CancellationToken cancellationToken)
     {
-        var roster = await RosterAsync(context, cancellationToken).ConfigureAwait(false);
+        var roster = await _store.RosterAsync(context.Match, cancellationToken).ConfigureAwait(false);
         var sheet = await dbContext.MatchSheets
             .AsNoTracking()
             .SingleOrDefaultAsync(
@@ -245,7 +226,7 @@ public sealed class MatchSheetService(
     }
 
     private static MatchSheetAthleteView AthleteView(
-        RosterRow athlete,
+        SheetAthlete athlete,
         AthleteAppearance? appearance,
         IReadOnlyDictionary<StatEventType, StatEvent>? events)
     {
@@ -273,53 +254,6 @@ public sealed class MatchSheetService(
         IReadOnlyDictionary<StatEventType, StatEvent>? events,
         StatEventType type) => events?.GetValueOrDefault(type)?.Quantity ?? 0;
 
-    private static void NormalizeSingleGoalkeeper(
-        List<MatchSheetAppearanceDefinition> definitions,
-        Guid teamId,
-        int goalsConceded)
-    {
-        var indexes = definitions
-            .Select((item, index) => (item, index))
-            .Where(pair => pair.item.RealTeamId == teamId
-                && pair.item.DidPlay
-                && pair.item.PlayedAsGoalkeeper)
-            .Select(pair => pair.index)
-            .ToArray();
-        if (indexes.Length == 1)
-        {
-            var index = indexes[0];
-            definitions[index] = definitions[index] with { GoalsConceded = goalsConceded };
-        }
-    }
-
-    private async Task ReplaceDetailsAsync(MatchSheet sheet, CancellationToken cancellationToken)
-    {
-        var appearances = await dbContext.AthleteAppearances
-            .Where(item => item.CompetitionId == sheet.CompetitionId && item.MatchSheetId == sheet.Id)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        var events = await dbContext.StatEvents
-            .Where(item => item.CompetitionId == sheet.CompetitionId && item.MatchSheetId == sheet.Id)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        dbContext.AthleteAppearances.RemoveRange(appearances);
-        dbContext.StatEvents.RemoveRange(events);
-    }
-
-    private void AddDetails(MatchSheet sheet, IEnumerable<MatchSheetAppearanceDefinition> definitions)
-    {
-        foreach (var definition in definitions)
-        {
-            dbContext.AthleteAppearances.Add(AthleteAppearance.Create(
-                Guid.CreateVersion7(), sheet.CompetitionId, sheet.Id, definition));
-            foreach (var statEvent in definition.Events())
-            {
-                dbContext.StatEvents.Add(StatEvent.Create(
-                    Guid.CreateVersion7(), sheet.CompetitionId, sheet.Id, definition.AthleteId, statEvent));
-            }
-        }
-    }
-
     private void AddAudit(MatchSheet sheet, DateTimeOffset occurredAt) =>
         dbContext.AdministrativeAuditEntries.Add(AdministrativeAuditEntry.Create(
             currentUser.Id ?? throw new InvalidOperationException("O caso de uso exige uma conta autenticada."),
@@ -333,10 +267,4 @@ public sealed class MatchSheetService(
         Round Round,
         string HomeTeamName,
         string AwayTeamName);
-
-    private sealed record RosterRow(
-        Guid AthleteId,
-        Guid RealTeamId,
-        string SportingName,
-        Position Position);
 }

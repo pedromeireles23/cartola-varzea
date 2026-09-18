@@ -43,6 +43,8 @@ public sealed class AuthorizationMatrixTests
         "GET /api/v1/competitions/{competitionId:guid}/matches/{matchId:guid}/sheet/ -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/readiness -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/rounds/ -> competition-member",
+        "GET /api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/imports/estatisticas/template"
+            + " -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/review -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/settings -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/stages/ -> competition-member",
@@ -64,6 +66,10 @@ public sealed class AuthorizationMatrixTests
         "POST /api/v1/competitions/{competitionId:guid}/imports/{kind} -> competition-owner-write",
         "POST /api/v1/competitions/{competitionId:guid}/imports/{kind}/preview -> competition-owner-write",
         "POST /api/v1/competitions/{competitionId:guid}/rounds/ -> competition-owner-write",
+        "POST /api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/imports/estatisticas/"
+            + " -> competition-staff-write",
+        "POST /api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/imports/estatisticas/preview"
+            + " -> competition-staff-write",
         "POST /api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/matches -> competition-owner-write",
         "POST /api/v1/competitions/{competitionId:guid}/stages/ -> competition-owner-write",
         "POST /api/v1/competitions/{competitionId:guid}/teams/ -> competition-owner-write",

@@ -81,15 +81,35 @@ export class ImportService {
     return `${this.importsUrl(competitionId)}/${kind}/template`;
   }
 
-  preview(competitionId: string, kind: ImportKind, file: File): Observable<ImportResult> {
-    return this.http.post<ImportResult>(
-      `${this.importsUrl(competitionId)}/${kind}/preview`,
-      body(file),
-    );
+  previewUrl(competitionId: string, kind: ImportKind): string {
+    return `${this.importsUrl(competitionId)}/${kind}/preview`;
   }
 
-  commit(competitionId: string, kind: ImportKind, file: File): Observable<ImportResult> {
-    return this.http.post<ImportResult>(`${this.importsUrl(competitionId)}/${kind}`, body(file));
+  commitUrl(competitionId: string, kind: ImportKind): string {
+    return `${this.importsUrl(competitionId)}/${kind}`;
+  }
+
+  /** Modelo da rodada, já preenchido com os jogos, os elencos e o que foi lançado. */
+  statisticsTemplateUrl(competitionId: string, roundId: string): string {
+    return `${this.statisticsUrl(competitionId, roundId)}/template`;
+  }
+
+  statisticsPreviewUrl(competitionId: string, roundId: string): string {
+    return `${this.statisticsUrl(competitionId, roundId)}/preview`;
+  }
+
+  statisticsCommitUrl(competitionId: string, roundId: string): string {
+    return this.statisticsUrl(competitionId, roundId);
+  }
+
+  /** Envia o arquivo para conferir ou importar; o endereço diz qual dos dois. */
+  send(url: string, file: File): Observable<ImportResult> {
+    return this.http.post<ImportResult>(url, body(file));
+  }
+
+  private statisticsUrl(competitionId: string, roundId: string): string {
+    const round = `rounds/${encodeURIComponent(roundId)}`;
+    return `${this.baseUrl}/competitions/${encodeURIComponent(competitionId)}/${round}/imports/estatisticas`;
   }
 
   private importsUrl(competitionId: string): string {
