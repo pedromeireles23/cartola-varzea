@@ -154,7 +154,8 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
         var targets = market.Where(item => item.GetProperty("kind").GetString() == "Athlete").Take(10)
             .Concat(Enumerable.Repeat(market.First(), 2))
             .ToList();
-        var responses = await Task.WhenAll(targets.Select(item => BuyAsync(player, world.Slug, item, cancellationToken)));
+        var responses = await Task.WhenAll(
+            targets.Select(item => BuyAsync(player, world.Slug, item, cancellationToken)));
         try
         {
             Assert.All(responses, response => Assert.Contains(

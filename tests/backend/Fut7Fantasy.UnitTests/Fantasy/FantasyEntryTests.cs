@@ -81,7 +81,9 @@ public sealed class FantasyEntryTests
         var bia = Athlete(Position.Forward, Aurora);
         Assert.Null(entry.Buy(bia, Rules(4), Now));
 
-        Assert.Equal("unavailable", entry.Buy(bia with { Id = Guid.NewGuid(), IsAvailable = false }, Rules(4), Now)?.Code);
+        Assert.Equal(
+            "unavailable",
+            entry.Buy(bia with { Id = Guid.NewGuid(), IsAvailable = false }, Rules(4), Now)?.Code);
 
         // Desligado ou eliminado sai pelo preço atual, que pode ter mudado.
         Assert.Null(entry.Sell(AssetKind.Athlete, bia.Id, currentPrice: 7.5m, Now));
