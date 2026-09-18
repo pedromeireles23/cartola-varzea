@@ -34,11 +34,11 @@ public enum SignInOutcome
 {
     Success,
 
-    /// <summary>E-mail inexistente ou senha errada. Os dois casos sao indistinguiveis.</summary>
+    /// <summary>
+    /// E-mail inexistente, senha errada ou conta bloqueada por tentativas
+    /// repetidas. Os tres casos sao indistinguiveis.
+    /// </summary>
     InvalidCredentials,
-
-    /// <summary>Conta temporariamente bloqueada por tentativas repetidas.</summary>
-    LockedOut,
 
     /// <summary>Conta existe e a senha confere, mas o e-mail ainda nao foi verificado.</summary>
     EmailNotConfirmed,

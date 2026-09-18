@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using Fut7Fantasy.Application.Abstractions;
@@ -22,6 +23,15 @@ public sealed class AccountService(
     IOptions<AuthenticationOptions> authOptions,
     ILogger<AccountService> logger) : IAccountService
 {
+    /// <summary>Dono do hash de referencia; nunca e persistido.</summary>
+    private static readonly ApplicationUser ContaDeReferencia = new()
+    {
+        DisplayName = string.Empty,
+        CreatedAt = DateTimeOffset.UnixEpoch,
+    };
+
+    private static string? _hashDeReferencia;
+
     private readonly AuthenticationOptions _auth = authOptions.Value;
 
     /// <inheritdoc />
@@ -107,32 +117,41 @@ public sealed class AccountService(
         var user = await users.FindByEmailAsync(email).ConfigureAwait(false);
         if (user is null)
         {
+            // Confere a senha contra um hash qualquer para gastar o mesmo tempo de
+            // uma conta real; sem isso, a demora da resposta revelaria quem existe.
+            users.PasswordHasher.VerifyHashedPassword(ContaDeReferencia, HashDeReferencia(), password);
             SecurityEvents.SignInFailed(logger, mascarado);
             return SignInOutcome.InvalidCredentials;
         }
 
-        var resultado = await signIn
-            .PasswordSignInAsync(user, password, isPersistent: true, lockoutOnFailure: true)
-            .ConfigureAwait(false);
+        // Nao usa PasswordSignInAsync: ele recusa conta bloqueada ou sem e-mail
+        // confirmado antes de olhar a senha, e as duas respostas diferentes
+        // confirmariam, com qualquer senha, que o e-mail tem conta.
+        var senhaConfere = await users.CheckPasswordAsync(user, password).ConfigureAwait(false);
 
-        if (resultado.IsLockedOut)
+        // Bloqueada responde como senha errada, mesmo com a senha certa: se a
+        // resposta mudasse, o bloqueio confirmaria o palpite em vez de barra-lo.
+        if (await users.IsLockedOutAsync(user).ConfigureAwait(false))
         {
             SecurityEvents.SignInLockedOut(logger, mascarado);
-            return SignInOutcome.LockedOut;
+            return SignInOutcome.InvalidCredentials;
         }
 
-        if (resultado.IsNotAllowed)
+        if (!senhaConfere)
         {
-            // Chega aqui quando a senha confere mas o e-mail nao foi verificado.
+            await users.AccessFailedAsync(user).ConfigureAwait(false);
+            SecurityEvents.SignInFailed(logger, mascarado);
+            return SignInOutcome.InvalidCredentials;
+        }
+
+        // Daqui em diante quem pergunta ja provou conhecer a senha.
+        if (!await signIn.CanSignInAsync(user).ConfigureAwait(false))
+        {
             return SignInOutcome.EmailNotConfirmed;
         }
 
-        if (!resultado.Succeeded)
-        {
-            SecurityEvents.SignInFailed(logger, mascarado);
-            return SignInOutcome.InvalidCredentials;
-        }
-
+        await users.ResetAccessFailedCountAsync(user).ConfigureAwait(false);
+        await signIn.SignInAsync(user, isPersistent: true).ConfigureAwait(false);
         SecurityEvents.SignInSucceeded(logger, user.Id);
         return SignInOutcome.Success;
     }
@@ -291,6 +310,14 @@ public sealed class AccountService(
 
         return new Uri(new Uri(_auth.PublicOrigin), caminho + query);
     }
+
+    /// <summary>
+    /// Hash de uma senha aleatoria, gerado pelo mesmo hasher e com os mesmos
+    /// parametros das contas reais. Calcular duas vezes numa corrida e inofensivo.
+    /// </summary>
+    private string HashDeReferencia() =>
+        _hashDeReferencia ??= users.PasswordHasher.HashPassword(
+            ContaDeReferencia, Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
 
     private static string Decode(string token)
     {

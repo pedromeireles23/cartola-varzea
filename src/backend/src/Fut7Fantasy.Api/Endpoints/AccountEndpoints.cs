@@ -162,15 +162,12 @@ public static class AccountEndpoints
                 detail: "Confirme seu e-mail pelo link que enviamos antes de entrar.",
                 statusCode: StatusCodes.Status403Forbidden),
 
-            SignInOutcome.LockedOut => Results.Problem(
-                title: "Muitas tentativas",
-                detail: "Aguarde alguns minutos antes de tentar de novo.",
-                statusCode: StatusCodes.Status423Locked),
-
-            // E-mail inexistente e senha errada devolvem exatamente a mesma resposta.
+            // E-mail inexistente, senha errada e conta bloqueada devolvem exatamente
+            // a mesma resposta; o texto avisa do bloqueio sem dizer se ele ocorreu.
             _ => Results.Problem(
                 title: "E-mail ou senha incorretos",
-                detail: "Confira os dados e tente de novo.",
+                detail: "Confira os dados e tente de novo. Depois de várias tentativas seguidas, "
+                    + "a entrada fica pausada por alguns minutos.",
                 statusCode: StatusCodes.Status401Unauthorized),
         };
     }

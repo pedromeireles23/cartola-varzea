@@ -52,6 +52,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddOptions<AuthenticationOptions>()
             .Bind(configuration.GetSection(AuthenticationOptions.SectionName))
             .ValidateDataAnnotations()
+            .Validate(
+                options => options.SessionAbsoluteLifetime >= options.SessionLifetime,
+                "O prazo absoluto da sessão não pode ser menor que o de inatividade.")
             .ValidateOnStart();
 
         services.AddOptions<OrganizationOptions>()

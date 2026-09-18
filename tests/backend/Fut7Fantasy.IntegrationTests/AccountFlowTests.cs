@@ -6,6 +6,8 @@ using System.Web;
 using Fut7Fantasy.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Fut7Fantasy.IntegrationTests;
 
@@ -124,6 +126,132 @@ public sealed partial class AccountFlowTests(SqlServerFixture sqlServer) : IClas
         Assert.Equal(HttpStatusCode.Unauthorized, senhaErrada.StatusCode);
         Assert.Equal(senhaErrada.StatusCode, emailInexistente.StatusCode);
         Assert.Equal(Sem(corpoSenhaErrada, "traceId"), Sem(corpoInexistente, "traceId"));
+    }
+
+    [Fact]
+    public async Task ContaBloqueadaNaoSeDistingueDeEmailInexistente()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        using var factory = sqlServer.CreateApi(emails);
+        using var client = await CriarClienteAsync(factory, cancellationToken);
+        var email = EmailUnico();
+
+        await CriarContaConfirmadaAsync(client, emails, email, cancellationToken);
+
+        // Cinco erros bloqueiam a conta (appsettings.json).
+        for (var tentativa = 0; tentativa < 5; tentativa++)
+        {
+            using var erro = await LoginAsync(client, email, "senha-errada-mas-longa", cancellationToken);
+            Assert.Equal(HttpStatusCode.Unauthorized, erro.StatusCode);
+        }
+
+        using var bloqueada = await LoginAsync(client, email, "senha-errada-mas-longa", cancellationToken);
+        var corpoBloqueada = await bloqueada.Content.ReadAsStringAsync(cancellationToken);
+
+        // Nem a senha certa muda a resposta: se mudasse, o bloqueio viraria um
+        // jeito de confirmar o palpite em vez de interromper a tentativa.
+        using var senhaCertaBloqueada = await LoginAsync(client, email, SenhaValida, cancellationToken);
+        var corpoSenhaCerta = await senhaCertaBloqueada.Content.ReadAsStringAsync(cancellationToken);
+
+        using var inexistente = await LoginAsync(
+            client, EmailUnico(), "senha-errada-mas-longa", cancellationToken);
+        var corpoInexistente = await inexistente.Content.ReadAsStringAsync(cancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, bloqueada.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, senhaCertaBloqueada.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, inexistente.StatusCode);
+        Assert.Equal(Sem(corpoInexistente, "traceId"), Sem(corpoBloqueada, "traceId"));
+        Assert.Equal(Sem(corpoInexistente, "traceId"), Sem(corpoSenhaCerta, "traceId"));
+    }
+
+    [Fact]
+    public async Task ContaNaoConfirmadaComSenhaErradaNaoSeDistingueDeEmailInexistente()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        using var factory = sqlServer.CreateApi(emails);
+        using var client = await CriarClienteAsync(factory, cancellationToken);
+        var email = EmailUnico();
+
+        using var cadastro = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/register", UriKind.Relative),
+            new { email, displayName = "Ainda Sem Confirmar", password = SenhaValida },
+            cancellationToken);
+        cadastro.EnsureSuccessStatusCode();
+
+        using var naoConfirmada = await LoginAsync(client, email, "senha-errada-mas-longa", cancellationToken);
+        var corpoNaoConfirmada = await naoConfirmada.Content.ReadAsStringAsync(cancellationToken);
+
+        using var inexistente = await LoginAsync(
+            client, EmailUnico(), "senha-errada-mas-longa", cancellationToken);
+        var corpoInexistente = await inexistente.Content.ReadAsStringAsync(cancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, naoConfirmada.StatusCode);
+        Assert.Equal(Sem(corpoInexistente, "traceId"), Sem(corpoNaoConfirmada, "traceId"));
+    }
+
+    [Fact]
+    public async Task EmailInexistenteCustaOMesmoHashDeUmaContaReal()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        var hasher = new CountingPasswordHasher();
+        using var factory = sqlServer.CreateApi(emails, services =>
+        {
+            services.RemoveAll<IPasswordHasher<ApplicationUser>>();
+            services.AddSingleton<IPasswordHasher<ApplicationUser>>(hasher);
+        });
+        using var client = await CriarClienteAsync(factory, cancellationToken);
+
+        // Sem o hash, o e-mail inexistente responderia bem mais rápido, e o tempo
+        // de resposta diria quais contas existem.
+        using var resposta = await LoginAsync(
+            client, EmailUnico(), "senha-errada-mas-longa", cancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
+        Assert.Equal(1, hasher.Verifications);
+    }
+
+    [Fact]
+    public async Task SessaoExpiraNoPrazoAbsolutoMesmoComUsoContinuo()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var emails = new CapturingEmailSender();
+        var clock = new FakeTimeProvider(DateTimeOffset.UtcNow);
+        using var factory = sqlServer.CreateApi(emails, services =>
+        {
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton<TimeProvider>(clock);
+        });
+        using var client = await CriarClienteAsync(factory, cancellationToken);
+        var email = EmailUnico();
+
+        await CriarContaConfirmadaAsync(client, emails, email, cancellationToken);
+        using var entrada = await LoginAsync(client, email, SenhaValida, cancellationToken);
+        Assert.Equal(HttpStatusCode.NoContent, entrada.StatusCode);
+
+        // Uso a cada 9 dias renova a inatividade (14 dias) indefinidamente; só o
+        // prazo absoluto (30 dias) encerra a sessão.
+        foreach (var esperado in new[] { HttpStatusCode.OK, HttpStatusCode.OK, HttpStatusCode.OK })
+        {
+            clock.Advance(TimeSpan.FromDays(9));
+            using var me = await client.GetAsync(new Uri("/api/v1/auth/me", UriKind.Relative), cancellationToken);
+            Assert.Equal(esperado, me.StatusCode);
+        }
+
+        clock.Advance(TimeSpan.FromDays(4));
+        using var expirada = await client.GetAsync(
+            new Uri("/api/v1/auth/me", UriKind.Relative), cancellationToken);
+        Assert.Equal(HttpStatusCode.NoContent, expirada.StatusCode);
     }
 
     [Fact]
@@ -432,4 +560,25 @@ public sealed partial class AccountFlowTests(SqlServerFixture sqlServer) : IClas
     }
 
     private static string EmailUnico() => $"teste-{Guid.CreateVersion7():n}@exemplo.local";
+
+    /// <summary>Hasher real que conta quantas senhas foram conferidas.</summary>
+    private sealed class CountingPasswordHasher : IPasswordHasher<ApplicationUser>
+    {
+        private readonly PasswordHasher<ApplicationUser> _inner = new();
+        private int _verifications;
+
+        public int Verifications => Volatile.Read(ref _verifications);
+
+        public string HashPassword(ApplicationUser user, string password) =>
+            _inner.HashPassword(user, password);
+
+        public PasswordVerificationResult VerifyHashedPassword(
+            ApplicationUser user,
+            string hashedPassword,
+            string providedPassword)
+        {
+            Interlocked.Increment(ref _verifications);
+            return _inner.VerifyHashedPassword(user, hashedPassword, providedPassword);
+        }
+    }
 }

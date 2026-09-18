@@ -55,7 +55,15 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services
     .AddOptions<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
     .Configure<IOptions<Fut7Fantasy.Infrastructure.Options.AuthenticationOptions>>(
-        (cookie, auth) => cookie.ExpireTimeSpan = auth.Value.SessionLifetime);
+        (cookie, auth) =>
+        {
+            cookie.ExpireTimeSpan = auth.Value.SessionLifetime;
+            AbsoluteSessionExpiry.Apply(cookie, auth.Value.SessionAbsoluteLifetime);
+        });
+
+// Um ano, sem includeSubDomains nem preload: o domínio definitivo ainda não existe
+// e as duas opções afetam hosts que não são desta aplicação (04-seguranca §7).
+builder.Services.AddHsts(options => options.MaxAge = TimeSpan.FromDays(365));
 
 // Antiforgery no formato que o HttpClient do Angular já envia por padrão: ele lê o
 // cookie XSRF-TOKEN e repete o valor no cabeçalho X-XSRF-TOKEN.
@@ -178,6 +186,11 @@ app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+}
+else
+{
+    // Fora do desenvolvimento: HSTS no localhost prenderia o navegador de quem desenvolve.
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
