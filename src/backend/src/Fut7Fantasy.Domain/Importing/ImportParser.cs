@@ -1,4 +1,5 @@
 using System.Globalization;
+using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.SportsCatalog;
 
 namespace Fut7Fantasy.Domain.Importing;
@@ -25,6 +26,18 @@ public sealed record CoachImportRow(
     string? DisplayName,
     PriceTier PriceTier,
     decimal? ExactPrice);
+
+/// <summary>
+/// Partida lida do arquivo. <see cref="KickoffLocal"/> fica no formato `2026-09-20T09:30`
+/// e no fuso do campeonato; a conversão para UTC é do servidor, que conhece o fuso.
+/// </summary>
+public sealed record MatchImportRow(
+    int Line,
+    string RoundName,
+    string StageName,
+    string HomeTeamName,
+    string AwayTeamName,
+    string KickoffLocal);
 
 /// <summary>Resultado da leitura: as linhas boas e todos os problemas encontrados.</summary>
 public sealed record ImportParseResult<TRow>(IReadOnlyList<TRow> Rows, IReadOnlyList<ImportIssue> Issues)
@@ -159,6 +172,44 @@ public static class ImportParser
     }
 
     /// <summary>
+    /// A identidade da partida é rodada, mandante e visitante: reenviar o arquivo com outro
+    /// horário remarca o jogo em vez de criar um segundo.
+    /// </summary>
+    public static ImportParseResult<MatchImportRow> Matches(CsvDocument document)
+    {
+        var template = ImportTemplates.For(ImportKind.Matches);
+        return Map(template, document, (row, cells, issues) =>
+        {
+            var round = Required(
+                cells, "rodada", row, issues, RoundDefinition.NameMinLength, RoundDefinition.NameMaxLength);
+            var stage = Required(
+                cells, "fase", row, issues, StageDefinition.NameMinLength, StageDefinition.NameMaxLength);
+            var home = Required(
+                cells, "mandante", row, issues, RealTeamDefinition.NameMinLength, RealTeamDefinition.NameMaxLength);
+            var away = Required(
+                cells, "visitante", row, issues, RealTeamDefinition.NameMinLength, RealTeamDefinition.NameMaxLength);
+            var date = Date(cells, "data", row, issues);
+            var time = Time(cells, "hora", row, issues);
+
+            if (home is not null && away is not null && string.Equals(home, away, StringComparison.OrdinalIgnoreCase))
+            {
+                issues.Add(new(row.Line, "visitante", "Um time não joga contra ele mesmo."));
+                return null;
+            }
+
+            return round is null || stage is null || home is null || away is null || date is null || time is null
+                ? null
+                : new MatchImportRow(
+                    row.Line,
+                    round,
+                    stage,
+                    home,
+                    away,
+                    date.Value.ToDateTime(time.Value).ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture));
+        }, row => $"{row.HomeTeamName} x {row.AwayTeamName} na {row.RoundName}", "mandante");
+    }
+
+    /// <summary>
     /// Percorre as linhas aplicando <paramref name="build"/> e acusa repetição da chave
     /// dentro do próprio arquivo, que é o erro mais comum de planilha copiada.
     /// </summary>
@@ -227,8 +278,59 @@ public static class ImportParser
         TeamImportRow team => team.Line,
         AthleteImportRow athlete => athlete.Line,
         CoachImportRow coach => coach.Line,
+        MatchImportRow match => match.Line,
         _ => 0,
     };
+
+    /// <summary>`20/09/2026` é o que a planilha em português grava; `2026-09-20` também vale.</summary>
+    private static DateOnly? Date(
+        IReadOnlyDictionary<string, string> cells,
+        string column,
+        CsvRow row,
+        List<ImportIssue> issues)
+    {
+        var raw = cells.GetValueOrDefault(column, string.Empty).Trim();
+        if (DateOnly.TryParseExact(
+            raw,
+            ["dd/MM/yyyy", "d/M/yyyy", "yyyy-MM-dd"],
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var date))
+        {
+            return date;
+        }
+
+        issues.Add(new(
+            row.Line,
+            column,
+            raw.Length == 0 ? $"Preencha `{column}`." : $"`{raw}` não é uma data. Use algo como 20/09/2026."));
+        return null;
+    }
+
+    /// <summary>Aceita os segundos que a planilha às vezes acrescenta ao salvar.</summary>
+    private static TimeOnly? Time(
+        IReadOnlyDictionary<string, string> cells,
+        string column,
+        CsvRow row,
+        List<ImportIssue> issues)
+    {
+        var raw = cells.GetValueOrDefault(column, string.Empty).Trim();
+        if (TimeOnly.TryParseExact(
+            raw,
+            ["HH:mm", "H:mm", "HH:mm:ss", "H:mm:ss"],
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var time))
+        {
+            return new TimeOnly(time.Hour, time.Minute);
+        }
+
+        issues.Add(new(
+            row.Line,
+            column,
+            raw.Length == 0 ? $"Preencha `{column}`." : $"`{raw}` não é uma hora. Use algo como 09:30."));
+        return null;
+    }
 
     private static string? Required(
         IReadOnlyDictionary<string, string> cells,

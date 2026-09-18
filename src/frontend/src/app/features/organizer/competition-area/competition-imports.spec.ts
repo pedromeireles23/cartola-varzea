@@ -39,6 +39,13 @@ const MODELOS: ImportTemplate[] = [
     fileName: 'tecnicos-v1.csv',
     columns: [{ name: 'time', required: true, description: 'Time.', example: 'União' }],
   },
+  {
+    kind: 'Matches',
+    version: 1,
+    label: 'partidas',
+    fileName: 'partidas-v1.csv',
+    columns: [{ name: 'rodada', required: true, description: 'Nome da rodada.', example: 'R1' }],
+  },
 ];
 
 function resultado(parcial: Partial<ImportResult['summary']> = {}): ImportResult {
@@ -158,6 +165,27 @@ describe('CompetitionImportsPage', () => {
 
     expect(texto(fixture)).toContain('3 linhas lidas: 0 criados, 0 alterados, 3 sem mudança.');
     expect(botao(fixture, 'Conferir arquivo')?.disabled).toBe(true);
+  });
+
+  it('partidas conferidas mostram as rodadas que o arquivo vai criar', async () => {
+    const fixture = await abrir();
+    botao(fixture, 'Partidas')?.click();
+    await fixture.whenStable();
+    expect(texto(fixture)).toContain('Modelo partidas-v1.csv');
+
+    await escolher(fixture);
+    botao(fixture, 'Conferir arquivo')?.click();
+    await fixture.whenStable();
+    http.expectOne('/api/v1/competitions/c1/imports/partidas/preview').flush({
+      ...resultado(),
+      notes: ['Rodadas a criar em rascunho, no fim da ordem: Rodada 1, Rodada 2.'],
+    });
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('3 linhas lidas: 3 a criar');
+    expect(texto(fixture)).toContain(
+      'Rodadas a criar em rascunho, no fim da ordem: Rodada 1, Rodada 2.',
+    );
   });
 
   it('linha inválida aparece com o número da linha e nada é dado como gravado', async () => {

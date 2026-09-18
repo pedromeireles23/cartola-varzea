@@ -3,7 +3,7 @@ using Fut7Fantasy.Domain.Importing;
 namespace Fut7Fantasy.Application.Importing;
 
 /// <summary>
-/// Importação CSV do catálogo esportivo (03 §13, ADR-009).
+/// Importação CSV do catálogo esportivo e das partidas (03 §13, ADR-009).
 ///
 /// A pré-visualização não grava nada; a confirmação relê o mesmo arquivo do zero e grava
 /// em transação única. Não existe rascunho da importação guardado no servidor: quem
@@ -61,6 +61,12 @@ public sealed record ImportResult(
     IReadOnlyList<ImportIssueView> Issues,
     string? RejectionMessage)
 {
+    /// <summary>
+    /// Observações que as contagens não mostram e que a pessoa precisa ler antes de
+    /// confirmar, como rodadas que serão criadas.
+    /// </summary>
+    public IReadOnlyList<string> Notes { get; init; } = [];
+
     public static ImportResult Of(ImportOutcome outcome) =>
         new(outcome, new ImportSummary(0, 0, 0, 0), [], null);
 

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fut7Fantasy.Infrastructure.Importing;
 
-public sealed class CatalogImportService(
+public sealed partial class CatalogImportService(
     Fut7FantasyDbContext dbContext,
     ICurrentUser currentUser,
     TimeProvider clock) : ICatalogImportService
@@ -62,6 +62,8 @@ public sealed class CatalogImportService(
             ImportKind.Athletes => await AthletesAsync(competitionId, read.Document, apply, cancellationToken)
                 .ConfigureAwait(false),
             ImportKind.Coaches => await CoachesAsync(competitionId, read.Document, apply, cancellationToken)
+                .ConfigureAwait(false),
+            ImportKind.Matches => await MatchesAsync(competitionId, read.Document, apply, cancellationToken)
                 .ConfigureAwait(false),
             _ => ImportResult.Of(ImportOutcome.NotFound),
         }, cancellationToken).ConfigureAwait(false);
@@ -365,7 +367,8 @@ public sealed class CatalogImportService(
         ImportKind kind,
         ImportSummary summary,
         DateTimeOffset now,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<string>? notes = null)
     {
         // A auditoria guarda o resumo, nunca o conteúdo do arquivo (04 §9).
         dbContext.AdministrativeAuditEntries.Add(AdministrativeAuditEntry.Create(
@@ -376,7 +379,7 @@ public sealed class CatalogImportService(
             + $"criados, {summary.Updated} alterados, {summary.Unchanged} sem mudança.",
             now));
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return Completed(summary);
+        return Completed(summary) with { Notes = notes ?? [] };
     }
 
     private static string Explain(CsvFailure failure, int line) => failure switch

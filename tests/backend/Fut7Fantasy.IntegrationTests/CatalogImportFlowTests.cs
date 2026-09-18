@@ -6,6 +6,7 @@ using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using static Fut7Fantasy.IntegrationTests.ImportRequests;
 using static Fut7Fantasy.IntegrationTests.TestAccounts;
 
 namespace Fut7Fantasy.IntegrationTests;
@@ -197,11 +198,8 @@ public sealed class CatalogImportFlowTests(SqlServerFixture sqlServer) : IClassF
 
         Assert.Equal(0, await CountTeamsAsync(factory, competitionId, cancellationToken));
 
-        using var unknownKind = await owner.PostAsync(
-            new Uri($"/api/v1/competitions/{competitionId}/imports/partidas", UriKind.Relative),
-            Multipart(Csv("nome\r\n")),
-            cancellationToken);
-        Assert.Equal(HttpStatusCode.NotFound, unknownKind.StatusCode);
+        var unknownKind = await PostAsync(owner, competitionId, "arbitros", Csv("nome\r\n"), cancellationToken);
+        Assert.Equal(HttpStatusCode.NotFound, unknownKind.Status);
     }
 
     [Fact]
@@ -262,54 +260,6 @@ public sealed class CatalogImportFlowTests(SqlServerFixture sqlServer) : IClassF
         Assert.NotNull(directory);
         return File.ReadAllBytes(Path.Combine(directory.FullName, "infra", "dados-demo", fileName));
     }
-
-    private static Uri Template(Guid competitionId, string kind) =>
-        new($"/api/v1/competitions/{competitionId}/imports/{kind}/template", UriKind.Relative);
-
-    private static byte[] Csv(string content) =>
-        Encoding.UTF8.GetBytes(content.ReplaceLineEndings("\r\n"));
-
-    private static MultipartFormDataContent Multipart(byte[] content)
-    {
-        var form = new MultipartFormDataContent();
-        form.Add(new ByteArrayContent(content), "arquivo", "catalogo.csv");
-        return form;
-    }
-
-    private static async Task<(HttpStatusCode Status, JsonElement Body)> PostAsync(
-        HttpClient client,
-        Guid competitionId,
-        string path,
-        byte[] content,
-        CancellationToken cancellationToken)
-    {
-        using var form = Multipart(content);
-        using var response = await client.PostAsync(
-            new Uri($"/api/v1/competitions/{competitionId}/imports/{path}", UriKind.Relative),
-            form,
-            cancellationToken);
-        if (response.StatusCode == HttpStatusCode.Forbidden)
-        {
-            return (response.StatusCode, default);
-        }
-
-        return (response.StatusCode, await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken));
-    }
-
-    private static (int Rows, int Created, int Updated, int Unchanged) Summary(JsonElement body)
-    {
-        var summary = body.GetProperty("summary");
-        return (
-            summary.GetProperty("rows").GetInt32(),
-            summary.GetProperty("created").GetInt32(),
-            summary.GetProperty("updated").GetInt32(),
-            summary.GetProperty("unchanged").GetInt32());
-    }
-
-    private static string? Code(JsonElement body) => body.GetProperty("code").GetString();
-
-    private static JsonElement.ArrayEnumerator Issues(JsonElement body) =>
-        body.GetProperty("issues").EnumerateArray();
 
     private static async Task<int> CountTeamsAsync(
         WebApplicationFactory<Program> factory,

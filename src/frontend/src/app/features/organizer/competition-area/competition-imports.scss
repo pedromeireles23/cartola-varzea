@@ -62,3 +62,10 @@ code {
   font-size: var(--font-small);
   overflow-wrap: anywhere;
 }
+
+/* Observação que a pessoa precisa ler antes de confirmar, como rodadas a criar. */
+.nota {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--color-brand-700);
+}

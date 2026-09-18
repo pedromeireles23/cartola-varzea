@@ -160,6 +160,42 @@ public sealed class ImportParserTests
         Assert.Equal("=1+1", parsed.Rows[0].Name);
     }
 
+    [Fact]
+    public void MatchesAcceptTheDateAndTimeTheSpreadsheetSaves()
+    {
+        var parsed = ImportParser.Matches(Read(
+            """
+            rodada;fase;mandante;visitante;data;hora
+            Rodada 1;Primeira fase;União da Vila;Estrela do Bairro;20/09/2026;09:30
+            Rodada 1;Primeira fase;Estrela do Bairro;União da Vila;5/9/2026;9:05
+            Rodada 2;Primeira fase;União da Vila;Estrela do Bairro;2026-09-27;15:30:00
+            """));
+
+        Assert.True(parsed.IsValid);
+        Assert.Equal(
+            ["2026-09-20T09:30", "2026-09-05T09:05", "2026-09-27T15:30"],
+            parsed.Rows.Select(row => row.KickoffLocal));
+    }
+
+    [Fact]
+    public void MatchIdentityIsRoundHomeAndAwaySoTheReturnLegIsAnotherMatch()
+    {
+        var parsed = ImportParser.Matches(Read(
+            """
+            rodada;fase;mandante;visitante;data;hora
+            Rodada 1;Primeira fase;União da Vila;Estrela do Bairro;20/09/2026;09:30
+            Rodada 1;Primeira fase;Estrela do Bairro;União da Vila;20/09/2026;11:00
+            rodada 1;Primeira fase;união da vila;Estrela do Bairro;20/09/2026;13:00
+            Rodada 2;Primeira fase;Grêmio;Grêmio;27/09/2026;09:30
+            Rodada 2;Primeira fase;Grêmio;União da Vila;31/02/2026;9h30
+            """));
+
+        Assert.Equal(
+            [(4, "mandante"), (5, "visitante"), (6, "data"), (6, "hora")],
+            parsed.Issues.Select(issue => (issue.Line, issue.Column)));
+        Assert.Equal(["Estrela do Bairro"], parsed.Rows.Select(row => row.HomeTeamName));
+    }
+
     private static string Message(ImportParseResult<AthleteImportRow> parsed, int line) =>
         parsed.Issues.Single(issue => issue.Line == line).Message;
 

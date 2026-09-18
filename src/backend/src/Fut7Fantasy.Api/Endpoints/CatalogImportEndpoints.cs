@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http.Metadata;
 namespace Fut7Fantasy.Api.Endpoints;
 
 /// <summary>
-/// Importação CSV do catálogo: modelo, pré-visualização e confirmação.
+/// Importação CSV do catálogo e das partidas: modelo, pré-visualização e confirmação.
 ///
 /// O arquivo nunca é gravado em disco nem em blob. Ele é lido em memória, dentro do
 /// limite de bytes, e descartado com a resposta (ADR-009).
@@ -164,6 +164,7 @@ public static class CatalogImportEndpoints
             "times" => ImportKind.Teams,
             "atletas" => ImportKind.Athletes,
             "tecnicos" => ImportKind.Coaches,
+            "partidas" => ImportKind.Matches,
             _ => default,
         };
         return parsed != default;

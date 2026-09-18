@@ -2,12 +2,13 @@ using System.Text;
 
 namespace Fut7Fantasy.Domain.Importing;
 
-/// <summary>O que um arquivo importa. Partidas e estatísticas entram na Fase 7.</summary>
+/// <summary>O que um arquivo importa.</summary>
 public enum ImportKind
 {
     Teams = 1,
     Athletes = 2,
     Coaches = 3,
+    Matches = 4,
 }
 
 /// <param name="Name">Nome exato da coluna no cabeçalho.</param>
@@ -62,6 +63,7 @@ public sealed class CsvTemplate
         ImportKind.Teams => "times",
         ImportKind.Athletes => "atletas",
         ImportKind.Coaches => "tecnicos",
+        ImportKind.Matches => "partidas",
         _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Tipo de importação desconhecido."),
     };
 
@@ -138,7 +140,33 @@ public static class ImportTemplates
             ["Grêmio da Rua 9", "Dona Val", "basico", "5"],
         ]);
 
-    public static IReadOnlyList<CsvTemplate> Current { get; } = [TeamsV1, AthletesV1, CoachesV1];
+    /// <summary>
+    /// As partidas apontam para rodada, fase e times pelo nome. A rodada que ainda não
+    /// existe é criada em rascunho; a fase e os times precisam existir antes.
+    /// </summary>
+    private static readonly CsvTemplate MatchesV1 = new(
+        ImportKind.Matches,
+        1,
+        "partidas",
+        [
+            new(
+                "rodada",
+                true,
+                "Nome da rodada. Se ainda não existir, é criada em rascunho no fim da ordem.",
+                "Rodada 1"),
+            new("fase", true, "Nome exato de uma fase já cadastrada.", "Primeira fase"),
+            new("mandante", true, "Nome exato do time mandante, confirmado na fase.", "União da Vila"),
+            new("visitante", true, "Nome exato do time visitante, confirmado na fase.", "Estrela do Bairro"),
+            new("data", true, "Dia do jogo, como 20/09/2026.", "20/09/2026"),
+            new("hora", true, "Hora do início no fuso do campeonato, como 09:30.", "09:30"),
+        ],
+        [
+            ["Rodada 1", "Primeira fase", "União da Vila", "Estrela do Bairro", "20/09/2026", "09:30"],
+            ["Rodada 1", "Primeira fase", "Grêmio da Rua 9", "União da Vila", "20/09/2026", "11:00"],
+            ["Rodada 2", "Primeira fase", "Estrela do Bairro", "Grêmio da Rua 9", "27/09/2026", "09:30"],
+        ]);
+
+    public static IReadOnlyList<CsvTemplate> Current { get; } = [TeamsV1, AthletesV1, CoachesV1, MatchesV1];
 
     public static CsvTemplate For(ImportKind kind) =>
         Current.SingleOrDefault(template => template.Kind == kind)

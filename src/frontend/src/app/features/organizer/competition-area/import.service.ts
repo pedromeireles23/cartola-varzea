@@ -4,8 +4,8 @@ import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../../../core/config/api-base-url';
 
-/** Tipos importáveis. Partidas e estatísticas entram com a Fase 7. */
-export type ImportKind = 'times' | 'atletas' | 'tecnicos';
+/** Tipos importáveis pela tela do campeonato. Estatísticas são importadas na rodada. */
+export type ImportKind = 'times' | 'atletas' | 'tecnicos' | 'partidas';
 
 export interface ImportColumn {
   readonly name: string;
@@ -15,7 +15,7 @@ export interface ImportColumn {
 }
 
 export interface ImportTemplate {
-  /** Nome em inglês do domínio (`Teams`, `Athletes`, `Coaches`). */
+  /** Nome em inglês do domínio (`Teams`, `Athletes`, `Coaches`, `Matches`). */
   readonly kind: string;
   readonly version: number;
   readonly label: string;
@@ -41,6 +41,8 @@ export interface ImportResult {
   readonly summary: ImportSummary;
   readonly issues: readonly ImportIssue[];
   readonly rejectionMessage: string | null;
+  /** O que as contagens não mostram, como rodadas que serão criadas. */
+  readonly notes?: readonly string[];
 }
 
 /** Códigos estáveis do Problem Details da importação. */
@@ -51,6 +53,7 @@ export const KIND_LABELS: Readonly<Record<ImportKind, string>> = {
   times: 'Times',
   atletas: 'Atletas',
   tecnicos: 'Técnicos',
+  partidas: 'Partidas',
 };
 
 /** O domínio nomeia em inglês; a rota e a interface, em português. */
@@ -58,6 +61,7 @@ export const KIND_BY_DOMAIN: Readonly<Record<string, ImportKind>> = {
   Teams: 'times',
   Athletes: 'atletas',
   Coaches: 'tecnicos',
+  Matches: 'partidas',
 };
 
 /** Espelha o limite do servidor, para avisar antes de subir o arquivo à toa. */

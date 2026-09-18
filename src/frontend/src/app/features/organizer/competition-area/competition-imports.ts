@@ -53,8 +53,9 @@ type Retorno =
     <div class="pagina">
       <h1>Importações</h1>
       <p class="intro">
-        Traga times, atletas e técnicos de uma planilha. Importe nesta ordem: o atleta e o técnico
-        apontam para o time pelo nome.
+        Traga times, atletas, técnicos e partidas de uma planilha. Importe nesta ordem: atleta e
+        técnico apontam para o time pelo nome, e a partida precisa da fase com os times confirmados.
+        As estatísticas de cada jogo são importadas na conferência da rodada.
       </p>
 
       @if (!proprietario()) {
@@ -206,6 +207,9 @@ type Retorno =
                     <app-alert [tone]="resultado.tipo === 'previa' ? 'info' : 'success'">
                       {{ resumo(resultado.resultado, resultado.tipo === 'previa') }}
                     </app-alert>
+                    @for (nota of resultado.resultado.notes ?? []; track $index) {
+                      <p class="nota">{{ nota }}</p>
+                    }
                     @if (resultado.tipo === 'previa') {
                       <p class="apoio">Nada foi gravado ainda. Use "Importar" para aplicar.</p>
                     }
@@ -228,7 +232,7 @@ export class CompetitionImportsPage {
 
   protected readonly contexto = inject(CompetitionContext);
   protected readonly proprietario = this.contexto.proprietario;
-  protected readonly abas: readonly ImportKind[] = ['times', 'atletas', 'tecnicos'];
+  protected readonly abas: readonly ImportKind[] = ['times', 'atletas', 'tecnicos', 'partidas'];
   protected readonly tamanhoMax = MAX_FILE_BYTES / 1024;
 
   protected readonly estado = signal<Estado>({ tipo: 'carregando' });
