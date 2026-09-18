@@ -11,6 +11,19 @@ internal static class ImportRequests
     public static Uri Template(Guid competitionId, string kind) =>
         new($"/api/v1/competitions/{competitionId}/imports/{kind}/template", UriKind.Relative);
 
+    /// <summary>Lê um arquivo de `infra/dados-demo` a partir da raiz do repositório.</summary>
+    public static byte[] DemoFile(string fileName)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "infra")))
+        {
+            directory = directory.Parent;
+        }
+
+        Assert.NotNull(directory);
+        return File.ReadAllBytes(Path.Combine(directory.FullName, "infra", "dados-demo", fileName));
+    }
+
     public static byte[] Csv(string content) =>
         Encoding.UTF8.GetBytes(content.ReplaceLineEndings("\r\n"));
 

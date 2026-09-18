@@ -326,6 +326,22 @@ public sealed class CompetitionRoundService(
                 new RoundError("Matches", "Marque ao menos uma partida antes de abrir o mercado."));
         }
 
+        // O mercado é um só (01 §9): com duas rodadas abertas, uma compra não saberia para
+        // qual escalação vale.
+        var otherOpen = await dbContext.Rounds
+            .AsNoTracking()
+            .Where(item => item.CompetitionId == competition.Id
+                && item.Id != round.Id
+                && item.Status == RoundStatus.MarketOpen)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (otherOpen.FirstOrDefault(item => item.PhaseAt(now) == RoundPhase.MarketOpen) is { } open)
+        {
+            return RoundCommandResult.Invalid(new RoundError(
+                "Status",
+                $"O mercado de {open.Name} ainda está aberto. Só uma rodada tem mercado aberto por vez."));
+        }
+
         try
         {
             round.OpenMarket(kickoffs.Min(), competition.MarketCloseLeadTime, now);

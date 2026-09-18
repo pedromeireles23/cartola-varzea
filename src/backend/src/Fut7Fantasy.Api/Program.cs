@@ -229,6 +229,7 @@ app.MapRealTeamEndpoints();
 app.MapAthleteEndpoints();
 app.MapCoachEndpoints();
 app.MapCatalogImportEndpoints();
+app.MapFantasyEndpoints();
 
 await app.RunAsync();
 

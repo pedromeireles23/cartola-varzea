@@ -27,6 +27,43 @@ internal static class CatalogAvailability
         return StageElimination.EliminatedTeams(stages, participants);
     }
 
+    /// <summary>
+    /// Quantos times seguem no campeonato, que é de onde sai o limite por time real (01 §9):
+    /// os da fase mais adiantada já confirmada, ou todos os não arquivados enquanto nenhuma
+    /// fase tem times.
+    /// </summary>
+    public static async Task<int> ActiveRealTeamsAsync(
+        Fut7FantasyDbContext dbContext,
+        Guid competitionId,
+        CancellationToken cancellationToken)
+    {
+        var activeTeams = await dbContext.RealTeams
+            .AsNoTracking()
+            .Where(team => team.CompetitionId == competitionId && team.ArchivedAt == null)
+            .Select(team => team.Id)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var latestStage = await (
+                from stage in dbContext.Stages.AsNoTracking()
+                where stage.CompetitionId == competitionId
+                    && dbContext.StageParticipants.Any(participant => participant.StageId == stage.Id)
+                orderby stage.Sequence descending
+                select (Guid?)stage.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (latestStage is null)
+        {
+            return activeTeams.Count;
+        }
+
+        return await dbContext.StageParticipants
+            .AsNoTracking()
+            .CountAsync(
+                participant => participant.StageId == latestStage && activeTeams.Contains(participant.RealTeamId),
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     /// <summary>Prazo de inscrição de atletas que vale agora, pela regra de <see cref="RegistrationWindow"/>.</summary>
     public static async Task<RegistrationWindow> RegistrationWindowAsync(
         Fut7FantasyDbContext dbContext,

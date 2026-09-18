@@ -248,19 +248,6 @@ public sealed class CatalogImportFlowTests(SqlServerFixture sqlServer) : IClassF
                 .Select(item => item.GetProperty("code").GetString()));
     }
 
-    /// <summary>Lê um arquivo de `infra/dados-demo` a partir da raiz do repositório.</summary>
-    private static byte[] DemoFile(string fileName)
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "infra")))
-        {
-            directory = directory.Parent;
-        }
-
-        Assert.NotNull(directory);
-        return File.ReadAllBytes(Path.Combine(directory.FullName, "infra", "dados-demo", fileName));
-    }
-
     private static async Task<int> CountTeamsAsync(
         WebApplicationFactory<Program> factory,
         Guid competitionId,
