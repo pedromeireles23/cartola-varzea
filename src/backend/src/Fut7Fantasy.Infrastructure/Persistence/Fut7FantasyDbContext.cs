@@ -76,6 +76,10 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public DbSet<SquadSlot> SquadSlots => Set<SquadSlot>();
 
+    public DbSet<LineupSnapshot> LineupSnapshots => Set<LineupSnapshot>();
+
+    public DbSet<LineupSnapshotSlot> LineupSnapshotSlots => Set<LineupSnapshotSlot>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {

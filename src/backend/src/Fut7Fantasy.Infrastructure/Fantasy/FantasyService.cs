@@ -13,7 +13,8 @@ namespace Fut7Fantasy.Infrastructure.Fantasy;
 public sealed class FantasyService(
     Fut7FantasyDbContext dbContext,
     ICurrentUser currentUser,
-    TimeProvider clock) : IFantasyService
+    TimeProvider clock,
+    LineupSnapshotMaterializer snapshotMaterializer) : IFantasyService
 {
     public async Task<FantasyOverview?> OverviewAsync(string slug, CancellationToken cancellationToken)
     {
@@ -263,6 +264,9 @@ public sealed class FantasyService(
         {
             return null;
         }
+
+        await snapshotMaterializer.EnsureClosedRoundsAsync(competition.Id, cancellationToken)
+            .ConfigureAwait(false);
 
         var profile = competition.ModalityProfile;
         var eliminated = await CatalogAvailability.EliminatedTeamsAsync(dbContext, competition.Id, cancellationToken)

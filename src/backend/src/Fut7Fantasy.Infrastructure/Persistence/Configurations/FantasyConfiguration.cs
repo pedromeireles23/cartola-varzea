@@ -61,3 +61,47 @@ public sealed class SquadSlotConfiguration : IEntityTypeConfiguration<SquadSlot>
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+public sealed class LineupSnapshotConfiguration : IEntityTypeConfiguration<LineupSnapshot>
+{
+    public void Configure(EntityTypeBuilder<LineupSnapshot> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.ToTable("LineupSnapshots", Fut7FantasyDbContext.FantasySchema);
+        builder.HasKey(snapshot => snapshot.Id);
+        builder.Property(snapshot => snapshot.Id).ValueGeneratedNever();
+
+        builder.HasOne<FantasyEntry>().WithMany().HasForeignKey(snapshot => snapshot.EntryId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<Round>().WithMany().HasForeignKey(snapshot => snapshot.RoundId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // MaterializaÃ§Ã£o preguiÃ§osa pode receber duas requisiÃ§Ãµes ao mesmo tempo; sÃ³ um
+        // retrato por participaÃ§Ã£o e rodada vence no banco.
+        builder.HasIndex(snapshot => new { snapshot.EntryId, snapshot.RoundId }).IsUnique();
+        builder.HasIndex(snapshot => snapshot.RoundId);
+
+        builder.HasMany(snapshot => snapshot.Slots).WithOne().HasForeignKey(slot => slot.SnapshotId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(snapshot => snapshot.Slots).UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+public sealed class LineupSnapshotSlotConfiguration : IEntityTypeConfiguration<LineupSnapshotSlot>
+{
+    public void Configure(EntityTypeBuilder<LineupSnapshotSlot> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.ToTable("LineupSnapshotSlots", Fut7FantasyDbContext.FantasySchema);
+        builder.HasKey(slot => slot.Id);
+        builder.Property(slot => slot.Id).ValueGeneratedNever();
+        builder.Property(slot => slot.Kind).HasConversion<string>().HasMaxLength(16).IsRequired();
+        builder.Property(slot => slot.Role).HasConversion<string>().HasMaxLength(16).IsRequired();
+        builder.Property(slot => slot.Position).HasConversion<string>().HasMaxLength(16);
+        builder.Property(slot => slot.AssetName).HasMaxLength(120).IsRequired();
+        builder.Property(slot => slot.RealTeamName).HasMaxLength(80).IsRequired();
+        builder.Property(slot => slot.Price).HasPrecision(5, 2);
+        builder.Property(slot => slot.PurchasePrice).HasPrecision(5, 2);
+        builder.HasIndex(slot => new { slot.SnapshotId, slot.Kind, slot.AssetId }).IsUnique();
+    }
+}

@@ -135,6 +135,86 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
     }
 
     [Fact]
+    public async Task ClosedMarketCreatesOneImmutableSnapshotAndLateEntryDoesNotReceiveIt()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        var earlyEmail = UniqueEmail("fantasy-snapshot-early");
+        await CreateUserAsync(factory, earlyEmail);
+        using var early = await CreateAuthenticatedClientAsync(factory, earlyEmail, cancellationToken);
+        using var earlyJoined = await early.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken);
+        earlyJoined.EnsureSuccessStatusCode();
+
+        foreach (var position in SquadPositions)
+        {
+            var choice = (await MarketAsync(early, world.Slug, cancellationToken))
+                .Where(item => item.GetProperty("position").GetString() == position
+                    && item.GetProperty("blockCode").ValueKind == JsonValueKind.Null)
+                .MinBy(item => item.GetProperty("price").GetDecimal());
+            using var bought = await BuyAsync(early, world.Slug, choice, cancellationToken);
+            bought.EnsureSuccessStatusCode();
+        }
+
+        var coach = (await MarketAsync(early, world.Slug, cancellationToken))
+            .Where(item => item.GetProperty("kind").GetString() == "Coach")
+            .MinBy(item => item.GetProperty("price").GetDecimal());
+        using var coachBought = await BuyAsync(early, world.Slug, coach, cancellationToken);
+        coachBought.EnsureSuccessStatusCode();
+
+        var slots = (await OverviewAsync(early, world.Slug, cancellationToken))
+            .GetProperty("entry").GetProperty("slots").EnumerateArray().ToList();
+        var captainSlot = slots.First(slot => slot.GetProperty("role").GetString() == "Starter");
+        using var captain = await CaptainAsync(early, world.Slug, captainSlot, cancellationToken);
+        captain.EnsureSuccessStatusCode();
+
+        clock.Advance(TimeSpan.FromDays(3));
+
+        // A adesÃ£o tardia observa primeiro o fechamento e materializa quem jÃ¡ estava apto.
+        var lateEmail = UniqueEmail("fantasy-snapshot-late");
+        await CreateUserAsync(factory, lateEmail);
+        using var late = await CreateAuthenticatedClientAsync(factory, lateEmail, cancellationToken);
+        using var lateJoined = await late.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken);
+        lateJoined.EnsureSuccessStatusCode();
+
+        // Repetir leituras nÃ£o duplica o retrato.
+        _ = await OverviewAsync(early, world.Slug, cancellationToken);
+        _ = await OverviewAsync(late, world.Slug, cancellationToken);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+        var entries = await dbContext.FantasyEntries
+            .AsNoTracking()
+            .Where(entry => entry.CompetitionId == world.CompetitionId)
+            .OrderBy(entry => entry.JoinedAt)
+            .ToListAsync(cancellationToken);
+        var snapshot = await dbContext.LineupSnapshots
+            .AsNoTracking()
+            .Include(item => item.Slots)
+            .SingleAsync(item => item.RoundId == world.RoundId, cancellationToken);
+        var round = await dbContext.Rounds.AsNoTracking()
+            .SingleAsync(item => item.Id == world.RoundId, cancellationToken);
+
+        Assert.Equal(2, entries.Count);
+        Assert.Equal(entries[0].Id, snapshot.EntryId);
+        Assert.NotEqual(entries[1].Id, snapshot.EntryId);
+        Assert.Equal(round.MarketCloseAt, snapshot.MarketClosedAt);
+        Assert.Equal(Id(captainSlot), snapshot.CaptainAthleteId);
+        Assert.Equal(12, snapshot.Slots.Count);
+        Assert.All(snapshot.Slots, slot =>
+        {
+            Assert.NotEmpty(slot.AssetName);
+            Assert.NotEmpty(slot.RealTeamName);
+            Assert.True(slot.Price > 0);
+        });
+    }
+
+    [Fact]
     public async Task ConcurrentPurchasesNeverSpendTheSameBalanceTwice()
     {
         Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);

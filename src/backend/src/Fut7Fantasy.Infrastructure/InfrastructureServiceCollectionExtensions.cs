@@ -108,6 +108,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ICoachService, CoachService>();
         services.AddScoped<ICatalogImportService, CatalogImportService>();
         services.AddScoped<IRoundStatisticsImportService, RoundStatisticsImportService>();
+        services.AddScoped<LineupSnapshotMaterializer>();
         services.AddScoped<IFantasyService, FantasyService>();
         services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
