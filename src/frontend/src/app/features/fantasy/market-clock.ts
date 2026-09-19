@@ -19,10 +19,14 @@ import { FantasyMarketStatus } from './fantasy.service';
  * fechamento e a contagem regressiva, ou fechado.
  *
  * O horário absoluto é o texto principal; a contagem só complementa e fica fora da
- * região viva, para o leitor de tela não anunciar cada segundo. Quando ela chega a
- * zero, `closed` avisa a página, que recarrega o estado pelo servidor — é ele quem
- * decide se o mercado fechou.
+ * região viva, para o leitor de tela não anunciar cada segundo. Passado o fechamento,
+ * `closed` avisa a página, que recarrega o estado pelo servidor — é ele quem decide se
+ * o mercado fechou. Se o servidor ainda responder "aberto" (o relógio do navegador
+ * pode estar um pouco adiantado), a pergunta se repete a cada poucos segundos.
  */
+/** Intervalo entre perguntas ao servidor enquanto ele insiste que o mercado está aberto. */
+const REPERGUNTA_MS = 5000;
+
 @Component({
   selector: 'app-market-clock',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,7 +61,9 @@ export class MarketClock implements OnInit {
   readonly closed = output<void>();
 
   private readonly agora = signal(Date.now());
-  private avisado = false;
+
+  /** Quando `closed` saiu pela última vez; zero enquanto não saiu. */
+  private ultimoAviso = 0;
 
   protected readonly fechamento = computed(() => {
     const market = this.market();
@@ -71,9 +77,12 @@ export class MarketClock implements OnInit {
 
   ngOnInit(): void {
     const timer = setInterval(() => {
-      this.agora.set(Date.now());
-      if (this.market().isOpen && this.contagem() === null && !this.avisado) {
-        this.avisado = true;
+      const agora = Date.now();
+      this.agora.set(agora);
+      const market = this.market();
+      const fechaEm = market.closesAt ? Date.parse(market.closesAt) : Number.NaN;
+      if (market.isOpen && fechaEm <= agora && agora - this.ultimoAviso >= REPERGUNTA_MS) {
+        this.ultimoAviso = agora;
         this.closed.emit();
       }
     }, 1000);
