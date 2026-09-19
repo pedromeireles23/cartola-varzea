@@ -28,6 +28,8 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
         "Midfielder", "Forward", "Forward", "Forward",
     ];
 
+    private static readonly string[] Positions = ["Goalkeeper", "Defender", "Midfielder", "Forward"];
+
     [Fact]
     public async Task ParticipantJoinsAndBuildsAValidSquadWhileTheServerEnforcesTheRules()
     {
@@ -480,6 +482,186 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
         Assert.Equal(JsonValueKind.Null, joinedLate.GetProperty("captainAthleteId").ValueKind);
     }
 
+    [Fact]
+    public async Task ServerRefusesEveryViolationWhenTheScreenIsBypassed()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        var catalog = (await world.Owner.GetFromJsonAsync<JsonElement>(
+                $"/api/v1/competitions/{world.CompetitionId}/athletes", cancellationToken))
+            .EnumerateArray()
+            .ToList();
+
+        // Quatro atletas de times diferentes no preço máximo, antes de o preço travar.
+        var expensive = Positions
+            .Select((position, index) => catalog.First(athlete =>
+                athlete.GetProperty("position").GetString() == position
+                && athlete.GetProperty("realTeamId").GetGuid() == world.Teams[index]))
+            .ToList();
+        foreach (var athlete in expensive)
+        {
+            using var priced = await world.Owner.PutAsJsonAsync(
+                $"/api/v1/competitions/{world.CompetitionId}/athletes/{Id(athlete)}",
+                new
+                {
+                    sportingName = athlete.GetProperty("sportingName").GetString(),
+                    position = athlete.GetProperty("position").GetString(),
+                    realTeamId = athlete.GetProperty("realTeamId").GetGuid(),
+                    priceTier = athlete.GetProperty("priceTier").GetString(),
+                    initialPriceOverride = 30m,
+                    version = athlete.GetProperty("version").GetString(),
+                },
+                cancellationToken);
+            priced.EnsureSuccessStatusCode();
+        }
+
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        // Orçamento: três compras de C$ 30 deixam C$ 10, e a quarta não cabe.
+        var richEmail = UniqueEmail("fantasy-bypass-budget");
+        await CreateUserAsync(factory, richEmail);
+        using var rich = await CreateAuthenticatedClientAsync(factory, richEmail, cancellationToken);
+        using (var joined = await rich.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken))
+        {
+            joined.EnsureSuccessStatusCode();
+        }
+
+        foreach (var athlete in expensive.Take(3))
+        {
+            using var bought = await BuyAthleteAsync(rich, world.Slug, Id(athlete), cancellationToken);
+            Assert.Equal(HttpStatusCode.OK, bought.StatusCode);
+        }
+
+        using (var tooExpensive = await BuyAthleteAsync(rich, world.Slug, Id(expensive[3]), cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.Conflict, tooExpensive.StatusCode);
+            var body = await tooExpensive.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+            Assert.Equal("fantasy_insufficient_balance", body.GetProperty("code").GetString());
+            Assert.Equal("Faltam C$ 20,00.", body.GetProperty("detail").GetString());
+        }
+
+        var balance = (await OverviewAsync(rich, world.Slug, cancellationToken))
+            .GetProperty("entry").GetProperty("balance").GetDecimal();
+        Assert.Equal(10m, balance);
+
+        // Limite por time, técnico único, troca, capitão, venda e ativo inexistente.
+        var playerEmail = UniqueEmail("fantasy-bypass-rules");
+        await CreateUserAsync(factory, playerEmail);
+        using var player = await CreateAuthenticatedClientAsync(factory, playerEmail, cancellationToken);
+        using (var joined = await player.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken))
+        {
+            joined.EnsureSuccessStatusCode();
+        }
+
+        var fromTeam = catalog
+            .Where(athlete => athlete.GetProperty("realTeamId").GetGuid() == world.Teams[4])
+            .ToList();
+        var fiveFromTeam = new[]
+            {
+                ("Goalkeeper", 0), ("Goalkeeper", 1), ("Defender", 0), ("Defender", 1), ("Midfielder", 0),
+            }
+            .Select(pick => fromTeam
+                .Where(athlete => athlete.GetProperty("position").GetString() == pick.Item1)
+                .ElementAt(pick.Item2))
+            .ToList();
+        foreach (var athlete in fiveFromTeam)
+        {
+            using var bought = await BuyAthleteAsync(player, world.Slug, Id(athlete), cancellationToken);
+            Assert.Equal(HttpStatusCode.OK, bought.StatusCode);
+        }
+
+        var sixth = fromTeam
+            .Where(athlete => athlete.GetProperty("position").GetString() == "Midfielder")
+            .ElementAt(1);
+        await AssertRefusedAsync(
+            await BuyAthleteAsync(player, world.Slug, Id(sixth), cancellationToken),
+            "fantasy_team_limit",
+            cancellationToken);
+
+        var coaches = (await MarketAsync(player, world.Slug, cancellationToken))
+            .Where(item => item.GetProperty("kind").GetString() == "Coach")
+            .ToList();
+        using (var firstCoach = await BuyAsync(player, world.Slug, coaches[0], cancellationToken))
+        {
+            firstCoach.EnsureSuccessStatusCode();
+        }
+
+        await AssertRefusedAsync(
+            await BuyAsync(player, world.Slug, coaches[1], cancellationToken),
+            "fantasy_coach_taken",
+            cancellationToken);
+
+        var slots = (await OverviewAsync(player, world.Slug, cancellationToken))
+            .GetProperty("entry").GetProperty("slots").EnumerateArray().ToList();
+        var starterGoalkeeper = Slot(slots, "Goalkeeper", "Starter");
+        var benchGoalkeeper = Slot(slots, "Goalkeeper", "Bench");
+        var starterDefender = Slot(slots, "Defender", "Starter");
+        await AssertRefusedAsync(
+            await SwapAsync(
+                player, world.Slug, Id(starterGoalkeeper), Id(Slot(slots, "Midfielder", "Bench")), cancellationToken),
+            "fantasy_invalid_swap",
+            cancellationToken);
+        await AssertRefusedAsync(
+            await SwapAsync(player, world.Slug, Id(starterGoalkeeper), Id(sixth), cancellationToken),
+            "fantasy_invalid_swap",
+            cancellationToken);
+        await AssertRefusedAsync(
+            await CaptainAsync(player, world.Slug, sixth, cancellationToken),
+            "fantasy_invalid_captain",
+            cancellationToken);
+        await AssertRefusedAsync(
+            await player.DeleteAsync(Uri(world.Slug, $"squad/atleta/{Id(sixth)}"), cancellationToken),
+            "fantasy_not_owned",
+            cancellationToken);
+        await AssertRefusedAsync(
+            await BuyAthleteAsync(player, world.Slug, Guid.NewGuid(), cancellationToken),
+            "fantasy_not_found",
+            cancellationToken);
+        using (var unknownKind = await player.PostAsync(
+            Uri(world.Slug, $"squad/jogador/{Id(sixth)}"), null, cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NotFound, unknownKind.StatusCode);
+        }
+
+        // Atleta desligado pelo organizador sai do mercado, mesmo por chamada direta.
+        var released = catalog.First(athlete => athlete.GetProperty("realTeamId").GetGuid() == world.Teams[5]
+            && athlete.GetProperty("position").GetString() == "Forward");
+        using (var release = await world.Owner.DeleteAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/athletes/{Id(released)}", cancellationToken))
+        {
+            release.EnsureSuccessStatusCode();
+        }
+
+        await AssertRefusedAsync(
+            await BuyAthleteAsync(player, world.Slug, Id(released), cancellationToken),
+            "fantasy_unavailable",
+            cancellationToken);
+
+        // Depois do fechamento, nem troca, nem capitão, nem venda.
+        clock.Advance(TimeSpan.FromDays(3));
+        await AssertRefusedAsync(
+            await SwapAsync(player, world.Slug, Id(starterGoalkeeper), Id(benchGoalkeeper), cancellationToken),
+            "fantasy_market_closed",
+            cancellationToken);
+        await AssertRefusedAsync(
+            await CaptainAsync(player, world.Slug, starterDefender, cancellationToken),
+            "fantasy_market_closed",
+            cancellationToken);
+        await AssertRefusedAsync(
+            await player.DeleteAsync(Uri(world.Slug, $"squad/atleta/{Id(starterDefender)}"), cancellationToken),
+            "fantasy_market_closed",
+            cancellationToken);
+
+        // Nada do que foi recusado mudou o elenco: cinco atletas do mesmo time e o técnico.
+        var after = (await OverviewAsync(player, world.Slug, cancellationToken)).GetProperty("entry");
+        Assert.Equal(6, after.GetProperty("slots").GetArrayLength());
+        Assert.Equal(JsonValueKind.Null, after.GetProperty("captainAthleteId").ValueKind);
+    }
+
     private static Uri Uri(string slug, string path) =>
         new($"/api/v1/fantasy/{slug}/{path}", UriKind.Relative);
 
@@ -516,6 +698,24 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
         client.PostAsync(
             Uri(slug, $"squad/{(item.GetProperty("kind").GetString() == "Coach" ? "tecnico" : "atleta")}/{Id(item)}"),
             null,
+            cancellationToken);
+
+    private static Task<HttpResponseMessage> BuyAthleteAsync(
+        HttpClient client,
+        string slug,
+        Guid athleteId,
+        CancellationToken cancellationToken) =>
+        client.PostAsync(Uri(slug, $"squad/atleta/{athleteId}"), null, cancellationToken);
+
+    private static Task<HttpResponseMessage> SwapAsync(
+        HttpClient client,
+        string slug,
+        Guid starterAthleteId,
+        Guid benchAthleteId,
+        CancellationToken cancellationToken) =>
+        client.PutAsJsonAsync(
+            Uri(slug, "lineup/swap"),
+            new { starterAthleteId, benchAthleteId },
             cancellationToken);
 
     private static async Task<JsonElement> LastClosedRoundAsync(
