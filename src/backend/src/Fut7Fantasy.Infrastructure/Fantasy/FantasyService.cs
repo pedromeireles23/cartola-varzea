@@ -350,12 +350,13 @@ public sealed class FantasyService(
             .MinBy(round => round.MarketCloseAt);
 
         return open is null
-            ? new FantasyMarketStatus(false, null, null, null)
+            ? new FantasyMarketStatus(false, null, null, null, competition.TimeZoneId)
             : new FantasyMarketStatus(
                 true,
                 open.Name,
                 open.MarketCloseAt,
-                CompetitionClock.ToLocalText(open.MarketCloseAt!.Value, competition.TimeZoneId));
+                CompetitionClock.ToLocalText(open.MarketCloseAt!.Value, competition.TimeZoneId),
+                competition.TimeZoneId);
     }
 
     private Guid UserId => currentUser.Id

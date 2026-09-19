@@ -27,8 +27,9 @@ type Estado =
  * Página pública do campeonato (02 §9.1, `/c/:campeonato`).
  *
  * O endereço é o slug, dado na publicação e estável a partir dali. Esta versão mostra
- * o que já existe — regras da modalidade, fases com times e o catálogo —; rodadas,
- * tabela e ranking entram com a Fase 8.
+ * o que já existe — regras da modalidade, fases com times e o catálogo — e o convite
+ * para jogar, que pede a conta antes de entrar; rodadas, tabela e ranking entram com a
+ * Fase 8.
  */
 @Component({
   selector: 'app-public-competition',
@@ -65,6 +66,7 @@ type Estado =
         <p class="intro">
           {{ modalidade() }} · Temporada {{ dados()!.season }} · {{ dados()!.organizationName }}
         </p>
+        <a class="jogar" [routerLink]="['/c', dados()!.slug, 'jogar']">Jogar neste campeonato</a>
 
         <app-card heading="Como se joga">
           <dl class="dados">

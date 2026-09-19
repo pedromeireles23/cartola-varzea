@@ -83,13 +83,14 @@ public sealed record FantasyOverview(
 /// <summary>
 /// Estado do mercado pelo relógio do servidor. <see cref="ClosesAt"/> é o fechamento em
 /// UTC, para a contagem regressiva; <see cref="ClosesAtLocal"/>, o mesmo instante no fuso
-/// do campeonato, para o horário absoluto.
+/// do campeonato (<see cref="TimeZoneId"/>), para o horário absoluto.
 /// </summary>
 public sealed record FantasyMarketStatus(
     bool IsOpen,
     string? RoundName,
     DateTimeOffset? ClosesAt,
-    string? ClosesAtLocal);
+    string? ClosesAtLocal,
+    string TimeZoneId);
 
 /// <summary>Limite por time real vigente e quantos times seguem ativos, de onde ele sai.</summary>
 public sealed record FantasyTeamLimitView(int ActiveRealTeams, int MaxStarters, int MaxAthletes);

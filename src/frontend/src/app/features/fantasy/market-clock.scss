@@ -1,0 +1,17 @@
+.relogio {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.relogio__texto {
+  margin: 0;
+  font-weight: 500;
+}
+
+.relogio__contagem {
+  margin: 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+  font-variant-numeric: tabular-nums;
+}

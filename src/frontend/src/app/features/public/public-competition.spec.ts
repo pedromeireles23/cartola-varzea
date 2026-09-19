@@ -78,6 +78,10 @@ describe('PublicCompetitionPage', () => {
     expect(texto(fixture)).toContain('1 goleiro, 2 defensores, 2 meio-campistas e 2 atacantes');
     expect(texto(fixture)).toContain('100 créditos');
     expect(texto(fixture)).toContain('Horário de Brasília');
+    const jogar = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+      'a.jogar',
+    );
+    expect(jogar?.getAttribute('href')).toBe(`/c/${SLUG}/jogar`);
     expect(texto(fixture)).toContain('1. Fase de grupos');
     expect(texto(fixture)).toContain('Grupo A');
     expect(texto(fixture)).toContain('Alpha, Beta');

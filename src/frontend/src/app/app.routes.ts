@@ -32,6 +32,21 @@ export const routes: Routes = [
           import('./features/public/public-competition').then((m) => m.PublicCompetitionPage),
       },
       {
+        // O jogo usa o mesmo slug da página pública; exige conta, e o destino é preservado.
+        path: 'c/:campeonato/jogar',
+        title: 'Jogar',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/fantasy/fantasy-play').then((m) => m.FantasyPlayPage),
+      },
+      {
+        path: 'c/:campeonato/mercado',
+        title: 'Mercado',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/fantasy/fantasy-market').then((m) => m.FantasyMarketPage),
+      },
+      {
         path: 'entrar',
         title: 'Entrar',
         canActivate: [anonymousGuard],

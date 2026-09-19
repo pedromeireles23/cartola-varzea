@@ -1,0 +1,210 @@
+// Estilos compartilhados pelas telas do jogo (início e mercado).
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+h1 {
+  margin: 0;
+}
+
+.intro,
+.apoio {
+  margin: 0;
+  color: var(--color-ink-700);
+}
+
+.apoio {
+  font-size: var(--font-small);
+}
+
+.aviso:focus {
+  outline: none;
+}
+
+.acao {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--touch-target);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-ink-950);
+  font-weight: 500;
+  text-decoration: none;
+  background-color: var(--color-brand-500);
+  border: 1px solid var(--color-brand-500);
+  border-radius: var(--radius-md);
+}
+
+.acao:hover {
+  background-color: var(--color-brand-300);
+}
+
+.dados {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.dados__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dados__item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+dt {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.pendencias {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.pendencias__titulo {
+  margin: 0;
+  font-size: var(--font-body-size);
+}
+
+.pendencias ul {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+// Resumo do elenco que acompanha a rolagem do mercado: saldo e limites sempre à vista.
+.resumo {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+
+@media (min-width: 640px) {
+  .resumo {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.resumo__item {
+  display: grid;
+  margin: 0;
+}
+
+.resumo__rotulo {
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+}
+
+.filtros {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .filtros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.grupo {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.grupo__topo {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.grupo__topo .apoio {
+  margin-top: var(--space-1);
+}
+
+.grupo__nome {
+  margin: 0;
+  font-size: var(--font-h3);
+}
+
+.escudo {
+  display: grid;
+  flex-shrink: 0;
+  width: 3rem;
+  aspect-ratio: 1;
+  place-items: center;
+  color: var(--color-brand-700);
+  font-weight: 700;
+  background: var(--color-brand-100);
+  border: 1px solid var(--color-brand-300);
+  border-radius: 50% 50% 45% 45%;
+}
+
+.itens {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.item__dados {
+  display: grid;
+  flex: 1 1 12rem;
+  gap: var(--space-1);
+  justify-items: start;
+}
+
+.item__nome {
+  margin: 0;
+  font-weight: 600;
+}
+
+.item__detalhe {
+  margin: 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.item__motivo {
+  margin: 0;
+  color: var(--color-warning);
+  font-size: var(--font-small);
+}
+
+.item--indisponivel .item__nome,
+.item--indisponivel .item__detalhe {
+  color: var(--color-ink-500);
+}
