@@ -98,9 +98,14 @@ describe('FantasyPlayPage', () => {
     expect(texto(fixture)).toContain('Técnico do União da Vila');
     expect(texto(fixture)).toContain('Escalação completa');
     const mercado = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
-      `a[href="/c/${SLUG}/mercado"]`,
+      `a.acao[href="/c/${SLUG}/mercado"]`,
     );
     expect(mercado?.textContent).toContain('Abrir o mercado');
+    // A montagem começa pelo campo (01 §12): é a ação principal da tela.
+    const escalar = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+      `a.acao[href="/c/${SLUG}/escalacao"]`,
+    );
+    expect(escalar?.textContent).toContain('Escalar meu time');
   });
 
   it('não confunde campeonato inexistente com erro de rede', async () => {

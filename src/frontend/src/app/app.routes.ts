@@ -47,6 +47,13 @@ export const routes: Routes = [
           import('./features/fantasy/fantasy-market').then((m) => m.FantasyMarketPage),
       },
       {
+        path: 'c/:campeonato/escalacao',
+        title: 'Escalação',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/fantasy/fantasy-lineup').then((m) => m.FantasyLineupPage),
+      },
+      {
         path: 'entrar',
         title: 'Entrar',
         canActivate: [anonymousGuard],

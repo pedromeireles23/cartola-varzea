@@ -1,0 +1,174 @@
+// Campo de escalação (02 §8, "Lineup pitch"). Precisa funcionar a partir de 360 px com
+// as onze vagas do futebol de campo: a vaga estreita na largura, nunca na altura do
+// alvo de toque, e o campo cresce para baixo em vez de encolher.
+.campo {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-3);
+  background:
+    linear-gradient(var(--color-brand-300), var(--color-brand-300)) center / 100% 2px no-repeat,
+    var(--color-brand-100);
+  border: 1px solid var(--color-brand-300);
+  border-radius: var(--radius-lg);
+}
+
+.campo__titulo,
+.banco__titulo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin: 0;
+  font-size: var(--font-h3);
+}
+
+.campo__formacao {
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+  font-weight: 500;
+}
+
+.campo__linha,
+.banco__vagas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.campo__linha {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.campo__vaga {
+  display: flex;
+  flex: 0 1 7.5rem;
+  min-width: 0;
+}
+
+.banco {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.banco__vagas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.banco__tecnico {
+  display: flex;
+  max-width: 10rem;
+}
+
+.vaga {
+  position: relative;
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  align-content: center;
+  justify-items: center;
+  min-width: 0;
+  min-height: 5rem;
+  padding: var(--space-2) var(--space-1);
+  color: var(--color-ink-950);
+  font: inherit;
+  text-align: center;
+  text-decoration: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+
+button.vaga {
+  cursor: pointer;
+}
+
+button.vaga:hover,
+a.vaga:hover {
+  border-color: var(--color-brand-700);
+}
+
+.vaga--vazia {
+  background: var(--color-brand-50);
+  border: 1px dashed var(--color-brand-700);
+  box-shadow: none;
+}
+
+.vaga--vazia .vaga__nome {
+  color: var(--color-brand-700);
+}
+
+.vaga--vazia.vaga--leitura .vaga__nome {
+  color: var(--color-ink-700);
+  font-weight: 500;
+}
+
+// Capitão: borda mais grossa e a letra C, nunca só a cor (02 §2).
+.vaga--capitao {
+  border: 2px solid var(--color-ink-950);
+}
+
+.vaga--indisponivel {
+  background: var(--color-canvas);
+}
+
+.vaga__sigla {
+  color: var(--color-ink-700);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.vaga__nome,
+.vaga__detalhe {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vaga__nome {
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.vaga__detalhe {
+  color: var(--color-ink-700);
+  font-size: var(--font-caption);
+}
+
+.vaga__capitao {
+  position: absolute;
+  top: calc(-1 * var(--space-2));
+  right: calc(-1 * var(--space-1));
+  display: grid;
+  width: 1.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+  color: var(--color-ink-950);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  background: var(--color-accent-500);
+  border: 2px solid var(--color-ink-950);
+  border-radius: var(--radius-pill);
+}
+
+.vaga__alerta {
+  color: var(--color-danger);
+  font-size: var(--font-caption);
+  font-weight: 600;
+}
+
+.acoes {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.acoes__descricao {
+  margin: 0 0 var(--space-2);
+}

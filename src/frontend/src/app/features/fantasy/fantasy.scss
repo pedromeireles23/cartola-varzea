@@ -1,4 +1,4 @@
-// Estilos compartilhados pelas telas do jogo (início e mercado).
+// Estilos compartilhados pelas telas do jogo (início, mercado e escalação).
 :host {
   display: flex;
   flex-direction: column;
@@ -41,6 +41,21 @@ h1 {
 
 .acao:hover {
   background-color: var(--color-brand-300);
+}
+
+.acao--secundaria {
+  background-color: var(--color-surface);
+  border-color: var(--color-ink-950);
+}
+
+.acao--secundaria:hover {
+  background-color: var(--color-brand-50);
+}
+
+.acoes-da-tela {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
 .dados {

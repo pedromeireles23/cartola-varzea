@@ -1,7 +1,7 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 
 import { apiErrorInterceptor } from '../../core/api/api-error.interceptor';
 import { API_BASE_URL } from '../../core/config/api-base-url';
@@ -16,6 +16,7 @@ import {
   visao,
 } from './fantasy-fixtures';
 import { FantasyMarketPage } from './fantasy-market';
+import { FantasyNotice } from './fantasy-notice';
 import { FantasyMarket, FantasyOverview } from './fantasy.service';
 
 describe('FantasyMarketPage', () => {
@@ -40,11 +41,15 @@ describe('FantasyMarketPage', () => {
     dadosVisao: FantasyOverview,
     dadosMercado: FantasyMarket,
     posicao?: string,
+    origem?: string,
   ): Promise<ComponentFixture<FantasyMarketPage>> {
     const fixture = TestBed.createComponent(FantasyMarketPage);
     fixture.componentRef.setInput('campeonato', SLUG);
     if (posicao) {
       fixture.componentRef.setInput('posicao', posicao);
+    }
+    if (origem) {
+      fixture.componentRef.setInput('origem', origem);
     }
     await fixture.whenStable();
     http.expectOne(OVERVIEW_URL).flush(dadosVisao);
@@ -238,6 +243,47 @@ describe('FantasyMarketPage', () => {
     selecionar(fixture, 'Posição', '');
     await fixture.whenStable();
     expect(texto(fixture)).toContain('Caio');
+  });
+
+  it('aberto por uma vaga do campo, volta para a escalação dizendo onde o atleta entrou', async () => {
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const fixture = await abrir(
+      visao(),
+      mercado([item({ id: 'g1', name: 'Nena', position: 'Goalkeeper' })]),
+      'goleiro',
+      'escalacao',
+    );
+
+    expect(texto(fixture)).toContain('Escolhendo um goleiro para a escalação.');
+    botao(fixture, 'Comprar Nena').click();
+    await fixture.whenStable();
+    http.expectOne(`/api/v1/fantasy/${SLUG}/squad/atleta/g1`).flush(
+      visao({
+        entry: entrada({
+          balance: 93,
+          slots: [
+            {
+              kind: 'Athlete',
+              assetId: 'g1',
+              name: 'Nena',
+              position: 'Goalkeeper',
+              realTeamId: 't1',
+              realTeamName: 'União da Vila',
+              role: 'Bench',
+              currentPrice: 7,
+              purchasePrice: 7,
+              isAvailable: true,
+              isCaptain: false,
+            },
+          ],
+        }),
+      }),
+    );
+    await fixture.whenStable();
+
+    // Sem reler o mercado: a tela seguinte é o campo.
+    expect(navegar).toHaveBeenCalledWith(['/c', SLUG, 'escalacao']);
+    expect(TestBed.inject(FantasyNotice).retirar()).toBe('Nena entrou no banco. Saldo: C$ 93,00.');
   });
 
   it('pagina por times e volta ao início quando o filtro muda', async () => {

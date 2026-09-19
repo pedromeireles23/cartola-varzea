@@ -9,7 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
@@ -29,6 +29,7 @@ import {
   POSITION_ORDER,
   assetRoleLabel,
   credits,
+  fantasyRefusalText,
   teamInitials,
 } from './fantasy-format';
 import {
@@ -39,6 +40,8 @@ import {
   FantasyService,
   MarketItem,
 } from './fantasy.service';
+import { FantasyNav } from './fantasy-nav';
+import { FantasyNotice } from './fantasy-notice';
 import { MarketClock } from './market-clock';
 
 type Estado =
@@ -82,9 +85,20 @@ const BLOQUEIOS_GERAIS = new Set(['not_joined', 'market_closed']);
 @Component({
   selector: 'app-fantasy-market',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, FormField, Loading, MarketClock, RouterLink, SelectField],
+  imports: [
+    Alert,
+    Badge,
+    Button,
+    Card,
+    FantasyNav,
+    FormField,
+    Loading,
+    MarketClock,
+    RouterLink,
+    SelectField,
+  ],
   template: `
-    <p class="intro"><a [routerLink]="['/c', campeonato(), 'jogar']">← Início do jogo</a></p>
+    <app-fantasy-nav [campeonato]="campeonato()" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
@@ -112,6 +126,14 @@ const BLOQUEIOS_GERAIS = new Set(['not_joined', 'market_closed']);
         <app-card>
           <app-market-clock [market]="mercado()!.market" (closed)="carregar()" />
         </app-card>
+
+        @if (daEscalacao() && podeOperar()) {
+          <app-alert tone="info">
+            Escolhendo {{ vagaEscolhida() }} para a escalação. Depois da compra você volta para o
+            campo.
+            <a [routerLink]="['/c', campeonato(), 'escalacao']">Voltar para a escalação</a>
+          </app-alert>
+        }
 
         @if (visao()!.entry; as entrada) {
           <section class="resumo" aria-label="Seu elenco no mercado">
@@ -241,6 +263,12 @@ export class FantasyMarketPage implements OnInit {
   /** Filtro inicial vindo do campo de escalação: `?posicao=goleiro`. */
   readonly posicao = input<string>();
 
+  /** `?origem=escalacao`: a vaga do campo abriu o mercado, e a compra volta para lá. */
+  readonly origem = input<string>();
+
+  private readonly router = inject(Router);
+  private readonly notice = inject(FantasyNotice);
+
   protected readonly opcoesPosicao: readonly SelectOption[] = [
     { value: '', label: 'Todas' },
     ...POSITION_ORDER.map((position) => ({ value: position, label: POSITION_LABELS[position] })),
@@ -278,6 +306,19 @@ export class FantasyMarketPage implements OnInit {
   protected readonly mercado = computed(() => {
     const atual = this.estado();
     return atual.tipo === 'pronto' ? atual.mercado : null;
+  });
+
+  protected readonly daEscalacao = computed(() => this.origem() === 'escalacao');
+
+  /** "um goleiro", "o técnico": o que a vaga pediu, no aviso do topo. */
+  protected readonly vagaEscolhida = computed(() => {
+    const posicao = POSICAO_NA_URL[this.posicao() ?? ''];
+    if (!posicao) {
+      return 'um atleta';
+    }
+    return posicao === 'Coach'
+      ? 'o técnico'
+      : `um ${POSITION_LABELS[posicao].toLocaleLowerCase('pt-BR')}`;
   });
 
   protected readonly podeOperar = computed(
@@ -404,6 +445,7 @@ export class FantasyMarketPage implements OnInit {
       item,
       this.service.buy(this.campeonato(), item.kind, item.id),
       'entrou no seu elenco',
+      this.daEscalacao() ? (visao) => this.voltarParaEscalacao(item, visao) : undefined,
     );
   }
 
@@ -419,11 +461,16 @@ export class FantasyMarketPage implements OnInit {
     item: MarketItem,
     operacao: ReturnType<FantasyService['buy']>,
     resultado: string,
+    concluir?: (visao: FantasyOverview) => void,
   ): void {
     this.operando.set(item.id);
     this.falhaNaOperacao.set(null);
     operacao.subscribe({
       next: (visao) => {
+        if (concluir) {
+          concluir(visao);
+          return;
+        }
         this.anuncio.set(
           `${item.name} ${resultado}. Saldo: ${credits(visao.entry?.balance ?? 0)}.`,
         );
@@ -431,13 +478,26 @@ export class FantasyMarketPage implements OnInit {
       },
       error: (falha: ApiFailure) => {
         this.operando.set(null);
-        this.falhaNaOperacao.set(falha.message);
+        this.falhaNaOperacao.set(fantasyRefusalText(falha, this.visao()?.teamLimit));
         // Mercado fechado ou elenco alterado em outra aba: o que a tela mostra ficou velho.
         if (falha.code === FANTASY_MARKET_CLOSED_CODE || falha.code === FANTASY_CONFLICT_CODE) {
           this.carregar();
         }
       },
     });
+  }
+
+  /** A compra saiu de uma vaga do campo: volta para ele dizendo onde o ativo entrou. */
+  private voltarParaEscalacao(item: MarketItem, visao: FantasyOverview): void {
+    const papel = visao.entry?.slots.find(
+      (slot) => slot.kind === item.kind && slot.assetId === item.id,
+    )?.role;
+    const onde =
+      papel === 'Bench' ? 'no banco' : papel === 'Coach' ? 'como técnico' : 'como titular';
+    this.notice.deixar(
+      `${item.name} entrou ${onde}. Saldo: ${credits(visao.entry?.balance ?? 0)}.`,
+    );
+    void this.router.navigate(['/c', this.campeonato(), 'escalacao']);
   }
 
   /** Os bloqueios de todos os itens dependem do elenco novo, então o mercado é relido. */

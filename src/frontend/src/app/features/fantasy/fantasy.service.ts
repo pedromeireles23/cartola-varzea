@@ -46,6 +46,33 @@ export interface LineupIssue {
   readonly message: string;
 }
 
+/** Vaga do retrato congelado: nome, time e preço como estavam no fechamento. */
+export interface FrozenSlot {
+  readonly kind: AssetKind;
+  readonly assetId: string;
+  readonly name: string;
+  readonly position: AthletePosition | null;
+  readonly realTeamId: string;
+  readonly realTeamName: string;
+  readonly role: SquadRole;
+  readonly price: number;
+  readonly isCaptain: boolean;
+}
+
+/**
+ * O que valeu na rodada mais recente com o mercado fechado: `Frozen` (a escalação
+ * completa congelou e vale), `Incomplete` (faltava algo no fechamento) ou
+ * `JoinedAfterClose` (a conta entrou depois). `slots` só vem em `Frozen`.
+ */
+export interface ClosedRoundLineup {
+  readonly roundName: string;
+  readonly marketClosedAt: string;
+  readonly marketClosedAtLocal: string;
+  readonly status: 'Frozen' | 'Incomplete' | 'JoinedAfterClose';
+  readonly captainAthleteId: string | null;
+  readonly slots: readonly FrozenSlot[];
+}
+
 export interface FantasyEntry {
   readonly balance: number;
   readonly patrimony: number;
@@ -53,6 +80,8 @@ export interface FantasyEntry {
   readonly slots: readonly SquadSlot[];
   /** Vazia quando a escalação está completa. */
   readonly issues: readonly LineupIssue[];
+  /** Nula enquanto nenhum mercado fechou. */
+  readonly lastClosedRound: ClosedRoundLineup | null;
 }
 
 export interface FantasyOverview {
@@ -115,6 +144,22 @@ export class FantasyService {
 
   sell(slug: string, kind: AssetKind, assetId: string): Observable<FantasyOverview> {
     return this.http.delete<FantasyOverview>(this.squadUrl(slug, kind, assetId));
+  }
+
+  /** Titular vai para o banco e o reserva da mesma posição entra no lugar dele. */
+  swap(
+    slug: string,
+    starterAthleteId: string,
+    benchAthleteId: string,
+  ): Observable<FantasyOverview> {
+    return this.http.put<FantasyOverview>(`${this.url(slug)}/lineup/swap`, {
+      starterAthleteId,
+      benchAthleteId,
+    });
+  }
+
+  captain(slug: string, athleteId: string): Observable<FantasyOverview> {
+    return this.http.put<FantasyOverview>(`${this.url(slug)}/lineup/captain`, { athleteId });
   }
 
   private squadUrl(slug: string, kind: AssetKind, assetId: string): string {

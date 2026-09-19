@@ -16,6 +16,7 @@ import { ApiFailure } from '../../core/api/problem-details';
 import { Alert, Button, Card, Loading } from '../../shared/ui';
 import { formationText } from '../organizer/competition-area/competition-format';
 import { credits } from './fantasy-format';
+import { FantasyNav } from './fantasy-nav';
 import { FantasyOverview, FantasyService } from './fantasy.service';
 import { MarketClock } from './market-clock';
 
@@ -34,9 +35,10 @@ type Estado =
 @Component({
   selector: 'app-fantasy-play',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, Loading, MarketClock, RouterLink],
+  imports: [Alert, Button, Card, FantasyNav, Loading, MarketClock, RouterLink],
   template: `
     <p class="intro"><a [routerLink]="['/c', campeonato()]">← Página do campeonato</a></p>
+    <app-fantasy-nav [campeonato]="campeonato()" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
@@ -109,7 +111,12 @@ type Estado =
               </section>
             }
 
-            <a class="acao" [routerLink]="['/c', campeonato(), 'mercado']">Abrir o mercado</a>
+            <div class="acoes-da-tela">
+              <a class="acao" [routerLink]="['/c', campeonato(), 'escalacao']">Escalar meu time</a>
+              <a class="acao acao--secundaria" [routerLink]="['/c', campeonato(), 'mercado']"
+                >Abrir o mercado</a
+              >
+            </div>
           </app-card>
         } @else {
           <app-card heading="Entre no campeonato">

@@ -5,12 +5,14 @@ import {
   FantasyMarketStatus,
   FantasyOverview,
   MarketItem,
+  SquadSlot,
 } from './fantasy.service';
 
 /** Dados de teste das telas do jogo, no formato que a API devolve. */
 export const SLUG = 'copa-da-varzea-2026';
 export const OVERVIEW_URL = `/api/v1/fantasy/${SLUG}/`;
 export const MARKET_URL = `/api/v1/fantasy/${SLUG}/market`;
+export const LINEUP_URL = `/api/v1/fantasy/${SLUG}/lineup`;
 
 export function mercadoAberto(parcial: Partial<FantasyMarketStatus> = {}): FantasyMarketStatus {
   return {
@@ -41,6 +43,24 @@ export function entrada(parcial: Partial<FantasyEntry> = {}): FantasyEntry {
       { code: 'missing_starter', message: 'Falta 1 goleiro entre os titulares.' },
       { code: 'missing_coach', message: 'Falta o técnico.' },
     ],
+    lastClosedRound: null,
+    ...parcial,
+  };
+}
+
+export function vaga(parcial: Partial<SquadSlot> = {}): SquadSlot {
+  return {
+    kind: 'Athlete',
+    assetId: parcial.name ?? 'a1',
+    name: 'Bia',
+    position: 'Midfielder',
+    realTeamId: 't1',
+    realTeamName: 'União da Vila',
+    role: 'Starter',
+    currentPrice: 8,
+    purchasePrice: 8,
+    isAvailable: true,
+    isCaptain: false,
     ...parcial,
   };
 }
