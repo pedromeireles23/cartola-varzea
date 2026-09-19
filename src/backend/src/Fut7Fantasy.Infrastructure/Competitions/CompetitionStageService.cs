@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Competitions;
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.PlatformAdministration;
+using Fut7Fantasy.Infrastructure.Fantasy;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,8 @@ namespace Fut7Fantasy.Infrastructure.Competitions;
 public sealed class CompetitionStageService(
     Fut7FantasyDbContext dbContext,
     ICurrentUser currentUser,
-    TimeProvider clock) : ICompetitionStageService
+    TimeProvider clock,
+    LineupSnapshotMaterializer snapshotMaterializer) : ICompetitionStageService
 {
     private const string GroupsNavigation = "_groups";
 
@@ -226,6 +228,9 @@ public sealed class CompetitionStageService(
             return InvalidParticipants("Cada time pode aparecer uma única vez na fase.");
         }
 
+        // Os participantes definem quantos times seguem vivos e, com isso, o limite por time
+        // que o retrato de uma rodada já fechada precisa guardar como era no fechamento.
+        await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken).ConfigureAwait(false);
         var stage = await StagesOf(competitionId)
             .SingleOrDefaultAsync(item => item.Id == stageId, cancellationToken)
             .ConfigureAwait(false);
@@ -409,6 +414,10 @@ public sealed class CompetitionStageService(
                 .SingleAsync(cancellationToken)
                 .ConfigureAwait(false);
 
+            // Criar, remover e reordenar fases muda qual é a fase mais adiantada, de onde sai
+            // o limite por time; rodadas já fechadas são retratadas antes da mudança.
+            await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken)
+                .ConfigureAwait(false);
             var result = await operation().ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return result;

@@ -43,6 +43,29 @@ public sealed class CoachTests
     }
 
     [Fact]
+    public void PriceLocksAtFirstMarketAvailabilityButTheNameStaysEditable()
+    {
+        var coach = Coach.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new CoachDefinition(null, PriceTier.Regular, null),
+            Now);
+        coach.MarkMarketAvailable(Now.AddHours(1));
+        coach.MarkMarketAvailable(Now.AddHours(5));
+
+        Assert.Equal(Now.AddHours(1), coach.FirstMarketAvailableAt);
+        Assert.Throws<InvalidOperationException>(() => coach.Update(
+            new CoachDefinition(null, PriceTier.Star, null), Now.AddHours(2)));
+        Assert.Throws<InvalidOperationException>(() => coach.Update(
+            new CoachDefinition(null, PriceTier.Regular, 9m), Now.AddHours(2)));
+
+        coach.Update(new CoachDefinition("Professora Ana", PriceTier.Regular, null), Now.AddHours(2));
+        Assert.Equal("Professora Ana", coach.DisplayName);
+        Assert.Equal(PriceTier.Regular, coach.PriceTier);
+    }
+
+    [Fact]
     public void ShortPersonNameAndInvalidPriceAreRefused()
     {
         var definition = new CoachDefinition("x", PriceTier.Regular, 30.01m);

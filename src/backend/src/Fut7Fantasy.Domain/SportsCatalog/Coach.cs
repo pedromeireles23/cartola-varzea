@@ -37,6 +37,9 @@ public sealed class Coach
 
     public decimal? InitialPriceOverride { get; private set; }
 
+    /// <summary>Depois deste instante o preço não pode mais ser alterado.</summary>
+    public DateTimeOffset? FirstMarketAvailableAt { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -62,8 +65,29 @@ public sealed class Coach
     public void Update(CoachDefinition definition, DateTimeOffset updatedAt)
     {
         ArgumentNullException.ThrowIfNull(definition);
+        if (FirstMarketAvailableAt is not null && ChangesPricing(definition))
+        {
+            throw new InvalidOperationException("O preço não muda depois que o técnico entra no mercado.");
+        }
+
         Apply(definition);
         UpdatedAt = updatedAt;
+    }
+
+    public bool ChangesPricing(CoachDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        return definition.PriceTier != PriceTier || definition.InitialPriceOverride != InitialPriceOverride;
+    }
+
+    /// <summary>
+    /// O preço trava na primeira abertura de mercado em que o técnico estava disponível,
+    /// como a posição do atleta: a partir daí alguém pode tê-lo comprado por esse valor.
+    /// </summary>
+    public void MarkMarketAvailable(DateTimeOffset availableAt)
+    {
+        FirstMarketAvailableAt ??= availableAt;
+        UpdatedAt = availableAt;
     }
 
     public string EffectiveName(string realTeamName)

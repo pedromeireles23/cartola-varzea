@@ -20,6 +20,8 @@ export interface Athlete {
   readonly isAvailable: boolean;
   /** O time ficou de fora da fase mais adiantada já confirmada. */
   readonly isEliminated: boolean;
+  /** Já esteve disponível num mercado aberto: posição e preço não mudam mais. */
+  readonly isMarketLocked: boolean;
   readonly status: RosterStatus;
   readonly updatedAt: string;
   readonly version: string;
@@ -40,6 +42,7 @@ export const ATHLETE_MAX_PRICE = 30;
 export const ATHLETE_DUPLICATE_CODE = 'athlete_sporting_name_duplicate';
 export const ATHLETE_TRANSFER_CODE = 'athlete_transfer_not_allowed';
 export const ATHLETE_POSITION_LOCKED_CODE = 'athlete_position_locked';
+export const ATHLETE_PRICE_LOCKED_CODE = 'athlete_price_locked';
 
 @Injectable({ providedIn: 'root' })
 export class AthleteService {

@@ -10,6 +10,7 @@ public static class AthleteEndpoints
     public const string DuplicateNameCode = "athlete_sporting_name_duplicate";
     public const string TransferNotAllowedCode = "athlete_transfer_not_allowed";
     public const string PositionLockedCode = "athlete_position_locked";
+    public const string PriceLockedCode = "athlete_price_locked";
 
     public const string RegistrationClosedCode = "athlete_registration_closed";
 
@@ -154,6 +155,10 @@ public static class AthleteEndpoints
             "Posição já utilizada no mercado",
             "A posição não pode mudar depois que o atleta fica disponível no mercado.",
             PositionLockedCode),
+        AthleteCommandOutcome.PriceLocked => Conflict(
+            "Preço já utilizado no mercado",
+            "O nível e o preço exato não podem mudar depois que o atleta fica disponível no mercado.",
+            PriceLockedCode),
         AthleteCommandOutcome.RegistrationClosed => Conflict(
             "Inscrições encerradas",
             "O prazo de inscrição deste campeonato terminou. Para inscrever mais atletas, "

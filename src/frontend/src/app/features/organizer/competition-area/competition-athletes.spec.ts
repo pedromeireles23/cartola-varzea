@@ -26,6 +26,7 @@ function athlete(partial: Partial<Athlete> = {}): Athlete {
     initialPrice: 11,
     isAvailable: true,
     isEliminated: false,
+    isMarketLocked: false,
     status: 'Active',
     updatedAt: '2026-09-16T22:00:00Z',
     version: 'AAAAAAAAB9E=',
@@ -191,6 +192,40 @@ describe('CompetitionAthletesPage', () => {
     await fixture.whenStable();
 
     expect(text(fixture)).toContain('Bia adicionado.');
+  });
+
+  it('trava posição e preço de quem já entrou no mercado, mas deixa renomear', async () => {
+    const fixture = await open([athlete({ isMarketLocked: true })]);
+
+    button(fixture, 'Editar Bia').click();
+    await settle(fixture);
+    const form = (fixture.nativeElement as HTMLElement).querySelector('form')!;
+    const selects = form.querySelectorAll('select');
+    const inputs = form.querySelectorAll('input');
+    expect(selects[1]!.disabled).toBe(true);
+    expect(selects[2]!.disabled).toBe(true);
+    expect(inputs[1]!.disabled).toBe(true);
+    expect(inputs[0]!.disabled).toBe(false);
+    expect(text(fixture)).toContain('Travado desde que o atleta entrou no mercado');
+
+    input(inputs[0]!, 'Bia Souza');
+    form.dispatchEvent(new Event('submit'));
+    await settle(fixture);
+    http
+      .expectOne((item) => item.url === `${ATHLETES}/a1` && item.method === 'PUT')
+      .flush(
+        {
+          title: 'Preço já utilizado no mercado',
+          status: 409,
+          code: 'athlete_price_locked',
+        },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await settle(fixture);
+
+    expect(text(fixture)).toContain(
+      'O nível e o preço não podem mudar depois que o atleta entra no mercado.',
+    );
   });
 
   it('desliga somente depois da confirmação e preserva o item na lista', async () => {

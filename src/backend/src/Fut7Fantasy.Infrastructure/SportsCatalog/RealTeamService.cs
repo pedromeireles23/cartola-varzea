@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.SportsCatalog;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Domain.SportsCatalog;
+using Fut7Fantasy.Infrastructure.Fantasy;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,8 @@ namespace Fut7Fantasy.Infrastructure.SportsCatalog;
 public sealed class RealTeamService(
     Fut7FantasyDbContext dbContext,
     ICurrentUser currentUser,
-    TimeProvider clock) : IRealTeamService
+    TimeProvider clock,
+    LineupSnapshotMaterializer snapshotMaterializer) : IRealTeamService
 {
     public async Task<IReadOnlyList<RealTeamView>> ListAsync(
         Guid competitionId,
@@ -40,6 +42,8 @@ public sealed class RealTeamService(
 
         return InCompetitionLockAsync(competitionId, async () =>
         {
+            await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken)
+                .ConfigureAwait(false);
             var normalized = definition.Normalized();
             if (await NameExistsAsync(competitionId, normalized.Name, null, cancellationToken).ConfigureAwait(false))
             {
@@ -76,6 +80,7 @@ public sealed class RealTeamService(
             return new RealTeamCommandResult(RealTeamCommandOutcome.Invalid, null, errors);
         }
 
+        await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken).ConfigureAwait(false);
         var team = await dbContext.RealTeams
             .SingleOrDefaultAsync(
                 item => item.CompetitionId == competitionId && item.Id == teamId && item.ArchivedAt == null,
@@ -124,6 +129,7 @@ public sealed class RealTeamService(
         Guid teamId,
         CancellationToken cancellationToken)
     {
+        await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken).ConfigureAwait(false);
         var team = await dbContext.RealTeams
             .SingleOrDefaultAsync(
                 item => item.CompetitionId == competitionId && item.Id == teamId && item.ArchivedAt == null,

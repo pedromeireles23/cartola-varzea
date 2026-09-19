@@ -27,6 +27,7 @@ import {
   COACH_MIN_PRICE,
   COACH_NAME_MAX,
   COACH_NAME_MIN,
+  COACH_PRICE_LOCKED_CODE,
   Coach,
   CoachInput,
   CoachService,
@@ -109,13 +110,24 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
                           <app-select-field
                             label="Nível de preço"
                             [options]="priceTierOptions"
+                            [disabled]="coach.isMarketLocked"
+                            [hint]="
+                              coach.isMarketLocked
+                                ? 'Travado desde a entrada no mercado: alguém pode tê-lo comprado por esse valor.'
+                                : undefined
+                            "
                             [(value)]="nivel"
                           />
                           <app-form-field
                             label="Preço exato (opcional)"
                             type="number"
                             placeholder="Ex.: 8,50"
-                            hint="Deixe vazio para usar o preço calculado pelo nível."
+                            [disabled]="coach.isMarketLocked"
+                            [hint]="
+                              coach.isMarketLocked
+                                ? 'Travado junto com o nível.'
+                                : 'Deixe vazio para usar o preço calculado pelo nível.'
+                            "
                             [error]="erroPreco()"
                             [(value)]="precoExato"
                           />
@@ -321,6 +333,12 @@ export class CompetitionCoachesPage {
 
   private tratarFalha(failure: ApiFailure): void {
     this.salvando.set(false);
+    if (failure.code === COACH_PRICE_LOCKED_CODE) {
+      this.erroPreco.set(
+        'O nível e o preço não podem mudar depois que o técnico entra no mercado.',
+      );
+      return;
+    }
     if (failure.status === 409) {
       this.cancelarEdicao();
       this.avisar(

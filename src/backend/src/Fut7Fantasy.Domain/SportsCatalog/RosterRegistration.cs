@@ -75,12 +75,21 @@ public sealed class RosterRegistration
         return new RosterRegistration(id, competitionId, athleteId, realTeamId, definition, registeredAt);
     }
 
-    public void UpdatePricing(AthleteDefinition definition)
+    /// <summary>
+    /// O preço trava junto com a posição, na primeira abertura de mercado em que o atleta
+    /// esteve disponível: a partir daí alguém pode tê-lo comprado por esse valor.
+    /// </summary>
+    public void UpdatePricing(AthleteDefinition definition, DateTimeOffset? marketLockedSince)
     {
         ArgumentNullException.ThrowIfNull(definition);
         if (!IsActive)
         {
             throw new InvalidOperationException("A inscrição desligada não pode ser alterada.");
+        }
+
+        if (marketLockedSince is not null && ChangesPricing(definition))
+        {
+            throw new InvalidOperationException("O preço não muda depois que o atleta entra no mercado.");
         }
 
         if (definition.Validate() is [var first, ..])
@@ -89,6 +98,12 @@ public sealed class RosterRegistration
         }
 
         ApplyPricing(definition);
+    }
+
+    public bool ChangesPricing(AthleteDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        return definition.PriceTier != PriceTier || definition.InitialPriceOverride != InitialPriceOverride;
     }
 
     public void EnsureTeam(Guid realTeamId)

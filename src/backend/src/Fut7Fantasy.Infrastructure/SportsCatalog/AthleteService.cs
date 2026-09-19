@@ -4,6 +4,7 @@ using Fut7Fantasy.Application.SportsCatalog;
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Domain.SportsCatalog;
+using Fut7Fantasy.Infrastructure.Fantasy;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +13,8 @@ namespace Fut7Fantasy.Infrastructure.SportsCatalog;
 public sealed class AthleteService(
     Fut7FantasyDbContext dbContext,
     ICurrentUser currentUser,
-    TimeProvider clock) : IAthleteService
+    TimeProvider clock,
+    LineupSnapshotMaterializer snapshotMaterializer) : IAthleteService
 {
     public async Task<IReadOnlyList<AthleteView>> ListAsync(
         Guid competitionId,
@@ -47,6 +49,8 @@ public sealed class AthleteService(
 
         return InCompetitionLockAsync(competitionId, async competition =>
         {
+            await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken)
+                .ConfigureAwait(false);
             var team = await dbContext.RealTeams
                 .SingleOrDefaultAsync(
                     item => item.CompetitionId == competitionId
@@ -107,6 +111,7 @@ public sealed class AthleteService(
             return new AthleteCommandResult(AthleteCommandOutcome.Invalid, null, errors);
         }
 
+        await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken).ConfigureAwait(false);
         var row = await Rows(competitionId, athleteId, activeOnly: true)
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -126,6 +131,11 @@ public sealed class AthleteService(
         }
 
         var normalized = definition.Normalized();
+        if (row.Athlete.FirstMarketAvailableAt is not null && row.Registration.ChangesPricing(normalized))
+        {
+            return AthleteCommandResult.Of(AthleteCommandOutcome.PriceLocked);
+        }
+
         if (await NameExistsAsync(competitionId, normalized.SportingName, athleteId, cancellationToken)
             .ConfigureAwait(false))
         {
@@ -142,7 +152,7 @@ public sealed class AthleteService(
             return AthleteCommandResult.Of(AthleteCommandOutcome.PositionLocked);
         }
 
-        row.Registration.UpdatePricing(normalized);
+        row.Registration.UpdatePricing(normalized, row.Athlete.FirstMarketAvailableAt);
         dbContext.Entry(row.Athlete).Property(item => item.RowVersion).OriginalValue = expectedVersion;
         dbContext.Entry(row.Athlete).Property(item => item.UpdatedAt).IsModified = true;
         AddAudit("AthleteUpdated", row.Athlete.Id, "Cadastro do atleta alterado.", now);
@@ -174,6 +184,7 @@ public sealed class AthleteService(
         Guid athleteId,
         CancellationToken cancellationToken)
     {
+        await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken).ConfigureAwait(false);
         var row = await Rows(competitionId, athleteId, activeOnly: true)
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);

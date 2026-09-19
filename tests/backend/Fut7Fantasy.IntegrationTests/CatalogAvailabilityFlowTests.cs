@@ -5,18 +5,19 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
+using static Fut7Fantasy.IntegrationTests.ImportRequests;
 using static Fut7Fantasy.IntegrationTests.TestAccounts;
 
 namespace Fut7Fantasy.IntegrationTests;
 
 /// <summary>
 /// Disponibilidade do catálogo que depende das fases e do mercado (Fase 6): eliminação
-/// pela confirmação da fase seguinte e posição travada na abertura do mercado.
+/// pela confirmação da fase seguinte e posição e preço travados na abertura do mercado.
 /// </summary>
 public sealed class CatalogAvailabilityFlowTests(SqlServerFixture sqlServer) : IClassFixture<SqlServerFixture>
 {
     [Fact]
-    public async Task TeamLeftOutOfTheNextStageIsEliminatedAndMarketOpeningLocksPositions()
+    public async Task TeamLeftOutOfTheNextStageIsEliminatedAndMarketOpeningLocksPositionsAndPrices()
     {
         Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
 
@@ -112,6 +113,42 @@ public sealed class CatalogAvailabilityFlowTests(SqlServerFixture sqlServer) : I
         using var eliminatedChange = await ChangePositionAsync(
             owner, competitionId, athletes["Duda"], teams["Brisa"], cancellationToken);
         Assert.Equal(HttpStatusCode.OK, eliminatedChange.StatusCode);
+
+        // O preço trava no mesmo instante, pela tela e pelo arquivo; o nome segue livre.
+        Assert.True(athletes["Ana"].GetProperty("isMarketLocked").GetBoolean());
+        Assert.False(athletes["Duda"].GetProperty("isMarketLocked").GetBoolean());
+        using var lockedPrice = await ChangeAthleteAsync(
+            owner, competitionId, athletes["Ana"], teams["Aurora"], "Ana", "Star", cancellationToken);
+        Assert.Equal(HttpStatusCode.Conflict, lockedPrice.StatusCode);
+        Assert.Contains("athlete_price_locked", await lockedPrice.Content.ReadAsStringAsync(cancellationToken));
+        using var renamed = await ChangeAthleteAsync(
+            owner, competitionId, athletes["Ana"], teams["Aurora"], "Ana Paula", "Regular", cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, renamed.StatusCode);
+
+        var importedPrice = await PostAsync(owner, competitionId, "atletas", Csv(
+            """
+            nome_esportivo;time;posicao;nivel_preco;preco_exato
+            Ana Paula;Aurora;atacante;regular;12
+            """), cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, importedPrice.Status);
+        Assert.Equal("nivel_preco", Issues(importedPrice.Body).Single().GetProperty("column").GetString());
+
+        coaches = await owner.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/competitions/{competitionId}/coaches", cancellationToken);
+        var byTeam = coaches.EnumerateArray()
+            .ToDictionary(coach => coach.GetProperty("realTeamName").GetString()!);
+        Assert.True(byTeam["Aurora"].GetProperty("isMarketLocked").GetBoolean());
+        Assert.False(byTeam["Brisa"].GetProperty("isMarketLocked").GetBoolean());
+        using var lockedCoach = await ChangeCoachAsync(
+            owner, competitionId, byTeam["Aurora"], null, "Star", cancellationToken);
+        Assert.Equal(HttpStatusCode.Conflict, lockedCoach.StatusCode);
+        Assert.Contains("coach_price_locked", await lockedCoach.Content.ReadAsStringAsync(cancellationToken));
+        using var namedCoach = await ChangeCoachAsync(
+            owner, competitionId, byTeam["Aurora"], "Professora Lia", "Regular", cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, namedCoach.StatusCode);
+        using var eliminatedCoach = await ChangeCoachAsync(
+            owner, competitionId, byTeam["Brisa"], null, "Star", cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, eliminatedCoach.StatusCode);
     }
 
     [Fact]
@@ -255,6 +292,38 @@ public sealed class CatalogAvailabilityFlowTests(SqlServerFixture sqlServer) : I
                 priceTier = "Regular",
                 version = athlete.GetProperty("version").GetString(),
             },
+            cancellationToken);
+
+    private static Task<HttpResponseMessage> ChangeAthleteAsync(
+        HttpClient owner,
+        Guid competitionId,
+        JsonElement athlete,
+        Guid teamId,
+        string sportingName,
+        string priceTier,
+        CancellationToken cancellationToken) =>
+        owner.PutAsJsonAsync(
+            $"/api/v1/competitions/{competitionId}/athletes/{athlete.GetProperty("id").GetGuid()}",
+            new
+            {
+                sportingName,
+                position = athlete.GetProperty("position").GetString(),
+                realTeamId = teamId,
+                priceTier,
+                version = athlete.GetProperty("version").GetString(),
+            },
+            cancellationToken);
+
+    private static Task<HttpResponseMessage> ChangeCoachAsync(
+        HttpClient owner,
+        Guid competitionId,
+        JsonElement coach,
+        string? displayName,
+        string priceTier,
+        CancellationToken cancellationToken) =>
+        owner.PutAsJsonAsync(
+            $"/api/v1/competitions/{competitionId}/coaches/{coach.GetProperty("id").GetGuid()}",
+            new { displayName, priceTier, version = coach.GetProperty("version").GetString() },
             cancellationToken);
 
     private static async Task<List<JsonElement>> AthletesAsync(

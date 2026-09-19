@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.Importing;
 using Fut7Fantasy.Domain.Importing;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Domain.SportsCatalog;
+using Fut7Fantasy.Infrastructure.Fantasy;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,8 @@ namespace Fut7Fantasy.Infrastructure.Importing;
 public sealed partial class CatalogImportService(
     Fut7FantasyDbContext dbContext,
     ICurrentUser currentUser,
-    TimeProvider clock) : ICatalogImportService
+    TimeProvider clock,
+    LineupSnapshotMaterializer snapshotMaterializer) : ICatalogImportService
 {
     public Task<ImportResult> PreviewAsync(
         Guid competitionId,
@@ -55,19 +57,39 @@ public sealed partial class CatalogImportService(
 
         // A trava na linha do campeonato serializa importações do mesmo campeonato: sem
         // ela, dois arquivos simultâneos criariam o mesmo time duas vezes.
-        return await CompetitionLock.RunAsync(dbContext, competitionId, async () => kind switch
+        return await CompetitionLock.RunAsync(dbContext, competitionId, async () =>
         {
-            ImportKind.Teams => await TeamsAsync(competitionId, read.Document, apply, cancellationToken)
-                .ConfigureAwait(false),
-            ImportKind.Athletes => await AthletesAsync(competitionId, read.Document, apply, cancellationToken)
-                .ConfigureAwait(false),
-            ImportKind.Coaches => await CoachesAsync(competitionId, read.Document, apply, cancellationToken)
-                .ConfigureAwait(false),
-            ImportKind.Matches => await MatchesAsync(competitionId, read.Document, apply, cancellationToken)
-                .ConfigureAwait(false),
-            _ => ImportResult.Of(ImportOutcome.NotFound),
+            // Como no cadastro manual, a rodada já fechada é retratada antes de o arquivo
+            // mudar nomes, preços ou times ativos.
+            if (apply)
+            {
+                await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            return await ImportAsync(competitionId, kind, read.Document, apply, cancellationToken)
+                .ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
     }
+
+    private async Task<ImportResult> ImportAsync(
+        Guid competitionId,
+        ImportKind kind,
+        CsvDocument document,
+        bool apply,
+        CancellationToken cancellationToken) =>
+        kind switch
+        {
+            ImportKind.Teams => await TeamsAsync(competitionId, document, apply, cancellationToken)
+                .ConfigureAwait(false),
+            ImportKind.Athletes => await AthletesAsync(competitionId, document, apply, cancellationToken)
+                .ConfigureAwait(false),
+            ImportKind.Coaches => await CoachesAsync(competitionId, document, apply, cancellationToken)
+                .ConfigureAwait(false),
+            ImportKind.Matches => await MatchesAsync(competitionId, document, apply, cancellationToken)
+                .ConfigureAwait(false),
+            _ => ImportResult.Of(ImportOutcome.NotFound),
+        };
 
     private async Task<ImportResult> TeamsAsync(
         Guid competitionId,
@@ -249,6 +271,16 @@ public sealed partial class CatalogImportService(
                 continue;
             }
 
+            if (existing.Athlete.FirstMarketAvailableAt is not null
+                && existing.Registration.ChangesPricing(Definition(row)))
+            {
+                issues.Add(new(
+                    row.Line,
+                    "nivel_preco",
+                    $"O preço de `{row.SportingName}` não muda depois que ele entrou no mercado."));
+                continue;
+            }
+
             if (Matches(existing.Athlete, existing.Registration, row))
             {
                 unchanged++;
@@ -284,7 +316,7 @@ public sealed partial class CatalogImportService(
             var existing = byName[row.SportingName];
             var definition = Definition(row);
             existing.Athlete.Update(definition, now);
-            existing.Registration.UpdatePricing(definition);
+            existing.Registration.UpdatePricing(definition, existing.Athlete.FirstMarketAvailableAt);
         }
 
         return await SaveAsync(competitionId, ImportKind.Athletes, summary, now, cancellationToken)
@@ -329,6 +361,16 @@ public sealed partial class CatalogImportService(
             if (existing.Team.IsArchived)
             {
                 issues.Add(new(row.Line, "time", $"`{row.TeamName}` está arquivado e não recebe alteração."));
+                continue;
+            }
+
+            if (existing.Coach.FirstMarketAvailableAt is not null
+                && existing.Coach.ChangesPricing(new CoachDefinition(row.DisplayName, row.PriceTier, row.ExactPrice)))
+            {
+                issues.Add(new(
+                    row.Line,
+                    "nivel_preco",
+                    $"O preço do técnico de `{row.TeamName}` não muda depois que ele entrou no mercado."));
                 continue;
             }
 

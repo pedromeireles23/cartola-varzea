@@ -24,6 +24,7 @@ function coach(partial: Partial<Coach> = {}): Coach {
     initialPrice: 8,
     isAvailable: true,
     isEliminated: false,
+    isMarketLocked: false,
     updatedAt: '2026-09-17T00:00:00Z',
     version: 'AAAAAAAAB9E=',
     ...partial,
@@ -144,6 +145,32 @@ describe('CompetitionCoachesPage', () => {
     await fixture.whenStable();
 
     expect(text(fixture)).toContain('Ana Lima salvo.');
+  });
+
+  it('trava o preço do técnico que já entrou no mercado, mas deixa nomear', async () => {
+    const fixture = await open([coach({ isMarketLocked: true })]);
+
+    button(fixture, 'Editar Técnico do União da Vila').click();
+    await settle(fixture);
+    const form = (fixture.nativeElement as HTMLElement).querySelector('form')!;
+    expect(form.querySelector('select')!.disabled).toBe(true);
+    expect(form.querySelector<HTMLInputElement>('input[type="number"]')!.disabled).toBe(true);
+    expect(form.querySelector<HTMLInputElement>('input[type="text"]')!.disabled).toBe(false);
+
+    input(form.querySelector('input[type="text"]')!, 'Ana Lima');
+    form.dispatchEvent(new Event('submit'));
+    await settle(fixture);
+    http
+      .expectOne(`${COACHES}/c1`)
+      .flush(
+        { title: 'Preço já utilizado no mercado', status: 409, code: 'coach_price_locked' },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await settle(fixture);
+
+    expect(text(fixture)).toContain(
+      'O nível e o preço não podem mudar depois que o técnico entra no mercado.',
+    );
   });
 
   it('envia nome nulo ao limpar o campo e restaura o fallback', async () => {

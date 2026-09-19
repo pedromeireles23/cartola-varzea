@@ -39,6 +39,9 @@ public enum AthleteCommandOutcome
     TransferNotAllowed,
     PositionLocked,
 
+    /// <summary>Nível e preço exato travam junto com a posição, na primeira abertura de mercado.</summary>
+    PriceLocked,
+
     /// <summary>O prazo de inscrição do campeonato terminou; só atleta novo é recusado.</summary>
     RegistrationClosed,
 }
@@ -62,6 +65,7 @@ public sealed record AthleteView(
     decimal InitialPrice,
     bool IsAvailable,
     bool IsEliminated,
+    bool IsMarketLocked,
     string Status,
     DateTimeOffset UpdatedAt,
     string Version)
@@ -92,6 +96,7 @@ public sealed record AthleteView(
                 registration.InitialPriceOverride),
             registration.IsActive && !team.IsArchived && !teamEliminated,
             teamEliminated,
+            athlete.FirstMarketAvailableAt is not null,
             registration.Status.ToString(),
             athlete.UpdatedAt,
             Convert.ToBase64String(athlete.RowVersion));

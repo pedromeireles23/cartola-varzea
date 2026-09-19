@@ -148,41 +148,18 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
         var earlyEmail = UniqueEmail("fantasy-snapshot-early");
         await CreateUserAsync(factory, earlyEmail);
         using var early = await CreateAuthenticatedClientAsync(factory, earlyEmail, cancellationToken);
-        using var earlyJoined = await early.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken);
-        earlyJoined.EnsureSuccessStatusCode();
-
-        foreach (var position in SquadPositions)
-        {
-            var choice = (await MarketAsync(early, world.Slug, cancellationToken))
-                .Where(item => item.GetProperty("position").GetString() == position
-                    && item.GetProperty("blockCode").ValueKind == JsonValueKind.Null)
-                .MinBy(item => item.GetProperty("price").GetDecimal());
-            using var bought = await BuyAsync(early, world.Slug, choice, cancellationToken);
-            bought.EnsureSuccessStatusCode();
-        }
-
-        var coach = (await MarketAsync(early, world.Slug, cancellationToken))
-            .Where(item => item.GetProperty("kind").GetString() == "Coach")
-            .MinBy(item => item.GetProperty("price").GetDecimal());
-        using var coachBought = await BuyAsync(early, world.Slug, coach, cancellationToken);
-        coachBought.EnsureSuccessStatusCode();
-
-        var slots = (await OverviewAsync(early, world.Slug, cancellationToken))
-            .GetProperty("entry").GetProperty("slots").EnumerateArray().ToList();
-        var captainSlot = slots.First(slot => slot.GetProperty("role").GetString() == "Starter");
-        using var captain = await CaptainAsync(early, world.Slug, captainSlot, cancellationToken);
-        captain.EnsureSuccessStatusCode();
+        var captainId = await JoinWithCompleteSquadAsync(early, world.Slug, cancellationToken);
 
         clock.Advance(TimeSpan.FromDays(3));
 
-        // A adesÃ£o tardia observa primeiro o fechamento e materializa quem jÃ¡ estava apto.
+        // A adesão tardia observa primeiro o fechamento e materializa quem já estava apto.
         var lateEmail = UniqueEmail("fantasy-snapshot-late");
         await CreateUserAsync(factory, lateEmail);
         using var late = await CreateAuthenticatedClientAsync(factory, lateEmail, cancellationToken);
         using var lateJoined = await late.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken);
         lateJoined.EnsureSuccessStatusCode();
 
-        // Repetir leituras nÃ£o duplica o retrato.
+        // Repetir leituras não duplica o retrato.
         _ = await OverviewAsync(early, world.Slug, cancellationToken);
         _ = await OverviewAsync(late, world.Slug, cancellationToken);
 
@@ -204,7 +181,7 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
         Assert.Equal(entries[0].Id, snapshot.EntryId);
         Assert.NotEqual(entries[1].Id, snapshot.EntryId);
         Assert.Equal(round.MarketCloseAt, snapshot.MarketClosedAt);
-        Assert.Equal(Id(captainSlot), snapshot.CaptainAthleteId);
+        Assert.Equal(captainId, snapshot.CaptainAthleteId);
         Assert.Equal(12, snapshot.Slots.Count);
         Assert.All(snapshot.Slots, slot =>
         {
@@ -212,6 +189,101 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
             Assert.NotEmpty(slot.RealTeamName);
             Assert.True(slot.Price > 0);
         });
+    }
+
+    [Fact]
+    public async Task OrganizerEditsAfterTheCloseDoNotReachTheSnapshotAndLateEntryPlaysTheNextRound()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        var earlyEmail = UniqueEmail("fantasy-frozen-early");
+        await CreateUserAsync(factory, earlyEmail);
+        using var early = await CreateAuthenticatedClientAsync(factory, earlyEmail, cancellationToken);
+        var captainId = await JoinWithCompleteSquadAsync(early, world.Slug, cancellationToken);
+
+        var captain = (await world.Owner.GetFromJsonAsync<JsonElement>(
+                $"/api/v1/competitions/{world.CompetitionId}/athletes", cancellationToken))
+            .EnumerateArray()
+            .Single(athlete => athlete.GetProperty("id").GetGuid() == captainId);
+        var originalName = captain.GetProperty("sportingName").GetString()!;
+        var originalTeamName = captain.GetProperty("realTeamName").GetString()!;
+        var captainTeamId = captain.GetProperty("realTeamId").GetGuid();
+
+        clock.Advance(TimeSpan.FromDays(3));
+
+        // Ninguém do fantasy agiu desde o fechamento: são as edições do organizador que
+        // encontram a rodada fechada e precisam retratá-la antes de mudar o catálogo.
+        var initialPriceOverride = captain.GetProperty("initialPriceOverride");
+        using var renamedAthlete = await world.Owner.PutAsJsonAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/athletes/{captainId}",
+            new
+            {
+                sportingName = $"{originalName} Renomeado",
+                position = captain.GetProperty("position").GetString(),
+                realTeamId = captainTeamId,
+                priceTier = captain.GetProperty("priceTier").GetString(),
+                initialPriceOverride = initialPriceOverride.ValueKind == JsonValueKind.Null
+                    ? (decimal?)null
+                    : initialPriceOverride.GetDecimal(),
+                version = captain.GetProperty("version").GetString(),
+            },
+            cancellationToken);
+        renamedAthlete.EnsureSuccessStatusCode();
+        var team = (await world.Owner.GetFromJsonAsync<JsonElement>(
+                $"/api/v1/competitions/{world.CompetitionId}/teams", cancellationToken))
+            .EnumerateArray()
+            .Single(item => item.GetProperty("id").GetGuid() == captainTeamId);
+        using var renamedTeam = await world.Owner.PutAsJsonAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/teams/{captainTeamId}",
+            new { name = $"{originalTeamName} FC", version = team.GetProperty("version").GetString() },
+            cancellationToken);
+        renamedTeam.EnsureSuccessStatusCode();
+
+        // A entrada tardia monta o elenco durante o mercado da rodada seguinte.
+        var secondRound = await CreateRoundAsync(world.Owner, world, "Rodada 2", daysAhead: 5, cancellationToken);
+        var secondRoundId = secondRound.GetProperty("id").GetGuid();
+        await OpenMarketAsync(world.Owner, world with { RoundId = secondRoundId }, cancellationToken);
+        var lateEmail = UniqueEmail("fantasy-frozen-late");
+        await CreateUserAsync(factory, lateEmail);
+        using var late = await CreateAuthenticatedClientAsync(factory, lateEmail, cancellationToken);
+        _ = await JoinWithCompleteSquadAsync(late, world.Slug, cancellationToken);
+
+        clock.Advance(TimeSpan.FromDays(3));
+        _ = await OverviewAsync(late, world.Slug, cancellationToken);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+        var entries = await dbContext.FantasyEntries
+            .AsNoTracking()
+            .Where(entry => entry.CompetitionId == world.CompetitionId)
+            .OrderBy(entry => entry.JoinedAt)
+            .Select(entry => entry.Id)
+            .ToListAsync(cancellationToken);
+        var snapshots = await dbContext.LineupSnapshots
+            .AsNoTracking()
+            .Include(item => item.Slots)
+            .Where(item => entries.Contains(item.EntryId))
+            .ToListAsync(cancellationToken);
+
+        Assert.Equal(2, entries.Count);
+        var first = Assert.Single(snapshots, item => item.RoundId == world.RoundId);
+        Assert.Equal(entries[0], first.EntryId);
+        var frozenCaptain = first.Slots.Single(slot => slot.AssetId == captainId);
+        Assert.Equal(originalName, frozenCaptain.AssetName);
+        Assert.Equal(originalTeamName, frozenCaptain.RealTeamName);
+
+        var second = snapshots.Where(item => item.RoundId == secondRoundId).ToList();
+        Assert.Equal(entries.Order(), second.Select(item => item.EntryId).Order());
+        var currentCaptain = second.Single(item => item.EntryId == entries[0])
+            .Slots.Single(slot => slot.AssetId == captainId);
+        Assert.Equal($"{originalName} Renomeado", currentCaptain.AssetName);
+        Assert.Equal($"{originalTeamName} FC", currentCaptain.RealTeamName);
     }
 
     [Fact]
@@ -370,6 +442,39 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
             Uri(slug, $"squad/{(item.GetProperty("kind").GetString() == "Coach" ? "tecnico" : "atleta")}/{Id(item)}"),
             null,
             cancellationToken);
+
+    /// <summary>Adere e compra o elenco completo mais barato, com capitão; devolve o capitão.</summary>
+    private static async Task<Guid> JoinWithCompleteSquadAsync(
+        HttpClient client,
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        using var joined = await client.PostAsync(Uri(slug, "entry"), null, cancellationToken);
+        joined.EnsureSuccessStatusCode();
+
+        foreach (var position in SquadPositions)
+        {
+            var choice = (await MarketAsync(client, slug, cancellationToken))
+                .Where(item => item.GetProperty("position").GetString() == position
+                    && item.GetProperty("blockCode").ValueKind == JsonValueKind.Null)
+                .MinBy(item => item.GetProperty("price").GetDecimal());
+            using var bought = await BuyAsync(client, slug, choice, cancellationToken);
+            bought.EnsureSuccessStatusCode();
+        }
+
+        var coach = (await MarketAsync(client, slug, cancellationToken))
+            .Where(item => item.GetProperty("kind").GetString() == "Coach")
+            .MinBy(item => item.GetProperty("price").GetDecimal());
+        using var coachBought = await BuyAsync(client, slug, coach, cancellationToken);
+        coachBought.EnsureSuccessStatusCode();
+
+        var slots = (await OverviewAsync(client, slug, cancellationToken))
+            .GetProperty("entry").GetProperty("slots").EnumerateArray().ToList();
+        var captainSlot = slots.First(slot => slot.GetProperty("role").GetString() == "Starter");
+        using var captain = await CaptainAsync(client, slug, captainSlot, cancellationToken);
+        captain.EnsureSuccessStatusCode();
+        return Id(captainSlot);
+    }
 
     private static Task<HttpResponseMessage> CaptainAsync(
         HttpClient client,

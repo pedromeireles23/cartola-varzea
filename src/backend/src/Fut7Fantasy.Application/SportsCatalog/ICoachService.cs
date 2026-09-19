@@ -22,6 +22,11 @@ public enum CoachCommandOutcome
     Invalid,
     NotFound,
     Conflict,
+
+    /// <summary>
+    /// Nível e preço exato travam na primeira abertura de mercado em que o técnico esteve disponível.
+    /// </summary>
+    PriceLocked,
 }
 
 public sealed record CoachCommandResult(
@@ -43,6 +48,7 @@ public sealed record CoachView(
     decimal InitialPrice,
     bool IsAvailable,
     bool IsEliminated,
+    bool IsMarketLocked,
     DateTimeOffset UpdatedAt,
     string Version)
 {
@@ -63,6 +69,7 @@ public sealed record CoachView(
             profile.InitialCoachPrice(coach.PriceTier, coach.InitialPriceOverride),
             !team.IsArchived && !teamEliminated,
             teamEliminated,
+            coach.FirstMarketAvailableAt is not null,
             coach.UpdatedAt,
             Convert.ToBase64String(coach.RowVersion));
     }

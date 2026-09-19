@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.SportsCatalog;
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Domain.SportsCatalog;
+using Fut7Fantasy.Infrastructure.Fantasy;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,8 @@ namespace Fut7Fantasy.Infrastructure.SportsCatalog;
 public sealed class CoachService(
     Fut7FantasyDbContext dbContext,
     ICurrentUser currentUser,
-    TimeProvider clock) : ICoachService
+    TimeProvider clock,
+    LineupSnapshotMaterializer snapshotMaterializer) : ICoachService
 {
     public async Task<IReadOnlyList<CoachView>> ListAsync(
         Guid competitionId,
@@ -40,6 +42,7 @@ public sealed class CoachService(
             return new CoachCommandResult(CoachCommandOutcome.Invalid, null, errors);
         }
 
+        await snapshotMaterializer.EnsureClosedRoundsAsync(competitionId, cancellationToken).ConfigureAwait(false);
         var row = await Rows(competitionId, coachId, activeTeamOnly: true)
             .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -53,8 +56,14 @@ public sealed class CoachService(
             return CoachCommandResult.Of(CoachCommandOutcome.Conflict);
         }
 
+        var normalized = definition.Normalized();
+        if (row.Coach.FirstMarketAvailableAt is not null && row.Coach.ChangesPricing(normalized))
+        {
+            return CoachCommandResult.Of(CoachCommandOutcome.PriceLocked);
+        }
+
         var now = clock.GetUtcNow();
-        row.Coach.Update(definition.Normalized(), now);
+        row.Coach.Update(normalized, now);
         dbContext.Entry(row.Coach).Property(item => item.RowVersion).OriginalValue = expectedVersion;
         dbContext.Entry(row.Coach).Property(item => item.UpdatedAt).IsModified = true;
         AddAudit("CoachUpdated", row.Coach.Id, "Ativo de técnico alterado.", now);

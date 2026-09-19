@@ -31,6 +31,7 @@ import {
   ATHLETE_NAME_MAX,
   ATHLETE_NAME_MIN,
   ATHLETE_POSITION_LOCKED_CODE,
+  ATHLETE_PRICE_LOCKED_CODE,
   ATHLETE_TRANSFER_CODE,
   Athlete,
   AthletePosition,
@@ -232,20 +233,34 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
           <app-select-field
             label="Posição"
             [options]="positionOptions"
+            [disabled]="travadoNoMercado()"
+            [hint]="
+              travadoNoMercado() ? 'Travada desde que o atleta entrou no mercado.' : undefined
+            "
             [error]="erroPosicao()"
             [(value)]="posicao"
           />
           <app-select-field
             label="Nível de preço"
             [options]="priceTierOptions"
-            hint="O nível ajusta o valor de referência da posição."
+            [disabled]="travadoNoMercado()"
+            [hint]="
+              travadoNoMercado()
+                ? 'Travado desde que o atleta entrou no mercado: alguém pode tê-lo comprado por esse valor.'
+                : 'O nível ajusta o valor de referência da posição.'
+            "
             [(value)]="nivel"
           />
           <app-form-field
             label="Preço exato (opcional)"
             type="number"
             placeholder="Ex.: 8,50"
-            hint="Deixe vazio para usar o preço calculado pelo nível."
+            [disabled]="travadoNoMercado()"
+            [hint]="
+              travadoNoMercado()
+                ? 'Travado junto com o nível.'
+                : 'Deixe vazio para usar o preço calculado pelo nível.'
+            "
             [error]="erroPreco()"
             [(value)]="precoExato"
           />
@@ -307,6 +322,7 @@ export class CompetitionAthletesPage {
   protected readonly estado = signal<Estado>({ tipo: 'carregando' });
   protected readonly editandoNovo = signal(false);
   protected readonly editandoId = signal<string | null>(null);
+  protected readonly travadoNoMercado = signal(false);
   protected readonly nome = signal('');
   protected readonly timeId = signal('');
   protected readonly posicao = signal<AthletePosition>('Forward');
@@ -378,6 +394,7 @@ export class CompetitionAthletesPage {
     this.retorno.set(null);
     this.editandoId.set(null);
     this.editandoNovo.set(true);
+    this.travadoNoMercado.set(false);
     this.preencherFormulario('', firstTeam.id, 'Forward', 'Regular', null);
   }
 
@@ -385,6 +402,7 @@ export class CompetitionAthletesPage {
     this.retorno.set(null);
     this.editandoNovo.set(false);
     this.editandoId.set(athlete.id);
+    this.travadoNoMercado.set(athlete.isMarketLocked);
     this.preencherFormulario(
       athlete.sportingName,
       athlete.realTeamId,
@@ -550,6 +568,10 @@ export class CompetitionAthletesPage {
     }
     if (failure.code === ATHLETE_POSITION_LOCKED_CODE) {
       this.erroPosicao.set('A posição não pode mudar depois que o atleta entra no mercado.');
+      return;
+    }
+    if (failure.code === ATHLETE_PRICE_LOCKED_CODE) {
+      this.erroPreco.set('O nível e o preço não podem mudar depois que o atleta entra no mercado.');
       return;
     }
     if (failure.code === ATHLETE_TRANSFER_CODE) {

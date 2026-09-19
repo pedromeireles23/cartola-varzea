@@ -17,6 +17,8 @@ export interface Coach {
   readonly isAvailable: boolean;
   /** O time ficou de fora da fase mais adiantada já confirmada. */
   readonly isEliminated: boolean;
+  /** Já esteve disponível num mercado aberto: o preço não muda mais. */
+  readonly isMarketLocked: boolean;
   readonly updatedAt: string;
   readonly version: string;
 }
@@ -31,6 +33,7 @@ export const COACH_NAME_MIN = 2;
 export const COACH_NAME_MAX = 80;
 export const COACH_MIN_PRICE = 1;
 export const COACH_MAX_PRICE = 30;
+export const COACH_PRICE_LOCKED_CODE = 'coach_price_locked';
 
 @Injectable({ providedIn: 'root' })
 export class CoachService {

@@ -351,16 +351,17 @@ public sealed class CompetitionRoundService(
             return RoundCommandResult.Invalid(new RoundError("MarketCloseAt", exception.Message));
         }
 
-        await LockPositionsAsync(competition.Id, now, cancellationToken).ConfigureAwait(false);
+        await LockMarketAssetsAsync(competition.Id, now, cancellationToken).ConfigureAwait(false);
         AddAudit("CompetitionRoundMarketOpened", round.Id, "Mercado da rodada aberto.", now);
         return null;
     }
 
     /// <summary>
-    /// A posição do atleta trava na primeira abertura de mercado em que ele estava
-    /// disponível (01 §9): a partir daí alguém pode tê-lo escalado naquela posição.
+    /// Posição e preço do atleta, e o preço do técnico, travam na primeira abertura de
+    /// mercado em que o ativo estava disponível (01 §7): a partir daí alguém pode tê-lo
+    /// comprado naquela posição e por aquele valor.
     /// </summary>
-    private async Task LockPositionsAsync(
+    private async Task LockMarketAssetsAsync(
         Guid competitionId,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -383,6 +384,20 @@ public sealed class CompetitionRoundService(
         foreach (var candidate in candidates.Where(item => !eliminated.Contains(item.TeamId)))
         {
             candidate.Athlete.MarkMarketAvailable(now);
+        }
+
+        var coaches = await (
+                from coach in dbContext.Coaches
+                join team in dbContext.RealTeams on coach.RealTeamId equals team.Id
+                where coach.CompetitionId == competitionId
+                    && team.ArchivedAt == null
+                    && coach.FirstMarketAvailableAt == null
+                select coach)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        foreach (var coach in coaches.Where(item => !eliminated.Contains(item.RealTeamId)))
+        {
+            coach.MarkMarketAvailable(now);
         }
     }
 

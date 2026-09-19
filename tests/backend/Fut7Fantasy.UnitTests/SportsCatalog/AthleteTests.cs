@@ -81,7 +81,7 @@ public sealed class AthleteTests
         Assert.Equal(14m, registration.InitialPriceOverride);
         Assert.Throws<InvalidOperationException>(() => registration.Release(Now.AddHours(2)));
         Assert.Throws<InvalidOperationException>(() => registration.UpdatePricing(
-            definition with { PriceTier = PriceTier.Basic }));
+            definition with { PriceTier = PriceTier.Basic }, null));
     }
 
     [Fact]
@@ -99,8 +99,31 @@ public sealed class AthleteTests
             Now.AddHours(2)));
 
         athlete.Update(
-            new AthleteDefinition("Eli Silva", Position.Goalkeeper, PriceTier.Star, null),
+            new AthleteDefinition("Eli Silva", Position.Goalkeeper, PriceTier.Regular, null),
             Now.AddHours(2));
         Assert.Equal("Eli Silva", athlete.SportingName);
+    }
+
+    [Fact]
+    public void PriceLocksWithThePositionAndOnlyThePriceIsCompared()
+    {
+        var definition = new AthleteDefinition("Fábio", Position.Forward, PriceTier.Regular, null);
+        var registration = RosterRegistration.Create(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), definition, Now);
+
+        registration.UpdatePricing(definition with { PriceTier = PriceTier.Star }, null);
+        Assert.Equal(PriceTier.Star, registration.PriceTier);
+
+        var lockedSince = Now.AddHours(1);
+        Assert.Throws<InvalidOperationException>(() => registration.UpdatePricing(
+            definition with { PriceTier = PriceTier.Star, InitialPriceOverride = 9m }, lockedSince));
+        Assert.Throws<InvalidOperationException>(() => registration.UpdatePricing(
+            definition with { PriceTier = PriceTier.Basic }, lockedSince));
+
+        // Renomear continua livre: o nome não está no preço.
+        registration.UpdatePricing(
+            definition with { SportingName = "Fábio Lima", PriceTier = PriceTier.Star }, lockedSince);
+        Assert.Equal(PriceTier.Star, registration.PriceTier);
+        Assert.Null(registration.InitialPriceOverride);
     }
 }

@@ -26,6 +26,7 @@ import { ChangeDetectionStrategy, Component, computed, input, model } from '@ang
           [rows]="rows()"
           [placeholder]="placeholder()"
           [required]="required()"
+          [disabled]="disabled()"
           [attr.minlength]="minLength()"
           [attr.maxlength]="maxLength()"
           [attr.aria-invalid]="error() ? 'true' : null"
@@ -41,6 +42,7 @@ import { ChangeDetectionStrategy, Component, computed, input, model } from '@ang
           [type]="type()"
           [placeholder]="placeholder()"
           [required]="required()"
+          [disabled]="disabled()"
           [attr.autocomplete]="autocomplete()"
           [attr.minlength]="minLength()"
           [attr.maxlength]="maxLength()"
@@ -70,6 +72,7 @@ export class FormField {
   readonly type = input<'text' | 'email' | 'password' | 'number' | 'datetime-local'>('text');
   readonly placeholder = input('');
   readonly required = input(false);
+  readonly disabled = input(false);
   readonly error = input<string>();
   readonly hint = input<string>();
   readonly minLength = input<number>();

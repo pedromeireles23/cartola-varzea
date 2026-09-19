@@ -7,6 +7,8 @@ namespace Fut7Fantasy.Api.Endpoints;
 /// <summary>Técnico único criado automaticamente para cada time.</summary>
 public static class CoachEndpoints
 {
+    public const string PriceLockedCode = "coach_price_locked";
+
     public static IEndpointRouteBuilder MapCoachEndpoints(this IEndpointRouteBuilder routes)
     {
         ArgumentNullException.ThrowIfNull(routes);
@@ -62,6 +64,11 @@ public static class CoachEndpoints
             CoachCommandOutcome.Completed => Results.Ok(result.Coach),
             CoachCommandOutcome.Invalid => DomainRequests.SportsCatalogValidationProblem(result.Errors),
             CoachCommandOutcome.NotFound => Results.NotFound(),
+            CoachCommandOutcome.PriceLocked => Results.Problem(
+                title: "Preço já utilizado no mercado",
+                detail: "O nível e o preço exato não podem mudar depois que o técnico fica disponível no mercado.",
+                statusCode: StatusCodes.Status409Conflict,
+                extensions: new Dictionary<string, object?> { ["code"] = PriceLockedCode }),
             _ => Results.Problem(
                 title: "Técnico alterado por outra pessoa",
                 detail: "Atualize a lista antes de salvar de novo.",
