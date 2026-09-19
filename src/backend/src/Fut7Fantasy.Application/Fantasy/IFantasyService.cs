@@ -98,13 +98,44 @@ public sealed record FantasyTeamLimitView(int ActiveRealTeams, int MaxStarters, 
 /// <summary>
 /// A participação da conta. <see cref="Patrimony"/> é o saldo mais o preço atual do
 /// elenco; <see cref="Issues"/> vazia quer dizer escalação completa.
+/// <see cref="LastClosedRound"/> diz o que valeu na rodada mais recente cujo mercado já
+/// fechou, e é nula enquanto nenhum mercado fechou.
 /// </summary>
 public sealed record FantasyEntryView(
     decimal Balance,
     decimal Patrimony,
     Guid? CaptainAthleteId,
     IReadOnlyList<SquadSlotView> Slots,
-    IReadOnlyList<LineupIssue> Issues);
+    IReadOnlyList<LineupIssue> Issues,
+    ClosedRoundLineupView? LastClosedRound);
+
+/// <summary>
+/// A escalação da conta na rodada mais recente com o mercado fechado. <see cref="Status"/>
+/// é <c>Frozen</c> (a escalação completa virou retrato e vale para a rodada),
+/// <c>Incomplete</c> (faltava algo no fechamento, então a conta não joga a rodada) ou
+/// <c>JoinedAfterClose</c> (a conta entrou depois do fechamento e joga a partir da
+/// próxima). <see cref="Slots"/> é o retrato, com os nomes do fechamento, e só vem
+/// preenchida em <c>Frozen</c>.
+/// </summary>
+public sealed record ClosedRoundLineupView(
+    string RoundName,
+    DateTimeOffset MarketClosedAt,
+    string MarketClosedAtLocal,
+    string Status,
+    Guid? CaptainAthleteId,
+    IReadOnlyList<FrozenSlotView> Slots);
+
+/// <summary>Vaga congelada no retrato: nome, time e preço como estavam no fechamento.</summary>
+public sealed record FrozenSlotView(
+    string Kind,
+    Guid AssetId,
+    string Name,
+    string? Position,
+    Guid RealTeamId,
+    string RealTeamName,
+    string Role,
+    decimal Price,
+    bool IsCaptain);
 
 /// <summary>Vaga ocupada: `Kind` é `Athlete` ou `Coach`; `Role`, `Starter`, `Bench` ou `Coach`.</summary>
 public sealed record SquadSlotView(

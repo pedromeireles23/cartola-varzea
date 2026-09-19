@@ -405,6 +405,81 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
     }
 
+    [Fact]
+    public async Task OverviewTellsEachParticipantWhatCountedWhenTheMarketClosed()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        var completeEmail = UniqueEmail("fantasy-closed-complete");
+        await CreateUserAsync(factory, completeEmail);
+        using var complete = await CreateAuthenticatedClientAsync(factory, completeEmail, cancellationToken);
+        var captainId = await JoinWithCompleteSquadAsync(complete, world.Slug, cancellationToken);
+
+        // Quem só comprou um atleta chega ao fechamento com a escalação incompleta.
+        var incompleteEmail = UniqueEmail("fantasy-closed-incomplete");
+        await CreateUserAsync(factory, incompleteEmail);
+        using var incomplete = await CreateAuthenticatedClientAsync(factory, incompleteEmail, cancellationToken);
+        using (var joined = await incomplete.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken))
+        {
+            joined.EnsureSuccessStatusCode();
+        }
+
+        var anyAthlete = (await MarketAsync(incomplete, world.Slug, cancellationToken))
+            .First(item => item.GetProperty("kind").GetString() == "Athlete");
+        using (var bought = await BuyAsync(incomplete, world.Slug, anyAthlete, cancellationToken))
+        {
+            bought.EnsureSuccessStatusCode();
+        }
+
+        // Enquanto nenhum mercado fechou, não há rodada fechada para contar.
+        var open = (await OverviewAsync(complete, world.Slug, cancellationToken)).GetProperty("entry");
+        Assert.Equal(JsonValueKind.Null, open.GetProperty("lastClosedRound").ValueKind);
+
+        clock.Advance(TimeSpan.FromDays(3));
+
+        var lateEmail = UniqueEmail("fantasy-closed-late");
+        await CreateUserAsync(factory, lateEmail);
+        using var late = await CreateAuthenticatedClientAsync(factory, lateEmail, cancellationToken);
+        using (var lateJoined = await late.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken))
+        {
+            lateJoined.EnsureSuccessStatusCode();
+        }
+
+        var frozen = await LastClosedRoundAsync(complete, world.Slug, cancellationToken);
+        Assert.Equal("Rodada 1", frozen.GetProperty("roundName").GetString());
+        Assert.Equal("Frozen", frozen.GetProperty("status").GetString());
+        Assert.Equal(captainId, frozen.GetProperty("captainAthleteId").GetGuid());
+        var frozenSlots = frozen.GetProperty("slots").EnumerateArray().ToList();
+        Assert.Equal(12, frozenSlots.Count);
+        Assert.Single(frozenSlots, slot => slot.GetProperty("isCaptain").GetBoolean());
+        Assert.Equal(7, frozenSlots.Count(slot => slot.GetProperty("role").GetString() == "Starter"));
+
+        // O horário do fechamento vem no fuso do campeonato, para a tela não converter nada.
+        var rounds = await world.Owner.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds", cancellationToken);
+        var closesAt = rounds.EnumerateArray()
+            .Single(item => item.GetProperty("id").GetGuid() == world.RoundId)
+            .GetProperty("marketCloseAt").GetDateTimeOffset();
+        Assert.Equal(closesAt, frozen.GetProperty("marketClosedAt").GetDateTimeOffset());
+        Assert.Equal(
+            closesAt.ToOffset(TimeSpan.FromHours(-3)).ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture),
+            frozen.GetProperty("marketClosedAtLocal").GetString());
+
+        var missed = await LastClosedRoundAsync(incomplete, world.Slug, cancellationToken);
+        Assert.Equal("Incomplete", missed.GetProperty("status").GetString());
+        Assert.Empty(missed.GetProperty("slots").EnumerateArray());
+
+        var joinedLate = await LastClosedRoundAsync(late, world.Slug, cancellationToken);
+        Assert.Equal("JoinedAfterClose", joinedLate.GetProperty("status").GetString());
+        Assert.Equal(JsonValueKind.Null, joinedLate.GetProperty("captainAthleteId").ValueKind);
+    }
+
     private static Uri Uri(string slug, string path) =>
         new($"/api/v1/fantasy/{slug}/{path}", UriKind.Relative);
 
@@ -442,6 +517,14 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
             Uri(slug, $"squad/{(item.GetProperty("kind").GetString() == "Coach" ? "tecnico" : "atleta")}/{Id(item)}"),
             null,
             cancellationToken);
+
+    private static async Task<JsonElement> LastClosedRoundAsync(
+        HttpClient client,
+        string slug,
+        CancellationToken cancellationToken) =>
+        (await OverviewAsync(client, slug, cancellationToken))
+            .GetProperty("entry")
+            .GetProperty("lastClosedRound");
 
     /// <summary>Adere e compra o elenco completo mais barato, com capitão; devolve o capitão.</summary>
     private static async Task<Guid> JoinWithCompleteSquadAsync(

@@ -25,7 +25,7 @@ public sealed class FantasyService(
         }
 
         var entry = await EntryAsync(context.Competition.Id, tracked: false, cancellationToken).ConfigureAwait(false);
-        return Overview(context, entry);
+        return await ViewAsync(context, entry, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<FantasyCommandResult> JoinAsync(string slug, CancellationToken cancellationToken)
@@ -61,7 +61,10 @@ public sealed class FantasyService(
             }
         }
 
-        return new(FantasyCommandOutcome.Completed, Overview(context, entry), null);
+        return new(
+            FantasyCommandOutcome.Completed,
+            await ViewAsync(context, entry, cancellationToken).ConfigureAwait(false),
+            null);
     }
 
     public async Task<MarketView?> MarketAsync(string slug, CancellationToken cancellationToken)
@@ -179,7 +182,10 @@ public sealed class FantasyService(
             return FantasyCommandResult.Of(FantasyCommandOutcome.Conflict);
         }
 
-        return new(FantasyCommandOutcome.Completed, Overview(context, entry), null);
+        return new(
+            FantasyCommandOutcome.Completed,
+            await ViewAsync(context, entry, cancellationToken).ConfigureAwait(false),
+            null);
     }
 
     private static SquadRejection? BlockFor(FantasyContext context, FantasyEntry? entry, MarketAsset asset)
@@ -197,16 +203,27 @@ public sealed class FantasyService(
         return entry.CanBuy(asset, context.Rules);
     }
 
-    private static FantasyOverview Overview(FantasyContext context, FantasyEntry? entry) => new(
+    private async Task<FantasyOverview> ViewAsync(
+        FantasyContext context,
+        FantasyEntry? entry,
+        CancellationToken cancellationToken) => new(
         context.Competition.Name,
         context.Competition.Slug!,
         ModalityProfileView.From(context.Competition.ModalityProfile),
         context.Market,
         new FantasyTeamLimitView(
             context.ActiveRealTeams, context.Rules.TeamLimit.MaxStarters, context.Rules.TeamLimit.MaxAthletes),
-        entry is null ? null : EntryView(context, entry));
+        entry is null
+            ? null
+            : EntryView(
+                context,
+                entry,
+                await LastClosedRoundAsync(context, entry, cancellationToken).ConfigureAwait(false)));
 
-    private static FantasyEntryView EntryView(FantasyContext context, FantasyEntry entry)
+    private static FantasyEntryView EntryView(
+        FantasyContext context,
+        FantasyEntry entry,
+        ClosedRoundLineupView? lastClosedRound)
     {
         var slots = entry.Slots
             .Select(slot =>
@@ -234,7 +251,72 @@ public sealed class FantasyService(
             entry.Balance + slots.Sum(slot => slot.CurrentPrice),
             entry.CaptainAthleteId,
             slots,
-            entry.Issues(context.Rules));
+            entry.Issues(context.Rules),
+            lastClosedRound);
+    }
+
+    /// <summary>
+    /// O que valeu na rodada mais recente cujo mercado já fechou. <see cref="ContextAsync"/>
+    /// materializou os retratos antes, então a falta do retrato já diz tudo: ou a conta
+    /// entrou depois do fechamento, ou a escalação estava incompleta nele.
+    /// </summary>
+    private async Task<ClosedRoundLineupView?> LastClosedRoundAsync(
+        FantasyContext context,
+        FantasyEntry entry,
+        CancellationToken cancellationToken)
+    {
+        var now = clock.GetUtcNow();
+        var round = await dbContext.Rounds
+            .AsNoTracking()
+            .Where(item => item.CompetitionId == context.Competition.Id
+                && item.MarketCloseAt != null
+                && item.MarketCloseAt <= now
+                && item.Status != RoundStatus.Draft
+                && item.Status != RoundStatus.Cancelled)
+            .OrderByDescending(item => item.MarketCloseAt)
+            .ThenByDescending(item => item.Sequence)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (round is null)
+        {
+            return null;
+        }
+
+        var closedAt = round.MarketCloseAt!.Value;
+        var snapshot = await dbContext.LineupSnapshots
+            .AsNoTracking()
+            .Include(item => item.Slots)
+            .SingleOrDefaultAsync(
+                item => item.EntryId == entry.Id && item.RoundId == round.Id,
+                cancellationToken)
+            .ConfigureAwait(false);
+        var status = snapshot is not null ? "Frozen"
+            : entry.JoinedAt > closedAt ? "JoinedAfterClose"
+            : "Incomplete";
+        var slots = snapshot is null
+            ? []
+            : snapshot.Slots
+                .OrderBy(slot => slot.Role)
+                .ThenBy(slot => slot.Position)
+                .Select(slot => new FrozenSlotView(
+                    slot.Kind.ToString(),
+                    slot.AssetId,
+                    slot.AssetName,
+                    slot.Position?.ToString(),
+                    slot.RealTeamId,
+                    slot.RealTeamName,
+                    slot.Role.ToString(),
+                    slot.Price,
+                    snapshot.CaptainAthleteId == slot.AssetId))
+                .ToList();
+
+        return new ClosedRoundLineupView(
+            round.Name,
+            closedAt,
+            CompetitionClock.ToLocalText(closedAt, context.Competition.TimeZoneId),
+            status,
+            snapshot?.CaptainAthleteId,
+            slots);
     }
 
     private async Task<FantasyEntry?> EntryAsync(Guid competitionId, bool tracked, CancellationToken cancellationToken)
