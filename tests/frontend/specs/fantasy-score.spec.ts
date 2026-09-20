@@ -87,7 +87,6 @@ test('a jornada inteira: a escalação congela, a rodada é publicada e o partic
     `Nenhum evento apareceu no detalhamento (artilheiro: ${artilheiro})`,
   ).toBeGreaterThan(0);
 
-
   const sobra = await jogador.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
