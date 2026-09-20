@@ -133,10 +133,49 @@ public sealed class RoundPublicationFlowTests(SqlServerFixture sqlServer) : ICla
             Assert.Equal(HttpStatusCode.Conflict, edit.StatusCode);
         }
 
+        // Quem jogou lê a própria pontuação, com o detalhamento e a variação de preço.
+        var rounds = await player.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/fantasy/{world.Slug}/rounds", cancellationToken);
+        var listed = Assert.Single(rounds.EnumerateArray());
+        Assert.Equal(world.RoundId, listed.GetProperty("roundId").GetGuid());
+        Assert.Equal(entry.Total, listed.GetProperty("total").GetDecimal());
+        Assert.True(listed.GetProperty("provisional").GetBoolean());
+
+        var detail = await player.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/fantasy/{world.Slug}/rounds/{world.RoundId}", cancellationToken);
+        Assert.True(detail.GetProperty("played").GetBoolean());
+        Assert.Equal(entry.Total, detail.GetProperty("total").GetDecimal());
+        var detailSlots = detail.GetProperty("slots").EnumerateArray().ToList();
+        Assert.Equal(12, detailSlots.Count);
+        Assert.Single(detailSlots, slot => slot.GetProperty("isCaptain").GetBoolean());
+        Assert.All(detailSlots, slot =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(slot.GetProperty("name").GetString()));
+            Assert.False(string.IsNullOrWhiteSpace(slot.GetProperty("realTeamName").GetString()));
+            Assert.True(slot.GetProperty("price").GetProperty("newPrice").GetDecimal() > 0);
+        });
+        Assert.Equal(
+            detailSlots.Where(slot => slot.GetProperty("counts").GetBoolean())
+                .Sum(slot => slot.GetProperty("points").GetDecimal())
+                + detail.GetProperty("captainBonus").GetDecimal(),
+            detail.GetProperty("total").GetDecimal());
+
+        // Quem não entrou no campeonato vê a rodada, mas sem escalação nenhuma.
+        var visitorEmail = UniqueEmail("publication-visitor");
+        await CreateUserAsync(factory, visitorEmail);
+        using var visitor = await CreateAuthenticatedClientAsync(factory, visitorEmail, cancellationToken);
+        var visitorDetail = await visitor.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/fantasy/{world.Slug}/rounds/{world.RoundId}", cancellationToken);
+        Assert.False(visitorDetail.GetProperty("played").GetBoolean());
+        Assert.Empty(visitorDetail.GetProperty("slots").EnumerateArray());
+
         // A rodada consolida sozinha, pelo relógio, no fim da janela de correção.
         clock.Advance(TimeSpan.FromDays(10));
         var consolidated = await ReviewAsync(world, world.RoundId, cancellationToken);
         Assert.Equal("Consolidated", consolidated.GetProperty("phase").GetString());
+        var afterConsolidation = await player.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/fantasy/{world.Slug}/rounds/{world.RoundId}", cancellationToken);
+        Assert.False(afterConsolidation.GetProperty("provisional").GetBoolean());
         Assert.True(consolidated.GetProperty("publication").GetProperty("consolidated").GetBoolean());
     }
 

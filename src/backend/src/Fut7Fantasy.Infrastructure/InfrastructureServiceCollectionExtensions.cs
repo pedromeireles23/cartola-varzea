@@ -113,6 +113,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<LineupSnapshotMaterializer>();
         services.AddScoped<IFantasyService, FantasyService>();
         services.AddScoped<IRoundPublicationService, RoundPublicationService>();
+        services.AddScoped<IFantasyScoreService, FantasyScoreService>();
         services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
         return services;

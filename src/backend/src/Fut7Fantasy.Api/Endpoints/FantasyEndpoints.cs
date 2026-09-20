@@ -1,5 +1,6 @@
 using Fut7Fantasy.Api.Security;
 using Fut7Fantasy.Application.Fantasy;
+using Fut7Fantasy.Application.Scoring;
 using Fut7Fantasy.Domain.Fantasy;
 
 namespace Fut7Fantasy.Api.Endpoints;
@@ -37,6 +38,14 @@ public static class FantasyEndpoints
             .RequireAuthorization()
             .WithName("GetFantasyMarket")
             .WithSummary("Ativos à venda com preço atual e, para cada um, o motivo de um bloqueio.");
+        fantasy.MapGet("/rounds", RoundsAsync)
+            .RequireAuthorization()
+            .WithName("ListFantasyRounds")
+            .WithSummary("Rodadas já publicadas, com a pontuação da conta em cada uma.");
+        fantasy.MapGet("/rounds/{roundId:guid}", RoundScoreAsync)
+            .RequireAuthorization()
+            .WithName("GetFantasyRoundScore")
+            .WithSummary("Detalhamento da rodada: cada vaga, os eventos que pontuaram e a variação de preço.");
         fantasy.MapPost("/squad/{kind}/{assetId:guid}", BuyAsync)
             .RequireAuthorization(AuthorizationPolicies.AuthenticatedWrite)
             .WithName("BuyFantasyAsset")
@@ -71,6 +80,23 @@ public static class FantasyEndpoints
         CancellationToken cancellationToken) =>
         await service.MarketAsync(slug, cancellationToken).ConfigureAwait(false) is { } market
             ? Results.Ok(market)
+            : Results.NotFound();
+
+    private static async Task<IResult> RoundsAsync(
+        string slug,
+        IFantasyScoreService service,
+        CancellationToken cancellationToken) =>
+        await service.RoundsAsync(slug, cancellationToken).ConfigureAwait(false) is { } rounds
+            ? Results.Ok(rounds)
+            : Results.NotFound();
+
+    private static async Task<IResult> RoundScoreAsync(
+        string slug,
+        Guid roundId,
+        IFantasyScoreService service,
+        CancellationToken cancellationToken) =>
+        await service.RoundAsync(slug, roundId, cancellationToken).ConfigureAwait(false) is { } score
+            ? Results.Ok(score)
             : Results.NotFound();
 
     private static async Task<IResult> JoinAsync(

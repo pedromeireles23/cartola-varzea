@@ -89,6 +89,10 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public DbSet<EntryRoundResult> EntryRoundResults => Set<EntryRoundResult>();
 
+    public DbSet<EntrySlotResult> EntrySlotResults => Set<EntrySlotResult>();
+
+    public DbSet<AthleteScoreLine> AthleteScoreLines => Set<AthleteScoreLine>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {
