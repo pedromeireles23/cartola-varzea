@@ -74,6 +74,7 @@ public sealed class AuthorizationMatrixTests
         "POST /api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/imports/estatisticas/preview"
             + " -> competition-staff-write",
         "POST /api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/matches -> competition-owner-write",
+        "POST /api/v1/competitions/{competitionId:guid}/rounds/{roundId:guid}/publish -> competition-owner-write",
         "POST /api/v1/competitions/{competitionId:guid}/stages/ -> competition-owner-write",
         "POST /api/v1/competitions/{competitionId:guid}/teams/ -> competition-owner-write",
         "POST /api/v1/auth/confirm-email -> " + Anonymous,
