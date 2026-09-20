@@ -98,6 +98,47 @@ export function countdownText(closesAt: string, now: number): string | null {
   return minutes > 0 ? `${minutes} min ${seconds} s` : `${seconds} s`;
 }
 
+/** "12,50 pts", como o participante lê a pontuação (02 §3). */
+export function points(value: number): string {
+  return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} pts`;
+}
+
+/** Sinal sempre visível na variação de preço: "+1,5" ou "-0,5". */
+export function signed(value: number): string {
+  const texto = Math.abs(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+  return value > 0 ? `+${texto}` : value < 0 ? `-${texto}` : '0';
+}
+
+const SCORE_ITEM_LABELS: Readonly<Record<string, readonly [string, string]>> = {
+  Goal: ['gol', 'gols'],
+  Assist: ['assistência', 'assistências'],
+  GoalkeeperSave: ['defesa', 'defesas'],
+  PenaltySave: ['pênalti defendido', 'pênaltis defendidos'],
+  YellowCard: ['cartão amarelo', 'cartões amarelos'],
+  RedCard: ['cartão vermelho', 'cartões vermelhos'],
+  OwnGoal: ['gol contra', 'gols contra'],
+  PenaltyMiss: ['pênalti perdido', 'pênaltis perdidos'],
+  GoalConceded: ['gol sofrido', 'gols sofridos'],
+  CleanSheet: ['jogo sem sofrer gol', 'jogos sem sofrer gol'],
+};
+
+/** "2 gols", "1 jogo sem sofrer gol": o item do detalhamento com a quantidade. */
+export function scoreItemLabel(item: string, quantity: number): string {
+  const rotulo = SCORE_ITEM_LABELS[item];
+  if (!rotulo) {
+    return `${quantity} ${item}`;
+  }
+  return `${quantity} ${quantity === 1 ? rotulo[0] : rotulo[1]}`;
+}
+
+/** Grupo comparado na valorização: "defensores" ou "técnicos" (01 §9). */
+export function valuationGroupLabel(kind: AssetKind, position: AthletePosition | null): string {
+  if (kind === 'Coach' || position === null) {
+    return 'técnicos';
+  }
+  return positionGroupLabel(position, 2).toLocaleLowerCase('pt-BR');
+}
+
 /** Até duas iniciais do nome do time, como o escudo de fallback da área de organização. */
 export function teamInitials(name: string): string {
   return name

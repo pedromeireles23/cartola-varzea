@@ -5,7 +5,15 @@ import { provideRouter } from '@angular/router';
 
 import { apiErrorInterceptor } from '../../core/api/api-error.interceptor';
 import { API_BASE_URL } from '../../core/config/api-base-url';
-import { MERCADO_FECHADO, OVERVIEW_URL, SLUG, entrada, visao } from './fantasy-fixtures';
+import {
+  MERCADO_FECHADO,
+  OVERVIEW_URL,
+  ROUNDS_URL,
+  SLUG,
+  entrada,
+  rodadaResumo,
+  visao,
+} from './fantasy-fixtures';
 import { FantasyPlayPage } from './fantasy-play';
 
 describe('FantasyPlayPage', () => {
@@ -57,6 +65,8 @@ describe('FantasyPlayPage', () => {
     expect(pedido.request.method).toBe('POST');
     pedido.flush(visao());
     await fixture.whenStable();
+    http.expectOne(ROUNDS_URL).flush([]);
+    await fixture.whenStable();
 
     expect(texto(fixture)).toContain('Você entrou no campeonato e recebeu C$ 100,00.');
     expect(texto(fixture)).toContain('Falta o técnico.');
@@ -91,7 +101,12 @@ describe('FantasyPlayPage', () => {
       }),
     );
     await fixture.whenStable();
+    http.expectOne(ROUNDS_URL).flush([rodadaResumo({ total: 21.5 })]);
+    await fixture.whenStable();
 
+    expect(texto(fixture)).toContain('Rodadas apuradas');
+    expect(texto(fixture)).toContain('21,50 pts');
+    expect(texto(fixture)).toContain('provisório');
     expect(texto(fixture)).toContain('Mercado fechado');
     expect(texto(fixture)).toContain('C$ 3,50');
     expect(texto(fixture)).toContain('C$ 101,00');

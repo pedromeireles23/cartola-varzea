@@ -15,9 +15,9 @@ import { RouterLink } from '@angular/router';
 import { ApiFailure } from '../../core/api/problem-details';
 import { Alert, Button, Card, Loading } from '../../shared/ui';
 import { formationText } from '../organizer/competition-area/competition-format';
-import { credits } from './fantasy-format';
+import { credits, points } from './fantasy-format';
 import { FantasyNav } from './fantasy-nav';
-import { FantasyOverview, FantasyService } from './fantasy.service';
+import { FantasyOverview, FantasyRoundSummary, FantasyService } from './fantasy.service';
 import { MarketClock } from './market-clock';
 
 type Estado =
@@ -111,6 +111,27 @@ type Estado =
               </section>
             }
 
+            @if (rodadas().length > 0) {
+              <section class="rodadas" aria-labelledby="rodadas-titulo">
+                <h3 id="rodadas-titulo" class="pendencias__titulo">Rodadas apuradas</h3>
+                <ul>
+                  @for (rodada of rodadas(); track rodada.roundId) {
+                    <li class="rodadas__item">
+                      <a [routerLink]="['/c', campeonato(), 'pontuacao', rodada.roundId]">
+                        {{ rodada.roundName }}
+                      </a>
+                      <span>
+                        {{ rodada.total === null ? 'Você não jogou' : pontos(rodada.total) }}
+                        @if (rodada.provisional) {
+                          · provisório
+                        }
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+
             <div class="acoes-da-tela">
               <a class="acao" [routerLink]="['/c', campeonato(), 'escalacao']">Escalar meu time</a>
               <a class="acao acao--secundaria" [routerLink]="['/c', campeonato(), 'mercado']"
@@ -168,6 +189,7 @@ export class FantasyPlayPage implements OnInit {
   private readonly aviso = viewChild<ElementRef<HTMLElement>>('aviso');
 
   protected readonly estado = signal<Estado>({ tipo: 'carregando' });
+  protected readonly rodadas = signal<readonly FantasyRoundSummary[]>([]);
   protected readonly entrando = signal(false);
   protected readonly recemChegado = signal(false);
   protected readonly falhaAoEntrar = signal<string | null>(null);
@@ -203,9 +225,16 @@ export class FantasyPlayPage implements OnInit {
     return credits(valor);
   }
 
+  protected pontos(valor: number): string {
+    return points(valor);
+  }
+
   protected carregar(): void {
     this.service.overview(this.campeonato()).subscribe({
-      next: (visao) => this.mostrar(visao),
+      next: (visao) => {
+        this.mostrar(visao);
+        this.carregarRodadas(visao);
+      },
       error: (falha: ApiFailure) => this.estado.set({ tipo: 'erro', falha }),
     });
   }
@@ -218,6 +247,7 @@ export class FantasyPlayPage implements OnInit {
         this.entrando.set(false);
         this.recemChegado.set(true);
         this.mostrar(visao);
+        this.carregarRodadas(visao);
         // O cartão de adesão some; o foco vai para a confirmação que o substitui.
         setTimeout(() => this.aviso()?.nativeElement.focus());
       },
@@ -225,6 +255,21 @@ export class FantasyPlayPage implements OnInit {
         this.entrando.set(false);
         this.falhaAoEntrar.set(falha.message);
       },
+    });
+  }
+
+  /**
+   * Só faz sentido listar rodadas apuradas para quem está no campeonato. Quem entrou
+   * agora também as vê, com o aviso de que não jogou as que já saíram.
+   */
+  private carregarRodadas(visao: FantasyOverview): void {
+    if (!visao.entry) {
+      return;
+    }
+
+    this.service.rounds(this.campeonato()).subscribe({
+      next: (rodadas) => this.rodadas.set(rodadas),
+      error: () => undefined,
     });
   }
 

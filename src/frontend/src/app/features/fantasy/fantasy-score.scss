@@ -1,0 +1,90 @@
+// Detalhamento da pontuação (02 §8): o total nunca é uma caixa-preta.
+.total {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.total__rotulo {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+.total__valor {
+  font-size: var(--font-h1);
+  font-variant-numeric: tabular-nums;
+}
+
+.vagas {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vaga-linha {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.vaga-linha:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+// Quem não entrou no total fica atenuado, mas continua legível e explicado por texto.
+.vaga-linha--fora .vaga-linha__nome,
+.vaga-linha--fora .vaga-linha__pontos {
+  color: var(--color-ink-500);
+}
+
+.vaga-linha__topo {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.vaga-linha__nome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin: 0;
+  font-weight: 600;
+}
+
+.vaga-linha__pontos {
+  font-size: var(--font-h3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.eventos {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.eventos__pontos {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.vaga-linha__nota {
+  margin: 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.vaga-linha__preco {
+  margin: 0;
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+}

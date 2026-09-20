@@ -223,3 +223,30 @@ dd {
 .item--indisponivel .item__detalhe {
   color: var(--color-ink-500);
 }
+
+.rodadas {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.rodadas ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rodadas__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rodadas__item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}

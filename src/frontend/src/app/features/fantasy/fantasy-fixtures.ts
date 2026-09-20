@@ -1,6 +1,9 @@
 import { PERFIS } from '../organizer/competition-area/competition-fixtures';
 import {
   FantasyEntry,
+  FantasyRoundScore,
+  FantasyRoundSlot,
+  FantasyRoundSummary,
   FantasyMarket,
   FantasyMarketStatus,
   FantasyOverview,
@@ -13,6 +16,61 @@ export const SLUG = 'copa-da-varzea-2026';
 export const OVERVIEW_URL = `/api/v1/fantasy/${SLUG}/`;
 export const MARKET_URL = `/api/v1/fantasy/${SLUG}/market`;
 export const LINEUP_URL = `/api/v1/fantasy/${SLUG}/lineup`;
+export const ROUNDS_URL = `/api/v1/fantasy/${SLUG}/rounds`;
+export const ROUND_ID = 'r1';
+export const ROUND_URL = `${ROUNDS_URL}/${ROUND_ID}`;
+
+export function rodadaResumo(parcial: Partial<FantasyRoundSummary> = {}): FantasyRoundSummary {
+  return {
+    roundId: ROUND_ID,
+    roundName: 'Rodada 1',
+    sequence: 1,
+    publishedAt: '2026-09-21T15:00:00Z',
+    publishedAtLocal: '2026-09-21T12:00',
+    consolidatesAtLocal: '2026-09-23T10:00',
+    provisional: true,
+    timeZoneId: 'America/Sao_Paulo',
+    total: 35,
+    ...parcial,
+  };
+}
+
+export function vagaApurada(parcial: Partial<FantasyRoundSlot> = {}): FantasyRoundSlot {
+  return {
+    kind: 'Athlete',
+    assetId: 'a1',
+    name: 'Bia',
+    position: 'Midfielder',
+    realTeamName: 'União da Vila',
+    role: 'Starter',
+    played: true,
+    points: 8,
+    counts: true,
+    isCaptain: false,
+    replaces: null,
+    replacedBy: null,
+    lines: [],
+    price: null,
+    ...parcial,
+  };
+}
+
+export function rodadaApurada(parcial: Partial<FantasyRoundScore> = {}): FantasyRoundScore {
+  return {
+    roundId: ROUND_ID,
+    roundName: 'Rodada 1',
+    publishedAtLocal: '2026-09-21T12:00',
+    consolidatesAtLocal: '2026-09-23T10:00',
+    provisional: true,
+    timeZoneId: 'America/Sao_Paulo',
+    revision: 1,
+    played: true,
+    total: 35,
+    captainBonus: 8,
+    slots: [vagaApurada()],
+    ...parcial,
+  };
+}
 
 export function mercadoAberto(parcial: Partial<FantasyMarketStatus> = {}): FantasyMarketStatus {
   return {

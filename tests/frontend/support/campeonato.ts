@@ -151,6 +151,75 @@ export async function publicarCampeonatoDemo(
   return { slug, competitionId, roundId: rodada.id };
 }
 
+/**
+ * Lança a súmula do único jogo da rodada e manda a rodada para revisão: mandante 1 × 0,
+ * gol do primeiro atacante do mandante, um goleiro em campo de cada lado. Devolve o nome
+ * de quem marcou.
+ */
+export async function lancarSumulaDaRodada(
+  api: ApiDaSessao,
+  competitionId: string,
+  roundId: string,
+): Promise<string> {
+  type Atleta = {
+    athleteId: string;
+    realTeamId: string;
+    sportingName: string;
+    position: string;
+  };
+  const rodadas = await api.get<{ id: string; version: string; matches: { id: string }[] }[]>(
+    `/api/v1/competitions/${competitionId}/rounds`,
+  );
+  const rodada = rodadas.find((item) => item.id === roundId)!;
+  const partida = rodada.matches[0]!.id;
+  const caminho = `/api/v1/competitions/${competitionId}/matches/${partida}/sheet`;
+  const sumula = await api.get<{ homeTeamId: string; awayTeamId: string; athletes: Atleta[] }>(
+    caminho,
+  );
+
+  const doTime = (time: string, posicao: string) =>
+    sumula.athletes.filter((item) => item.realTeamId === time && item.position === posicao);
+  const goleiros = [
+    doTime(sumula.homeTeamId, 'Goalkeeper')[0]!,
+    doTime(sumula.awayTeamId, 'Goalkeeper')[0]!,
+  ];
+  const foraDeCampo = [
+    doTime(sumula.homeTeamId, 'Goalkeeper')[1]!.athleteId,
+    doTime(sumula.awayTeamId, 'Goalkeeper')[1]!.athleteId,
+  ];
+  const artilheiro = doTime(sumula.homeTeamId, 'Forward')[0]!;
+
+  await api.put(caminho, {
+    homeScore: 1,
+    awayScore: 0,
+    version: null,
+    appearances: sumula.athletes.map((atleta) => ({
+      athleteId: atleta.athleteId,
+      didPlay: !foraDeCampo.includes(atleta.athleteId),
+      playedAsGoalkeeper: goleiros.some((item) => item.athleteId === atleta.athleteId),
+      goalsConceded: atleta.athleteId === goleiros[1]!.athleteId ? 1 : 0,
+      goals: atleta.athleteId === artilheiro.athleteId ? 1 : 0,
+      assists: 0,
+      goalkeeperSaves: 0,
+      penaltySaves: 0,
+      yellowCards: 0,
+      redCards: 0,
+      redCardReason: null,
+      ownGoals: 0,
+      penaltyMisses: 0,
+    })),
+  });
+
+  const atual = await api.get<{ id: string; version: string }[]>(
+    `/api/v1/competitions/${competitionId}/rounds`,
+  );
+  await api.put(`/api/v1/competitions/${competitionId}/rounds/${roundId}/status`, {
+    transition: 'SendToReview',
+    version: atual.find((item) => item.id === roundId)!.version,
+  });
+  return artilheiro.sportingName;
+}
+
 /** Data e hora no fuso do campeonato (Brasília), no formato que a API espera. */
 export function horarioDeBrasilia(instante: Date): string {
   const partes = Object.fromEntries(

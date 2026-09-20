@@ -115,6 +115,70 @@ export interface FantasyMarket {
   readonly items: readonly MarketItem[];
 }
 
+/** Uma rodada já publicada, com a pontuação da conta; `total` nulo quando ela não jogou. */
+export interface FantasyRoundSummary {
+  readonly roundId: string;
+  readonly roundName: string;
+  readonly sequence: number;
+  readonly publishedAt: string;
+  readonly publishedAtLocal: string;
+  readonly consolidatesAtLocal: string;
+  readonly provisional: boolean;
+  readonly timeZoneId: string;
+  readonly total: number | null;
+}
+
+/** Um item que gerou pontos: "2 gols, +12,00". */
+export interface FantasyScoreLine {
+  readonly item: string;
+  readonly quantity: number;
+  readonly points: number;
+}
+
+/** A variação de preço explicada pela média da posição (01 §9). */
+export interface FantasyPriceChange {
+  readonly average: number | null;
+  readonly difference: number | null;
+  readonly variation: number;
+  readonly previousPrice: number;
+  readonly newPrice: number;
+}
+
+export interface FantasyRoundSlot {
+  readonly kind: AssetKind;
+  readonly assetId: string;
+  readonly name: string;
+  readonly position: AthletePosition | null;
+  readonly realTeamName: string;
+  readonly role: SquadRole;
+  readonly played: boolean;
+  readonly points: number;
+  /** Se os pontos entraram no total: titular que jogou, reserva que entrou, técnico com time em campo. */
+  readonly counts: boolean;
+  readonly isCaptain: boolean;
+  /** Preenchido no reserva que entrou: o titular que ele cobriu. */
+  readonly replaces: string | null;
+  /** Preenchido no titular que não jogou: o reserva que entrou no lugar dele. */
+  readonly replacedBy: string | null;
+  readonly lines: readonly FantasyScoreLine[];
+  readonly price: FantasyPriceChange | null;
+}
+
+/** `played` falso quer dizer que a conta não teve escalação congelada na rodada. */
+export interface FantasyRoundScore {
+  readonly roundId: string;
+  readonly roundName: string;
+  readonly publishedAtLocal: string;
+  readonly consolidatesAtLocal: string;
+  readonly provisional: boolean;
+  readonly timeZoneId: string;
+  readonly revision: number;
+  readonly played: boolean;
+  readonly total: number;
+  readonly captainBonus: number;
+  readonly slots: readonly FantasyRoundSlot[];
+}
+
 export const FANTASY_MARKET_CLOSED_CODE = 'fantasy_market_closed';
 export const FANTASY_NOT_JOINED_CODE = 'fantasy_not_joined';
 export const FANTASY_CONFLICT_CODE = 'fantasy_conflict';
@@ -156,6 +220,15 @@ export class FantasyService {
       starterAthleteId,
       benchAthleteId,
     });
+  }
+
+  /** Rodadas já publicadas, da mais recente para a mais antiga. */
+  rounds(slug: string): Observable<FantasyRoundSummary[]> {
+    return this.http.get<FantasyRoundSummary[]>(`${this.url(slug)}/rounds`);
+  }
+
+  round(slug: string, roundId: string): Observable<FantasyRoundScore> {
+    return this.http.get<FantasyRoundScore>(`${this.url(slug)}/rounds/${roundId}`);
   }
 
   captain(slug: string, athleteId: string): Observable<FantasyOverview> {
