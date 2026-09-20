@@ -76,3 +76,25 @@
   background: var(--color-canvas);
   border-radius: var(--radius-sm);
 }
+
+.publication {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+}
+
+@media (min-width: 640px) {
+  .publication {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+}
+
+.publication dt {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+.publication dd {
+  margin: 0;
+  font-weight: 600;
+}

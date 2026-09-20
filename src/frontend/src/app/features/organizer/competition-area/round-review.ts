@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Loading } from '../../../shared/ui';
+import { Alert, Badge, Button, Card, Dialog, Loading } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
 import { ImportUpload } from './import-upload';
 import { ImportService } from './import.service';
@@ -33,7 +33,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-round-review',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, ImportUpload, Loading, RouterLink],
+  imports: [Alert, Badge, Button, Card, Dialog, ImportUpload, Loading, RouterLink],
   template: `
     <div class="pagina">
       <a class="voltar" routerLink="../..">← Voltar para rodadas</a>
@@ -102,6 +102,60 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
             }
           </app-card>
 
+          @if (review()!.publication; as publication) {
+            <app-card heading="Resultado publicado">
+              <app-alert [tone]="publication.consolidated ? 'success' : 'info'">
+                @if (publication.consolidated) {
+                  Resultado consolidado desde {{ when(publication.consolidatesAtLocal) }}.
+                } @else {
+                  Resultado provisório até {{ when(publication.consolidatesAtLocal) }}: até lá, uma
+                  correção de súmula ainda muda pontos e preços sem cerimônia.
+                }
+              </app-alert>
+              <dl class="publication">
+                <div>
+                  <dt>Publicado em</dt>
+                  <dd>{{ when(publication.publishedAtLocal) }}</dd>
+                </div>
+                <div>
+                  <dt>Participações apuradas</dt>
+                  <dd>{{ publication.entries }}</dd>
+                </div>
+                @if (publication.highestTotal !== null) {
+                  <div>
+                    <dt>Maior pontuação</dt>
+                    <dd>{{ points(publication.highestTotal) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Média</dt>
+                    <dd>{{ points(publication.averageTotal!) }}</dd>
+                  </div>
+                }
+                <div>
+                  <dt>Revisão da apuração</dt>
+                  <dd>{{ publication.revision }}ª</dd>
+                </div>
+              </dl>
+            </app-card>
+          } @else if (review()!.phase === 'UnderReview') {
+            <app-card heading="Publicar o resultado">
+              <p class="support">
+                Publicar apura a rodada inteira de uma vez: pontos de cada atleta, técnico e
+                participação, e os preços novos do mercado. O resultado nasce provisório e consolida
+                no fim da janela de correção.
+              </p>
+              @if (owner()) {
+                <div class="actions">
+                  <app-button [disabled]="!review()!.ready" (pressed)="confirming.set(true)">
+                    Publicar resultado
+                  </app-button>
+                </div>
+              } @else {
+                <p class="support">Só quem é proprietário do campeonato publica o resultado.</p>
+              }
+            </app-card>
+          }
+
           @if (acceptsSheets()) {
             <app-card heading="Súmulas por planilha">
               <p class="support">
@@ -121,6 +175,21 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
               (importado)="load(true)"
             />
           }
+
+          <app-dialog
+            [open]="confirming()"
+            [heading]="'Publicar o resultado de ' + review()!.roundName + '?'"
+            (dismissed)="confirming.set(false)"
+          >
+            <p>
+              Os pontos de todos os participantes e os preços novos passam a valer agora. Até o fim
+              da janela de correção, o resultado aparece como provisório.
+            </p>
+            <div dialogActions>
+              <app-button variant="ghost" (pressed)="confirming.set(false)">Cancelar</app-button>
+              <app-button [loading]="saving()" (pressed)="publish()">Publicar</app-button>
+            </div>
+          </app-dialog>
 
           <h2>Partidas</h2>
           <div class="matches">
@@ -175,6 +244,7 @@ export class RoundReviewPage {
   protected readonly owner = this.context.proprietario;
   protected readonly state = signal<State>({ kind: 'loading' });
   protected readonly saving = signal(false);
+  protected readonly confirming = signal(false);
   protected readonly message = signal<{
     readonly tone: 'success' | 'warning' | 'danger';
     readonly text: string;
@@ -244,12 +314,43 @@ export class RoundReviewPage {
       });
   }
 
+  protected publish(): void {
+    const review = this.review();
+    if (!review || this.saving()) return;
+
+    this.saving.set(true);
+    this.service.publish(this.competitionId, review.roundId, review.version).subscribe({
+      next: (published) => {
+        this.saving.set(false);
+        this.confirming.set(false);
+        this.state.set({ kind: 'ready', review: published });
+        this.message.set({
+          tone: 'success',
+          text: 'Resultado publicado. Os pontos e os preços novos já valem para todos.',
+        });
+      },
+      error: (failure: ApiFailure) => {
+        this.saving.set(false);
+        this.confirming.set(false);
+        this.message.set({ tone: 'danger', text: failure.message });
+        this.load();
+      },
+    });
+  }
+
+  /** "12,50 pts", como o participante lê. */
+  protected points(value: number): string {
+    return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} pts`;
+  }
+
   protected phaseLabel(phase: RoundPhase): string {
     return PHASE_LABELS[phase];
   }
 
   protected phaseTone(phase: RoundPhase): 'success' | 'warning' | 'neutral' {
-    if (phase === 'UnderReview') return 'success';
+    if (phase === 'UnderReview' || phase === 'Published' || phase === 'Consolidated') {
+      return 'success';
+    }
     return phase === 'InProgress' ? 'warning' : 'neutral';
   }
 

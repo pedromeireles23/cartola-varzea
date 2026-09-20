@@ -75,6 +75,23 @@ export interface RoundReviewPending {
   readonly matchId: string | null;
 }
 
+/**
+ * A apuração vigente de uma rodada publicada. Até `consolidatesAt` o resultado é
+ * provisório; os horários também vêm no fuso do campeonato.
+ */
+export interface RoundPublication {
+  readonly revision: number;
+  readonly scoringRuleSetVersion: number;
+  readonly publishedAt: string;
+  readonly publishedAtLocal: string;
+  readonly consolidatesAt: string;
+  readonly consolidatesAtLocal: string;
+  readonly consolidated: boolean;
+  readonly entries: number;
+  readonly highestTotal: number | null;
+  readonly averageTotal: number | null;
+}
+
 export interface RoundReview {
   readonly roundId: string;
   readonly roundName: string;
@@ -85,6 +102,8 @@ export interface RoundReview {
   readonly matches: readonly RoundReviewMatch[];
   readonly pending: readonly RoundReviewPending[];
   readonly version: string;
+  /** Nula enquanto a rodada não foi publicada. */
+  readonly publication: RoundPublication | null;
 }
 
 /** O que o formulário de partida envia. */
@@ -144,6 +163,16 @@ export class RoundService {
 
   remove(competitionId: string, roundId: string): Observable<void> {
     return this.http.delete<void>(this.roundUrl(competitionId, roundId));
+  }
+
+  /**
+   * Apura e publica a rodada em revisão. Devolve a conferência já com o resumo da
+   * apuração; repetir o pedido não apura de novo.
+   */
+  publish(competitionId: string, roundId: string, version: string): Observable<RoundReview> {
+    return this.http.post<RoundReview>(`${this.roundUrl(competitionId, roundId)}/publish`, {
+      version,
+    });
   }
 
   changeStatus(

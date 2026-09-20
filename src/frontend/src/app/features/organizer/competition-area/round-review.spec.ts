@@ -8,10 +8,27 @@ import { API_BASE_URL } from '../../../core/config/api-base-url';
 import { CompetitionContext } from './competition-context';
 import { campeonato } from './competition-fixtures';
 import { RoundReviewPage } from './round-review';
-import { RoundReview } from './round.service';
+import { RoundPublication, RoundReview } from './round.service';
 
 const URL = '/api/v1/competitions/c1/rounds/r1/review';
 const STATUS_URL = '/api/v1/competitions/c1/rounds/r1/status';
+const PUBLISH_URL = '/api/v1/competitions/c1/rounds/r1/publish';
+
+function publication(changes: Partial<RoundPublication> = {}): RoundPublication {
+  return {
+    revision: 1,
+    scoringRuleSetVersion: 1,
+    publishedAt: '2026-09-21T15:00:00Z',
+    publishedAtLocal: '2026-09-21T12:00',
+    consolidatesAt: '2026-09-23T13:00:00Z',
+    consolidatesAtLocal: '2026-09-23T10:00',
+    consolidated: false,
+    entries: 12,
+    highestTotal: 35,
+    averageTotal: 18.25,
+    ...changes,
+  };
+}
 
 function review(changes: Partial<RoundReview> = {}): RoundReview {
   return {
@@ -38,12 +55,25 @@ function review(changes: Partial<RoundReview> = {}): RoundReview {
     ],
     pending: [],
     version: 'AAAAAAAAB9E=',
+    publication: null,
     ...changes,
   };
 }
 
 describe('RoundReviewPage', () => {
   let http: HttpTestingController;
+
+  beforeAll(() => {
+    const prototipo = HTMLDialogElement.prototype as HTMLDialogElement & {
+      showModal?: () => void;
+    };
+    prototipo.showModal ??= function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    };
+    prototipo.close = function (this: HTMLDialogElement) {
+      this.removeAttribute('open');
+    };
+  });
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -191,5 +221,48 @@ describe('RoundReviewPage', () => {
     const fixture = await open(review({ phase: 'MarketOpen' }));
 
     expect(text(fixture)).not.toContain('Súmulas por planilha');
+  });
+
+  it('o proprietário publica a rodada em revisão depois de confirmar', async () => {
+    const fixture = await open(review({ phase: 'UnderReview' }));
+
+    button(fixture, 'Publicar resultado')!.click();
+    await fixture.whenStable();
+    const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog')!;
+    expect(dialog.hasAttribute('open')).toBe(true);
+    expect(dialog.textContent).toContain('Publicar o resultado de Rodada 1?');
+
+    [...dialog.querySelectorAll('button')]
+      .find((item) => item.textContent?.trim() === 'Publicar')!
+      .click();
+    await fixture.whenStable();
+    const request = http.expectOne(PUBLISH_URL);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ version: 'AAAAAAAAB9E=' });
+    request.flush(review({ phase: 'Published', publication: publication() }));
+    await fixture.whenStable();
+
+    expect(text(fixture)).toContain('Resultado publicado. Os pontos e os preços novos já valem');
+    expect(text(fixture)).toContain('Resultado provisório até 23/09/2026 10:00');
+    expect(text(fixture)).toMatch(/Participações apuradas\s*12/);
+    expect(text(fixture)).toMatch(/Maior pontuação\s*35,00 pts/);
+    expect(text(fixture)).toMatch(/Média\s*18,25 pts/);
+    expect(button(fixture, 'Publicar resultado')).toBeUndefined();
+  });
+
+  it('o auxiliar acompanha a revisão, mas não publica', async () => {
+    const fixture = await open(review({ phase: 'UnderReview' }), 'Assistant');
+
+    expect(text(fixture)).toContain('Só quem é proprietário do campeonato publica o resultado.');
+    expect(button(fixture, 'Publicar resultado')).toBeUndefined();
+  });
+
+  it('diz quando o resultado já consolidou', async () => {
+    const fixture = await open(
+      review({ phase: 'Consolidated', publication: publication({ consolidated: true }) }),
+    );
+
+    expect(text(fixture)).toContain('Resultado consolidado desde 23/09/2026 10:00.');
+    expect(text(fixture)).toContain('Consolidada');
   });
 });
