@@ -5,6 +5,7 @@ using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.Fantasy;
 using Fut7Fantasy.Domain.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Persistence;
+using Fut7Fantasy.Infrastructure.Scoring;
 using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Microsoft.EntityFrameworkCore;
 
@@ -376,7 +377,9 @@ public sealed class FantasyService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        // Preço atual é o inicial até a valorização da Fase 10 existir.
+        // Preço atual: o da última apuração publicada; sem ela, o preço inicial.
+        var prices = await AssetPrices.CurrentAsync(dbContext, competition.Id, cancellationToken)
+            .ConfigureAwait(false);
         Dictionary<(AssetKind, Guid), CatalogAsset> catalog = [];
         foreach (var item in athletes)
         {
@@ -387,10 +390,12 @@ public sealed class FantasyService(
                     item.Athlete.Id,
                     item.Athlete.Position,
                     item.Team.Id,
-                    profile.InitialAthletePrice(
-                        item.Athlete.Position,
-                        item.Registration.PriceTier,
-                        item.Registration.InitialPriceOverride),
+                    prices.TryGetValue((AssetKind.Athlete, item.Athlete.Id), out var athletePrice)
+                        ? athletePrice
+                        : profile.InitialAthletePrice(
+                            item.Athlete.Position,
+                            item.Registration.PriceTier,
+                            item.Registration.InitialPriceOverride),
                     available),
                 item.Athlete.SportingName,
                 item.Team.Name);
@@ -404,7 +409,9 @@ public sealed class FantasyService(
                     item.Coach.Id,
                     null,
                     item.Team.Id,
-                    profile.InitialCoachPrice(item.Coach.PriceTier, item.Coach.InitialPriceOverride),
+                    prices.TryGetValue((AssetKind.Coach, item.Coach.Id), out var coachPrice)
+                        ? coachPrice
+                        : profile.InitialCoachPrice(item.Coach.PriceTier, item.Coach.InitialPriceOverride),
                     !item.Team.IsArchived && !eliminated.Contains(item.Team.Id)),
                 item.Coach.EffectiveName(item.Team.Name),
                 item.Team.Name);

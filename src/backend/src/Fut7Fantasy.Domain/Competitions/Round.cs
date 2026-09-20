@@ -174,6 +174,25 @@ public sealed class Round
         UpdatedAt = now;
     }
 
+    /// <summary>
+    /// Publica o resultado. A rodada nasce provisória e vira consolidada sozinha quando o
+    /// relógio passa de <paramref name="consolidatesAt"/>, sem job (01 §9). A apuração que
+    /// sustenta a publicação é gravada pelo caso de uso, na mesma transação.
+    /// </summary>
+    public void Publish(DateTimeOffset now, DateTimeOffset consolidatesAt)
+    {
+        EnsureTransition(RoundStatus.Published);
+        if (MarketCloseAt is not { } closeAt || consolidatesAt <= closeAt)
+        {
+            throw new InvalidOperationException("A consolidação vem depois do fechamento do mercado.");
+        }
+
+        PublishedAt = now;
+        ConsolidatesAt = consolidatesAt;
+        Status = RoundStatus.Published;
+        UpdatedAt = now;
+    }
+
     /// <summary>Verdadeiro quando o relógio já passou do fechamento do mercado.</summary>
     public bool MarketIsClosed(DateTimeOffset now) =>
         Status == RoundStatus.MarketOpen && MarketCloseAt is { } closeAt && now >= closeAt;

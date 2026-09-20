@@ -143,6 +143,37 @@ public sealed class RoundTests
         Assert.Equal(Round.MaxRoundsPerCompetition, round.Sequence);
     }
 
+    [Fact]
+    public void PublishingFromReviewIsProvisionalUntilTheClockReachesTheConsolidation()
+    {
+        var round = Create();
+        var kickoff = Now.AddDays(2);
+        round.OpenMarket(kickoff, OneHour, Now);
+        Assert.Throws<InvalidOperationException>(() => round.Publish(kickoff, kickoff.AddDays(3)));
+
+        round.BeginReview(kickoff);
+        var publishedAt = kickoff.AddDays(1);
+        var consolidatesAt = kickoff.AddDays(3);
+        round.Publish(publishedAt, consolidatesAt);
+
+        Assert.Equal(RoundStatus.Published, round.Status);
+        Assert.Equal(publishedAt, round.PublishedAt);
+        Assert.Equal(consolidatesAt, round.ConsolidatesAt);
+        Assert.Equal(RoundPhase.Published, round.PhaseAt(consolidatesAt.AddTicks(-1)));
+        Assert.Equal(RoundPhase.Consolidated, round.PhaseAt(consolidatesAt));
+    }
+
+    [Fact]
+    public void ConsolidationBeforeTheMarketClosedIsRefused()
+    {
+        var round = Create();
+        var kickoff = Now.AddDays(2);
+        round.OpenMarket(kickoff, OneHour, Now);
+        round.BeginReview(kickoff);
+
+        Assert.Throws<InvalidOperationException>(() => round.Publish(kickoff, round.MarketCloseAt!.Value));
+    }
+
     private static Round Create() =>
         Round.Create(Guid.NewGuid(), Guid.NewGuid(), 1, new RoundDefinition("Rodada 1"), Now);
 }

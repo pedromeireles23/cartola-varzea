@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Competitions;
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.PlatformAdministration;
+using Fut7Fantasy.Domain.Scoring;
 using Fut7Fantasy.Domain.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Fut7Fantasy.Infrastructure.SportsCatalog;
@@ -713,7 +714,51 @@ public sealed class CompetitionRoundService(
             pending.Count == 0,
             views,
             pending,
-            Convert.ToBase64String(round.RowVersion));
+            Convert.ToBase64String(round.RowVersion),
+            await PublicationAsync(competition, round, now, cancellationToken).ConfigureAwait(false));
+    }
+
+    /// <summary>Resumo da apuração vigente: a revisão mais alta da rodada publicada.</summary>
+    private async Task<RoundPublicationView?> PublicationAsync(
+        Competition competition,
+        Round round,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (round.PublishedAt is not { } publishedAt || round.ConsolidatesAt is not { } consolidatesAt)
+        {
+            return null;
+        }
+
+        var calculation = await dbContext.RoundCalculations
+            .AsNoTracking()
+            .Where(item => item.RoundId == round.Id)
+            .OrderByDescending(item => item.Revision)
+            .Select(item => new { item.Id, item.Revision, item.ScoringRuleSetVersion })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (calculation is null)
+        {
+            return null;
+        }
+
+        var totals = await dbContext.EntryRoundResults
+            .AsNoTracking()
+            .Where(item => item.CalculationId == calculation.Id)
+            .Select(item => item.Total)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return new(
+            calculation.Revision,
+            calculation.ScoringRuleSetVersion,
+            publishedAt,
+            CompetitionClock.ToLocalText(publishedAt, competition.TimeZoneId),
+            consolidatesAt,
+            CompetitionClock.ToLocalText(consolidatesAt, competition.TimeZoneId),
+            now >= consolidatesAt,
+            totals.Count,
+            totals.Count == 0 ? null : totals.Max(),
+            totals.Count == 0 ? null : ScoringRuleSet.Round(totals.Average()));
     }
 
     private static IReadOnlyList<MatchSheetError> ValidateSheet(

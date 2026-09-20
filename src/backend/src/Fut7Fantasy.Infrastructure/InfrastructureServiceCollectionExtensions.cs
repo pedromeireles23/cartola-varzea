@@ -5,6 +5,7 @@ using Fut7Fantasy.Application.Fantasy;
 using Fut7Fantasy.Application.Importing;
 using Fut7Fantasy.Application.Organizations;
 using Fut7Fantasy.Application.PlatformAdministration;
+using Fut7Fantasy.Application.Scoring;
 using Fut7Fantasy.Application.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Authorization;
 using Fut7Fantasy.Infrastructure.Competitions;
@@ -16,6 +17,7 @@ using Fut7Fantasy.Infrastructure.Options;
 using Fut7Fantasy.Infrastructure.Organizations;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Fut7Fantasy.Infrastructure.PlatformAdministration;
+using Fut7Fantasy.Infrastructure.Scoring;
 using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Startup;
 using Microsoft.AspNetCore.Authorization;
@@ -110,6 +112,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRoundStatisticsImportService, RoundStatisticsImportService>();
         services.AddScoped<LineupSnapshotMaterializer>();
         services.AddScoped<IFantasyService, FantasyService>();
+        services.AddScoped<IRoundPublicationService, RoundPublicationService>();
         services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
         return services;

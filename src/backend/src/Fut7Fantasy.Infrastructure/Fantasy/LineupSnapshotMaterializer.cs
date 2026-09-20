@@ -1,6 +1,7 @@
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.Fantasy;
 using Fut7Fantasy.Infrastructure.Persistence;
+using Fut7Fantasy.Infrastructure.Scoring;
 using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Microsoft.EntityFrameworkCore;
 
@@ -123,6 +124,8 @@ public sealed class LineupSnapshotMaterializer(Fut7FantasyDbContext dbContext, T
         CancellationToken cancellationToken)
     {
         var profile = competition.ModalityProfile;
+        var prices = await AssetPrices.CurrentAsync(dbContext, competition.Id, cancellationToken)
+            .ConfigureAwait(false);
         var athletes = await (
                 from athlete in dbContext.Athletes.AsNoTracking()
                 join registration in dbContext.RosterRegistrations.AsNoTracking()
@@ -150,10 +153,12 @@ public sealed class LineupSnapshotMaterializer(Fut7FantasyDbContext dbContext, T
                 item.Athlete.Position,
                 item.Team.Id,
                 item.Team.Name,
-                profile.InitialAthletePrice(
-                    item.Athlete.Position,
-                    item.Registration.PriceTier,
-                    item.Registration.InitialPriceOverride));
+                prices.TryGetValue((AssetKind.Athlete, item.Athlete.Id), out var athletePrice)
+                    ? athletePrice
+                    : profile.InitialAthletePrice(
+                        item.Athlete.Position,
+                        item.Registration.PriceTier,
+                        item.Registration.InitialPriceOverride));
         }
 
         foreach (var item in coaches)
@@ -165,7 +170,9 @@ public sealed class LineupSnapshotMaterializer(Fut7FantasyDbContext dbContext, T
                 null,
                 item.Team.Id,
                 item.Team.Name,
-                profile.InitialCoachPrice(item.Coach.PriceTier, item.Coach.InitialPriceOverride));
+                prices.TryGetValue((AssetKind.Coach, item.Coach.Id), out var coachPrice)
+                    ? coachPrice
+                    : profile.InitialCoachPrice(item.Coach.PriceTier, item.Coach.InitialPriceOverride));
         }
 
         return assets;

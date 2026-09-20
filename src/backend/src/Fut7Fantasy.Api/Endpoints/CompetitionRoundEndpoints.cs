@@ -1,5 +1,6 @@
 using Fut7Fantasy.Api.Security;
 using Fut7Fantasy.Application.Competitions;
+using Fut7Fantasy.Application.Scoring;
 using Fut7Fantasy.Domain.Competitions;
 
 namespace Fut7Fantasy.Api.Endpoints;
@@ -44,6 +45,10 @@ public static class CompetitionRoundEndpoints
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("ChangeCompetitionRoundStatus")
             .WithSummary("Abre o mercado, inicia a revisão, volta para rascunho ou cancela a rodada.");
+        rounds.MapPost("/{roundId:guid}/publish", PublishAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
+            .WithName("PublishCompetitionRound")
+            .WithSummary("Apura e publica a rodada em revisão; repetir o pedido não apura de novo.");
         rounds.MapPost("/{roundId:guid}/matches", AddMatchAsync)
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("AddCompetitionMatch")
@@ -207,6 +212,40 @@ public static class CompetitionRoundEndpoints
             competitionId, roundId, matchId, version!, cancellationToken).ConfigureAwait(false));
     }
 
+    private static async Task<IResult> PublishAsync(
+        Guid competitionId,
+        Guid roundId,
+        RoundPublicationRequest request,
+        IRoundPublicationService publication,
+        ICompetitionRoundService service,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (RequiredVersion(request.Version) is { } missing)
+        {
+            return missing;
+        }
+
+        var result = await publication
+            .PublishAsync(competitionId, roundId, request.Version!, cancellationToken)
+            .ConfigureAwait(false);
+        return result.Outcome switch
+        {
+            RoundPublicationOutcome.Completed => Results.Ok(
+                await service.ReviewAsync(competitionId, roundId, cancellationToken).ConfigureAwait(false)),
+            RoundPublicationOutcome.NotFound => Results.NotFound(),
+            RoundPublicationOutcome.Invalid => DomainRequests.ValidationProblem(
+                result.Errors.Select(error => new CompetitionSettingsError(error.Field, error.Message)),
+                field => field),
+            RoundPublicationOutcome.StatusLocked => StatusProblem(
+                "Só uma rodada em revisão pode ser publicada. Recarregue para ver a situação."),
+            _ => Results.Problem(
+                title: "Rodada alterada por outra pessoa",
+                detail: "Atualize a página para ver a versão atual antes de publicar.",
+                statusCode: StatusCodes.Status409Conflict),
+        };
+    }
+
     private static IResult? RequiredVersion(string? version) =>
         string.IsNullOrWhiteSpace(version)
             ? DomainRequests.ValidationProblem(
@@ -242,6 +281,9 @@ public static class CompetitionRoundEndpoints
 }
 
 public sealed record RoundRequest(string? Name, string? Version);
+
+/// <summary>A versão da rodada lida na conferência.</summary>
+public sealed record RoundPublicationRequest(string? Version);
 
 /// <summary>`OpenMarket`, `ReopenForEditing`, `SendToReview` ou `Cancel`.</summary>
 public sealed record RoundStatusRequest(string? Transition, string? Version);

@@ -2,6 +2,7 @@ using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.Fantasy;
 using Fut7Fantasy.Domain.Organizations;
 using Fut7Fantasy.Domain.PlatformAdministration;
+using Fut7Fantasy.Domain.Scoring;
 using Fut7Fantasy.Domain.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -34,6 +35,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
     public const string SportsCatalogSchema = "sports_catalog";
 
     public const string FantasySchema = "fantasy";
+
+    public const string ScoringSchema = "scoring";
 
     /// <summary>Historico de inicializacoes.</summary>
     public DbSet<StartupRecord> StartupRecords => Set<StartupRecord>();
@@ -79,6 +82,12 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
     public DbSet<LineupSnapshot> LineupSnapshots => Set<LineupSnapshot>();
 
     public DbSet<LineupSnapshotSlot> LineupSnapshotSlots => Set<LineupSnapshotSlot>();
+
+    public DbSet<RoundCalculation> RoundCalculations => Set<RoundCalculation>();
+
+    public DbSet<AssetPriceChange> AssetPriceChanges => Set<AssetPriceChange>();
+
+    public DbSet<EntryRoundResult> EntryRoundResults => Set<EntryRoundResult>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)

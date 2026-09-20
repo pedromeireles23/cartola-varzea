@@ -137,7 +137,10 @@ public sealed record RoundView(
     IReadOnlyList<MatchView> Matches,
     string Version);
 
-/// <summary>Conferência dos fatos da rodada antes da apuração e publicação.</summary>
+/// <summary>
+/// Conferência dos fatos da rodada antes da apuração e publicação. <see cref="Publication"/>
+/// resume a apuração vigente e é nula enquanto a rodada não foi publicada.
+/// </summary>
 public sealed record RoundReviewView(
     Guid RoundId,
     string RoundName,
@@ -147,7 +150,25 @@ public sealed record RoundReviewView(
     bool Ready,
     IReadOnlyList<RoundReviewMatchView> Matches,
     IReadOnlyList<RoundReviewPendingView> Pending,
-    string Version);
+    string Version,
+    RoundPublicationView? Publication);
+
+/// <summary>
+/// A apuração vigente da rodada. Até <see cref="ConsolidatesAt"/> o resultado é provisório;
+/// depois, consolidado. Os horários vêm também no fuso do campeonato, para a tela não
+/// converter nada.
+/// </summary>
+public sealed record RoundPublicationView(
+    int Revision,
+    int ScoringRuleSetVersion,
+    DateTimeOffset PublishedAt,
+    string PublishedAtLocal,
+    DateTimeOffset ConsolidatesAt,
+    string ConsolidatesAtLocal,
+    bool Consolidated,
+    int Entries,
+    decimal? HighestTotal,
+    decimal? AverageTotal);
 
 public sealed record RoundReviewMatchView(
     Guid MatchId,
