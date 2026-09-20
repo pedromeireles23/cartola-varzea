@@ -76,8 +76,8 @@ public sealed class LineupSnapshotConfiguration : IEntityTypeConfiguration<Lineu
         builder.HasOne<Round>().WithMany().HasForeignKey(snapshot => snapshot.RoundId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // MaterializaÃ§Ã£o preguiÃ§osa pode receber duas requisiÃ§Ãµes ao mesmo tempo; sÃ³ um
-        // retrato por participaÃ§Ã£o e rodada vence no banco.
+        // Materialização preguiçosa pode receber duas requisições ao mesmo tempo; só um
+        // retrato por participação e rodada vence no banco.
         builder.HasIndex(snapshot => new { snapshot.EntryId, snapshot.RoundId }).IsUnique();
         builder.HasIndex(snapshot => snapshot.RoundId);
 
