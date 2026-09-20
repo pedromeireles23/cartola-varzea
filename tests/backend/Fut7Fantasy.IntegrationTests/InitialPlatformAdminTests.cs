@@ -105,10 +105,8 @@ public sealed partial class InitialPlatformAdminTests(SqlServerFixture sqlServer
     [Fact]
     public void ApplicationRefusesToStartWithInvalidInitialAdminEmail()
     {
-        using var baseFactory = new ApiFactory();
-        using var factory = WithInitialAdmin(baseFactory, "isto-nao-e-email");
-
-        var exception = Assert.Throws<OptionsValidationException>(() => factory.CreateClient());
+        var exception = ApiFactory.RefusesToStart(() =>
+            WithInitialAdmin(new ApiFactory(), "isto-nao-e-email"));
 
         Assert.Contains("InitialAdminEmail", exception.Message, StringComparison.Ordinal);
     }

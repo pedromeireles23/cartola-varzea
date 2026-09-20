@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Fut7Fantasy.IntegrationTests;
@@ -21,6 +22,42 @@ public class ApiFactory : WebApplicationFactory<Program>
     private const string UnreachableConnectionString =
         "Server=127.0.0.1,14330;Database=Fut7FantasyTests;User Id=sa;Password=nao-usada;"
         + "TrustServerCertificate=True;Connect Timeout=1";
+
+    /// <summary>
+    /// Sobe a aplicacao esperando que a validacao de opcoes do startup a derrube, e
+    /// devolve a excecao.
+    ///
+    /// O host adiado do <see cref="WebApplicationFactory{TEntryPoint}"/> as vezes descarta
+    /// o provedor antes de propagar a excecao da validacao, e o teste recebe um
+    /// <see cref="ObjectDisposedException"/> no lugar dela. E corrida da fabrica de teste,
+    /// nao do produto: nesse caso a tentativa e refeita.
+    /// </summary>
+    public static OptionsValidationException RefusesToStart(Func<WebApplicationFactory<Program>> create)
+    {
+        ArgumentNullException.ThrowIfNull(create);
+
+        ObjectDisposedException? masked = null;
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            using var api = create();
+            try
+            {
+                using var client = api.CreateClient();
+                Assert.Fail("A aplicacao subiu com uma configuracao que deveria derruba-la.");
+            }
+            catch (OptionsValidationException exception)
+            {
+                return exception;
+            }
+            catch (ObjectDisposedException exception)
+            {
+                masked = exception;
+            }
+        }
+
+        throw new InvalidOperationException(
+            "A validacao do startup nao apareceu em cinco tentativas.", masked);
+    }
 
     /// <summary>Registro de inicializacoes em memoria.</summary>
     public FakeStartupLog StartupLog { get; } = new();
