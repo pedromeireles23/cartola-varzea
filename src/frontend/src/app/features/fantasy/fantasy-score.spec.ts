@@ -78,6 +78,7 @@ describe('FantasyScorePage', () => {
     expect(texto(fixture)).toContain(
       '13,00 pts · 11,11 acima da média dos defensores · +2 · C$ 7,00 → C$ 9,00',
     );
+    expect(texto(fixture)).not.toContain('sem bônus');
   });
 
   it('mostra quem o banco cobriu e quem ficou de fora do total', async () => {
@@ -92,6 +93,7 @@ describe('FantasyScorePage', () => {
             played: false,
             points: 0,
             counts: false,
+            isCaptain: true,
             replacedBy: 'g2',
             price: { average: null, difference: null, variation: 0, previousPrice: 7, newPrice: 7 },
           }),
@@ -132,9 +134,11 @@ describe('FantasyScorePage', () => {
     expect(texto(fixture)).toContain('Entrou no lugar de um titular que não jogou');
     expect(texto(fixture)).toContain('Ficou no banco: os pontos não contam');
     expect(texto(fixture)).toContain('Sem ninguém do time dele em campo, o técnico não pontuou.');
-    expect(texto(fixture)).toContain('Sem jogar, o preço não muda: 0');
+    expect(texto(fixture)).toContain('Sem jogar, o preço não muda: C$ 7,00');
+    expect(texto(fixture)).toContain(
+      'O capitão não entrou em campo, então a rodada ficou sem bônus',
+    );
     expect(texto(fixture)).toContain('Reserva de goleiro');
-    expect(texto(fixture)).not.toContain('do capitão');
   });
 
   it('diz que o resultado consolidou quando a janela de correção acabou', async () => {

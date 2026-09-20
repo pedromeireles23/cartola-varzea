@@ -92,6 +92,11 @@ interface Grupo {
                 Inclui {{ pontos(pontuacao()!.captainBonus) }} do capitão, que dobra a própria
                 pontuação.
               </p>
+            } @else if (capitaoForaDeCampo()) {
+              <p class="apoio">
+                O capitão não entrou em campo, então a rodada ficou sem bônus: quem entra no lugar
+                dele nunca herda o multiplicador.
+              </p>
             }
             <p class="apoio">
               Publicada em {{ horario(pontuacao()!.publishedAtLocal) }} · apuração
@@ -133,11 +138,8 @@ interface Grupo {
                     @if (nota(vaga); as texto) {
                       <p class="vaga-linha__nota">{{ texto }}</p>
                     }
-                    @if (vaga.price; as preco) {
-                      <p class="vaga-linha__preco">
-                        {{ variacao(vaga) }} · {{ creditos(preco.previousPrice) }} →
-                        {{ creditos(preco.newPrice) }}
-                      </p>
+                    @if (vaga.price) {
+                      <p class="vaga-linha__preco">{{ variacao(vaga) }}</p>
                     }
                   </li>
                 }
@@ -174,6 +176,11 @@ export class FantasyScorePage implements OnInit {
     const atual = this.estado();
     return atual.tipo === 'pronto' ? atual.rodada : null;
   });
+
+  /** Sem capitão em campo a rodada fica sem bônus, e a tela precisa dizer isso (01 §9). */
+  protected readonly capitaoForaDeCampo = computed(
+    () => this.pontuacao()?.slots.some((vaga) => vaga.isCaptain && !vaga.played) ?? false,
+  );
 
   /** Titulares, banco e técnico, na ordem em que o campo os mostra. */
   protected readonly grupos = computed<readonly Grupo[]>(() => {
@@ -234,20 +241,31 @@ export class FantasyScorePage implements OnInit {
     return vaga.counts ? null : 'Sem ninguém do time dele em campo, o técnico não pontuou.';
   }
 
-  /** "8,00 pts · 6,11 acima da média dos defensores · +1,5" (01 §9). */
+  /**
+   * A variação explicada, como pede o 01 §9: "8,00 pts · 6,11 acima da média dos
+   * defensores · +1,5 · C$ 7,00 → C$ 8,50". Quem não jogou não entra na média nem muda de
+   * preço, e quem ficou na média mantém o preço.
+   */
   protected variacao(vaga: FantasyRoundSlot): string {
     const preco = vaga.price!;
     if (preco.difference === null) {
-      return `Sem jogar, o preço não muda: ${signed(preco.variation)}`;
+      return `Sem jogar, o preço não muda: ${credits(preco.newPrice)}`;
     }
 
-    const lado = preco.difference >= 0 ? 'acima' : 'abaixo';
+    const grupo = valuationGroupLabel(vaga.kind, vaga.position);
     const distancia = Math.abs(preco.difference).toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-    const grupo = valuationGroupLabel(vaga.kind, vaga.position);
-    return `${points(vaga.points)} · ${distancia} ${lado} da média dos ${grupo} · ${signed(preco.variation)}`;
+    const comparacao =
+      preco.difference === 0
+        ? `na média dos ${grupo}`
+        : `${distancia} ${preco.difference > 0 ? 'acima' : 'abaixo'} da média dos ${grupo}`;
+    const movimento =
+      preco.variation === 0
+        ? `preço mantido em ${credits(preco.newPrice)}`
+        : `${signed(preco.variation)} · ${credits(preco.previousPrice)} → ${credits(preco.newPrice)}`;
+    return `${points(vaga.points)} · ${comparacao} · ${movimento}`;
   }
 
   protected carregar(): void {
