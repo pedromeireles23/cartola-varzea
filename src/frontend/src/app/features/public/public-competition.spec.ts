@@ -122,6 +122,42 @@ describe('PublicCompetitionPage', () => {
     expect(texto(fixture)).toContain('Times ainda não confirmados nesta fase.');
   });
 
+  it('campeonato publicado e ainda vazio explica que está em montagem', async () => {
+    const fixture = await abrir();
+    http.expectOne(URL).flush(campeonato({ stages: [], teams: [] }));
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('Campeonato ainda em montagem');
+    expect(texto(fixture)).toContain('ainda não cadastrou os times nem as fases');
+    // Um aviso só, em vez de três "nada aqui" separados.
+    expect(texto(fixture)).not.toContain('As fases ainda não foram publicadas');
+    expect(texto(fixture)).not.toContain('O catálogo de times ainda não foi cadastrado');
+  });
+
+  it('sem catálogo, não oferece jogar: não haveria atleta para comprar', async () => {
+    const fixture = await abrir();
+    http.expectOne(URL).flush(campeonato({ teams: [] }));
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('O catálogo de times ainda não foi cadastrado');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a.jogar')).toBeNull();
+    // O ranking continua acessível: ele explica sozinho que nada se mexeu ainda.
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(`a[href="/c/${SLUG}/ranking"]`),
+    ).not.toBeNull();
+  });
+
+  it('com catálogo, o convite para jogar aparece', async () => {
+    const fixture = await abrir();
+    http.expectOne(URL).flush(campeonato());
+    await fixture.whenStable();
+
+    const jogar = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+      'a.jogar',
+    );
+    expect(jogar?.getAttribute('href')).toBe(`/c/${SLUG}/jogar`);
+  });
+
   it('endereço inexistente não parece erro do sistema', async () => {
     const fixture = await abrir();
     http.expectOne(URL).flush(null, { status: 404, statusText: 'Not Found' });

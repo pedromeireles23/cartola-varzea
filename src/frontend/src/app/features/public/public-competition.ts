@@ -67,9 +67,26 @@ type Estado =
           {{ modalidade() }} · Temporada {{ dados()!.season }} · {{ dados()!.organizationName }}
         </p>
         <p class="acoes-publicas">
-          <a class="jogar" [routerLink]="['/c', dados()!.slug, 'jogar']">Jogar neste campeonato</a>
+          @if (!semCatalogo()) {
+            <a class="jogar" [routerLink]="['/c', dados()!.slug, 'jogar']"
+              >Jogar neste campeonato</a
+            >
+          }
           <a class="acao" [routerLink]="['/c', dados()!.slug, 'ranking']">Ver o ranking</a>
         </p>
+
+        @if (emMontagem()) {
+          <app-card heading="Campeonato ainda em montagem">
+            <app-alert tone="info">
+              A liga publicou este campeonato, mas ainda não cadastrou os times nem as fases.
+            </app-alert>
+            <p>
+              Quando isso acontecer, o elenco de cada time, a tabela e as rodadas aparecem aqui — e
+              o campeonato abre para quem quiser montar uma equipe.
+            </p>
+            <a class="acao acao--secundaria" routerLink="/campeonatos">Ver outros campeonatos</a>
+          </app-card>
+        }
 
         <app-card heading="Como se joga">
           <dl class="dados">
@@ -100,44 +117,51 @@ type Estado =
           </dl>
         </app-card>
 
-        <app-card heading="Fases">
-          @for (fase of dados()!.stages; track fase.sequence) {
-            <section class="fase">
-              <h3 class="fase__titulo">{{ fase.sequence }}. {{ fase.name }}</h3>
-              <p class="apoio">{{ formato(fase.format) }}</p>
+        @if (!emMontagem()) {
+          <app-card heading="Fases">
+            @for (fase of dados()!.stages; track fase.sequence) {
+              <section class="fase">
+                <h3 class="fase__titulo">{{ fase.sequence }}. {{ fase.name }}</h3>
+                <p class="apoio">{{ formato(fase.format) }}</p>
 
-              @if (fase.groups.length > 0) {
-                <ul class="grupos">
-                  @for (grupo of fase.groups; track grupo.name) {
-                    <li class="grupo">
-                      <span class="grupo__nome">{{ grupo.name }}</span>
-                      <span>{{ grupo.teams.join(', ') }}</span>
-                    </li>
-                  }
-                </ul>
-              } @else if (fase.teams.length > 0) {
-                <p>{{ fase.teams.join(', ') }}</p>
-              } @else {
-                <p class="apoio">Times ainda não confirmados nesta fase.</p>
-              }
-            </section>
-          } @empty {
-            <p class="apoio">Nenhuma fase publicada.</p>
-          }
-        </app-card>
-
-        <app-card heading="Times">
-          <ul class="times">
-            @for (time of dados()!.teams; track time.name) {
-              <li class="time">
-                <span>{{ time.name }}</span>
-                <span class="time__elenco">{{ elenco(time.athletes) }}</span>
-              </li>
+                @if (fase.groups.length > 0) {
+                  <ul class="grupos">
+                    @for (grupo of fase.groups; track grupo.name) {
+                      <li class="grupo">
+                        <span class="grupo__nome">{{ grupo.name }}</span>
+                        <span>{{ grupo.teams.join(', ') }}</span>
+                      </li>
+                    }
+                  </ul>
+                } @else if (fase.teams.length > 0) {
+                  <p>{{ fase.teams.join(', ') }}</p>
+                } @else {
+                  <p class="apoio">Times ainda não confirmados nesta fase.</p>
+                }
+              </section>
             } @empty {
-              <li class="apoio">Nenhum time no catálogo.</li>
+              <p class="apoio">
+                As fases ainda não foram publicadas. Elas dizem quem joga contra quem.
+              </p>
             }
-          </ul>
-        </app-card>
+          </app-card>
+
+          <app-card heading="Times">
+            <ul class="times">
+              @for (time of dados()!.teams; track time.name) {
+                <li class="time">
+                  <span>{{ time.name }}</span>
+                  <span class="time__elenco">{{ elenco(time.athletes) }}</span>
+                </li>
+              } @empty {
+                <li class="apoio">
+                  O catálogo de times ainda não foi cadastrado, então não dá para montar uma equipe
+                  por enquanto.
+                </li>
+              }
+            </ul>
+          </app-card>
+        }
       }
     }
   `,
@@ -168,6 +192,20 @@ export class PublicCompetitionPage implements OnInit {
   });
 
   protected readonly fuso = computed(() => timeZoneLabel(this.dados()?.timeZoneId ?? ''));
+
+  /**
+   * Sem time no catálogo não há atleta para comprar, então o convite para jogar levaria
+   * a um beco sem saída. A página diz o que falta em vez de oferecer o que não dá.
+   */
+  protected readonly semCatalogo = computed(() => (this.dados()?.teams.length ?? 0) === 0);
+
+  /**
+   * Publicado, mas ainda sem nada dentro. Três "nada aqui" separados — fases, times e
+   * catálogo — não explicam o que está acontecendo; um aviso só explica.
+   */
+  protected readonly emMontagem = computed(
+    () => this.semCatalogo() && (this.dados()?.stages.length ?? 0) === 0,
+  );
 
   ngOnInit(): void {
     this.carregar();
