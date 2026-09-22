@@ -46,6 +46,20 @@ export const routes: Routes = [
           import('./features/public/competition-ranking').then((m) => m.CompetitionRankingPage),
       },
       {
+        // Calendário e súmula são públicos: a súmula só existe depois que a rodada
+        // publica, e o servidor responde 404 antes disso.
+        path: 'c/:campeonato/partidas',
+        title: 'Partidas',
+        loadComponent: () =>
+          import('./features/public/competition-fixtures').then((m) => m.CompetitionFixturesPage),
+      },
+      {
+        path: 'c/:campeonato/partidas/:partidaId',
+        title: 'Súmula',
+        loadComponent: () =>
+          import('./features/public/public-match').then((m) => m.PublicMatchPage),
+      },
+      {
         // O jogo usa o mesmo slug da página pública; exige conta, e o destino é preservado.
         path: 'c/:campeonato/jogar',
         title: 'Jogar',

@@ -32,6 +32,15 @@ public static class PublicCompetitionEndpoints
             .WithName("GetPublicCompetitionRanking")
             .WithSummary("Ranking geral acumulado do campeonato publicado, sem conta.");
 
+        competitions.MapGet("/{slug}/fixtures", FixturesAsync)
+            .AllowAnonymous()
+            .WithName("GetPublicCompetitionFixtures")
+            .WithSummary("Calendário do campeonato; placar só nas rodadas com resultado publicado.");
+        competitions.MapGet("/{slug}/matches/{matchId:guid}", MatchAsync)
+            .AllowAnonymous()
+            .WithName("GetPublicMatch")
+            .WithSummary("Súmula de uma partida, disponível só depois que a rodada publica.");
+
         return routes;
     }
 
@@ -47,6 +56,41 @@ public static class PublicCompetitionEndpoints
 
         return await service.GeneralAsync(slug, cancellationToken).ConfigureAwait(false) is { } ranking
             ? Results.Ok(ranking)
+            : Results.NotFound();
+    }
+
+    private static async Task<IResult> FixturesAsync(
+        string slug,
+        IPublicFixtureService service,
+        CancellationToken cancellationToken)
+    {
+        if (!CompetitionSlug.IsValid(slug))
+        {
+            return Results.NotFound();
+        }
+
+        return await service.FixturesAsync(slug, cancellationToken).ConfigureAwait(false) is { } fixtures
+            ? Results.Ok(fixtures)
+            : Results.NotFound();
+    }
+
+    /// <summary>
+    /// Partida de rodada não publicada responde igual a partida inexistente: a diferença
+    /// entre 404 e 403 contaria que o jogo já tem súmula lançada.
+    /// </summary>
+    private static async Task<IResult> MatchAsync(
+        string slug,
+        Guid matchId,
+        IPublicFixtureService service,
+        CancellationToken cancellationToken)
+    {
+        if (!CompetitionSlug.IsValid(slug))
+        {
+            return Results.NotFound();
+        }
+
+        return await service.MatchAsync(slug, matchId, cancellationToken).ConfigureAwait(false) is { } match
+            ? Results.Ok(match)
             : Results.NotFound();
     }
 
