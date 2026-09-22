@@ -60,7 +60,7 @@ describe('CompetitionSearchPage', () => {
     expect(texto(fixture)).toContain('Copa da Várzea');
     expect(texto(fixture)).toContain('Liga da Várzea');
     expect(texto(fixture)).toContain('Fut7');
-    const link = (fixture.nativeElement as HTMLElement).querySelector('.resultado__nome a');
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.cartao-link__titulo a');
     expect(link?.getAttribute('href')).toBe('/c/copa-da-varzea-2026');
   });
 

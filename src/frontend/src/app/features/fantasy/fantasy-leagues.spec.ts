@@ -68,7 +68,7 @@ describe('FantasyLeaguesPage', () => {
     expect(texto(fixture)).not.toContain('você está em 1º');
 
     const link = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
-      `.liga__nome a[href="/c/${SLUG}/ligas/${LIGA_ID}"]`,
+      `.cartao-link__titulo a[href="/c/${SLUG}/ligas/${LIGA_ID}"]`,
     );
     expect(link?.textContent).toContain('Turma do sábado');
   });

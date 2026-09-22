@@ -1,0 +1,238 @@
+// Porta de entrada do produto. Superficie plana, tipografia grande e uma linha de campo
+// ao fundo: nada de degrade nem de brilho, como manda o 02 §1.
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+// ---------------------------------------------------------------- capa
+
+.capa {
+  position: relative;
+  display: grid;
+  gap: var(--space-5);
+  justify-items: start;
+  padding-block: var(--space-8) var(--space-4);
+}
+
+// O campo e so tracado, na cor da borda: da profundidade sem disputar a leitura. Ele
+// encosta na margem do texto e para antes do conteudo seguinte.
+.capa__campo {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
+  width: min(100%, 26rem);
+  height: auto;
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 2;
+  opacity: 70%;
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .capa__campo {
+    width: 32rem;
+    opacity: 100%;
+  }
+}
+
+.capa__titulo {
+  display: grid;
+  max-width: 12ch;
+  margin: 0;
+  font-size: var(--font-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+// As tres palavras sao a promessa do produto; elas chegam em sequencia, uma linha de
+// cada vez, e param. Nada se repete depois disso.
+.capa__titulo span {
+  animation: sobe var(--motion-panel) var(--motion-easing) backwards;
+}
+
+.capa__titulo span:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.capa__titulo span:nth-child(3) {
+  animation-delay: 140ms;
+  color: var(--color-brand-700);
+}
+
+.capa__texto {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-h3);
+  animation: sobe var(--motion-panel) var(--motion-easing) 210ms backwards;
+}
+
+.capa__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  animation: sobe var(--motion-panel) var(--motion-easing) 280ms backwards;
+}
+
+.capa__nota {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+// ---------------------------------------------------------------- como funciona
+
+.passos,
+.destaques {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.passos__lista {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  counter-reset: passo;
+}
+
+@media (min-width: 720px) {
+  .passos__lista {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.passo {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color var(--motion-feedback) var(--motion-easing),
+    box-shadow var(--motion-feedback) var(--motion-easing);
+}
+
+.passo:hover {
+  border-color: var(--color-brand-300);
+  box-shadow: var(--shadow-1);
+}
+
+// O numero e o unico ornamento da secao: grande, chapado e sem circulo em volta.
+.passo__numero {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-brand-300);
+  transition: color var(--motion-feedback) var(--motion-easing);
+}
+
+.passo:hover .passo__numero {
+  color: var(--color-brand-700);
+}
+
+.passo__titulo {
+  margin: 0;
+  font-size: var(--font-h3);
+}
+
+.passo__texto {
+  margin: 0;
+  color: var(--color-ink-700);
+}
+
+// ---------------------------------------------------------------- destaques
+
+.destaques__topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.destaques__topo h2 {
+  margin: 0;
+}
+
+.apoio {
+  margin: 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+// ---------------------------------------------------------------- acoes
+
+.acao {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  padding: var(--space-3) var(--space-6);
+  color: var(--color-ink-950);
+  font-weight: 600;
+  text-decoration: none;
+  background-color: var(--color-brand-500);
+  border: 1px solid var(--color-brand-500);
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--motion-feedback) var(--motion-easing),
+    border-color var(--motion-feedback) var(--motion-easing);
+}
+
+.acao:hover {
+  background-color: var(--color-brand-300);
+  border-color: var(--color-brand-300);
+}
+
+.acao--secundaria {
+  background-color: transparent;
+  border-color: var(--color-ink-950);
+}
+
+.acao--secundaria:hover {
+  background-color: var(--color-brand-50);
+  border-color: var(--color-ink-950);
+}
+
+// ---------------------------------------------------------------- movimento
+
+@keyframes sobe {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+// Abaixo da dobra, quem revela e a rolagem: o cartao entra quando entra na tela, com a
+// linha do tempo nativa do CSS. Sem suporte, o conteudo simplesmente ja esta visivel —
+// nada aqui depende da animacao para ser lido.
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .passo,
+    .destaques__topo {
+      animation: sobe 320ms var(--motion-easing) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capa__titulo span,
+  .capa__texto,
+  .capa__acoes {
+    animation: none;
+  }
+}

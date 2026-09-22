@@ -54,7 +54,24 @@ test('visitante sem conta encontra o campeonato publicado e não o rascunho', as
   const anonimo = await browser.newContext();
   const visitante = await anonimo.newPage();
 
-  await visitante.goto('/campeonatos');
+  // A porta de entrada é a landing: quem cai aqui sem saber o que é o projeto precisa
+  // entender a proposta e achar o caminho, sem conta (critério de saída da Fase 8).
+  await visitante.goto('/');
+  await expect(
+    visitante.getByRole('heading', { name: 'Monte, dispute, acompanhe.', level: 1 }),
+  ).toBeVisible();
+  // "Como funciona" é o CTA e o título da seção; aqui interessa a seção.
+  await expect(visitante.getByRole('heading', { name: 'Como funciona' })).toBeVisible();
+  await expect(visitante.getByText('Monte seu elenco')).toBeVisible();
+  await expect(
+    visitante.getByText('Créditos virtuais, sem pagamento, aposta ou prêmio'),
+  ).toBeVisible();
+  // O campeonato recém-publicado aparece no destaque, que sai da mesma busca pública.
+  await expect(visitante.getByRole('link', { name: publicado })).toBeVisible();
+  await expect(await visitante.title()).toContain('Cartola Várzea');
+
+  await visitante.getByRole('link', { name: 'Ver campeonatos' }).click();
+  await expect(visitante).toHaveURL(/\/campeonatos$/);
   await expect(visitante.getByRole('heading', { name: 'Campeonatos', level: 1 })).toBeVisible();
   await visitante.getByLabel('Buscar campeonato').fill(marca);
   await visitante.getByRole('button', { name: 'Buscar' }).click();

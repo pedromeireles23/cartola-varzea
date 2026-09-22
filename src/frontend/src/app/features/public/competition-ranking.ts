@@ -7,10 +7,10 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
+import { PageMetaService } from '../../core/seo/page-meta';
 import { Alert, Badge, Button, Card, Loading } from '../../shared/ui';
 import { Ranking, PublicCompetitionService } from './public-competition.service';
 
@@ -121,7 +121,7 @@ type Estado =
 })
 export class CompetitionRankingPage implements OnInit {
   private readonly service = inject(PublicCompetitionService);
-  private readonly title = inject(Title);
+  private readonly meta = inject(PageMetaService);
 
   readonly campeonato = input.required<string>();
   protected readonly estado = signal<Estado>({ tipo: 'carregando' });
@@ -144,7 +144,11 @@ export class CompetitionRankingPage implements OnInit {
     this.service.ranking(this.campeonato()).subscribe({
       next: (ranking) => {
         this.estado.set({ tipo: 'pronto', ranking });
-        this.title.setTitle(`Ranking de ${ranking.competitionName} · Cartola Várzea`);
+        this.meta.set({
+          title: `Ranking de ${ranking.competitionName}`,
+          description: `Classificação geral acumulada de ${ranking.competitionName}, com pontos, patrimônio e o que cada pessoa fez na última rodada apurada.`,
+          type: 'article',
+        });
       },
       error: (falha: ApiFailure) => this.estado.set({ tipo: 'erro', falha }),
     });

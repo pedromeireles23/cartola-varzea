@@ -1,0 +1,116 @@
+// Cartao cujo conteudo inteiro e um link (02 §8).
+//
+// O titulo leva, e o cartao todo vira alvo de toque pelo ::after que cobre a area. E o
+// mesmo item da lista de campeonatos, dos destaques da landing e das ligas do
+// participante; estava escrito tres vezes antes de virar uma folha so.
+//
+// A superficie repete a do cartao do design system (shared/ui/card.scss) em vez de usar
+// o <app-card>, porque o link precisa alcancar a borda de fora, e o <section> de dentro
+// do componente nao alcanca.
+.cartao-link {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-5);
+  padding-right: var(--space-12);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color var(--motion-feedback) var(--motion-easing),
+    box-shadow var(--motion-feedback) var(--motion-easing),
+    transform var(--motion-feedback) var(--motion-easing);
+}
+
+// Um pixel: o cartao responde ao cursor sem sair do lugar na grade.
+.cartao-link:hover {
+  border-color: var(--color-brand-300);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+
+// Quem chega pelo teclado precisa ver o cartao todo reagir, nao so o texto do link.
+.cartao-link:focus-within {
+  border-color: var(--color-brand-700);
+}
+
+.cartao-link__titulo {
+  margin: 0;
+  font-size: var(--font-h3);
+}
+
+.cartao-link__titulo a {
+  color: var(--color-ink-950);
+  text-decoration: none;
+}
+
+.cartao-link__titulo a::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border-radius: var(--radius-lg);
+}
+
+.cartao-link__titulo a:hover {
+  text-decoration: underline;
+}
+
+.cartao-link__detalhe {
+  margin: 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.cartao-link__seta {
+  position: absolute;
+  top: 50%;
+  right: var(--space-5);
+  color: var(--color-ink-500);
+  font-size: var(--font-h3);
+  transform: translateY(-50%);
+  transition:
+    color var(--motion-feedback) var(--motion-easing),
+    transform var(--motion-feedback) var(--motion-easing);
+}
+
+.cartao-link:hover .cartao-link__seta {
+  color: var(--color-brand-700);
+  transform: translateY(-50%) translateX(3px);
+}
+
+// Lista desses cartoes, com a cascata curta de entrada da classificacao.
+// `backwards` e nao `both`: com `both` o estado final da animacao continuaria valendo
+// depois dela e passaria por cima do :hover, que e declaracao comum.
+.cartoes-link {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.cartoes-link > * {
+  animation: cartao-link-entra var(--motion-panel) var(--motion-easing) backwards;
+  animation-delay: calc(min(var(--indice, 0), 6) * 40ms);
+}
+
+@keyframes cartao-link-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartoes-link > * {
+    animation: none;
+  }
+
+  .cartao-link:hover {
+    transform: none;
+  }
+
+  .cartao-link:hover .cartao-link__seta {
+    transform: translateY(-50%);
+  }
+}

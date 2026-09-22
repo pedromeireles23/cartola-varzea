@@ -13,6 +13,13 @@ export const routes: Routes = [
     component: PublicLayout,
     children: [
       {
+        // A raiz é a porta de entrada do produto (Fase 8); antes ela redirecionava para
+        // a página de sistema, que é ferramenta de diagnóstico, não proposta de valor.
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('./features/public/landing').then((m) => m.LandingPage),
+      },
+      {
         path: 'sistema',
         title: 'Estado do sistema',
         loadComponent: () =>
@@ -280,7 +287,6 @@ export const routes: Routes = [
             (m) => m.OrganizerApplicationsPage,
           ),
       },
-      { path: '', pathMatch: 'full', redirectTo: 'sistema' },
     ],
   },
   { path: '**', redirectTo: '' },

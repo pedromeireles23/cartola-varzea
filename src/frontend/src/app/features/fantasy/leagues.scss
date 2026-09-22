@@ -1,100 +1,5 @@
 // Estilos das telas de liga privada: a lista, a liga aberta e o convite.
 
-.ligas {
-  display: grid;
-  gap: var(--space-3);
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-// Mesma superficie do cartao do design system (shared/ui/card.scss), escrita aqui
-// porque a lista precisa do item inteiro como alvo do link, e o <section> do app-card
-// nao alcanca a borda de fora.
-//
-// `backwards` e nao `both`: com `both` o estado final da animacao continuaria valendo
-// depois dela e passaria por cima do :hover, que e declaracao comum.
-.liga {
-  position: relative;
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-5);
-  padding-right: var(--space-12);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  transition:
-    border-color var(--motion-feedback) var(--motion-easing),
-    box-shadow var(--motion-feedback) var(--motion-easing),
-    transform var(--motion-feedback) var(--motion-easing);
-  animation: liga-entra var(--motion-panel) var(--motion-easing) backwards;
-  animation-delay: calc(min(var(--indice, 0), 6) * 40ms);
-}
-
-// Um pixel: o cartao responde ao cursor sem sair do lugar na grade.
-.liga:hover {
-  border-color: var(--color-brand-300);
-  box-shadow: var(--shadow-2);
-  transform: translateY(-1px);
-}
-
-// Quem chega pelo teclado precisa ver o cartao todo reagir, nao so o texto do link.
-.liga:focus-within {
-  border-color: var(--color-brand-700);
-}
-
-.liga__nome {
-  margin: 0;
-  font-size: var(--font-h3);
-}
-
-.liga__nome a {
-  color: var(--color-ink-950);
-  text-decoration: none;
-}
-
-// O link cobre o cartao inteiro; o resto do texto continua acima dele.
-.liga__nome a::after {
-  position: absolute;
-  inset: 0;
-  content: '';
-  border-radius: var(--radius-lg);
-}
-
-.liga__nome a:hover {
-  text-decoration: underline;
-}
-
-.liga__detalhe {
-  margin: 0;
-  color: var(--color-ink-700);
-  font-size: var(--font-small);
-}
-
-.liga__seta {
-  position: absolute;
-  top: 50%;
-  right: var(--space-5);
-  color: var(--color-ink-500);
-  font-size: var(--font-h3);
-  transform: translateY(-50%);
-  transition:
-    color var(--motion-feedback) var(--motion-easing),
-    transform var(--motion-feedback) var(--motion-easing);
-}
-
-.liga:hover .liga__seta {
-  color: var(--color-brand-700);
-  transform: translateY(-50%) translateX(3px);
-}
-
-@keyframes liga-entra {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-
 // O painel nasce logo abaixo dos dois botoes que o abrem, entao ele desce de la.
 .painel {
   animation: painel-entra var(--motion-panel) var(--motion-easing) backwards;
@@ -188,17 +93,8 @@
 
 // Sem movimento: tudo aparece no lugar, sem atraso nem deslocamento (02 §11).
 @media (prefers-reduced-motion: reduce) {
-  .liga,
   .painel,
   .linha__acao {
     animation: none;
-  }
-
-  .liga:hover {
-    transform: none;
-  }
-
-  .liga:hover .liga__seta {
-    transform: translateY(-50%);
   }
 }

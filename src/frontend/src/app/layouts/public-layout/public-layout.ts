@@ -8,6 +8,9 @@ import { NotificationBell } from '../notification-bell/notification-bell';
 /**
  * Layout das areas sem login (02 §9.1). Navegacao enxuta, focada em descobrir
  * campeonatos. Quando ha sessao, o acesso ao perfil aparece no lugar de entrar.
+ *
+ * _(2026-09-22, Fase 8.)_ "Estado do sistema" desceu para o rodape: e diagnostico de
+ * portfolio, nao caminho de quem chega para entender o produto.
  */
 @Component({
   selector: 'app-public-layout',
@@ -21,7 +24,6 @@ import { NotificationBell } from '../notification-bell/notification-bell';
         <a class="topo__marca" routerLink="/">Cartola Várzea</a>
         <nav class="topo__nav" aria-label="Navegação principal">
           <a routerLink="/campeonatos">Campeonatos</a>
-          <a routerLink="/sistema">Sistema</a>
           @if (conta(); as dados) {
             <app-notification-bell />
             <a routerLink="/perfil">{{ dados.displayName }}</a>
@@ -40,6 +42,7 @@ import { NotificationBell } from '../notification-bell/notification-bell';
 
     <footer class="rodape">
       <p>Demonstração de portfólio, com dados fictícios. Sem pagamentos, apostas ou premiações.</p>
+      <p><a routerLink="/sistema">Estado do sistema</a></p>
     </footer>
   `,
   styleUrl: './public-layout.scss',

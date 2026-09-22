@@ -10,6 +10,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
+import { PageMetaService } from '../../core/seo/page-meta';
 import { Alert, Button, Card, FormField, Loading } from '../../shared/ui';
 import { MODALITY_LABELS } from '../organizer/competition.service';
 import { PublicCompetitionService, PublicCompetitionSummary } from './public-competition.service';
@@ -65,23 +66,20 @@ type Estado =
         </app-card>
       }
       @case ('pronto') {
-        <ul class="resultados">
-          @for (campeonato of campeonatos(); track campeonato.slug) {
-            <li>
-              <app-card>
-                <article class="resultado">
-                  <h2 class="resultado__nome">
-                    <a [routerLink]="['/c', campeonato.slug]">{{ campeonato.name }}</a>
-                  </h2>
-                  <p class="resultado__detalhe">
-                    {{ rotulo(campeonato.modality) }} · Temporada {{ campeonato.season }}
-                  </p>
-                  <p class="resultado__detalhe">
-                    {{ campeonato.organizationName }} · publicado em
-                    {{ campeonato.publishedAt | date: 'dd/MM/yyyy' }}
-                  </p>
-                </article>
-              </app-card>
+        <ul class="cartoes-link">
+          @for (campeonato of campeonatos(); track campeonato.slug; let i = $index) {
+            <li class="cartao-link" [style.--indice]="i">
+              <h2 class="cartao-link__titulo">
+                <a [routerLink]="['/c', campeonato.slug]">{{ campeonato.name }}</a>
+              </h2>
+              <p class="cartao-link__detalhe">
+                {{ rotulo(campeonato.modality) }} · Temporada {{ campeonato.season }}
+              </p>
+              <p class="cartao-link__detalhe">
+                {{ campeonato.organizationName }} · publicado em
+                {{ campeonato.publishedAt | date: 'dd/MM/yyyy' }}
+              </p>
+              <span class="cartao-link__seta" aria-hidden="true">→</span>
             </li>
           } @empty {
             <li>
@@ -100,12 +98,13 @@ type Estado =
       }
     }
   `,
-  styleUrl: './public.scss',
+  styleUrls: ['./public.scss', '../../shared/ui/link-card.scss'],
 })
 export class CompetitionSearchPage implements OnInit {
   private readonly service = inject(PublicCompetitionService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly meta = inject(PageMetaService);
 
   /** Espelha o limite que o servidor aplica ao termo. */
   protected readonly buscaMax = 80;
@@ -121,6 +120,11 @@ export class CompetitionSearchPage implements OnInit {
   });
 
   ngOnInit(): void {
+    this.meta.set({
+      title: 'Campeonatos',
+      description:
+        'Campeonatos amadores publicados no Cartola Várzea: encontre o seu por nome, temporada ou organização e acompanhe a classificação.',
+    });
     this.termo.set(this.route.snapshot.queryParamMap.get('busca') ?? '');
     this.carregar();
   }

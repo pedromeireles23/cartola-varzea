@@ -8,10 +8,10 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
+import { PageMetaService } from '../../core/seo/page-meta';
 import { Alert, Button, Card, Loading } from '../../shared/ui';
 import { formationText, timeZoneLabel } from '../organizer/competition-area/competition-format';
 import { FORMAT_LABELS } from '../organizer/competition-area/stage.service';
@@ -145,7 +145,7 @@ type Estado =
 })
 export class PublicCompetitionPage implements OnInit {
   private readonly service = inject(PublicCompetitionService);
-  private readonly title = inject(Title);
+  private readonly meta = inject(PageMetaService);
 
   /** Slug do campeonato na rota. */
   readonly campeonato = input.required<string>();
@@ -183,7 +183,11 @@ export class PublicCompetitionPage implements OnInit {
     this.service.get(this.campeonato()).subscribe({
       next: (campeonato) => {
         this.estado.set({ tipo: 'pronto', campeonato });
-        this.title.setTitle(`${campeonato.name} · Cartola Várzea`);
+        this.meta.set({
+          title: campeonato.name,
+          description: `${MODALITY_LABELS[campeonato.modality]} · temporada ${campeonato.season}, por ${campeonato.organizationName}. Times, fases e classificação do campeonato, com o fantasy aberto a quem quiser jogar.`,
+          type: 'article',
+        });
       },
       error: (falha: ApiFailure) => this.estado.set({ tipo: 'erro', falha }),
     });

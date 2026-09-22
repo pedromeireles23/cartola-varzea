@@ -80,13 +80,13 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
             </p>
           </app-card>
         } @else {
-          <ul class="ligas">
+          <ul class="cartoes-link">
             @for (liga of ligas(); track liga.id) {
-              <li class="liga" [style.--indice]="$index">
-                <h2 class="liga__nome">
+              <li class="cartao-link" [style.--indice]="$index">
+                <h2 class="cartao-link__titulo">
                   <a [routerLink]="['/c', campeonato(), 'ligas', liga.id]">{{ liga.name }}</a>
                 </h2>
-                <p class="liga__detalhe">
+                <p class="cartao-link__detalhe">
                   {{ participantes(liga.members) }}
                   @if (liga.position !== null) {
                     · você está em {{ liga.position }}º
@@ -95,7 +95,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
                     · liga criada por você
                   }
                 </p>
-                <span class="liga__seta" aria-hidden="true">→</span>
+                <span class="cartao-link__seta" aria-hidden="true">→</span>
               </li>
             }
           </ul>
@@ -169,7 +169,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
       }
     }
   `,
-  styleUrls: ['./fantasy.scss', './leagues.scss'],
+  styleUrls: ['./fantasy.scss', '../../shared/ui/link-card.scss', './leagues.scss'],
 })
 export class FantasyLeaguesPage implements OnInit {
   private readonly service = inject(LeagueService);
