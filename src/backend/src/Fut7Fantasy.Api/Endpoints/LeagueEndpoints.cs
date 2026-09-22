@@ -11,6 +11,10 @@ namespace Fut7Fantasy.Api.Endpoints;
 /// As rotas ficam sob o slug do campeonato, como o resto do jogo: quem participa nunca
 /// vê o identificador interno. A entrada pelo código é a única fora dele, porque quem
 /// recebe um código ainda não sabe de que campeonato ele é.
+///
+/// O slug não é enfeite: toda rota confere que a liga é mesmo do campeonato nomeado no
+/// endereço. Sem isso o mesmo identificador responderia sob qualquer campeonato, e o
+/// endereço deixaria de descrever o que devolve.
 /// </summary>
 public static class LeagueEndpoints
 {
@@ -91,10 +95,11 @@ public static class LeagueEndpoints
     }
 
     private static async Task<IResult> GetAsync(
+        string slug,
         Guid leagueId,
         ILeagueService service,
         CancellationToken cancellationToken) =>
-        await service.GetAsync(leagueId, cancellationToken).ConfigureAwait(false) is { } league
+        await service.GetAsync(slug, leagueId, cancellationToken).ConfigureAwait(false) is { } league
             ? Results.Ok(league)
             : Results.NotFound();
 
@@ -105,6 +110,7 @@ public static class LeagueEndpoints
         ToResult(await service.JoinAsync(code, cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> RotateAsync(
+        string slug,
         Guid leagueId,
         LeagueInviteRequest request,
         ILeagueService service,
@@ -117,20 +123,22 @@ public static class LeagueEndpoints
         }
 
         return ToResult(await service
-            .RotateInviteAsync(leagueId, request.Close, request.Version!, cancellationToken)
+            .RotateInviteAsync(slug, leagueId, request.Close, request.Version!, cancellationToken)
             .ConfigureAwait(false));
     }
 
     private static async Task<IResult> RemoveAsync(
+        string slug,
         Guid leagueId,
         Guid membershipId,
         ILeagueService service,
         CancellationToken cancellationToken) =>
         ToResult(await service
-            .RemoveMemberAsync(leagueId, membershipId, cancellationToken)
+            .RemoveMemberAsync(slug, leagueId, membershipId, cancellationToken)
             .ConfigureAwait(false));
 
     private static async Task<IResult> DeleteAsync(
+        string slug,
         Guid leagueId,
         string? version,
         ILeagueService service,
@@ -141,7 +149,8 @@ public static class LeagueEndpoints
             return missing;
         }
 
-        return ToResult(await service.DeleteAsync(leagueId, version!, cancellationToken).ConfigureAwait(false));
+        return ToResult(
+            await service.DeleteAsync(slug, leagueId, version!, cancellationToken).ConfigureAwait(false));
     }
 
     private static IResult? RequiredVersion(string? version) =>

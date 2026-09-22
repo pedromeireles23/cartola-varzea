@@ -268,6 +268,57 @@ public sealed class LeagueFlowTests(SqlServerFixture sqlServer) : IClassFixture<
         Assert.Empty(await MineAsync(dona, world.Slug, cancellationToken));
     }
 
+    [Fact]
+    public async Task LeagueRoutesRefuseASlugThatIsNotTheCompetitionOfTheLeague()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        using var dona = await PlayerAsync(factory, world, "liga-slug", "Pessoa Dona", cancellationToken);
+        using var criada = await CreateLeagueAsync(dona, world.Slug, "Liga do Slug", cancellationToken);
+        criada.EnsureSuccessStatusCode();
+        var liga = await criada.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        var leagueId = liga.GetProperty("id").GetGuid();
+        var version = liga.GetProperty("version").GetString();
+
+        // O slug da rota descreve o que ela devolve: sob outro campeonato, a mesma liga
+        // responde como inexistente, sem confirmar onde ela está de verdade.
+        const string OutroSlug = "campeonato-que-nao-e-o-da-liga";
+        using (var lida = await dona.GetAsync(
+            new System.Uri($"/api/v1/fantasy/{OutroSlug}/leagues/{leagueId}", UriKind.Relative),
+            cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NotFound, lida.StatusCode);
+        }
+
+        using (var trocada = await dona.PutAsJsonAsync(
+            $"/api/v1/fantasy/{OutroSlug}/leagues/{leagueId}/invite",
+            new { version, close = false },
+            cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NotFound, trocada.StatusCode);
+        }
+
+        var versao = System.Uri.EscapeDataString(version!);
+        using (var apagada = await dona.DeleteAsync(
+            new System.Uri(
+                $"/api/v1/fantasy/{OutroSlug}/leagues/{leagueId}?version={versao}", UriKind.Relative),
+            cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NotFound, apagada.StatusCode);
+        }
+
+        // E nada disso mexeu na liga: pelo endereço certo ela continua inteira.
+        var intacta = await LeagueAsync(dona, world.Slug, leagueId, cancellationToken);
+        Assert.Equal("Liga do Slug", intacta.GetProperty("name").GetString());
+        Assert.Single(intacta.GetProperty("members").EnumerateArray());
+    }
+
     private static System.Uri Membro(string slug, Guid leagueId, Guid membershipId) =>
         new($"/api/v1/fantasy/{slug}/leagues/{leagueId}/members/{membershipId}", UriKind.Relative);
 

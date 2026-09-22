@@ -137,13 +137,16 @@ public sealed class LeagueService(
             []);
     }
 
-    public async Task<LeagueView?> GetAsync(Guid leagueId, CancellationToken cancellationToken)
+    public async Task<LeagueView?> GetAsync(
+        string slug,
+        Guid leagueId,
+        CancellationToken cancellationToken)
     {
         var league = await dbContext.PrivateLeagues
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == leagueId, cancellationToken)
             .ConfigureAwait(false);
-        if (league is null)
+        if (league is null || !await BelongsAsync(league, slug, cancellationToken).ConfigureAwait(false))
         {
             return null;
         }
@@ -168,12 +171,6 @@ public sealed class LeagueService(
             return null;
         }
 
-        var slug = await dbContext.Competitions
-            .AsNoTracking()
-            .Where(item => item.Id == league.CompetitionId)
-            .Select(item => item.Slug!)
-            .SingleAsync(cancellationToken)
-            .ConfigureAwait(false);
         var timeZone = await TimeZoneAsync(league.CompetitionId, cancellationToken).ConfigureAwait(false);
         var dono = league.OwnerUserId == UserId;
         var byEntry = standings.Rows.ToDictionary(row => row.EntryId);
@@ -280,6 +277,7 @@ public sealed class LeagueService(
     }
 
     public async Task<LeagueCommandResult> RotateInviteAsync(
+        string slug,
         Guid leagueId,
         bool close,
         string version,
@@ -288,7 +286,7 @@ public sealed class LeagueService(
         var league = await dbContext.PrivateLeagues
             .SingleOrDefaultAsync(item => item.Id == leagueId, cancellationToken)
             .ConfigureAwait(false);
-        if (league is null)
+        if (league is null || !await BelongsAsync(league, slug, cancellationToken).ConfigureAwait(false))
         {
             return LeagueCommandResult.Of(LeagueCommandOutcome.NotFound);
         }
@@ -324,16 +322,11 @@ public sealed class LeagueService(
             return LeagueCommandResult.Of(LeagueCommandOutcome.Conflict);
         }
 
-        var slug = await dbContext.Competitions
-            .AsNoTracking()
-            .Where(item => item.Id == league.CompetitionId)
-            .Select(item => item.Slug!)
-            .SingleAsync(cancellationToken)
-            .ConfigureAwait(false);
         return await CompletedAsync(slug, league.Id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<LeagueCommandOutcome> RemoveMemberAsync(
+        string slug,
         Guid leagueId,
         Guid membershipId,
         CancellationToken cancellationToken)
@@ -346,7 +339,9 @@ public sealed class LeagueService(
             .SingleOrDefaultAsync(
                 item => item.Id == membershipId && item.LeagueId == leagueId, cancellationToken)
             .ConfigureAwait(false);
-        if (league is null || membership is null)
+        if (league is null
+            || membership is null
+            || !await BelongsAsync(league, slug, cancellationToken).ConfigureAwait(false))
         {
             return LeagueCommandOutcome.NotFound;
         }
@@ -370,6 +365,7 @@ public sealed class LeagueService(
     }
 
     public async Task<LeagueCommandOutcome> DeleteAsync(
+        string slug,
         Guid leagueId,
         string version,
         CancellationToken cancellationToken)
@@ -377,7 +373,7 @@ public sealed class LeagueService(
         var league = await dbContext.PrivateLeagues
             .SingleOrDefaultAsync(item => item.Id == leagueId, cancellationToken)
             .ConfigureAwait(false);
-        if (league is null)
+        if (league is null || !await BelongsAsync(league, slug, cancellationToken).ConfigureAwait(false))
         {
             return LeagueCommandOutcome.NotFound;
         }
@@ -426,6 +422,17 @@ public sealed class LeagueService(
             minhas?.SingleOrDefault(item => item.Id == leagueId),
             []);
     }
+
+    /// <summary>
+    /// A liga é mesmo do campeonato nomeado no endereço? Sem esta conferência o slug da
+    /// rota seria enfeite, e o mesmo identificador responderia sob qualquer campeonato.
+    /// Divergência responde como inexistente, pelo mesmo motivo de quem não é membro: a
+    /// resposta não confirma em que campeonato aquela liga está.
+    /// </summary>
+    private Task<bool> BelongsAsync(PrivateLeague league, string slug, CancellationToken cancellationToken) =>
+        dbContext.Competitions
+            .AsNoTracking()
+            .AnyAsync(item => item.Id == league.CompetitionId && item.Slug == slug, cancellationToken);
 
     private Task<Guid?> EntryAsync(Guid competitionId, CancellationToken cancellationToken) =>
         dbContext.FantasyEntries

@@ -26,9 +26,10 @@ public interface ILeagueService
 
     /// <summary>
     /// A liga com o ranking dela. Só quem é membro lê; qualquer outra conta recebe o
-    /// mesmo "não encontrado" de uma liga inexistente.
+    /// mesmo "não encontrado" de uma liga inexistente. A liga também precisa ser do
+    /// campeonato que o <paramref name="slug"/> nomeia.
     /// </summary>
-    Task<LeagueView?> GetAsync(Guid leagueId, CancellationToken cancellationToken);
+    Task<LeagueView?> GetAsync(string slug, Guid leagueId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Entra pelo código. Código errado, vencido, fechado ou de campeonato que a conta
@@ -38,6 +39,7 @@ public interface ILeagueService
 
     /// <summary>Troca o código por outro, ou fecha a liga para novas entradas.</summary>
     Task<LeagueCommandResult> RotateInviteAsync(
+        string slug,
         Guid leagueId,
         bool close,
         string version,
@@ -48,12 +50,17 @@ public interface ILeagueService
     /// O dono não sai da própria liga: para isso ele a apaga.
     /// </summary>
     Task<LeagueCommandOutcome> RemoveMemberAsync(
+        string slug,
         Guid leagueId,
         Guid membershipId,
         CancellationToken cancellationToken);
 
     /// <summary>Apaga a liga e todas as associações. Só o dono.</summary>
-    Task<LeagueCommandOutcome> DeleteAsync(Guid leagueId, string version, CancellationToken cancellationToken);
+    Task<LeagueCommandOutcome> DeleteAsync(
+        string slug,
+        Guid leagueId,
+        string version,
+        CancellationToken cancellationToken);
 }
 
 public enum LeagueCommandOutcome

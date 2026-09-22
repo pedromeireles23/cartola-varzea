@@ -76,11 +76,11 @@ test('duas contas entram na mesma liga e leem o mesmo ranking acumulado', async 
   const codigo = (await dona.locator('.convite__valor').innerText()).replace(/[^A-Z0-9]/g, '');
   expect(codigo, 'O código do convite tem dez caracteres').toHaveLength(10);
 
-  // A convidada entra pelo link do convite, que é o caminho de quem recebe o código.
+  // A convidada entra pelo link do convite, que é o caminho de quem recebe o código. A
+  // tela entra sozinha e oferece a saída ali mesmo, para quem caiu no link sem querer.
   await convidada.goto(`/convite/${codigo}`);
-  await expect(convidada.getByText('Você foi convidado')).toBeVisible();
-  await convidada.getByRole('button', { name: 'Entrar na liga' }).click();
-  await expect(convidada.getByText('Você entrou na liga Turma do sábado.')).toBeVisible();
+  await expect(convidada.getByText('Agora você disputa a Turma do sábado.')).toBeVisible();
+  await expect(convidada.getByRole('button', { name: 'Sair desta liga' })).toBeVisible();
   await convidada.getByRole('link', { name: 'Ver a classificação da liga' }).click();
   await expect(convidada.getByRole('heading', { name: 'Turma do sábado', level: 1 })).toBeVisible();
 
@@ -111,12 +111,28 @@ test('duas contas entram na mesma liga e leem o mesmo ranking acumulado', async 
   const daConvidada = await classificacao(convidada);
   expect(daDona).toHaveLength(2);
   expect(daConvidada).toEqual(daDona);
-  expect(daDona.join(' | ')).toContain('Dona da Liga');
-  expect(daDona.join(' | ')).toContain('Convidada da Liga');
+  expect(daDona.map((linha) => linha.nome)).toContain('Dona da Liga');
+  expect(daDona.map((linha) => linha.nome)).toContain('Convidada da Liga');
 
-  // Quem fica na frente depende de a súmula ter feito marcar alguém do elenco delas, o
-  // que a massa fictícia não garante; a ordem em si tem os testes determinísticos de
-  // `RankingTests`. Aqui o que importa é as duas lerem exatamente a mesma lista.
+  // A ordem na tela é a ordem da regra, quaisquer que sejam os números que a súmula
+  // produziu: pontos nunca sobem lista abaixo, a colocação começa em 1º e ou repete a
+  // de cima — empate — ou é a posição da linha. Qual das duas fica na frente depende de
+  // a súmula ter feito marcar alguém do elenco delas, o que a massa fictícia não
+  // garante; quem decide o desempate tem os testes determinísticos de `RankingTests`.
+  expect(daDona[0]!.posicao).toBe(1);
+  for (let i = 1; i < daDona.length; i++) {
+    const linha = daDona[i]!;
+    const acima = daDona[i - 1]!;
+    expect(linha.pontos).toBeLessThanOrEqual(acima.pontos);
+    expect(linha.posicao === acima.posicao || linha.posicao === i + 1).toBe(true);
+  }
+
+  // E "empatado" marca exatamente quem divide a colocação com outra pessoa (01 §9).
+  daDona.forEach((linha, i) =>
+    expect(linha.empatado).toBe(
+      daDona.some((outra, j) => j !== i && outra.posicao === linha.posicao),
+    ),
+  );
 
   // Cada uma se reconhece na própria linha, e só na dela.
   await expect(dona.locator('.linha--voce')).toHaveCount(1);
@@ -149,11 +165,19 @@ test('duas contas entram na mesma liga e leem o mesmo ranking acumulado', async 
   await contextoDois.close();
 });
 
+interface LinhaDoRanking {
+  readonly posicao: number;
+  readonly nome: string;
+  readonly pontos: number;
+  readonly empatado: boolean;
+}
+
 /**
- * A classificação como colocação, nome e total, sem as etiquetas "Você" e "Dono", que
- * mudam conforme quem está lendo. É o que precisa ser idêntico nas duas telas.
+ * A classificação como colocação, nome, total e empate, sem as etiquetas "Você" e
+ * "Dono", que mudam conforme quem está lendo. É o que precisa ser idêntico nas duas
+ * telas, e é sobre isso que os invariantes de ordem são conferidos.
  */
-async function classificacao(pagina: Page): Promise<string[]> {
+async function classificacao(pagina: Page): Promise<LinhaDoRanking[]> {
   return pagina.locator('.classificacao .linha').evaluateAll((linhas) =>
     linhas.map((linha) => {
       const texto = (seletor: string) => linha.querySelector(seletor)?.textContent?.trim() ?? '';
@@ -162,7 +186,17 @@ async function classificacao(pagina: Page): Promise<string[]> {
         .map((no) => no.textContent?.trim() ?? '')
         .filter(Boolean)
         .join(' ');
-      return `${texto('.linha__posicao')} ${nome} ${texto('.linha__pontos')}`;
+      return {
+        posicao: Number.parseInt(texto('.linha__posicao'), 10),
+        nome,
+        // "46,00 pts" em pt-BR vira 46 para poder ser comparado.
+        pontos: Number(
+          texto('.linha__pontos')
+            .replace(/[^\d,-]/g, '')
+            .replace(',', '.'),
+        ),
+        empatado: texto('.linha__detalhe').includes('empatado'),
+      };
     }),
   );
 }
