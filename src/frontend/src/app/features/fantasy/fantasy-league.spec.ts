@@ -227,6 +227,56 @@ describe('FantasyLeaguePage', () => {
     expect(texto(fixture)).toContain('Convidado saiu da liga.');
   });
 
+  it('a classificação não pisca para o estado de carregando depois de uma ação', async () => {
+    const fixture = await abrir(
+      liga({
+        isOwner: true,
+        members: [
+          membro({ position: 1, displayName: 'Dona', isViewer: true, isOwner: true }),
+          membro({ position: 2, displayName: 'Convidado', membershipId: MEMBERSHIP }),
+        ],
+      }),
+    );
+
+    clicar(fixture, 'Gerenciar participantes');
+    await fixture.whenStable();
+    clicar(fixture, 'Remover');
+    await fixture.whenStable();
+    confirmar(fixture, 'Remover');
+    await fixture.whenStable();
+    http.expectOne(`${LEAGUE_URL}/members/${MEMBERSHIP}`).flush(null);
+    await fixture.whenStable();
+
+    // Enquanto a liga é relida, a tela continua montada: sem "Abrindo a liga…".
+    expect(texto(fixture)).not.toContain('Abrindo a liga');
+    expect(texto(fixture)).toContain('Dona');
+
+    http.expectOne(LEAGUE_URL).flush(liga({ isOwner: true }));
+    await fixture.whenStable();
+
+    // E o foco vai para o aviso, porque o botão que o abriu saiu junto com a linha.
+    const aviso = (fixture.nativeElement as HTMLElement).querySelector('.aviso');
+    expect(document.activeElement).toBe(aviso);
+  });
+
+  it('sem a própria associação, sair vira aviso em vez de uma rota com id vazio', async () => {
+    const fixture = await abrir(
+      liga({
+        members: [
+          membro({ position: 1, displayName: 'Dona', isOwner: true }),
+          membro({ position: 2, displayName: 'Eu', isViewer: true, membershipId: null }),
+        ],
+      }),
+    );
+
+    clicar(fixture, 'Sair desta liga');
+    await fixture.whenStable();
+    confirmar(fixture, 'Sair da liga');
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('Não encontramos a sua participação nesta liga');
+  });
+
   it('apagar a liga confirma, manda a versão lida e volta para a lista', async () => {
     const fixture = await abrir(liga({ isOwner: true, inviteCode: CODIGO }));
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);

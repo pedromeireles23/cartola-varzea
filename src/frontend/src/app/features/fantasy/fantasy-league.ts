@@ -1,11 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   OnInit,
   computed,
   inject,
   input,
   signal,
+  viewChild,
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
@@ -78,7 +80,9 @@ type Confirmacao =
         </p>
 
         @if (aviso(); as mensagem) {
-          <app-alert tone="success">{{ mensagem }}</app-alert>
+          <div #avisoRef tabindex="-1" class="aviso">
+            <app-alert tone="success">{{ mensagem }}</app-alert>
+          </div>
         }
         @if (erroAcao(); as mensagem) {
           <app-alert tone="danger">{{ mensagem }}</app-alert>
@@ -289,6 +293,11 @@ export class FantasyLeaguePage implements OnInit {
    */
   readonly ligaId = input.required<string>();
 
+  private readonly avisoRef = viewChild<ElementRef<HTMLElement>>('avisoRef');
+
+  /** Só um "Copiado" por vez: dois cliques seguidos não apagam o aviso do segundo. */
+  private relogioDaCopia: ReturnType<typeof setTimeout> | null = null;
+
   protected readonly estado = signal<Estado>({ tipo: 'carregando' });
   protected readonly confirmacao = signal<Confirmacao | null>(null);
   protected readonly gerenciando = signal(false);
@@ -357,8 +366,16 @@ export class FantasyLeaguePage implements OnInit {
     });
   }
 
-  protected carregar(): void {
-    this.estado.set({ tipo: 'carregando' });
+  /**
+   * `silencioso` recarrega sem passar pelo estado de carregando. Depois de uma ação a
+   * tela já está montada, e trocá-la por "Abrindo a liga…" faria a página piscar e
+   * levaria junto o aviso do que acabou de acontecer.
+   */
+  protected carregar(silencioso = false): void {
+    if (!silencioso) {
+      this.estado.set({ tipo: 'carregando' });
+    }
+
     this.service.get(this.campeonato(), this.ligaId()).subscribe({
       next: (liga) => {
         this.estado.set({ tipo: 'pronto', liga });
@@ -379,7 +396,10 @@ export class FantasyLeaguePage implements OnInit {
       await area.writeText(codigo);
       this.copiado.set(true);
       this.copiaManual.set(false);
-      setTimeout(() => this.copiado.set(false), 2400);
+      if (this.relogioDaCopia !== null) {
+        clearTimeout(this.relogioDaCopia);
+      }
+      this.relogioDaCopia = setTimeout(() => this.copiado.set(false), 2400);
     } catch {
       this.copiaManual.set(true);
     }
@@ -447,9 +467,19 @@ export class FantasyLeaguePage implements OnInit {
       case 'apagar':
         this.encerrar(this.service.remove(this.campeonato(), liga.id, liga.version));
         return;
-      case 'sair':
-        this.encerrar(this.sairDaLiga(liga));
+      case 'sair': {
+        const pedido = this.sairDaLiga(liga);
+        if (pedido === null) {
+          this.confirmacao.set(null);
+          this.erroAcao.set(
+            'Não encontramos a sua participação nesta liga. Atualize a página e tente de novo.',
+          );
+          return;
+        }
+
+        this.encerrar(pedido);
         return;
+      }
       case 'remover':
         this.aplicar(
           this.service.removeMember(this.campeonato(), liga.id, acao.membershipId),
@@ -471,10 +501,14 @@ export class FantasyLeaguePage implements OnInit {
     );
   }
 
-  /** O próprio participante saindo: a linha dele é a dele mesmo, com `membershipId`. */
-  private sairDaLiga(liga: League): Observable<void> {
+  /**
+   * O próprio participante saindo: a linha dele é a única com `membershipId` que ele
+   * recebe. Sem ela não há o que pedir ao servidor, e montar a rota com um id vazio
+   * só trocaria um aviso claro por um 404.
+   */
+  private sairDaLiga(liga: League): Observable<void> | null {
     const minha = liga.members.find((membro) => membro.isViewer)?.membershipId;
-    return this.service.removeMember(this.campeonato(), liga.id, minha ?? '');
+    return minha ? this.service.removeMember(this.campeonato(), liga.id, minha) : null;
   }
 
   /** Ação que mantém a pessoa na tela: recarrega a liga e confirma o que mudou. */
@@ -485,7 +519,10 @@ export class FantasyLeaguePage implements OnInit {
         this.agindo.set(false);
         this.confirmacao.set(null);
         this.aviso.set(mensagem);
-        this.carregar();
+        this.carregar(true);
+        // O botão que abriu o diálogo pode ter sumido junto com a linha removida; o
+        // foco vai para o aviso em vez de cair no corpo da página.
+        setTimeout(() => this.avisoRef()?.nativeElement.focus());
       },
       error: (falha: ApiFailure) => this.falhou(falha),
     });
