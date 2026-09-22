@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Fut7Fantasy.Api.Endpoints;
 using Fut7Fantasy.Api.Security;
@@ -148,6 +149,19 @@ builder.Services.AddRateLimiter(options =>
             });
     });
 
+    // Tentar códigos de liga é limitado por conta, não por IP: a rota exige sessão, e
+    // quem fica tentando é uma conta, não um endereço.
+    options.AddPolicy(LeagueEndpoints.InviteRateLimitPolicy, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "desconhecido",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = LeagueEndpoints.InviteAttemptsPerWindow,
+                Window = LeagueEndpoints.InviteWindow,
+            }));
+
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
         var limits = context.RequestServices.GetRequiredService<IOptions<GlobalRateLimitOptions>>().Value;
@@ -231,6 +245,7 @@ app.MapCoachEndpoints();
 app.MapCatalogImportEndpoints();
 app.MapFantasyEndpoints();
 app.MapNotificationEndpoints();
+app.MapLeagueEndpoints();
 
 await app.RunAsync();
 
