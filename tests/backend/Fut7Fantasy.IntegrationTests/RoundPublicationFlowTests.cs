@@ -254,6 +254,238 @@ public sealed class RoundPublicationFlowTests(SqlServerFixture sqlServer) : ICla
         Assert.Equal("competition_round_status", body.GetProperty("code").GetString());
     }
 
+    [Fact]
+    public async Task CorrectingAPublishedRoundRewritesItAndEveryRoundAfterItInOneGo()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+        var second = (await CreateRoundAsync(world.Owner, world, "Rodada 2", daysAhead: 5, cancellationToken))
+            .GetProperty("id").GetGuid();
+
+        var playerEmail = UniqueEmail("correction-player");
+        await CreateUserAsync(factory, playerEmail);
+        using var player = await CreateAuthenticatedClientAsync(factory, playerEmail, cancellationToken);
+        await JoinWithCompleteSquadAsync(player, world.Slug, cancellationToken);
+
+        var assistantEmail = UniqueEmail("correction-assistant");
+        var assistantId = await CreateUserAsync(factory, assistantEmail);
+        await AddAssistantAsync(factory, world.OrganizationId, assistantId);
+
+        clock.Advance(TimeSpan.FromDays(3));
+        await OpenMarketAsync(world.Owner, world with { RoundId = second }, cancellationToken);
+        clock.Advance(TimeSpan.FromDays(3));
+        var sheet = await FillSheetAsync(world, world.RoundId, cancellationToken);
+        await FillSheetAsync(world, second, cancellationToken);
+        await PublishRoundAsync(world, world.RoundId, cancellationToken);
+        await PublishRoundAsync(world, second, cancellationToken);
+
+        var firstTotal = await TotalAsync(player, world.Slug, world.RoundId, cancellationToken);
+        var secondTotal = await TotalAsync(player, world.Slug, second, cancellationToken);
+
+        // Passada a janela, a rodada consolidou: reabrir sem motivo é recusado. As sessões
+        // de quem não organiza não sobrevivem a dez dias de relógio; elas são refeitas.
+        clock.Advance(TimeSpan.FromDays(10));
+        using var assistant = await CreateAuthenticatedClientAsync(factory, assistantEmail, cancellationToken);
+        using var reader = await CreateAuthenticatedClientAsync(factory, playerEmail, cancellationToken);
+        var consolidated = await ReviewAsync(world, world.RoundId, cancellationToken);
+        Assert.Equal("Consolidated", consolidated.GetProperty("phase").GetString());
+        var version = await RoundVersionAsync(world, world.RoundId, cancellationToken);
+        using (var silent = await ReopenAsync(world.Owner, world, world.RoundId, version, null, cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, silent.StatusCode);
+            Assert.Contains("já consolidou", await silent.Content.ReadAsStringAsync(cancellationToken));
+        }
+
+        var motive = "Gol lançado no atleta errado pela arbitragem.";
+        using (var byAssistant = await ReopenAsync(assistant, world, world.RoundId, version, motive, cancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.Forbidden, byAssistant.StatusCode);
+        }
+
+        using (var reopened = await ReopenAsync(world.Owner, world, world.RoundId, version, motive, cancellationToken))
+        {
+            reopened.EnsureSuccessStatusCode();
+            var review = await reopened.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+            Assert.Equal("ReopenedForCorrection", review.GetProperty("phase").GetString());
+            Assert.Equal(motive, review.GetProperty("correction").GetProperty("reason").GetString());
+
+            // A apuração vigente continua inteira: reabrir não desfaz nada.
+            Assert.Equal(1, review.GetProperty("publication").GetProperty("revision").GetInt32());
+        }
+
+        // Quem joga continua lendo os números de antes, avisado de que a rodada mudou de mão.
+        var during = await reader.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/fantasy/{world.Slug}/rounds/{world.RoundId}", cancellationToken);
+        Assert.True(during.GetProperty("underCorrection").GetBoolean());
+        Assert.Equal(1, during.GetProperty("revision").GetInt32());
+        Assert.Equal(firstTotal, during.GetProperty("total").GetDecimal());
+        Assert.Equal(
+            secondTotal,
+            (await TotalAsync(reader, world.Slug, second, cancellationToken))!.Value);
+
+        // A rodada reaberta volta a aceitar súmula: o mandante fez 3, não 1.
+        await FillSheetAsync(world, world.RoundId, cancellationToken, goals: 3);
+        await PublishRoundAsync(world, world.RoundId, cancellationToken);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+        var calculations = await dbContext.RoundCalculations
+            .AsNoTracking()
+            .Include(item => item.Athletes)
+            .Include(item => item.Prices)
+            .Where(item => item.CompetitionId == world.CompetitionId)
+            .ToListAsync(cancellationToken);
+
+        var corrected = calculations.Single(item => item.RoundId == world.RoundId && item.Revision == 2);
+        Assert.Equal(motive, corrected.CorrectionReason);
+        Assert.Equal(15m, corrected.Athletes.Single(item => item.AthleteId == sheet.Scorer).Points);
+        Assert.Equal(5m, calculations
+            .Single(item => item.RoundId == world.RoundId && item.Revision == 1)
+            .Athletes.Single(item => item.AthleteId == sheet.Scorer).Points);
+
+        // A Rodada 2 foi refeita na mesma transação, partindo dos preços novos da Rodada 1.
+        var chained = calculations.Single(item => item.RoundId == second && item.Revision == 2);
+        Assert.Contains("Rodada 1", chained.CorrectionReason ?? string.Empty, StringComparison.Ordinal);
+        var afterCorrection = corrected.Prices.ToDictionary(item => (item.Kind, item.AssetId), item => item.NewPrice);
+        Assert.All(
+            chained.Prices,
+            item => Assert.Equal(afterCorrection[(item.Kind, item.AssetId)], item.PreviousPrice));
+        Assert.NotEqual(
+            calculations.Single(item => item.RoundId == second && item.Revision == 1).Prices
+                .Single(item => item.AssetId == sheet.Scorer).NewPrice,
+            chained.Prices.Single(item => item.AssetId == sheet.Scorer).NewPrice);
+
+        // O mercado vende pelo preço da última revisão da última rodada.
+        var market = await MarketAsync(reader, world.Slug, cancellationToken);
+        Assert.Equal(
+            chained.Prices.Single(item => item.AssetId == sheet.Scorer).NewPrice,
+            market.Single(item => Id(item) == sheet.Scorer).GetProperty("price").GetDecimal());
+
+        // O participante lê o que mudou: motivo, quando saiu e quanto tinha antes.
+        var after = await reader.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/fantasy/{world.Slug}/rounds/{world.RoundId}", cancellationToken);
+        Assert.False(after.GetProperty("underCorrection").GetBoolean());
+        Assert.Equal(2, after.GetProperty("revision").GetInt32());
+        var correction = after.GetProperty("correction");
+        Assert.Equal(motive, correction.GetProperty("reason").GetString());
+        Assert.Equal(firstTotal, correction.GetProperty("previousTotal").GetDecimal());
+        Assert.False(string.IsNullOrWhiteSpace(correction.GetProperty("correctedAtLocal").GetString()));
+
+        // A Rodada 2 também avisa, apontando a rodada que causou o recálculo.
+        var chainedDetail = await reader.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/fantasy/{world.Slug}/rounds/{second}", cancellationToken);
+        Assert.Contains(
+            "Rodada 1",
+            chainedDetail.GetProperty("correction").GetProperty("reason").GetString() ?? string.Empty,
+            StringComparison.Ordinal);
+
+        var audit = await dbContext.AdministrativeAuditEntries
+            .AsNoTracking()
+            .Where(item => item.TargetId == world.RoundId)
+            .ToListAsync(cancellationToken);
+        Assert.Contains(audit, item =>
+            item.Action == "CompetitionRoundReopenedForCorrection"
+            && item.Reason.Contains(motive, StringComparison.Ordinal));
+        Assert.Contains(audit, item =>
+            item.Action == "CompetitionRoundPublished"
+            && item.Reason.Contains("republicada com a revisão 2", StringComparison.Ordinal)
+            && item.Reason.Contains("1 rodadas seguintes recalculadas", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ARoundBeingCorrectedHoldsBackEveryRoundThatComesAfterIt()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+        var second = (await CreateRoundAsync(world.Owner, world, "Rodada 2", daysAhead: 5, cancellationToken))
+            .GetProperty("id").GetGuid();
+
+        clock.Advance(TimeSpan.FromDays(3));
+        await OpenMarketAsync(world.Owner, world with { RoundId = second }, cancellationToken);
+        clock.Advance(TimeSpan.FromDays(3));
+        await FillSheetAsync(world, world.RoundId, cancellationToken);
+        await FillSheetAsync(world, second, cancellationToken);
+        await PublishRoundAsync(world, world.RoundId, cancellationToken);
+
+        var firstVersion = await RoundVersionAsync(world, world.RoundId, cancellationToken);
+        using (var reopened = await ReopenAsync(
+            world.Owner, world, world.RoundId, firstVersion, "Placar conferido errado na súmula.", cancellationToken))
+        {
+            reopened.EnsureSuccessStatusCode();
+        }
+
+        // A Rodada 2 não sai enquanto a anterior estiver em correção: os preços dela
+        // partiriam de uma apuração que está prestes a mudar.
+        var secondVersion = await SendToReviewAsync(world, second, cancellationToken);
+        using var blocked = await PublishAsync(world.Owner, world, second, secondVersion, cancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, blocked.StatusCode);
+        Assert.Contains("Publique antes a Rodada 1", await blocked.Content.ReadAsStringAsync(cancellationToken));
+    }
+
+    [Fact]
+    public async Task OnlyAPublishedRoundIsReopenedForCorrection()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var factory = CreateApi(new FakeTimeProvider(ApiFactory.FixedNow));
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        var version = await RoundVersionAsync(world, world.RoundId, cancellationToken);
+        using var refused = await ReopenAsync(
+            world.Owner, world, world.RoundId, version, "Motivo mais do que suficiente.", cancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, refused.StatusCode);
+        var body = await refused.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        Assert.Equal("competition_round_status", body.GetProperty("code").GetString());
+    }
+
+    private static Task<HttpResponseMessage> ReopenAsync(
+        HttpClient client,
+        World world,
+        Guid roundId,
+        string version,
+        string? reason,
+        CancellationToken cancellationToken) =>
+        client.PostAsJsonAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds/{roundId}/reopen",
+            new { version, reason },
+            cancellationToken);
+
+    /// <summary>Manda para revisão se preciso e publica; a rodada reaberta já está lá.</summary>
+    private static async Task PublishRoundAsync(World world, Guid roundId, CancellationToken cancellationToken)
+    {
+        var round = await RoundAsync(world, roundId, cancellationToken);
+        var version = round.GetProperty("status").GetString() == "UnderReview"
+            ? round.GetProperty("version").GetString()!
+            : await SendToReviewAsync(world, roundId, cancellationToken);
+        using var published = await PublishAsync(world.Owner, world, roundId, version, cancellationToken);
+        published.EnsureSuccessStatusCode();
+    }
+
+    private static async Task<decimal?> TotalAsync(
+        HttpClient client,
+        string slug,
+        Guid roundId,
+        CancellationToken cancellationToken)
+    {
+        var detail = await client.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/fantasy/{slug}/rounds/{roundId}", cancellationToken);
+        return detail.GetProperty("played").GetBoolean() ? detail.GetProperty("total").GetDecimal() : null;
+    }
+
     private static Task<HttpResponseMessage> PublishAsync(
         HttpClient client,
         World world,
@@ -300,7 +532,11 @@ public sealed class RoundPublicationFlowTests(SqlServerFixture sqlServer) : ICla
     /// Súmula do único jogo da rodada: mandante 1 × 0, gol do primeiro atacante do
     /// mandante; cada time com um goleiro em campo e o outro fora; os demais jogaram.
     /// </summary>
-    private static async Task<SheetFacts> FillSheetAsync(World world, Guid roundId, CancellationToken cancellationToken)
+    private static async Task<SheetFacts> FillSheetAsync(
+        World world,
+        Guid roundId,
+        CancellationToken cancellationToken,
+        int goals = 1)
     {
         var matchId = (await RoundAsync(world, roundId, cancellationToken))
             .GetProperty("matches")[0].GetProperty("id").GetGuid();
@@ -335,8 +571,8 @@ public sealed class RoundPublicationFlowTests(SqlServerFixture sqlServer) : ICla
                 athleteId = id,
                 didPlay = !benched.Contains(id),
                 playedAsGoalkeeper = goalkeepers.Contains(id),
-                goalsConceded = id == facts.AwayGoalkeeper ? 1 : 0,
-                goals = id == facts.Scorer ? 1 : 0,
+                goalsConceded = id == facts.AwayGoalkeeper ? goals : 0,
+                goals = id == facts.Scorer ? goals : 0,
                 assists = 0,
                 goalkeeperSaves = 0,
                 penaltySaves = 0,
@@ -350,7 +586,13 @@ public sealed class RoundPublicationFlowTests(SqlServerFixture sqlServer) : ICla
 
         using var saved = await world.Owner.PutAsJsonAsync(
             uri,
-            new { homeScore = 1, awayScore = 0, appearances, version = (string?)null },
+            new
+            {
+                homeScore = goals,
+                awayScore = 0,
+                appearances,
+                version = current.GetProperty("version").GetString(),
+            },
             cancellationToken);
         saved.EnsureSuccessStatusCode();
         var version = (await saved.Content.ReadFromJsonAsync<JsonElement>(cancellationToken))

@@ -174,6 +174,94 @@ public sealed class RoundTests
         Assert.Throws<InvalidOperationException>(() => round.Publish(kickoff, round.MarketCloseAt!.Value));
     }
 
+    [Fact]
+    public void ReopeningAProvisionalRoundDoesNotRequireAReason()
+    {
+        var round = Published(out var consolidatesAt);
+        var stillProvisional = consolidatesAt.AddTicks(-1);
+
+        round.ReopenForCorrection(stillProvisional, reason: null);
+
+        Assert.Equal(RoundStatus.UnderReview, round.Status);
+        Assert.Equal(RoundPhase.ReopenedForCorrection, round.PhaseAt(stillProvisional));
+        Assert.True(round.IsUnderCorrection);
+        Assert.Equal(stillProvisional, round.ReopenedAt);
+        Assert.Null(round.CorrectionReason);
+
+        // A apuração vigente não é desfeita: a rodada continua sabendo quando saiu.
+        Assert.NotNull(round.PublishedAt);
+        Assert.Equal(consolidatesAt, round.ConsolidatesAt);
+    }
+
+    [Fact]
+    public void ReopeningAConsolidatedRoundWithoutAReasonIsRefused()
+    {
+        var round = Published(out var consolidatesAt);
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => round.ReopenForCorrection(consolidatesAt, reason: "   "));
+
+        Assert.Contains("já consolidou", exception.Message, StringComparison.Ordinal);
+        Assert.Equal(RoundStatus.Published, round.Status);
+        Assert.False(round.IsUnderCorrection);
+    }
+
+    [Fact]
+    public void ReasonThatExplainsNothingIsRefused()
+    {
+        var round = Published(out var consolidatesAt);
+
+        Assert.Throws<InvalidOperationException>(() => round.ReopenForCorrection(consolidatesAt, "errado"));
+        Assert.Throws<InvalidOperationException>(
+            () => round.ReopenForCorrection(consolidatesAt, new string('a', Round.CorrectionReasonMaxLength + 1)));
+        Assert.Equal(RoundStatus.Published, round.Status);
+    }
+
+    [Fact]
+    public void RepublishingClearsTheReopeningAndStartsANewProvisionalWindow()
+    {
+        var round = Published(out var consolidatesAt);
+        round.ReopenForCorrection(consolidatesAt, "Gol lançado no atleta errado.");
+
+        var republishedAt = consolidatesAt.AddDays(1);
+        var newWindow = republishedAt.AddDays(1);
+        round.Publish(republishedAt, newWindow);
+
+        Assert.Equal(RoundStatus.Published, round.Status);
+        Assert.False(round.IsUnderCorrection);
+        Assert.Null(round.ReopenedAt);
+        Assert.Null(round.CorrectionReason);
+        Assert.Equal(republishedAt, round.PublishedAt);
+        Assert.Equal(RoundPhase.Published, round.PhaseAt(republishedAt));
+    }
+
+    [Fact]
+    public void OnlyAPublishedRoundIsReopenedForCorrection()
+    {
+        var round = Create();
+        var kickoff = Now.AddDays(2);
+        Assert.Throws<InvalidOperationException>(() => round.ReopenForCorrection(Now, "Motivo suficiente."));
+
+        round.OpenMarket(kickoff, OneHour, Now);
+        round.BeginReview(kickoff);
+
+        // Em conferência pela primeira vez não é correção: não há resultado para corrigir.
+        Assert.Equal(RoundPhase.UnderReview, round.PhaseAt(kickoff));
+        Assert.False(round.IsUnderCorrection);
+        Assert.Throws<InvalidOperationException>(() => round.ReopenForCorrection(kickoff, "Motivo suficiente."));
+    }
+
+    private static Round Published(out DateTimeOffset consolidatesAt)
+    {
+        var round = Create();
+        var kickoff = Now.AddDays(2);
+        round.OpenMarket(kickoff, OneHour, Now);
+        round.BeginReview(kickoff);
+        consolidatesAt = kickoff.AddDays(3);
+        round.Publish(kickoff.AddDays(1), consolidatesAt);
+        return round;
+    }
+
     private static Round Create() =>
         Round.Create(Guid.NewGuid(), Guid.NewGuid(), 1, new RoundDefinition("Rodada 1"), Now);
 }
