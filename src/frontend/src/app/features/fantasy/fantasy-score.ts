@@ -70,7 +70,12 @@ interface Grupo {
       @case ('pronto') {
         <h1>{{ pontuacao()!.roundName }}</h1>
 
-        @if (pontuacao()!.provisional) {
+        @if (pontuacao()!.underCorrection) {
+          <app-alert tone="warning">
+            A liga reabriu esta rodada para correção. Até ela republicar, o que você lê aqui é o
+            resultado que está valendo; os números podem mudar de uma vez.
+          </app-alert>
+        } @else if (pontuacao()!.provisional) {
           <app-alert tone="warning">
             Resultado provisório: pode mudar até {{ horario(pontuacao()!.consolidatesAtLocal) }}. A
             liga ainda pode corrigir a súmula nesse prazo.
@@ -78,6 +83,18 @@ interface Grupo {
         } @else {
           <app-alert tone="success">
             Resultado consolidado desde {{ horario(pontuacao()!.consolidatesAtLocal) }}.
+          </app-alert>
+        }
+
+        @if (pontuacao()!.correction; as correcao) {
+          <app-alert tone="info">
+            Rodada corrigida em {{ horario(correcao.correctedAtLocal) }}.
+            @if (correcao.reason) {
+              Motivo: {{ correcao.reason }}
+            }
+            @if (mudanca(); as texto) {
+              {{ texto }}
+            }
           </app-alert>
         }
 
@@ -178,6 +195,19 @@ export class FantasyScorePage implements OnInit {
   });
 
   /** Sem capitão em campo a rodada fica sem bônus, e a tela precisa dizer isso (01 §9). */
+  /**
+   * O que a correção fez com o total desta conta. Nulo quando a conta não jogou a revisão
+   * anterior — aí não existe um "antes" para comparar.
+   */
+  protected readonly mudanca = computed(() => {
+    const rodada = this.pontuacao();
+    const anterior = rodada?.correction?.previousTotal;
+    if (!rodada?.played || anterior === null || anterior === undefined) return null;
+    return anterior === rodada.total
+      ? `Sua pontuação não mudou: ${this.pontos(rodada.total)}.`
+      : `Sua pontuação foi de ${this.pontos(anterior)} para ${this.pontos(rodada.total)}.`;
+  });
+
   protected readonly capitaoForaDeCampo = computed(
     () => this.pontuacao()?.slots.some((vaga) => vaga.isCaptain && !vaga.played) ?? false,
   );

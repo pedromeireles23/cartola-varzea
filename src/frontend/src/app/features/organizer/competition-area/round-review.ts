@@ -2,11 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Dialog, Loading } from '../../../shared/ui';
+import { Alert, Badge, Button, Card, Dialog, FormField, Loading } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
 import { ImportUpload } from './import-upload';
 import { ImportService } from './import.service';
 import {
+  CORRECTION_REASON_MAX,
+  CORRECTION_REASON_MIN,
   MATCH_STATUS_LABELS,
   PHASE_LABELS,
   RoundPhase,
@@ -33,7 +35,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-round-review',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Dialog, ImportUpload, Loading, RouterLink],
+  imports: [Alert, Badge, Button, Card, Dialog, FormField, ImportUpload, Loading, RouterLink],
   template: `
     <div class="pagina">
       <a class="voltar" routerLink="../..">← Voltar para rodadas</a>
@@ -104,14 +106,25 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 
           @if (review()!.publication; as publication) {
             <app-card heading="Resultado publicado">
-              <app-alert [tone]="publication.consolidated ? 'success' : 'info'">
-                @if (publication.consolidated) {
-                  Resultado consolidado desde {{ when(publication.consolidatesAtLocal) }}.
-                } @else {
-                  Resultado provisório até {{ when(publication.consolidatesAtLocal) }}: até lá, uma
-                  correção de súmula ainda muda pontos e preços sem cerimônia.
-                }
-              </app-alert>
+              @if (review()!.correction; as correction) {
+                <app-alert tone="warning">
+                  Rodada reaberta em {{ when(correction.reopenedAtLocal) }}.
+                  @if (correction.reason) {
+                    Motivo: {{ correction.reason }}
+                  }
+                  Quem joga continua vendo a {{ publication.revision }}ª apuração até você
+                  republicar.
+                </app-alert>
+              } @else {
+                <app-alert [tone]="publication.consolidated ? 'success' : 'info'">
+                  @if (publication.consolidated) {
+                    Resultado consolidado desde {{ when(publication.consolidatesAtLocal) }}.
+                  } @else {
+                    Resultado provisório até {{ when(publication.consolidatesAtLocal) }}: até lá,
+                    uma correção de súmula ainda muda pontos e preços sem cerimônia.
+                  }
+                </app-alert>
+              }
               <dl class="publication">
                 <div>
                   <dt>Publicado em</dt>
@@ -135,19 +148,42 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
                   <dt>Revisão da apuração</dt>
                   <dd>{{ publication.revision }}ª</dd>
                 </div>
+                @if (publication.correctionReason) {
+                  <div class="wide">
+                    <dt>Motivo da correção</dt>
+                    <dd>{{ publication.correctionReason }}</dd>
+                  </div>
+                }
               </dl>
+              @if (owner() && !correcting()) {
+                <div class="actions">
+                  <app-button variant="secondary" (pressed)="openReopen()">
+                    Reabrir para correção
+                  </app-button>
+                </div>
+              }
             </app-card>
-          } @else if (review()!.phase === 'UnderReview') {
-            <app-card heading="Publicar o resultado">
-              <p class="support">
-                Publicar apura a rodada inteira de uma vez: pontos de cada atleta, técnico e
-                participação, e os preços novos do mercado. O resultado nasce provisório e consolida
-                no fim da janela de correção.
-              </p>
+          }
+
+          @if (canPublish()) {
+            <app-card [heading]="correcting() ? 'Republicar o resultado' : 'Publicar o resultado'">
+              @if (correcting()) {
+                <p class="support">
+                  Republicar grava uma apuração nova com a súmula corrigida, sem apagar a anterior,
+                  e refaz na mesma hora toda rodada seguinte que já saiu — cada uma partindo do
+                  preço deixado pela anterior.
+                </p>
+              } @else {
+                <p class="support">
+                  Publicar apura a rodada inteira de uma vez: pontos de cada atleta, técnico e
+                  participação, e os preços novos do mercado. O resultado nasce provisório e
+                  consolida no fim da janela de correção.
+                </p>
+              }
               @if (owner()) {
                 <div class="actions">
                   <app-button [disabled]="!review()!.ready" (pressed)="confirming.set(true)">
-                    Publicar resultado
+                    {{ correcting() ? 'Republicar resultado' : 'Publicar resultado' }}
                   </app-button>
                 </div>
               } @else {
@@ -178,16 +214,60 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 
           <app-dialog
             [open]="confirming()"
-            [heading]="'Publicar o resultado de ' + review()!.roundName + '?'"
+            [heading]="
+              (correcting() ? 'Republicar o resultado de ' : 'Publicar o resultado de ') +
+              review()!.roundName +
+              '?'
+            "
             (dismissed)="confirming.set(false)"
           >
-            <p>
-              Os pontos de todos os participantes e os preços novos passam a valer agora. Até o fim
-              da janela de correção, o resultado aparece como provisório.
-            </p>
+            @if (correcting()) {
+              <p>
+                A pontuação de todo mundo nesta rodada e nas seguintes que já saíram é refeita de
+                uma vez. As apurações antigas continuam gravadas, e quem joga passa a ver os números
+                novos com o aviso de que a rodada foi corrigida.
+              </p>
+            } @else {
+              <p>
+                Os pontos de todos os participantes e os preços novos passam a valer agora. Até o
+                fim da janela de correção, o resultado aparece como provisório.
+              </p>
+            }
             <div dialogActions>
               <app-button variant="ghost" (pressed)="confirming.set(false)">Cancelar</app-button>
-              <app-button [loading]="saving()" (pressed)="publish()">Publicar</app-button>
+              <app-button [loading]="saving()" (pressed)="publish()">
+                {{ correcting() ? 'Republicar' : 'Publicar' }}
+              </app-button>
+            </div>
+          </app-dialog>
+
+          <app-dialog
+            [open]="reopening()"
+            [heading]="'Reabrir ' + review()!.roundName + ' para correção?'"
+            (dismissed)="reopening.set(false)"
+          >
+            <p>
+              A rodada volta para conferência e a súmula aceita edição de novo. Nada muda para quem
+              joga agora: os números só são trocados quando você republicar.
+            </p>
+            <app-form-field
+              label="Motivo da correção"
+              [multiline]="true"
+              [rows]="3"
+              [required]="reasonRequired()"
+              [minLength]="reasonMin"
+              [maxLength]="reasonMax"
+              [error]="reasonError() ?? undefined"
+              [hint]="
+                reasonRequired()
+                  ? 'Esta rodada já consolidou: o participante vai ler este texto.'
+                  : 'A rodada ainda está provisória, então o motivo é opcional.'
+              "
+              [(value)]="reason"
+            />
+            <div dialogActions>
+              <app-button variant="ghost" (pressed)="reopening.set(false)">Cancelar</app-button>
+              <app-button [loading]="saving()" (pressed)="reopen()">Reabrir</app-button>
             </div>
           </app-dialog>
 
@@ -245,6 +325,11 @@ export class RoundReviewPage {
   protected readonly state = signal<State>({ kind: 'loading' });
   protected readonly saving = signal(false);
   protected readonly confirming = signal(false);
+  protected readonly reopening = signal(false);
+  protected readonly reason = signal('');
+  protected readonly reasonError = signal<string | null>(null);
+  protected readonly reasonMin = CORRECTION_REASON_MIN;
+  protected readonly reasonMax = CORRECTION_REASON_MAX;
   protected readonly message = signal<{
     readonly tone: 'success' | 'warning' | 'danger';
     readonly text: string;
@@ -254,11 +339,24 @@ export class RoundReviewPage {
     return current.kind === 'ready' ? current.review : null;
   });
 
-  /** Súmula só é lançada depois do início dos jogos e antes da publicação. */
+  /** Súmula é lançada em andamento, em conferência e enquanto a rodada está em correção. */
   protected readonly acceptsSheets = computed(() => {
     const phase = this.review()?.phase;
-    return phase === 'InProgress' || phase === 'UnderReview';
+    return phase === 'InProgress' || phase === 'UnderReview' || phase === 'ReopenedForCorrection';
   });
+
+  /** A rodada foi reaberta: o que vem a seguir é republicar, não publicar. */
+  protected readonly correcting = computed(() => this.review()?.correction !== null);
+
+  protected readonly canPublish = computed(() => {
+    const phase = this.review()?.phase;
+    return phase === 'UnderReview' || phase === 'ReopenedForCorrection';
+  });
+
+  /** Depois de consolidada, quem joga já tomou o resultado como definitivo. */
+  protected readonly reasonRequired = computed(
+    () => this.review()?.publication?.consolidated ?? false,
+  );
 
   protected readonly statisticsTemplateUrl = computed(() =>
     this.imports.statisticsTemplateUrl(this.competitionId, this.roundId),
@@ -314,6 +412,44 @@ export class RoundReviewPage {
       });
   }
 
+  protected openReopen(): void {
+    this.reason.set('');
+    this.reasonError.set(null);
+    this.reopening.set(true);
+  }
+
+  protected reopen(): void {
+    const review = this.review();
+    if (!review || this.saving()) return;
+
+    const reason = this.reason().trim();
+    if (this.reasonRequired() && reason.length < CORRECTION_REASON_MIN) {
+      this.reasonError.set(
+        `Explique a correção em pelo menos ${CORRECTION_REASON_MIN} caracteres.`,
+      );
+      return;
+    }
+
+    this.saving.set(true);
+    this.service
+      .reopen(this.competitionId, review.roundId, review.version, reason === '' ? null : reason)
+      .subscribe({
+        next: (reopened) => {
+          this.saving.set(false);
+          this.reopening.set(false);
+          this.state.set({ kind: 'ready', review: reopened });
+          this.message.set({
+            tone: 'warning',
+            text: 'Rodada reaberta. Corrija a súmula e republique para os números mudarem.',
+          });
+        },
+        error: (failure: ApiFailure) => {
+          this.saving.set(false);
+          this.reasonError.set(failure.message);
+        },
+      });
+  }
+
   protected publish(): void {
     const review = this.review();
     if (!review || this.saving()) return;
@@ -326,7 +462,10 @@ export class RoundReviewPage {
         this.state.set({ kind: 'ready', review: published });
         this.message.set({
           tone: 'success',
-          text: 'Resultado publicado. Os pontos e os preços novos já valem para todos.',
+          text:
+            published.publication!.revision > 1
+              ? 'Resultado corrigido. As rodadas seguintes que já saíram foram refeitas junto.'
+              : 'Resultado publicado. Os pontos e os preços novos já valem para todos.',
         });
       },
       error: (failure: ApiFailure) => {
@@ -351,7 +490,7 @@ export class RoundReviewPage {
     if (phase === 'UnderReview' || phase === 'Published' || phase === 'Consolidated') {
       return 'success';
     }
-    return phase === 'InProgress' ? 'warning' : 'neutral';
+    return phase === 'InProgress' || phase === 'ReopenedForCorrection' ? 'warning' : 'neutral';
   }
 
   protected statusLabel(status: keyof typeof MATCH_STATUS_LABELS): string {

@@ -154,6 +154,73 @@ describe('FantasyScorePage', () => {
     expect(texto(fixture)).not.toContain('Sua pontuação na rodada');
   });
 
+  it('avisa que a rodada está em correção sem esconder os números que estão valendo', async () => {
+    const fixture = await abrir(rodadaApurada({ underCorrection: true }));
+
+    expect(texto(fixture)).toContain('A liga reabriu esta rodada para correção');
+    expect(texto(fixture)).toContain('o que você lê aqui é o resultado que está valendo');
+    expect(texto(fixture)).toContain('35,00 pts');
+
+    // O aviso de provisório sairia errado aqui: quem manda é a correção em andamento.
+    expect(texto(fixture)).not.toContain('Resultado provisório');
+  });
+
+  it('conta o que a correção fez com a pontuação da conta', async () => {
+    const fixture = await abrir(
+      rodadaApurada({
+        revision: 2,
+        total: 46,
+        correction: {
+          revision: 2,
+          correctedAtLocal: '2026-09-24T10:00',
+          reason: 'Gol lançado no atleta errado.',
+          previousTotal: 42.5,
+        },
+      }),
+    );
+
+    expect(texto(fixture)).toContain('Rodada corrigida em qui., 24/09 às 10:00');
+    expect(texto(fixture)).toContain('Motivo: Gol lançado no atleta errado.');
+    expect(texto(fixture)).toContain('Sua pontuação foi de 42,50 pts para 46,00 pts.');
+  });
+
+  it('a correção que não mexeu nesta conta diz isso, em vez de uma seta entre números iguais', async () => {
+    const fixture = await abrir(
+      rodadaApurada({
+        revision: 2,
+        correction: {
+          revision: 2,
+          correctedAtLocal: '2026-09-24T10:00',
+          reason: null,
+          previousTotal: 35,
+        },
+      }),
+    );
+
+    expect(texto(fixture)).toContain('Sua pontuação não mudou: 35,00 pts.');
+    expect(texto(fixture)).not.toContain('Motivo:');
+  });
+
+  it('a rodada recalculada de quem não jogou avisa sem comparar números', async () => {
+    const fixture = await abrir(
+      rodadaApurada({
+        played: false,
+        total: 0,
+        slots: [],
+        revision: 2,
+        correction: {
+          revision: 2,
+          correctedAtLocal: '2026-09-24T10:00',
+          reason: 'Recalculada porque a Rodada 1 foi corrigida.',
+          previousTotal: null,
+        },
+      }),
+    );
+
+    expect(texto(fixture)).toContain('Motivo: Recalculada porque a Rodada 1 foi corrigida.');
+    expect(texto(fixture)).not.toContain('Sua pontuação foi de');
+  });
+
   it('não confunde rodada sem apuração com erro de rede', async () => {
     const fixture = TestBed.createComponent(FantasyScorePage);
     fixture.componentRef.setInput('campeonato', SLUG);

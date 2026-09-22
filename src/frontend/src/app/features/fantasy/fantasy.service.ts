@@ -126,6 +126,20 @@ export interface FantasyRoundSummary {
   readonly provisional: boolean;
   readonly timeZoneId: string;
   readonly total: number | null;
+  /** O organizador reabriu a rodada: estes números ainda podem ser trocados. */
+  readonly underCorrection: boolean;
+}
+
+/**
+ * A correção que produziu a apuração vigente: quando ela saiu, por que a rodada foi
+ * reaberta e quanto a conta tinha antes. `reason` é nulo quando a rodada foi corrigida
+ * enquanto ainda era provisória, quando o motivo não é exigido.
+ */
+export interface FantasyRoundCorrection {
+  readonly revision: number;
+  readonly correctedAtLocal: string;
+  readonly reason: string | null;
+  readonly previousTotal: number | null;
 }
 
 /** Um item que gerou pontos: "2 gols, +12,00". */
@@ -177,6 +191,9 @@ export interface FantasyRoundScore {
   readonly total: number;
   readonly captainBonus: number;
   readonly slots: readonly FantasyRoundSlot[];
+  readonly underCorrection: boolean;
+  /** Nula na primeira apuração da rodada. */
+  readonly correction: FantasyRoundCorrection | null;
 }
 
 export const FANTASY_MARKET_CLOSED_CODE = 'fantasy_market_closed';

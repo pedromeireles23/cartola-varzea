@@ -31,6 +31,7 @@ export function rodadaResumo(parcial: Partial<FantasyRoundSummary> = {}): Fantas
     provisional: true,
     timeZoneId: 'America/Sao_Paulo',
     total: 35,
+    underCorrection: false,
     ...parcial,
   };
 }
@@ -68,6 +69,8 @@ export function rodadaApurada(parcial: Partial<FantasyRoundScore> = {}): Fantasy
     total: 35,
     captainBonus: 8,
     slots: [vagaApurada()],
+    underCorrection: false,
+    correction: null,
     ...parcial,
   };
 }

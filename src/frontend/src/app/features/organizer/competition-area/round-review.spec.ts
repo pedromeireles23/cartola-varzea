@@ -13,6 +13,7 @@ import { RoundPublication, RoundReview } from './round.service';
 const URL = '/api/v1/competitions/c1/rounds/r1/review';
 const STATUS_URL = '/api/v1/competitions/c1/rounds/r1/status';
 const PUBLISH_URL = '/api/v1/competitions/c1/rounds/r1/publish';
+const REOPEN_URL = '/api/v1/competitions/c1/rounds/r1/reopen';
 
 function publication(changes: Partial<RoundPublication> = {}): RoundPublication {
   return {
@@ -26,8 +27,18 @@ function publication(changes: Partial<RoundPublication> = {}): RoundPublication 
     entries: 12,
     highestTotal: 35,
     averageTotal: 18.25,
+    correctionReason: null,
     ...changes,
   };
+}
+
+/** Rodada publicada e consolidada, o estado de onde a correção parte. */
+function consolidada(changes: Partial<RoundReview> = {}): RoundReview {
+  return review({
+    phase: 'Consolidated',
+    publication: publication({ consolidated: true }),
+    ...changes,
+  });
 }
 
 function review(changes: Partial<RoundReview> = {}): RoundReview {
@@ -56,6 +67,7 @@ function review(changes: Partial<RoundReview> = {}): RoundReview {
     pending: [],
     version: 'AAAAAAAAB9E=',
     publication: null,
+    correction: null,
     ...changes,
   };
 }
@@ -258,11 +270,149 @@ describe('RoundReviewPage', () => {
   });
 
   it('diz quando o resultado já consolidou', async () => {
-    const fixture = await open(
-      review({ phase: 'Consolidated', publication: publication({ consolidated: true }) }),
-    );
+    const fixture = await open(consolidada());
 
     expect(text(fixture)).toContain('Resultado consolidado desde 23/09/2026 10:00.');
     expect(text(fixture)).toContain('Consolidada');
   });
+
+  it('o proprietário reabre a rodada consolidada informando o motivo', async () => {
+    const fixture = await open(consolidada());
+
+    button(fixture, 'Reabrir para correção')!.click();
+    await fixture.whenStable();
+    const dialog = dialogoAberto(fixture);
+    expect(dialog.textContent).toContain('Reabrir Rodada 1 para correção?');
+    expect(dialog.textContent).toContain('Esta rodada já consolidou');
+
+    escrever(dialog, 'Gol lançado no atleta errado pela arbitragem.');
+    acionar(dialog, 'Reabrir');
+    await fixture.whenStable();
+
+    const request = http.expectOne(REOPEN_URL);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      version: 'AAAAAAAAB9E=',
+      reason: 'Gol lançado no atleta errado pela arbitragem.',
+    });
+    request.flush(
+      consolidada({
+        phase: 'ReopenedForCorrection',
+        correction: {
+          reopenedAt: '2026-09-24T13:00:00Z',
+          reopenedAtLocal: '2026-09-24T10:00',
+          reason: 'Gol lançado no atleta errado pela arbitragem.',
+        },
+      }),
+    );
+    await fixture.whenStable();
+
+    expect(text(fixture)).toContain('Rodada reaberta. Corrija a súmula e republique');
+    expect(text(fixture)).toContain('Rodada reaberta em 24/09/2026 10:00');
+    expect(text(fixture)).toContain('Quem joga continua vendo a 1ª apuração');
+    expect(text(fixture)).toContain('Republicar resultado');
+    expect(text(fixture)).toContain('Súmulas por planilha');
+    expect(button(fixture, 'Reabrir para correção')).toBeUndefined();
+  });
+
+  it('não envia a reabertura de uma rodada consolidada sem motivo', async () => {
+    const fixture = await open(consolidada());
+
+    button(fixture, 'Reabrir para correção')!.click();
+    await fixture.whenStable();
+    acionar(dialogoAberto(fixture), 'Reabrir');
+    await fixture.whenStable();
+
+    http.expectNone(REOPEN_URL);
+    expect(text(fixture)).toContain('Explique a correção em pelo menos 10 caracteres.');
+  });
+
+  it('a rodada ainda provisória é reaberta sem motivo', async () => {
+    const fixture = await open(review({ phase: 'Published', publication: publication() }));
+
+    button(fixture, 'Reabrir para correção')!.click();
+    await fixture.whenStable();
+    const dialog = dialogoAberto(fixture);
+    expect(dialog.textContent).toContain(
+      'A rodada ainda está provisória, então o motivo é opcional.',
+    );
+
+    acionar(dialog, 'Reabrir');
+    await fixture.whenStable();
+
+    const request = http.expectOne(REOPEN_URL);
+    expect(request.request.body).toEqual({ version: 'AAAAAAAAB9E=', reason: null });
+    request.flush(
+      review({
+        phase: 'ReopenedForCorrection',
+        publication: publication(),
+        correction: {
+          reopenedAt: '2026-09-22T13:00:00Z',
+          reopenedAtLocal: '2026-09-22T10:00',
+          reason: null,
+        },
+      }),
+    );
+    await fixture.whenStable();
+
+    expect(text(fixture)).toContain('Rodada reaberta em 22/09/2026 10:00');
+  });
+
+  it('republicar avisa que as rodadas seguintes são refeitas junto', async () => {
+    const fixture = await open(
+      consolidada({
+        phase: 'ReopenedForCorrection',
+        correction: {
+          reopenedAt: '2026-09-24T13:00:00Z',
+          reopenedAtLocal: '2026-09-24T10:00',
+          reason: 'Placar conferido errado.',
+        },
+      }),
+    );
+
+    expect(text(fixture)).toContain('refaz na mesma hora toda rodada seguinte que já saiu');
+    button(fixture, 'Republicar resultado')!.click();
+    await fixture.whenStable();
+    const dialog = dialogoAberto(fixture);
+    expect(dialog.textContent).toContain('Republicar o resultado de Rodada 1?');
+    expect(dialog.textContent).toContain('nas seguintes que já saíram é refeita de uma vez');
+
+    acionar(dialog, 'Republicar');
+    await fixture.whenStable();
+    http.expectOne(PUBLISH_URL).flush(
+      review({
+        phase: 'Published',
+        publication: publication({ revision: 2, correctionReason: 'Placar conferido errado.' }),
+      }),
+    );
+    await fixture.whenStable();
+
+    expect(text(fixture)).toContain('Resultado corrigido. As rodadas seguintes que já saíram');
+    expect(text(fixture)).toMatch(/Revisão da apuração\s*2ª/);
+    expect(text(fixture)).toMatch(/Motivo da correção\s*Placar conferido errado\./);
+  });
+
+  it('o auxiliar não reabre a rodada', async () => {
+    const fixture = await open(consolidada(), 'Assistant');
+
+    expect(button(fixture, 'Reabrir para correção')).toBeUndefined();
+  });
+
+  function dialogoAberto(fixture: ComponentFixture<RoundReviewPage>): HTMLDialogElement {
+    return [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLDialogElement>('dialog'),
+    ].find((item) => item.hasAttribute('open'))!;
+  }
+
+  function escrever(dialog: HTMLDialogElement, texto: string): void {
+    const campo = dialog.querySelector('textarea')!;
+    campo.value = texto;
+    campo.dispatchEvent(new Event('input'));
+  }
+
+  function acionar(dialog: HTMLDialogElement, label: string): void {
+    [...dialog.querySelectorAll('button')]
+      .find((item) => item.textContent?.trim() === label)!
+      .click();
+  }
 });

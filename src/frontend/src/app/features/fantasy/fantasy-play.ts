@@ -122,7 +122,9 @@ type Estado =
                       </a>
                       <span>
                         {{ rodada.total === null ? 'Você não jogou' : pontos(rodada.total) }}
-                        @if (rodada.provisional) {
+                        @if (rodada.underCorrection) {
+                          · em correção
+                        } @else if (rodada.provisional) {
                           · provisório
                         }
                       </span>

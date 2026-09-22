@@ -16,6 +16,7 @@ export type RoundPhase =
   | 'UnderReview'
   | 'Published'
   | 'Consolidated'
+  | 'ReopenedForCorrection'
   | 'Cancelled';
 
 export type MatchStatus = 'Scheduled' | 'Postponed' | 'Cancelled';
@@ -90,6 +91,18 @@ export interface RoundPublication {
   readonly entries: number;
   readonly highestTotal: number | null;
   readonly averageTotal: number | null;
+  /** Por que esta revisão existe; nula na primeira publicação. */
+  readonly correctionReason: string | null;
+}
+
+/**
+ * A reabertura em andamento. Enquanto ela existe, `publication` continua descrevendo a
+ * apuração que vale para quem joga: a correção só troca os números na republicação.
+ */
+export interface RoundCorrection {
+  readonly reopenedAt: string;
+  readonly reopenedAtLocal: string;
+  readonly reason: string | null;
 }
 
 export interface RoundReview {
@@ -104,6 +117,8 @@ export interface RoundReview {
   readonly version: string;
   /** Nula enquanto a rodada não foi publicada. */
   readonly publication: RoundPublication | null;
+  /** Nula quando a rodada não está reaberta para correção. */
+  readonly correction: RoundCorrection | null;
 }
 
 /** O que o formulário de partida envia. */
@@ -123,6 +138,10 @@ export const MAX_ROUNDS = 60;
 /** Código estável de quando o estado da rodada não aceita a operação. */
 export const ROUND_STATUS_CODE = 'competition_round_status';
 
+/** O servidor recusa um motivo que não explica nada; a tela avisa antes de enviar. */
+export const CORRECTION_REASON_MIN = 10;
+export const CORRECTION_REASON_MAX = 300;
+
 export const PHASE_LABELS: Readonly<Record<RoundPhase, string>> = {
   Draft: 'Rascunho',
   MarketOpen: 'Mercado aberto',
@@ -131,6 +150,7 @@ export const PHASE_LABELS: Readonly<Record<RoundPhase, string>> = {
   UnderReview: 'Em apuração',
   Published: 'Publicada',
   Consolidated: 'Consolidada',
+  ReopenedForCorrection: 'Em correção',
   Cancelled: 'Cancelada',
 };
 
@@ -172,6 +192,22 @@ export class RoundService {
   publish(competitionId: string, roundId: string, version: string): Observable<RoundReview> {
     return this.http.post<RoundReview>(`${this.roundUrl(competitionId, roundId)}/publish`, {
       version,
+    });
+  }
+
+  /**
+   * Reabre a rodada publicada para corrigir a súmula. Nada é recalculado agora: a
+   * apuração vigente continua valendo até o organizador republicar.
+   */
+  reopen(
+    competitionId: string,
+    roundId: string,
+    version: string,
+    reason: string | null,
+  ): Observable<RoundReview> {
+    return this.http.post<RoundReview>(`${this.roundUrl(competitionId, roundId)}/reopen`, {
+      version,
+      reason,
     });
   }
 

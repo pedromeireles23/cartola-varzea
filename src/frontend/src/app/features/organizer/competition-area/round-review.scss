@@ -98,3 +98,12 @@
   margin: 0;
   font-weight: 600;
 }
+
+/* O motivo da correção é uma frase inteira; ela ocupa a linha toda da grade. */
+.publication .wide {
+  grid-column: 1 / -1;
+}
+
+.publication .wide dd {
+  font-weight: 400;
+}
