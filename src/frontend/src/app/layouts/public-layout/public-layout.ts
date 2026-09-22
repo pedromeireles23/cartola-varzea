@@ -3,6 +3,7 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { DemoBanner } from '../demo-banner/demo-banner';
+import { NotificationBell } from '../notification-bell/notification-bell';
 
 /**
  * Layout das areas sem login (02 §9.1). Navegacao enxuta, focada em descobrir
@@ -11,7 +12,7 @@ import { DemoBanner } from '../demo-banner/demo-banner';
 @Component({
   selector: 'app-public-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DemoBanner, RouterLink, RouterOutlet],
+  imports: [DemoBanner, NotificationBell, RouterLink, RouterOutlet],
   template: `
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 
@@ -22,6 +23,7 @@ import { DemoBanner } from '../demo-banner/demo-banner';
           <a routerLink="/campeonatos">Campeonatos</a>
           <a routerLink="/sistema">Sistema</a>
           @if (conta(); as dados) {
+            <app-notification-bell />
             <a routerLink="/perfil">{{ dados.displayName }}</a>
           } @else {
             <a routerLink="/entrar">Entrar</a>

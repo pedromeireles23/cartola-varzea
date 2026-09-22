@@ -452,6 +452,87 @@ public sealed class RoundPublicationFlowTests(SqlServerFixture sqlServer) : ICla
         Assert.Equal("competition_round_status", body.GetProperty("code").GetString());
     }
 
+    [Fact]
+    public async Task PublishingAndCorrectingLeaveOneNoticeEachInTheParticipantInbox()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        var playerEmail = UniqueEmail("inbox-player");
+        await CreateUserAsync(factory, playerEmail);
+        using var player = await CreateAuthenticatedClientAsync(factory, playerEmail, cancellationToken);
+        await JoinWithCompleteSquadAsync(player, world.Slug, cancellationToken);
+
+        // Quem só tem conta não recebe aviso de um campeonato que não joga.
+        var visitorEmail = UniqueEmail("inbox-visitor");
+        await CreateUserAsync(factory, visitorEmail);
+        using var visitor = await CreateAuthenticatedClientAsync(factory, visitorEmail, cancellationToken);
+
+        clock.Advance(TimeSpan.FromDays(3));
+        await FillSheetAsync(world, world.RoundId, cancellationToken);
+        await PublishRoundAsync(world, world.RoundId, cancellationToken);
+
+        var inbox = await InboxAsync(player, cancellationToken);
+        Assert.Equal(1, inbox.GetProperty("unread").GetInt32());
+        var notice = Assert.Single(inbox.GetProperty("items").EnumerateArray());
+        Assert.Equal("RoundPublished", notice.GetProperty("kind").GetString());
+        Assert.Equal("Rodada 1 apurada", notice.GetProperty("title").GetString());
+        Assert.Equal(world.RoundId, notice.GetProperty("roundId").GetGuid());
+        Assert.Equal(world.Slug, notice.GetProperty("competitionSlug").GetString());
+        Assert.False(notice.GetProperty("read").GetBoolean());
+        Assert.Empty((await InboxAsync(visitor, cancellationToken)).GetProperty("items").EnumerateArray());
+
+        // Publicar de novo responde sucesso sem apurar; também não avisa de novo.
+        using (var again = await PublishAsync(
+            world.Owner,
+            world,
+            world.RoundId,
+            await RoundVersionAsync(world, world.RoundId, cancellationToken),
+            cancellationToken))
+        {
+            again.EnsureSuccessStatusCode();
+        }
+
+        Assert.Equal(1, (await InboxAsync(player, cancellationToken)).GetProperty("unread").GetInt32());
+
+        using (var read = await player.PostAsync("/api/v1/notifications/read", null, cancellationToken))
+        {
+            read.EnsureSuccessStatusCode();
+            var updated = await read.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+            Assert.Equal(0, updated.GetProperty("unread").GetInt32());
+            Assert.True(updated.GetProperty("items")[0].GetProperty("read").GetBoolean());
+        }
+
+        // A correção acrescenta um aviso novo, sem apagar o da publicação.
+        clock.Advance(TimeSpan.FromDays(1));
+        var version = await RoundVersionAsync(world, world.RoundId, cancellationToken);
+        using (var reopened = await ReopenAsync(
+            world.Owner, world, world.RoundId, version, "A súmula chegou com um gol a menos.", cancellationToken))
+        {
+            reopened.EnsureSuccessStatusCode();
+        }
+
+        await FillSheetAsync(world, world.RoundId, cancellationToken, goals: 3);
+        await PublishRoundAsync(world, world.RoundId, cancellationToken);
+
+        var depois = await InboxAsync(player, cancellationToken);
+        Assert.Equal(1, depois.GetProperty("unread").GetInt32());
+        var avisos = depois.GetProperty("items").EnumerateArray().ToList();
+        Assert.Equal(2, avisos.Count);
+        Assert.Equal("RoundCorrected", avisos[0].GetProperty("kind").GetString());
+        Assert.Equal("Rodada 1 corrigida", avisos[0].GetProperty("title").GetString());
+        Assert.Equal("RoundPublished", avisos[1].GetProperty("kind").GetString());
+        Assert.True(avisos[1].GetProperty("read").GetBoolean());
+    }
+
+    private static async Task<JsonElement> InboxAsync(HttpClient client, CancellationToken cancellationToken) =>
+        await client.GetFromJsonAsync<JsonElement>("/api/v1/notifications", cancellationToken);
+
     private static Task<HttpResponseMessage> ReopenAsync(
         HttpClient client,
         World world,

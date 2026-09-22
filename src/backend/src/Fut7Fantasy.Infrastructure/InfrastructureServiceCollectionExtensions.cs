@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.Accounts;
 using Fut7Fantasy.Application.Competitions;
 using Fut7Fantasy.Application.Fantasy;
 using Fut7Fantasy.Application.Importing;
+using Fut7Fantasy.Application.Notifications;
 using Fut7Fantasy.Application.Organizations;
 using Fut7Fantasy.Application.PlatformAdministration;
 using Fut7Fantasy.Application.Scoring;
@@ -13,6 +14,7 @@ using Fut7Fantasy.Infrastructure.Email;
 using Fut7Fantasy.Infrastructure.Fantasy;
 using Fut7Fantasy.Infrastructure.Identity;
 using Fut7Fantasy.Infrastructure.Importing;
+using Fut7Fantasy.Infrastructure.Notifications;
 using Fut7Fantasy.Infrastructure.Options;
 using Fut7Fantasy.Infrastructure.Organizations;
 using Fut7Fantasy.Infrastructure.Persistence;
@@ -114,6 +116,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IFantasyService, FantasyService>();
         services.AddScoped<IRoundPublicationService, RoundPublicationService>();
         services.AddScoped<IFantasyScoreService, FantasyScoreService>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
         return services;

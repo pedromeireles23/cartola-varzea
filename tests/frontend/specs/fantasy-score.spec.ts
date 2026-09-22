@@ -68,6 +68,15 @@ test('a jornada inteira: a escalação congela, a rodada sai, é corrigida e o p
   await expect(page.getByText('Resultado provisório até')).toBeVisible();
   await expect(page.getByText(/Participações apuradas\s*1/)).toBeVisible();
 
+  // O sino avisa que saiu resultado, e o aviso leva à pontuação da rodada.
+  await jogador.goto(`/c/${slug}/jogar`);
+  const sino = jogador.getByRole('button', { name: 'Avisos, 1 por ler' });
+  await expect(sino).toBeVisible();
+  await sino.click();
+  await expect(jogador.getByRole('link', { name: 'Rodada 1 apurada' })).toBeVisible();
+  await jogador.keyboard.press('Escape');
+  await expect(jogador.getByRole('button', { name: 'Avisos', exact: true })).toBeVisible();
+
   // E quem jogou lê a própria pontuação, com o detalhamento.
   await jogador.goto(`/c/${slug}/jogar`);
   await expect(jogador.getByText('Rodadas apuradas')).toBeVisible();

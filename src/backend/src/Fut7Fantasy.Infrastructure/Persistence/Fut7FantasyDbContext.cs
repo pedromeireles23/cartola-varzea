@@ -1,5 +1,6 @@
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.Fantasy;
+using Fut7Fantasy.Domain.Notifications;
 using Fut7Fantasy.Domain.Organizations;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Domain.Scoring;
@@ -37,6 +38,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
     public const string FantasySchema = "fantasy";
 
     public const string ScoringSchema = "scoring";
+
+    public const string NotificationsSchema = "notifications";
 
     /// <summary>Historico de inicializacoes.</summary>
     public DbSet<StartupRecord> StartupRecords => Set<StartupRecord>();
@@ -92,6 +95,8 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
     public DbSet<EntrySlotResult> EntrySlotResults => Set<EntrySlotResult>();
 
     public DbSet<AthleteScoreLine> AthleteScoreLines => Set<AthleteScoreLine>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)

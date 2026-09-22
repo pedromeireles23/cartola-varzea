@@ -3,6 +3,7 @@ using Fut7Fantasy.Application.Competitions;
 using Fut7Fantasy.Application.Scoring;
 using Fut7Fantasy.Domain.Competitions;
 using Fut7Fantasy.Domain.Fantasy;
+using Fut7Fantasy.Domain.Notifications;
 using Fut7Fantasy.Domain.PlatformAdministration;
 using Fut7Fantasy.Domain.Scoring;
 using Fut7Fantasy.Infrastructure.Competitions;
@@ -236,6 +237,7 @@ public sealed class RoundPublicationService(
             UserId,
             reason);
         dbContext.RoundCalculations.Add(calculation);
+        await NotifyAsync(calculation, now, cancellationToken).ConfigureAwait(false);
         if (current is null)
         {
             return new(calculation, 0);
@@ -295,6 +297,32 @@ public sealed class RoundPublicationService(
         }
 
         return chained;
+    }
+
+    /// <summary>
+    /// Avisa cada participação apurada, na mesma transação: a primeira revisão anuncia o
+    /// resultado, as seguintes anunciam a correção. A chave única por conta, rodada e
+    /// revisão faz a repetição não duplicar o aviso, como a própria apuração.
+    /// </summary>
+    private async Task NotifyAsync(
+        RoundCalculation calculation,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var entryIds = calculation.Entries.Select(entry => entry.EntryId).ToArray();
+        if (entryIds.Length == 0)
+        {
+            return;
+        }
+
+        var users = await dbContext.FantasyEntries
+            .AsNoTracking()
+            .Where(entry => entryIds.Contains(entry.Id))
+            .Select(entry => entry.UserId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        dbContext.Notifications.AddRange(users.Select(user => Notification.ForRound(
+            user, calculation.CompetitionId, calculation.RoundId, calculation.Revision, now)));
     }
 
     /// <summary>O mesmo catálogo com os preços que a apuração anterior deixou.</summary>

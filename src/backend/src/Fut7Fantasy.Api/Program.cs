@@ -230,6 +230,7 @@ app.MapAthleteEndpoints();
 app.MapCoachEndpoints();
 app.MapCatalogImportEndpoints();
 app.MapFantasyEndpoints();
+app.MapNotificationEndpoints();
 
 await app.RunAsync();
 

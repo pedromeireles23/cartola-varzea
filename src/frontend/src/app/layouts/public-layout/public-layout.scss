@@ -44,6 +44,8 @@
 
 .topo__nav {
   display: flex;
+  // O sino e mais alto que os links; alinhados pelo centro nada pula de linha.
+  align-items: center;
   gap: var(--space-4);
 }
 
