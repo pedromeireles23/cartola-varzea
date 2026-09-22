@@ -28,7 +28,8 @@ internal static partial class TestAccounts
     public static async Task<Guid> CreateUserAsync(
         WebApplicationFactory<Program> factory,
         string email,
-        string? role = null)
+        string? role = null,
+        string displayName = "Pessoa de Teste")
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -39,7 +40,7 @@ internal static partial class TestAccounts
             UserName = email,
             Email = email,
             EmailConfirmed = true,
-            DisplayName = "Pessoa de Teste",
+            DisplayName = displayName,
             CreatedAt = ApiFactory.FixedNow,
         };
         Assert.True((await users.CreateAsync(user, SenhaValida)).Succeeded);

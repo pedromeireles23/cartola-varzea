@@ -74,6 +74,16 @@ test('visitante sem conta encontra o campeonato publicado e não o rascunho', as
   // O visitante vê o campeonato, nunca a área de organização dele.
   await expect(visitante.getByRole('link', { name: 'Configuração' })).toHaveCount(0);
 
+  // O ranking é público e existe antes da primeira rodada, dizendo que ainda não se mexeu.
+  await visitante.getByRole('link', { name: 'Ver o ranking' }).click();
+  await expect(visitante).toHaveURL(new RegExp(`${endereco}/ranking$`));
+  await expect(
+    visitante.getByRole('heading', { name: `Ranking de ${publicado}`, level: 1 }),
+  ).toBeVisible();
+  await expect(visitante.getByText('Nenhuma rodada foi apurada ainda')).toBeVisible();
+  await expect(visitante.getByText('Ninguém entrou neste campeonato ainda')).toBeVisible();
+  await visitante.getByRole('link', { name: 'Voltar ao campeonato' }).click();
+
   // Recarregar prova que o endereço vale sozinho, sem depender da navegação.
   await visitante.reload();
   await expect(visitante.getByRole('heading', { name: publicado, level: 1 })).toBeVisible();

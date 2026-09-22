@@ -117,6 +117,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRoundPublicationService, RoundPublicationService>();
         services.AddScoped<IFantasyScoreService, FantasyScoreService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IRankingService, RankingService>();
         services.AddScoped<IAuthorizationHandler, CompetitionRoleHandler>();
 
         return services;

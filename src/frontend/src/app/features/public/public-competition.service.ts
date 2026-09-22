@@ -48,6 +48,29 @@ export interface PublicCompetition {
   readonly teams: readonly PublicTeam[];
 }
 
+/**
+ * Uma linha da classificação. `tied` marca quem divide a colocação e `lastRoundPoints`
+ * é nulo para quem não jogou a última rodada apurada.
+ */
+export interface RankingRow {
+  readonly position: number;
+  readonly tied: boolean;
+  readonly displayName: string;
+  readonly totalPoints: number;
+  readonly netWorth: number;
+  readonly lastRoundPoints: number | null;
+  readonly isViewer: boolean;
+}
+
+/** O ranking geral acumulado do campeonato (01 §9), público como o resto da página. */
+export interface Ranking {
+  readonly competitionName: string;
+  readonly rounds: number;
+  readonly lastRoundName: string | null;
+  readonly provisional: boolean;
+  readonly entries: readonly RankingRow[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class PublicCompetitionService {
   private readonly http = inject(HttpClient);
@@ -63,6 +86,10 @@ export class PublicCompetitionService {
 
   get(slug: string): Observable<PublicCompetition> {
     return this.http.get<PublicCompetition>(`${this.competitionsUrl}/${encodeURIComponent(slug)}`);
+  }
+
+  ranking(slug: string): Observable<Ranking> {
+    return this.http.get<Ranking>(`${this.competitionsUrl}/${encodeURIComponent(slug)}/ranking`);
   }
 
   private get competitionsUrl(): string {

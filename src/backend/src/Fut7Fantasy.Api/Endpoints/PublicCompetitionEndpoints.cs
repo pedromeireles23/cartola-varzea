@@ -1,4 +1,5 @@
 using Fut7Fantasy.Application.Competitions;
+using Fut7Fantasy.Application.Scoring;
 using Fut7Fantasy.Domain.Competitions;
 
 namespace Fut7Fantasy.Api.Endpoints;
@@ -26,7 +27,27 @@ public static class PublicCompetitionEndpoints
             .WithName("GetPublicCompetition")
             .WithSummary("Campeonato publicado pelo endereço público, sem campos administrativos.");
 
+        competitions.MapGet("/{slug}/ranking", RankingAsync)
+            .AllowAnonymous()
+            .WithName("GetPublicCompetitionRanking")
+            .WithSummary("Ranking geral acumulado do campeonato publicado, sem conta.");
+
         return routes;
+    }
+
+    private static async Task<IResult> RankingAsync(
+        string slug,
+        IRankingService service,
+        CancellationToken cancellationToken)
+    {
+        if (!CompetitionSlug.IsValid(slug))
+        {
+            return Results.NotFound();
+        }
+
+        return await service.GeneralAsync(slug, cancellationToken).ConfigureAwait(false) is { } ranking
+            ? Results.Ok(ranking)
+            : Results.NotFound();
     }
 
     private static async Task<IResult> SearchAsync(

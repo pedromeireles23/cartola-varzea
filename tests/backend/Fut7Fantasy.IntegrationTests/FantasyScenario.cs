@@ -195,6 +195,158 @@ internal static class FantasyScenario
         opened.EnsureSuccessStatusCode();
     }
 
+    /// <summary>
+    /// Conferência, publicação e súmula da rodada, compartilhadas entre a apuração e o
+    /// ranking: os dois precisam de um campeonato com resultado para ter o que medir.
+    /// </summary>
+    internal static Task<HttpResponseMessage> ReopenAsync(
+        HttpClient client,
+        World world,
+        Guid roundId,
+        string version,
+        string? reason,
+        CancellationToken cancellationToken) =>
+        client.PostAsJsonAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds/{roundId}/reopen",
+            new { version, reason },
+            cancellationToken);
+
+    /// <summary>Manda para revisão se preciso e publica; a rodada reaberta já está lá.</summary>
+    internal static async Task PublishRoundAsync(World world, Guid roundId, CancellationToken cancellationToken)
+    {
+        var round = await RoundAsync(world, roundId, cancellationToken);
+        var version = round.GetProperty("status").GetString() == "UnderReview"
+            ? round.GetProperty("version").GetString()!
+            : await SendToReviewAsync(world, roundId, cancellationToken);
+        using var published = await PublishAsync(world.Owner, world, roundId, version, cancellationToken);
+        published.EnsureSuccessStatusCode();
+    }
+
+    internal static Task<HttpResponseMessage> PublishAsync(
+        HttpClient client,
+        World world,
+        Guid roundId,
+        string version,
+        CancellationToken cancellationToken) =>
+        client.PostAsJsonAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds/{roundId}/publish",
+            new { version },
+            cancellationToken);
+
+    internal static async Task<JsonElement> ReviewAsync(
+        World world,
+        Guid roundId,
+        CancellationToken cancellationToken) =>
+        await world.Owner.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds/{roundId}/review", cancellationToken);
+
+    internal static async Task<JsonElement> RoundAsync(
+        World world,
+        Guid roundId,
+        CancellationToken cancellationToken) =>
+        (await world.Owner.GetFromJsonAsync<JsonElement>(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds", cancellationToken))
+        .EnumerateArray()
+        .Single(item => item.GetProperty("id").GetGuid() == roundId);
+
+    internal static async Task<string> RoundVersionAsync(
+        World world,
+        Guid roundId,
+        CancellationToken cancellationToken) =>
+        (await RoundAsync(world, roundId, cancellationToken)).GetProperty("version").GetString()!;
+
+    /// <summary>Manda a rodada para revisão e devolve a versão nova, que a publicação exige.</summary>
+    internal static async Task<string> SendToReviewAsync(World world, Guid roundId, CancellationToken cancellationToken)
+    {
+        using var response = await world.Owner.PutAsJsonAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds/{roundId}/status",
+            new { transition = "SendToReview", version = await RoundVersionAsync(world, roundId, cancellationToken) },
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken))
+            .GetProperty("version").GetString()!;
+    }
+
+    /// <summary>
+    /// Súmula do único jogo da rodada: mandante 1 × 0, gol do primeiro atacante do
+    /// mandante; cada time com um goleiro em campo e o outro fora; os demais jogaram.
+    /// </summary>
+    internal static async Task<SheetFacts> FillSheetAsync(
+        World world,
+        Guid roundId,
+        CancellationToken cancellationToken,
+        int goals = 1)
+    {
+        var matchId = (await RoundAsync(world, roundId, cancellationToken))
+            .GetProperty("matches")[0].GetProperty("id").GetGuid();
+        var uri = $"/api/v1/competitions/{world.CompetitionId}/matches/{matchId}/sheet";
+        var current = await world.Owner.GetFromJsonAsync<JsonElement>(uri, cancellationToken);
+        var home = current.GetProperty("homeTeamId").GetGuid();
+        var athletes = current.GetProperty("athletes").EnumerateArray().ToList();
+
+        Guid First(Guid team, string position, int skip = 0) => athletes
+            .Where(item => item.GetProperty("realTeamId").GetGuid() == team
+                && item.GetProperty("position").GetString() == position)
+            .Skip(skip)
+            .First()
+            .GetProperty("athleteId").GetGuid();
+
+        var away = current.GetProperty("awayTeamId").GetGuid();
+        var facts = new SheetFacts(
+            matchId,
+            First(home, "Forward"),
+            First(home, "Goalkeeper"),
+            First(home, "Goalkeeper", skip: 1),
+            First(away, "Goalkeeper"),
+            null);
+        var benched = new[] { facts.HomeReserveGoalkeeper, First(away, "Goalkeeper", skip: 1) };
+        var goalkeepers = new[] { facts.HomeGoalkeeper, facts.AwayGoalkeeper };
+
+        var appearances = athletes.Select(item =>
+        {
+            var id = item.GetProperty("athleteId").GetGuid();
+            return new
+            {
+                athleteId = id,
+                didPlay = !benched.Contains(id),
+                playedAsGoalkeeper = goalkeepers.Contains(id),
+                goalsConceded = id == facts.AwayGoalkeeper ? goals : 0,
+                goals = id == facts.Scorer ? goals : 0,
+                assists = 0,
+                goalkeeperSaves = 0,
+                penaltySaves = 0,
+                yellowCards = 0,
+                redCards = 0,
+                redCardReason = (string?)null,
+                ownGoals = 0,
+                penaltyMisses = 0,
+            };
+        }).ToArray();
+
+        using var saved = await world.Owner.PutAsJsonAsync(
+            uri,
+            new
+            {
+                homeScore = goals,
+                awayScore = 0,
+                appearances,
+                version = current.GetProperty("version").GetString(),
+            },
+            cancellationToken);
+        saved.EnsureSuccessStatusCode();
+        var version = (await saved.Content.ReadFromJsonAsync<JsonElement>(cancellationToken))
+            .GetProperty("version").GetString();
+        return facts with { Version = version };
+    }
+
+    internal sealed record SheetFacts(
+        Guid MatchId,
+        Guid Scorer,
+        Guid HomeGoalkeeper,
+        Guid HomeReserveGoalkeeper,
+        Guid AwayGoalkeeper,
+        string? Version);
+
     internal sealed record World(
         HttpClient Owner,
         Guid CompetitionId,

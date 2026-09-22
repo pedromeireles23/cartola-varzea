@@ -177,3 +177,11 @@ dd {
 .jogar:hover {
   background-color: var(--color-brand-300);
 }
+
+.acoes-publicas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin: 0 0 var(--space-6);
+}

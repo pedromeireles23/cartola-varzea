@@ -32,6 +32,13 @@ export const routes: Routes = [
           import('./features/public/public-competition').then((m) => m.PublicCompetitionPage),
       },
       {
+        // O ranking é conteúdo público (01 §10): quem não tem conta vê a classificação.
+        path: 'c/:campeonato/ranking',
+        title: 'Ranking',
+        loadComponent: () =>
+          import('./features/public/competition-ranking').then((m) => m.CompetitionRankingPage),
+      },
+      {
         // O jogo usa o mesmo slug da página pública; exige conta, e o destino é preservado.
         path: 'c/:campeonato/jogar',
         title: 'Jogar',
