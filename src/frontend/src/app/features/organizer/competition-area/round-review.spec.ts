@@ -387,7 +387,7 @@ describe('RoundReviewPage', () => {
     );
     await fixture.whenStable();
 
-    expect(text(fixture)).toContain('Resultado corrigido. As rodadas seguintes que já saíram');
+    expect(text(fixture)).toContain('Resultado corrigido. Quem joga já vê os números novos');
     expect(text(fixture)).toMatch(/Revisão da apuração\s*2ª/);
     expect(text(fixture)).toMatch(/Motivo da correção\s*Placar conferido errado\./);
   });

@@ -70,6 +70,18 @@ interface Grupo {
       @case ('pronto') {
         <h1>{{ pontuacao()!.roundName }}</h1>
 
+        @if (pontuacao()!.correction; as correcao) {
+          <app-alert tone="info">
+            Rodada corrigida em {{ horario(correcao.correctedAtLocal) }}.
+            @if (correcao.reason) {
+              Motivo: {{ correcao.reason }}
+            }
+            @if (mudanca(); as texto) {
+              {{ texto }}
+            }
+          </app-alert>
+        }
+
         @if (pontuacao()!.underCorrection) {
           <app-alert tone="warning">
             A liga reabriu esta rodada para correção. Até ela republicar, o que você lê aqui é o
@@ -83,18 +95,6 @@ interface Grupo {
         } @else {
           <app-alert tone="success">
             Resultado consolidado desde {{ horario(pontuacao()!.consolidatesAtLocal) }}.
-          </app-alert>
-        }
-
-        @if (pontuacao()!.correction; as correcao) {
-          <app-alert tone="info">
-            Rodada corrigida em {{ horario(correcao.correctedAtLocal) }}.
-            @if (correcao.reason) {
-              Motivo: {{ correcao.reason }}
-            }
-            @if (mudanca(); as texto) {
-              {{ texto }}
-            }
           </app-alert>
         }
 

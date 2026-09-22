@@ -12,7 +12,7 @@ import { criarOrganizacaoAprovada } from '../support/organizacao';
 /** Elenco do Fut7 por posição: titulares da formação mais um reserva de cada. */
 const ELENCO_FUT7 = { Goalkeeper: 2, Defender: 3, Midfielder: 3, Forward: 3 };
 
-test('a jornada inteira: a escalação congela, a rodada é publicada e o participante vê os pontos', async ({
+test('a jornada inteira: a escalação congela, a rodada sai, é corrigida e o participante acompanha', async ({
   browser,
   page,
   request,
@@ -91,6 +91,42 @@ test('a jornada inteira: a escalação congela, a rodada é publicada e o partic
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(sobra, 'A página rola na horizontal').toBeLessThanOrEqual(0);
+
+  // A correção: a liga reabre a rodada, refaz a súmula e republica.
+  const totalAntes = await jogador.locator('.total__valor').innerText();
+
+  await page.goto(`/organizar/c/${competitionId}/rodadas/${roundId}/revisao`);
+  await page.getByRole('button', { name: 'Reabrir para correção' }).click();
+  const reabertura = page.getByRole('dialog', { name: 'Reabrir Rodada 1 para correção?' });
+  await reabertura
+    .getByLabel('Motivo da correção')
+    .fill('A súmula chegou com um gol a menos do mandante.');
+  await reabertura.getByRole('button', { name: 'Reabrir', exact: true }).click();
+  await expect(page.getByText('Rodada reaberta.')).toBeVisible();
+  await expect(page.getByText('Rodada reaberta em')).toBeVisible();
+
+  // Enquanto isso, quem joga continua lendo o resultado que está valendo.
+  await jogador.reload();
+  await expect(jogador.getByText('A liga reabriu esta rodada para correção')).toBeVisible();
+  await expect(jogador.locator('.total__valor')).toHaveText(totalAntes);
+
+  await lancarSumulaDaRodada(new ApiDaSessao(page), competitionId, roundId, 2);
+  await page.reload();
+  await page.getByRole('button', { name: 'Republicar resultado' }).click();
+  const republicacao = page.getByRole('dialog', { name: 'Republicar o resultado de Rodada 1?' });
+  await republicacao.getByRole('button', { name: 'Republicar', exact: true }).click();
+  await expect(page.getByText('Resultado corrigido.')).toBeVisible();
+  await expect(page.getByText(/Revisão da apuração\s*2ª/)).toBeVisible();
+
+  // E lê o que mudou, com o total de antes ao lado do de agora.
+  await jogador.reload();
+  await expect(jogador.getByText('Rodada corrigida em')).toBeVisible();
+  await expect(
+    jogador.getByText('Motivo: A súmula chegou com um gol a menos do mandante.'),
+  ).toBeVisible();
+  await expect(jogador.getByText(/Sua pontuação (foi de|não mudou)/)).toBeVisible();
+  await expect(jogador.getByText('A liga reabriu esta rodada')).toBeHidden();
+
   await contexto.close();
 });
 

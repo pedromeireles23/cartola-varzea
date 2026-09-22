@@ -152,14 +152,16 @@ export async function publicarCampeonatoDemo(
 }
 
 /**
- * Lança a súmula do único jogo da rodada e manda a rodada para revisão: mandante 1 × 0,
- * gol do primeiro atacante do mandante, um goleiro em campo de cada lado. Devolve o nome
- * de quem marcou.
+ * Lança a súmula do único jogo da rodada e, se preciso, manda a rodada para revisão:
+ * mandante `gols` × 0, todos do primeiro atacante do mandante, um goleiro em campo de cada
+ * lado. Devolve o nome de quem marcou. Chamada de novo com outro placar, corrige a súmula
+ * — a rodada reaberta já está em conferência e não precisa da transição.
  */
 export async function lancarSumulaDaRodada(
   api: ApiDaSessao,
   competitionId: string,
   roundId: string,
+  gols = 1,
 ): Promise<string> {
   type Atleta = {
     athleteId: string;
@@ -173,9 +175,12 @@ export async function lancarSumulaDaRodada(
   const rodada = rodadas.find((item) => item.id === roundId)!;
   const partida = rodada.matches[0]!.id;
   const caminho = `/api/v1/competitions/${competitionId}/matches/${partida}/sheet`;
-  const sumula = await api.get<{ homeTeamId: string; awayTeamId: string; athletes: Atleta[] }>(
-    caminho,
-  );
+  const sumula = await api.get<{
+    homeTeamId: string;
+    awayTeamId: string;
+    athletes: Atleta[];
+    version: string | null;
+  }>(caminho);
 
   const doTime = (time: string, posicao: string) =>
     sumula.athletes.filter((item) => item.realTeamId === time && item.position === posicao);
@@ -190,15 +195,15 @@ export async function lancarSumulaDaRodada(
   const artilheiro = doTime(sumula.homeTeamId, 'Forward')[0]!;
 
   await api.put(caminho, {
-    homeScore: 1,
+    homeScore: gols,
     awayScore: 0,
-    version: null,
+    version: sumula.version,
     appearances: sumula.athletes.map((atleta) => ({
       athleteId: atleta.athleteId,
       didPlay: !foraDeCampo.includes(atleta.athleteId),
       playedAsGoalkeeper: goleiros.some((item) => item.athleteId === atleta.athleteId),
-      goalsConceded: atleta.athleteId === goleiros[1]!.athleteId ? 1 : 0,
-      goals: atleta.athleteId === artilheiro.athleteId ? 1 : 0,
+      goalsConceded: atleta.athleteId === goleiros[1]!.athleteId ? gols : 0,
+      goals: atleta.athleteId === artilheiro.athleteId ? gols : 0,
       assists: 0,
       goalkeeperSaves: 0,
       penaltySaves: 0,
@@ -210,13 +215,17 @@ export async function lancarSumulaDaRodada(
     })),
   });
 
-  const atual = await api.get<{ id: string; version: string }[]>(
+  const atual = await api.get<{ id: string; status: string; version: string }[]>(
     `/api/v1/competitions/${competitionId}/rounds`,
   );
-  await api.put(`/api/v1/competitions/${competitionId}/rounds/${roundId}/status`, {
-    transition: 'SendToReview',
-    version: atual.find((item) => item.id === roundId)!.version,
-  });
+  const depois = atual.find((item) => item.id === roundId)!;
+  if (depois.status !== 'UnderReview') {
+    await api.put(`/api/v1/competitions/${competitionId}/rounds/${roundId}/status`, {
+      transition: 'SendToReview',
+      version: depois.version,
+    });
+  }
+
   return artilheiro.sportingName;
 }
 

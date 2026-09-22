@@ -464,7 +464,7 @@ export class RoundReviewPage {
           tone: 'success',
           text:
             published.publication!.revision > 1
-              ? 'Resultado corrigido. As rodadas seguintes que já saíram foram refeitas junto.'
+              ? 'Resultado corrigido. Quem joga já vê os números novos e o motivo da correção.'
               : 'Resultado publicado. Os pontos e os preços novos já valem para todos.',
         });
       },
