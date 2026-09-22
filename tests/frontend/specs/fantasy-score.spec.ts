@@ -4,13 +4,11 @@ import {
   ApiDaSessao,
   horarioDeBrasilia,
   lancarSumulaDaRodada,
+  montarElencoPelaApi,
   publicarCampeonatoDemo,
 } from '../support/campeonato';
 import { ADMIN_E2E_EMAIL, entrarComContaNova, entrarComoAdmin } from '../support/conta';
 import { criarOrganizacaoAprovada } from '../support/organizacao';
-
-/** Elenco do Fut7 por posição: titulares da formação mais um reserva de cada. */
-const ELENCO_FUT7 = { Goalkeeper: 2, Defender: 3, Midfielder: 3, Forward: 3 };
 
 test('a jornada inteira: a escalação congela, a rodada sai, é corrigida e o participante acompanha', async ({
   browser,
@@ -138,39 +136,3 @@ test('a jornada inteira: a escalação congela, a rodada sai, é corrigida e o p
 
   await contexto.close();
 });
-
-/** Adere e compra o elenco mais barato que o servidor libera; devolve o capitão. */
-async function montarElencoPelaApi(api: ApiDaSessao, slug: string): Promise<string> {
-  type Item = {
-    kind: string;
-    id: string;
-    position: string | null;
-    price: number;
-    blockCode: string | null;
-  };
-  await api.post(`/api/v1/fantasy/${slug}/entry`);
-  const posicoes: (string | null)[] = [
-    ...Object.entries(ELENCO_FUT7).flatMap(([posicao, quantidade]) =>
-      Array.from({ length: quantidade }, () => posicao),
-    ),
-    null,
-  ];
-  for (const posicao of posicoes) {
-    const { items } = await api.get<{ items: Item[] }>(`/api/v1/fantasy/${slug}/market`);
-    const escolha = items
-      .filter((item) => item.position === posicao && item.blockCode === null)
-      .sort((a, b) => a.price - b.price)[0]!;
-    await api.post(
-      `/api/v1/fantasy/${slug}/squad/${escolha.kind === 'Coach' ? 'tecnico' : 'atleta'}/${escolha.id}`,
-    );
-  }
-
-  const visao = await api.get<{
-    entry: { slots: { assetId: string; name: string; position: string; role: string }[] };
-  }>(`/api/v1/fantasy/${slug}/`);
-  const capitao = visao.entry.slots.find(
-    (slot) => slot.position === 'Forward' && slot.role === 'Starter',
-  )!;
-  await api.put(`/api/v1/fantasy/${slug}/lineup/captain`, { athleteId: capitao.assetId });
-  return capitao.name;
-}

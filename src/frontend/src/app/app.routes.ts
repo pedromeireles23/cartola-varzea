@@ -68,6 +68,31 @@ export const routes: Routes = [
           import('./features/fantasy/fantasy-lineup').then((m) => m.FantasyLineupPage),
       },
       {
+        path: 'c/:campeonato/ligas',
+        title: 'Ligas',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/fantasy/fantasy-leagues').then((m) => m.FantasyLeaguesPage),
+      },
+      {
+        // A liga fica sob o campeonato porque a API e a navegação do jogo precisam do
+        // slug; o identificador da liga continua sendo o GUID, que não é adivinhável.
+        path: 'c/:campeonato/ligas/:ligaId',
+        title: 'Liga',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/fantasy/fantasy-league').then((m) => m.FantasyLeaguePage),
+      },
+      {
+        // Quem recebe um convite ainda não sabe de que campeonato ele é, então esta é a
+        // única rota de liga fora do slug. Exige conta, e o destino é preservado.
+        path: 'convite/:codigo',
+        title: 'Convite para uma liga',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/fantasy/league-invite').then((m) => m.LeagueInvitePage),
+      },
+      {
         path: 'entrar',
         title: 'Entrar',
         canActivate: [anonymousGuard],

@@ -85,7 +85,7 @@ type Estado =
           <app-card>
             <ol class="classificacao">
               @for (linha of ranking()!.entries; track linha.displayName + '-' + linha.position) {
-                <li class="linha" [class.linha--voce]="linha.isViewer">
+                <li class="linha" [class.linha--voce]="linha.isViewer" [style.--indice]="$index">
                   <span class="linha__posicao" [attr.aria-label]="colocacao(linha.position)">
                     {{ linha.position }}º
                   </span>
@@ -117,7 +117,7 @@ type Estado =
       }
     }
   `,
-  styleUrls: ['./public.scss', './competition-ranking.scss'],
+  styleUrls: ['./public.scss', '../../shared/ui/leaderboard.scss'],
 })
 export class CompetitionRankingPage implements OnInit {
   private readonly service = inject(PublicCompetitionService);

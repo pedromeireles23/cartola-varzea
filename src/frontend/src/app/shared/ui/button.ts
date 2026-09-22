@@ -17,6 +17,8 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
       [class]="classes()"
       [disabled]="disabled() || loading()"
       [attr.aria-busy]="loading() ? 'true' : null"
+      [attr.aria-expanded]="expanded() === undefined ? null : expanded()"
+      [attr.aria-controls]="controls() ?? null"
       (click)="pressed.emit()"
     >
       @if (loading()) {
@@ -33,6 +35,13 @@ export class Button {
   readonly disabled = input(false);
   readonly loading = input(false);
   readonly fullWidth = input(false);
+
+  /**
+   * Quando o botao abre um painel na propria tela, `expanded` e `controls` ligam os
+   * dois: sem isso o leitor de tela anuncia so "botao", sem dizer se ja esta aberto.
+   */
+  readonly expanded = input<boolean | undefined>(undefined);
+  readonly controls = input<string>();
 
   readonly pressed = output<void>();
 

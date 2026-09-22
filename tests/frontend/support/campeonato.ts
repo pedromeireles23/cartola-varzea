@@ -246,3 +246,51 @@ export function horarioDeBrasilia(instante: Date): string {
   );
   return `${partes['year']}-${partes['month']}-${partes['day']}T${partes['hour']}:${partes['minute']}`;
 }
+
+/** Elenco do Fut7 por posição: titulares da formação mais um reserva de cada. */
+export const ELENCO_FUT7 = { Goalkeeper: 2, Defender: 3, Midfielder: 3, Forward: 3 };
+
+/**
+ * Adere ao campeonato e compra o elenco mais barato que o servidor libera; devolve o
+ * nome do capitão. `posicaoDoCapitao` existe para que duas contas montem o mesmo elenco
+ * e ainda assim terminem com pontuações diferentes: quem capitaneia quem marcou leva o
+ * multiplicador, quem capitaneia outra posição não.
+ */
+export async function montarElencoPelaApi(
+  api: ApiDaSessao,
+  slug: string,
+  posicaoDoCapitao: 'Forward' | 'Defender' = 'Forward',
+): Promise<string> {
+  type Item = {
+    kind: string;
+    id: string;
+    position: string | null;
+    price: number;
+    blockCode: string | null;
+  };
+  await api.post(`/api/v1/fantasy/${slug}/entry`);
+  const posicoes: (string | null)[] = [
+    ...Object.entries(ELENCO_FUT7).flatMap(([posicao, quantidade]) =>
+      Array.from({ length: quantidade }, () => posicao),
+    ),
+    null,
+  ];
+  for (const posicao of posicoes) {
+    const { items } = await api.get<{ items: Item[] }>(`/api/v1/fantasy/${slug}/market`);
+    const escolha = items
+      .filter((item) => item.position === posicao && item.blockCode === null)
+      .sort((a, b) => a.price - b.price)[0]!;
+    await api.post(
+      `/api/v1/fantasy/${slug}/squad/${escolha.kind === 'Coach' ? 'tecnico' : 'atleta'}/${escolha.id}`,
+    );
+  }
+
+  const visao = await api.get<{
+    entry: { slots: { assetId: string; name: string; position: string; role: string }[] };
+  }>(`/api/v1/fantasy/${slug}/`);
+  const capitao = visao.entry.slots.find(
+    (slot) => slot.position === posicaoDoCapitao && slot.role === 'Starter',
+  )!;
+  await api.put(`/api/v1/fantasy/${slug}/lineup/captain`, { athleteId: capitao.assetId });
+  return capitao.name;
+}

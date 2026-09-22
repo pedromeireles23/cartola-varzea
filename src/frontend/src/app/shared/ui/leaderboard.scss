@@ -1,0 +1,93 @@
+// Classificacao compartilhada pelo ranking geral e pelo ranking da liga (02 §8).
+//
+// As duas telas mostram a mesma coisa — colocacao, nome, patrimonio, o que a pessoa
+// fez na ultima rodada e o total — e so mudam no que vem depois da linha. Manter a
+// regra num arquivo so evita que uma evolua sem a outra.
+.classificacao {
+  display: grid;
+  gap: var(--space-1);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.linha {
+  display: grid;
+  // Colocacao estreita, nome elastico, pontos alinhados a direita.
+  grid-template-columns: 2.5rem 1fr auto;
+  gap: var(--space-3);
+  align-items: baseline;
+  padding: var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: background-color var(--motion-feedback) var(--motion-easing);
+}
+
+.linha:last-child {
+  border-bottom: none;
+}
+
+// Lista longa: a linha sob o cursor ajuda a nao trocar de pessoa no meio da leitura.
+.linha:not(.linha--voce):hover {
+  background-color: var(--color-canvas);
+}
+
+// A linha de quem esta lendo e o que faz a pessoa voltar; ela se destaca sem gritar.
+// A barra a esquerda repete o destaque sem depender de cor, junto da etiqueta "Voce".
+.linha--voce {
+  background-color: var(--color-brand-50);
+  box-shadow: inset 3px 0 0 var(--color-brand-700);
+}
+
+.linha__posicao {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-500);
+}
+
+.linha--voce .linha__posicao {
+  color: var(--color-brand-700);
+  font-weight: 600;
+}
+
+.linha__nome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  font-weight: 600;
+}
+
+.linha__detalhe {
+  flex-basis: 100%;
+  font-size: var(--font-small);
+  font-weight: 400;
+  color: var(--color-ink-700);
+}
+
+.linha__pontos {
+  font-variant-numeric: tabular-nums;
+}
+
+// A lista entra de baixo para cima, em cascata curta, para que a ordem seja percebida
+// como ordem. O atraso para de crescer na oitava linha: ninguem espera uma lista de
+// trinta pessoas aparecer em fila.
+.linha {
+  // `backwards` e nao `both`: com `both` o estado final da animacao continuaria
+  // valendo depois dela e passaria por cima do :hover, que e declaracao comum.
+  animation: linha-entra var(--motion-panel) var(--motion-easing) backwards;
+  animation-delay: calc(min(var(--indice, 0), 8) * 30ms);
+}
+
+@keyframes linha-entra {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+// Sem movimento: a lista aparece inteira, sem atraso nenhum (02 §11).
+@media (prefers-reduced-motion: reduce) {
+  .linha {
+    animation: none;
+  }
+}

@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 /**
- * Navegação entre as telas do jogo num campeonato (02 §8 e §9.1): Início, Mercado e
- * Escalação, nessa ordem. Ligas entram com a Fase 11. A tela atual é marcada com
- * `aria-current`, não só com cor.
+ * Navegação entre as telas do jogo num campeonato (02 §8 e §9.1): Início, Mercado,
+ * Escalação e Ligas, nessa ordem. A tela atual é marcada com `aria-current`, não só
+ * com cor. Ligas continua marcada dentro de uma liga, porque o link casa por prefixo.
  */
 @Component({
   selector: 'app-fantasy-nav',
@@ -33,5 +33,6 @@ export class FantasyNav {
     { caminho: 'jogar', rotulo: 'Início' },
     { caminho: 'mercado', rotulo: 'Mercado' },
     { caminho: 'escalacao', rotulo: 'Escalação' },
+    { caminho: 'ligas', rotulo: 'Ligas' },
   ] as const;
 }
