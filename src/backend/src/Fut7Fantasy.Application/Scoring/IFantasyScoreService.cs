@@ -7,16 +7,22 @@ namespace Fut7Fantasy.Application.Scoring;
 /// </summary>
 public interface IFantasyScoreService
 {
-    /// <summary>Rodadas publicadas, da mais recente para a mais antiga.</summary>
+    /// <summary>
+    /// Rodadas já apuradas, da mais recente para a mais antiga. Uma rodada reaberta para
+    /// correção continua na lista com os números da apuração vigente: esconder o resultado
+    /// até a republicação deixaria o participante sem referência nenhuma.
+    /// </summary>
     Task<IReadOnlyList<FantasyRoundSummaryView>?> RoundsAsync(string slug, CancellationToken cancellationToken);
 
-    /// <summary>O detalhamento de uma rodada publicada; nulo quando ela não existe ou não saiu.</summary>
+    /// <summary>O detalhamento de uma rodada já apurada; nulo quando ela não existe ou não saiu.</summary>
     Task<FantasyRoundScoreView?> RoundAsync(string slug, Guid roundId, CancellationToken cancellationToken);
 }
 
 /// <summary>
 /// Uma rodada apurada na lista. <see cref="Total"/> é nulo quando a conta não jogou a
 /// rodada — entrou depois do fechamento ou estava com a escalação incompleta.
+/// <see cref="UnderCorrection"/> diz que o organizador reabriu a rodada: os números
+/// continuam sendo os da apuração vigente e podem mudar quando ele republicar.
 /// </summary>
 public sealed record FantasyRoundSummaryView(
     Guid RoundId,
@@ -27,7 +33,8 @@ public sealed record FantasyRoundSummaryView(
     string ConsolidatesAtLocal,
     bool Provisional,
     string TimeZoneId,
-    decimal? Total);
+    decimal? Total,
+    bool UnderCorrection);
 
 /// <summary>
 /// O detalhamento de uma rodada. <see cref="Played"/> falso quer dizer que a conta não
@@ -45,7 +52,21 @@ public sealed record FantasyRoundScoreView(
     bool Played,
     decimal Total,
     decimal CaptainBonus,
-    IReadOnlyList<FantasyRoundSlotView> Slots);
+    IReadOnlyList<FantasyRoundSlotView> Slots,
+    bool UnderCorrection,
+    FantasyRoundCorrectionView? Correction);
+
+/// <summary>
+/// A correção que produziu a revisão vigente (01 §9): quando ela saiu, por que a rodada foi
+/// reaberta e quanto a conta tinha antes. <see cref="PreviousTotal"/> é nulo quando a conta
+/// não jogou a revisão anterior; <see cref="Reason"/> é nulo quando a rodada foi corrigida
+/// enquanto ainda era provisória, quando o motivo não é exigido.
+/// </summary>
+public sealed record FantasyRoundCorrectionView(
+    int Revision,
+    string CorrectedAtLocal,
+    string? Reason,
+    decimal? PreviousTotal);
 
 /// <summary>
 /// Uma vaga da escalação congelada, com o que ela fez na rodada. <see cref="Counts"/> diz

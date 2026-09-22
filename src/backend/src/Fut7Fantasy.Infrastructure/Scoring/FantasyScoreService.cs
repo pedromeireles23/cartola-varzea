@@ -55,7 +55,8 @@ public sealed class FantasyScoreService(
                 calculations.TryGetValue(round.Id, out var calculationId)
                     && totals.TryGetValue(calculationId, out var total)
                         ? total
-                        : null)),
+                        : null,
+                round.IsUnderCorrection)),
         ];
     }
 
@@ -81,7 +82,7 @@ public sealed class FantasyScoreService(
             .AsNoTracking()
             .Where(item => item.RoundId == round.Id)
             .OrderByDescending(item => item.Revision)
-            .Select(item => new { item.Id, item.Revision })
+            .Select(item => new { item.Id, item.Revision, item.CalculatedAt, item.CorrectionReason })
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
         if (calculation is null)
@@ -92,6 +93,7 @@ public sealed class FantasyScoreService(
         var provisional = clock.GetUtcNow() < round.ConsolidatesAt!.Value;
         var publishedAtLocal = CompetitionClock.ToLocalText(round.PublishedAt!.Value, competition.TimeZoneId);
         var consolidatesAtLocal = CompetitionClock.ToLocalText(round.ConsolidatesAt!.Value, competition.TimeZoneId);
+        var correctedAtLocal = CompetitionClock.ToLocalText(calculation.CalculatedAt, competition.TimeZoneId);
         FantasyRoundScoreView Empty() => new(
             round.Id,
             round.Name,
@@ -103,7 +105,11 @@ public sealed class FantasyScoreService(
             Played: false,
             0m,
             0m,
-            []);
+            [],
+            round.IsUnderCorrection,
+            calculation.Revision == 1
+                ? null
+                : new(calculation.Revision, correctedAtLocal, calculation.CorrectionReason, null));
 
         var entryId = await EntryIdAsync(competition.Id, cancellationToken).ConfigureAwait(false);
         if (entryId is null)
@@ -148,6 +154,15 @@ public sealed class FantasyScoreService(
 
         var labels = snapshot.Slots.ToDictionary(slot => (slot.Kind, slot.AssetId));
         var linesByAthlete = lines.ToLookup(line => line.AthleteId);
+        var correction = calculation.Revision == 1
+            ? null
+            : new FantasyRoundCorrectionView(
+                calculation.Revision,
+                correctedAtLocal,
+                calculation.CorrectionReason,
+                await PreviousTotalAsync(
+                        round.Id, calculation.Revision, entryId.Value, cancellationToken)
+                    .ConfigureAwait(false));
         return new(
             round.Id,
             round.Name,
@@ -202,7 +217,36 @@ public sealed class FantasyScoreService(
                                     price.PreviousPrice,
                                     price.NewPrice));
                     }),
-            ]);
+            ],
+            round.IsUnderCorrection,
+            correction);
+    }
+
+    /// <summary>
+    /// Quanto a conta somou na revisão anterior, para a tela dizer "de 42,50 para 46,00".
+    /// Nulo quando aquela revisão não tinha essa participação.
+    /// </summary>
+    private async Task<decimal?> PreviousTotalAsync(
+        Guid roundId,
+        int revision,
+        Guid entryId,
+        CancellationToken cancellationToken)
+    {
+        var previous = await dbContext.RoundCalculations
+            .AsNoTracking()
+            .Where(item => item.RoundId == roundId && item.Revision < revision)
+            .OrderByDescending(item => item.Revision)
+            .Select(item => (Guid?)item.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return previous is null
+            ? null
+            : await dbContext.EntryRoundResults
+                .AsNoTracking()
+                .Where(item => item.CalculationId == previous && item.EntryId == entryId)
+                .Select(item => (decimal?)item.Total)
+                .SingleOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
     }
 
     /// <summary>Só campeonato publicado é jogável; rascunho não existe para quem joga.</summary>
@@ -213,12 +257,16 @@ public sealed class FantasyScoreService(
                 item => item.Slug == slug && item.Status == CompetitionStatus.Published,
                 cancellationToken);
 
-    /// <summary>Rodadas publicadas, da mais recente para a mais antiga.</summary>
+    /// <summary>
+    /// Rodadas já apuradas, da mais recente para a mais antiga. Uma rodada reaberta para
+    /// correção continua aqui: `PublishedAt` preenchido é o que diz que existe apuração
+    /// vigente, e ela só será substituída quando o organizador republicar.
+    /// </summary>
     private async Task<List<Round>> PublishedRoundsAsync(Guid competitionId, CancellationToken cancellationToken) =>
         await dbContext.Rounds
             .AsNoTracking()
             .Where(round => round.CompetitionId == competitionId
-                && round.Status == RoundStatus.Published
+                && (round.Status == RoundStatus.Published || round.Status == RoundStatus.UnderReview)
                 && round.PublishedAt != null
                 && round.ConsolidatesAt != null)
             .OrderByDescending(round => round.Sequence)

@@ -28,6 +28,11 @@ public sealed class Round
     /// <summary>Acima disso a lista vira inútil; nenhum campeonato de várzea chega perto.</summary>
     public const int MaxRoundsPerCompetition = 60;
 
+    /// <summary>Curto demais não explica nada a quem vai ler o aviso de correção.</summary>
+    public const int CorrectionReasonMinLength = 10;
+
+    public const int CorrectionReasonMaxLength = 300;
+
     private Round()
     {
     }
@@ -68,6 +73,18 @@ public sealed class Round
     /// <summary>Fim da janela de correção; a rodada vira consolidada sozinha (Fase 10).</summary>
     public DateTimeOffset? ConsolidatesAt { get; private set; }
 
+    /// <summary>
+    /// Instante em que a rodada publicada foi reaberta para correção. Vive só até a
+    /// republicação, que o consome junto do motivo e devolve a rodada a `Published`.
+    /// </summary>
+    public DateTimeOffset? ReopenedAt { get; private set; }
+
+    /// <summary>
+    /// Motivo da reabertura em andamento. Obrigatório depois que a rodada consolidou;
+    /// dentro da janela de correção é opcional, porque o resultado ainda é provisório.
+    /// </summary>
+    public string? CorrectionReason { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -76,6 +93,12 @@ public sealed class Round
 
     /// <summary>Partidas só podem ser criadas, alteradas ou removidas no rascunho.</summary>
     public bool AcceptsMatchChanges => Status == RoundStatus.Draft;
+
+    /// <summary>
+    /// Rodada que já foi publicada e voltou para conferência. Ela continua mostrando a
+    /// apuração vigente a quem joga: a revisão anterior só é trocada na republicação.
+    /// </summary>
+    public bool IsUnderCorrection => Status == RoundStatus.UnderReview && PublishedAt is not null;
 
     public static Round Create(
         Guid id,
@@ -190,6 +213,51 @@ public sealed class Round
         PublishedAt = now;
         ConsolidatesAt = consolidatesAt;
         Status = RoundStatus.Published;
+
+        // A reabertura acaba aqui: o motivo segue para a revisão que esta publicação
+        // grava, que é onde ele fica guardado para sempre.
+        ReopenedAt = null;
+        CorrectionReason = null;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// Reabre uma rodada publicada para corrigir a súmula (01 §9). Ela volta para
+    /// conferência e a apuração vigente continua sendo a última revisão gravada: nada é
+    /// desfeito, e a correção só vale quando o organizador republicar.
+    ///
+    /// Depois de consolidada o motivo é obrigatório, porque a essa altura o participante
+    /// já tomou o resultado como definitivo e precisa ler por que ele mudou.
+    /// </summary>
+    public void ReopenForCorrection(DateTimeOffset now, string? reason)
+    {
+        if (Status != RoundStatus.Published)
+        {
+            throw new InvalidOperationException("Só uma rodada publicada é reaberta para correção.");
+        }
+
+        EnsureTransition(RoundStatus.UnderReview);
+
+        var trimmed = reason?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            if (PhaseAt(now) == RoundPhase.Consolidated)
+            {
+                throw new InvalidOperationException(
+                    "Esta rodada já consolidou: explique o motivo da correção para o participante.");
+            }
+
+            trimmed = null;
+        }
+        else if (trimmed.Length is < CorrectionReasonMinLength or > CorrectionReasonMaxLength)
+        {
+            throw new InvalidOperationException(
+                $"Use de {CorrectionReasonMinLength} a {CorrectionReasonMaxLength} caracteres no motivo da correção.");
+        }
+
+        ReopenedAt = now;
+        CorrectionReason = trimmed;
+        Status = RoundStatus.UnderReview;
         UpdatedAt = now;
     }
 
@@ -204,7 +272,9 @@ public sealed class Round
     {
         RoundStatus.Draft => RoundPhase.Draft,
         RoundStatus.Cancelled => RoundPhase.Cancelled,
-        RoundStatus.UnderReview => RoundPhase.UnderReview,
+        RoundStatus.UnderReview => PublishedAt is null
+            ? RoundPhase.UnderReview
+            : RoundPhase.ReopenedForCorrection,
         RoundStatus.Published => ConsolidatesAt is { } consolidatesAt && now >= consolidatesAt
             ? RoundPhase.Consolidated
             : RoundPhase.Published,

@@ -17,6 +17,18 @@ public interface IRoundPublicationService
         Guid roundId,
         string version,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Reabre uma rodada publicada para corrigir a súmula. Nada é recalculado agora: a
+    /// apuração vigente continua a que está gravada, e a correção só vale na republicação.
+    /// O motivo é obrigatório depois que a rodada consolidou (01 §9).
+    /// </summary>
+    Task<RoundPublicationResult> ReopenAsync(
+        Guid competitionId,
+        Guid roundId,
+        string version,
+        string? reason,
+        CancellationToken cancellationToken);
 }
 
 public enum RoundPublicationOutcome
@@ -34,7 +46,16 @@ public enum RoundPublicationOutcome
     StatusLocked,
 }
 
-public sealed record RoundPublicationResult(RoundPublicationOutcome Outcome, IReadOnlyList<RoundError> Errors)
+/// <summary>
+/// O que a republicação de uma correção mudou, para a auditoria e para a confirmação da
+/// tela. <see cref="Chained"/> conta as rodadas seguintes que ganharam revisão nova.
+/// </summary>
+public sealed record RoundCorrectionSummary(int Revision, int ChangedEntries, int Chained);
+
+public sealed record RoundPublicationResult(
+    RoundPublicationOutcome Outcome,
+    IReadOnlyList<RoundError> Errors,
+    RoundCorrectionSummary? Correction = null)
 {
     public static RoundPublicationResult Of(RoundPublicationOutcome outcome) => new(outcome, []);
 

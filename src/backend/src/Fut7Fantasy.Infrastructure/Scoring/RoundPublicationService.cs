@@ -76,23 +76,16 @@ public sealed class RoundPublicationService(
             var now = clock.GetUtcNow();
             var closedAt = round.MarketCloseAt!.Value;
             var rules = await RulesAsync(competition, cancellationToken).ConfigureAwait(false);
-            var revision = 1 + (await dbContext.RoundCalculations
-                .Where(item => item.RoundId == round.Id)
-                .MaxAsync(item => (int?)item.Revision, cancellationToken)
-                .ConfigureAwait(false) ?? 0);
+            var catalog = await CatalogAsync(competition, closedAt, cancellationToken).ConfigureAwait(false);
 
-            var calculation = RoundCalculation.Compute(
-                Guid.CreateVersion7(),
-                competition.Id,
-                round.Id,
-                revision,
-                rules,
-                await PerformancesAsync(competition, round, cancellationToken).ConfigureAwait(false),
-                await CatalogAsync(competition, closedAt, cancellationToken).ConfigureAwait(false),
-                await LineupsAsync(round, cancellationToken).ConfigureAwait(false),
-                now,
-                UserId);
-            dbContext.RoundCalculations.Add(calculation);
+            // O motivo declarado na reabertura vai para a revisão que esta publicação
+            // grava; `Round.Publish` encerra a reabertura logo abaixo.
+            var applied = await ApplyAsync(
+                    competition, round, rules, catalog, now, round.CorrectionReason, cancellationToken)
+                .ConfigureAwait(false);
+            var chained = await ChainAsync(
+                    competition, round, rules, catalog, applied.Calculation, now, cancellationToken)
+                .ConfigureAwait(false);
 
             round.Publish(
                 now,
@@ -103,7 +96,7 @@ public sealed class RoundPublicationService(
                 UserId,
                 "CompetitionRoundPublished",
                 round.Id,
-                $"Rodada publicada com a revisão {revision} da apuração.",
+                Explain(applied, chained),
                 now));
 
             try
@@ -117,8 +110,207 @@ public sealed class RoundPublicationService(
                 return RoundPublicationResult.Of(RoundPublicationOutcome.Conflict);
             }
 
+            return new(
+                RoundPublicationOutcome.Completed,
+                [],
+                new(applied.Calculation.Revision, applied.ChangedEntries, chained.Count));
+        }, cancellationToken);
+
+    /// <summary>
+    /// Reabre sob a mesma trava da publicação. Nada é recalculado aqui: a apuração vigente
+    /// continua sendo a última revisão gravada, e quem joga segue lendo os números dela com
+    /// o aviso de correção em andamento. A súmula volta a aceitar edição porque a rodada
+    /// volta para conferência.
+    /// </summary>
+    public Task<RoundPublicationResult> ReopenAsync(
+        Guid competitionId,
+        Guid roundId,
+        string version,
+        string? reason,
+        CancellationToken cancellationToken) =>
+        CompetitionLock.RunAsync(dbContext, competitionId, async () =>
+        {
+            var round = await dbContext.Rounds
+                .SingleOrDefaultAsync(
+                    item => item.CompetitionId == competitionId && item.Id == roundId,
+                    cancellationToken)
+                .ConfigureAwait(false);
+            if (round is null)
+            {
+                return RoundPublicationResult.Of(RoundPublicationOutcome.NotFound);
+            }
+
+            if (!RowVersions.Matches(version, round.RowVersion, out var expectedVersion))
+            {
+                return RoundPublicationResult.Of(RoundPublicationOutcome.Conflict);
+            }
+
+            if (round.Status != RoundStatus.Published)
+            {
+                return RoundPublicationResult.Of(RoundPublicationOutcome.StatusLocked);
+            }
+
+            var now = clock.GetUtcNow();
+            try
+            {
+                round.ReopenForCorrection(now, reason);
+            }
+            catch (InvalidOperationException exception)
+            {
+                dbContext.ChangeTracker.Clear();
+                return RoundPublicationResult.Invalid(new RoundError("Reason", exception.Message));
+            }
+
+            dbContext.Entry(round).Property(item => item.RowVersion).OriginalValue = expectedVersion;
+            dbContext.AdministrativeAuditEntries.Add(AdministrativeAuditEntry.Create(
+                UserId,
+                "CompetitionRoundReopenedForCorrection",
+                round.Id,
+                round.CorrectionReason is { } declared
+                    ? $"Rodada reaberta para correção: {declared}"
+                    : "Rodada reaberta para correção enquanto o resultado ainda era provisório.",
+                now));
+
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateException)
+            {
+                dbContext.ChangeTracker.Clear();
+                return RoundPublicationResult.Of(RoundPublicationOutcome.Conflict);
+            }
+
             return RoundPublicationResult.Of(RoundPublicationOutcome.Completed);
         }, cancellationToken);
+
+    /// <summary>Uma revisão recém-calculada e quantas participações ela mexeu.</summary>
+    private sealed record Applied(RoundCalculation Calculation, int ChangedEntries);
+
+    private static string Explain(Applied applied, IReadOnlyCollection<Applied> chained)
+    {
+        if (applied.Calculation.Revision == 1)
+        {
+            return "Rodada publicada com a revisão 1 da apuração.";
+        }
+
+        var text = $"Rodada republicada com a revisão {applied.Calculation.Revision} da apuração; "
+            + $"{applied.ChangedEntries} participações mudaram de pontuação";
+        return chained.Count == 0
+            ? $"{text}."
+            : $"{text}; {chained.Count} rodadas seguintes recalculadas, "
+                + $"mexendo em {chained.Sum(item => item.ChangedEntries)} participações.";
+    }
+
+    /// <summary>
+    /// Apura a rodada numa revisão nova e conta quantas participações mudaram de total em
+    /// relação à revisão anterior — o que a auditoria registra e a tela resume.
+    /// </summary>
+    private async Task<Applied> ApplyAsync(
+        Competition competition,
+        Round round,
+        ScoringRuleSet rules,
+        IReadOnlyCollection<PricedAsset> catalog,
+        DateTimeOffset now,
+        string? reason,
+        CancellationToken cancellationToken)
+    {
+        var current = await dbContext.RoundCalculations
+            .AsNoTracking()
+            .Where(item => item.RoundId == round.Id)
+            .OrderByDescending(item => item.Revision)
+            .Select(item => new { item.Id, item.Revision })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var calculation = RoundCalculation.Compute(
+            Guid.CreateVersion7(),
+            competition.Id,
+            round.Id,
+            (current?.Revision ?? 0) + 1,
+            rules,
+            await PerformancesAsync(competition, round, cancellationToken).ConfigureAwait(false),
+            catalog,
+            await LineupsAsync(round, cancellationToken).ConfigureAwait(false),
+            now,
+            UserId,
+            reason);
+        dbContext.RoundCalculations.Add(calculation);
+        if (current is null)
+        {
+            return new(calculation, 0);
+        }
+
+        var previous = await dbContext.EntryRoundResults
+            .AsNoTracking()
+            .Where(item => item.CalculationId == current.Id)
+            .ToDictionaryAsync(item => item.EntryId, item => item.Total, cancellationToken)
+            .ConfigureAwait(false);
+        return new(
+            calculation,
+            calculation.Entries.Count(entry =>
+                !previous.TryGetValue(entry.EntryId, out var total) || total != entry.Total));
+    }
+
+    /// <summary>
+    /// A correção de uma rodada move o preço de todo ativo, e cada rodada seguinte partiu do
+    /// preço antigo. Elas ganham revisão nova na ordem em que o mercado fechou, cada uma
+    /// partindo do preço deixado pela anterior, dentro desta mesma transação: ninguém chega
+    /// a ler o campeonato com metade das rodadas recalculada (ADR-003).
+    /// </summary>
+    private async Task<List<Applied>> ChainAsync(
+        Competition competition,
+        Round round,
+        ScoringRuleSet rules,
+        IReadOnlyCollection<PricedAsset> catalog,
+        RoundCalculation previous,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var following = await dbContext.Rounds
+            .AsNoTracking()
+            .Where(item => item.CompetitionId == competition.Id
+                && item.Id != round.Id
+                && item.Status == RoundStatus.Published
+                && item.MarketCloseAt != null
+                && item.MarketCloseAt > round.MarketCloseAt)
+            .OrderBy(item => item.MarketCloseAt)
+            .ThenBy(item => item.Sequence)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        List<Applied> chained = [];
+        foreach (var next in following)
+        {
+            var applied = await ApplyAsync(
+                competition,
+                next,
+                rules,
+                Reprice(catalog, previous),
+                now,
+                $"Recalculada porque a {round.Name} foi corrigida.",
+                cancellationToken).ConfigureAwait(false);
+            chained.Add(applied);
+            previous = applied.Calculation;
+        }
+
+        return chained;
+    }
+
+    /// <summary>O mesmo catálogo com os preços que a apuração anterior deixou.</summary>
+    private static List<PricedAsset> Reprice(
+        IReadOnlyCollection<PricedAsset> catalog,
+        RoundCalculation previous)
+    {
+        var prices = previous.Prices.ToDictionary(
+            change => (change.Kind, change.AssetId), change => change.NewPrice);
+        return
+        [
+            .. catalog.Select(asset => prices.TryGetValue((asset.Kind, asset.AssetId), out var price)
+                ? asset with { Price = price }
+                : asset),
+        ];
+    }
 
     /// <summary>
     /// A conferência refeita na hora (súmulas completas e coerentes) e a ordem das rodadas:
@@ -211,7 +403,7 @@ public sealed class RoundPublicationService(
     }
 
     /// <summary>Todo ativo do campeonato, com o preço que valia antes desta rodada.</summary>
-    private async Task<List<PricedAsset>> CatalogAsync(
+    private async Task<IReadOnlyCollection<PricedAsset>> CatalogAsync(
         Competition competition,
         DateTimeOffset closedAt,
         CancellationToken cancellationToken)

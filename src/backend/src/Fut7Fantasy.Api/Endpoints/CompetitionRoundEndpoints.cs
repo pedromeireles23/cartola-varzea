@@ -49,6 +49,10 @@ public static class CompetitionRoundEndpoints
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("PublishCompetitionRound")
             .WithSummary("Apura e publica a rodada em revisão; repetir o pedido não apura de novo.");
+        rounds.MapPost("/{roundId:guid}/reopen", ReopenAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
+            .WithName("ReopenCompetitionRound")
+            .WithSummary("Reabre a rodada publicada para correção; consolidada exige motivo.");
         rounds.MapPost("/{roundId:guid}/matches", AddMatchAsync)
             .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
             .WithName("AddCompetitionMatch")
@@ -246,6 +250,40 @@ public static class CompetitionRoundEndpoints
         };
     }
 
+    private static async Task<IResult> ReopenAsync(
+        Guid competitionId,
+        Guid roundId,
+        RoundReopenRequest request,
+        IRoundPublicationService publication,
+        ICompetitionRoundService service,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (RequiredVersion(request.Version) is { } missing)
+        {
+            return missing;
+        }
+
+        var result = await publication
+            .ReopenAsync(competitionId, roundId, request.Version!, request.Reason, cancellationToken)
+            .ConfigureAwait(false);
+        return result.Outcome switch
+        {
+            RoundPublicationOutcome.Completed => Results.Ok(
+                await service.ReviewAsync(competitionId, roundId, cancellationToken).ConfigureAwait(false)),
+            RoundPublicationOutcome.NotFound => Results.NotFound(),
+            RoundPublicationOutcome.Invalid => DomainRequests.ValidationProblem(
+                result.Errors.Select(error => new CompetitionSettingsError(error.Field, error.Message)),
+                field => field),
+            RoundPublicationOutcome.StatusLocked => StatusProblem(
+                "Só uma rodada publicada é reaberta para correção. Recarregue para ver a situação."),
+            _ => Results.Problem(
+                title: "Rodada alterada por outra pessoa",
+                detail: "Atualize a página para ver a versão atual antes de reabrir.",
+                statusCode: StatusCodes.Status409Conflict),
+        };
+    }
+
     private static IResult? RequiredVersion(string? version) =>
         string.IsNullOrWhiteSpace(version)
             ? DomainRequests.ValidationProblem(
@@ -284,6 +322,12 @@ public sealed record RoundRequest(string? Name, string? Version);
 
 /// <summary>A versão da rodada lida na conferência.</summary>
 public sealed record RoundPublicationRequest(string? Version);
+
+/// <summary>
+/// Reabertura para correção. <see cref="Reason"/> é obrigatório quando a rodada já
+/// consolidou; dentro da janela ele pode vir vazio, porque o resultado ainda é provisório.
+/// </summary>
+public sealed record RoundReopenRequest(string? Version, string? Reason);
 
 /// <summary>`OpenMarket`, `ReopenForEditing`, `SendToReview` ou `Cancel`.</summary>
 public sealed record RoundStatusRequest(string? Transition, string? Version);

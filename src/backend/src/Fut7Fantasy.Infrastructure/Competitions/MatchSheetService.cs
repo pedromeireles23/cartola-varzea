@@ -42,7 +42,7 @@ public sealed class MatchSheetService(
         var now = clock.GetUtcNow();
         if (context.Match.Status != MatchStatus.Scheduled
             || now < context.Match.KickoffAt
-            || context.Round.PhaseAt(now) is not (RoundPhase.InProgress or RoundPhase.UnderReview))
+            || !RoundPhases.AcceptsSheetChanges(context.Round.PhaseAt(now)))
         {
             return MatchSheetCommandResult.Of(MatchSheetCommandOutcome.StatusLocked);
         }

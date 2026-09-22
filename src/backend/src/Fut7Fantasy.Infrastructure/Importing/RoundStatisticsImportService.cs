@@ -124,7 +124,7 @@ public sealed class RoundStatisticsImportService(
                     issues.Add(new(first.Line, "mandante", $"{label} não é um jogo marcado de {round.Name}."));
                     continue;
                 case [var game]:
-                    if (phase is not (RoundPhase.InProgress or RoundPhase.UnderReview))
+                    if (!RoundPhases.AcceptsSheetChanges(phase))
                     {
                         issues.Add(new(
                             first.Line,

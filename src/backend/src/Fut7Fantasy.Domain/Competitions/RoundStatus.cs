@@ -16,7 +16,10 @@ public enum RoundStatus
     /// <summary>Mercado aberto. Fecha sozinho quando o relógio passa de `MarketCloseAt`.</summary>
     MarketOpen = 2,
 
-    /// <summary>Partidas encerradas, súmulas em revisão antes de publicar.</summary>
+    /// <summary>
+    /// Partidas encerradas, súmulas em conferência. Uma rodada que já foi publicada e
+    /// voltou para cá está em correção; quem separa os dois casos é `PublishedAt`.
+    /// </summary>
     UnderReview = 3,
 
     /// <summary>Resultado publicado; nasce provisório e consolida pelo relógio.</summary>
@@ -40,6 +43,23 @@ public enum RoundPhase
     Published = 6,
     Consolidated = 7,
     Cancelled = 8,
+
+    /// <summary>
+    /// Rodada publicada que voltou para conferência (01 §8, estado excepcional). A
+    /// apuração vigente continua valendo até a republicação trocar tudo de uma vez.
+    /// </summary>
+    ReopenedForCorrection = 9,
+}
+
+/// <summary>O que cada fase da rodada permite, para a regra não ser reescrita em cada caso de uso.</summary>
+public static class RoundPhases
+{
+    /// <summary>
+    /// Súmula aceita escrita enquanto a rodada está em andamento, em conferência ou
+    /// reaberta para correção — a reabertura existe exatamente para corrigir a súmula.
+    /// </summary>
+    public static bool AcceptsSheetChanges(RoundPhase phase) =>
+        phase is RoundPhase.InProgress or RoundPhase.UnderReview or RoundPhase.ReopenedForCorrection;
 }
 
 /// <summary>Transições válidas entre os estados guardados.</summary>
@@ -54,7 +74,8 @@ public static class RoundLifecycle
         [RoundStatus.MarketOpen] = [RoundStatus.Draft, RoundStatus.UnderReview, RoundStatus.Cancelled],
         [RoundStatus.UnderReview] = [RoundStatus.Published],
 
-        // Republicar depois de uma correção passa de novo pela revisão (Fase 10).
+        // Reabrir para correção devolve a rodada à conferência; republicar passa pelo
+        // mesmo caminho da primeira publicação.
         [RoundStatus.Published] = [RoundStatus.UnderReview],
         [RoundStatus.Cancelled] = [],
     };

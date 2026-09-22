@@ -21,6 +21,8 @@ public sealed class RoundCalculationConfiguration : IEntityTypeConfiguration<Rou
         builder.HasKey(calculation => calculation.Id);
         builder.Property(calculation => calculation.Id).ValueGeneratedNever();
         builder.Property(calculation => calculation.Modality).HasConversion<string>().HasMaxLength(16).IsRequired();
+        builder.Property(calculation => calculation.CorrectionReason)
+            .HasMaxLength(Round.CorrectionReasonMaxLength);
 
         builder.HasOne<Competition>().WithMany().HasForeignKey(calculation => calculation.CompetitionId)
             .OnDelete(DeleteBehavior.Restrict);

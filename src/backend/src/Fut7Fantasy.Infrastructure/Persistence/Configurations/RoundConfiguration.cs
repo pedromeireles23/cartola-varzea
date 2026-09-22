@@ -23,7 +23,9 @@ public sealed class RoundConfiguration : IEntityTypeConfiguration<Round>
             .HasMaxLength(RoundDefinition.NameMaxLength).IsRequired();
         builder.Property(round => round.Status).HasConversion<string>().HasMaxLength(24).IsRequired();
         builder.Property(round => round.RowVersion).IsRowVersion();
+        builder.Property(round => round.CorrectionReason).HasMaxLength(Round.CorrectionReasonMaxLength);
         builder.Ignore(round => round.AcceptsMatchChanges);
+        builder.Ignore(round => round.IsUnderCorrection);
 
         builder.HasOne<Competition>().WithMany().HasForeignKey(round => round.CompetitionId)
             .OnDelete(DeleteBehavior.Cascade);

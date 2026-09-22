@@ -715,7 +715,13 @@ public sealed class CompetitionRoundService(
             views,
             pending,
             Convert.ToBase64String(round.RowVersion),
-            await PublicationAsync(competition, round, now, cancellationToken).ConfigureAwait(false));
+            await PublicationAsync(competition, round, now, cancellationToken).ConfigureAwait(false),
+            round.IsUnderCorrection && round.ReopenedAt is { } reopenedAt
+                ? new(
+                    reopenedAt,
+                    CompetitionClock.ToLocalText(reopenedAt, competition.TimeZoneId),
+                    round.CorrectionReason)
+                : null);
     }
 
     /// <summary>Resumo da apuração vigente: a revisão mais alta da rodada publicada.</summary>
@@ -734,7 +740,7 @@ public sealed class CompetitionRoundService(
             .AsNoTracking()
             .Where(item => item.RoundId == round.Id)
             .OrderByDescending(item => item.Revision)
-            .Select(item => new { item.Id, item.Revision, item.ScoringRuleSetVersion })
+            .Select(item => new { item.Id, item.Revision, item.ScoringRuleSetVersion, item.CorrectionReason })
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
         if (calculation is null)
@@ -758,7 +764,8 @@ public sealed class CompetitionRoundService(
             now >= consolidatesAt,
             totals.Count,
             totals.Count == 0 ? null : totals.Max(),
-            totals.Count == 0 ? null : ScoringRuleSet.Round(totals.Average()));
+            totals.Count == 0 ? null : ScoringRuleSet.Round(totals.Average()),
+            calculation.CorrectionReason);
     }
 
     private static IReadOnlyList<MatchSheetError> ValidateSheet(

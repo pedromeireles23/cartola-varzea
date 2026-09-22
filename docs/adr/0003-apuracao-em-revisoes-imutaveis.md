@@ -43,6 +43,12 @@ preços novos. Três forças puxam o desenho:
   cada rodada parte dos preços da anterior.
 7. O campeonato fica na versão de regra de pontuação da primeira rodada publicada.
   Recalibrar a modalidade não muda o jogo de quem já está jogando.
+8. Reabrir uma rodada para correção não recalcula nada. A apuração vigente continua sendo a
+  última revisão gravada, e quem joga segue lendo os números dela com o aviso de correção
+  em andamento. O recálculo acontece na republicação, que gera a revisão nova da rodada
+  corrigida e, na mesma transação, uma revisão nova de cada rodada publicada posterior, na
+  ordem do fechamento do mercado e partindo do preço deixado pela anterior. Não existe
+  instante em que parte do campeonato esteja recalculada e parte não.
 
 ## Consequências
 
@@ -53,6 +59,8 @@ preços novos. Três forças puxam o desenho:
   campeonato de várzea (dezenas de rodadas, centenas de ativos), isso é pequeno; em
   troca, o preço atual é uma consulta a uma única apuração.
 - Recalcular em cadeia depois de uma correção antiga significa gerar revisões novas das
-  rodadas seguintes, cada uma partindo do preço da anterior, sem desfazer nada.
+  rodadas seguintes, cada uma partindo do preço da anterior, sem desfazer nada. Como as
+  revisões da cadeia ainda não estão gravadas quando a seguinte é calculada, os preços
+  passam de uma para a outra em memória, e não por consulta ao banco.
 - Publicar fora de ordem não é possível. Se uma rodada ficar travada sem súmula, o
   organizador precisa resolvê-la ou cancelá-la antes de publicar as seguintes.

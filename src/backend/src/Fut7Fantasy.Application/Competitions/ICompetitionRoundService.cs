@@ -151,7 +151,18 @@ public sealed record RoundReviewView(
     IReadOnlyList<RoundReviewMatchView> Matches,
     IReadOnlyList<RoundReviewPendingView> Pending,
     string Version,
-    RoundPublicationView? Publication);
+    RoundPublicationView? Publication,
+    RoundCorrectionView? Correction);
+
+/// <summary>
+/// A reabertura em andamento, nula quando a rodada não está em correção. Enquanto ela
+/// existe, <see cref="RoundReviewView.Publication"/> continua descrevendo a apuração que
+/// vale para quem joga: a correção só troca os números quando o organizador republicar.
+/// </summary>
+public sealed record RoundCorrectionView(
+    DateTimeOffset ReopenedAt,
+    string ReopenedAtLocal,
+    string? Reason);
 
 /// <summary>
 /// A apuração vigente da rodada. Até <see cref="ConsolidatesAt"/> o resultado é provisório;
@@ -168,7 +179,8 @@ public sealed record RoundPublicationView(
     bool Consolidated,
     int Entries,
     decimal? HighestTotal,
-    decimal? AverageTotal);
+    decimal? AverageTotal,
+    string? CorrectionReason);
 
 public sealed record RoundReviewMatchView(
     Guid MatchId,

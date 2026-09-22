@@ -42,6 +42,13 @@ public sealed class RoundCalculation
     /// <summary>1 na primeira publicação; cada correção republicada soma um.</summary>
     public int Revision { get; private set; }
 
+    /// <summary>
+    /// Por que esta revisão existe: o motivo da reabertura, ou a frase que aponta a rodada
+    /// corrigida quando esta foi recalculada em cadeia. Nula na primeira publicação e nas
+    /// correções feitas enquanto a rodada ainda era provisória sem motivo declarado.
+    /// </summary>
+    public string? CorrectionReason { get; private set; }
+
     public Modality Modality { get; private set; }
 
     /// <summary>Versão do <see cref="ScoringRuleSet"/> usada, para reproduzir a conta depois.</summary>
@@ -75,7 +82,8 @@ public sealed class RoundCalculation
         IReadOnlyCollection<PricedAsset> catalog,
         IEnumerable<EntryLineup> lineups,
         DateTimeOffset calculatedAt,
-        Guid calculatedBy)
+        Guid calculatedBy,
+        string? correctionReason = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(performances);
@@ -98,6 +106,7 @@ public sealed class RoundCalculation
             ScoringRuleSetVersion = rules.Version,
             CalculatedAt = calculatedAt,
             CalculatedBy = calculatedBy,
+            CorrectionReason = string.IsNullOrWhiteSpace(correctionReason) ? null : correctionReason.Trim(),
         };
 
         var athletes = AthleteScoring.Score(rules, performances);
