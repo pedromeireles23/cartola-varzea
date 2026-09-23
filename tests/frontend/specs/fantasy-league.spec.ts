@@ -195,7 +195,7 @@ async function classificacao(pagina: Page): Promise<LinhaDoRanking[]> {
             .replace(/[^\d,-]/g, '')
             .replace(',', '.'),
         ),
-        empatado: texto('.linha__detalhe').includes('empatado'),
+        empatado: linha.querySelector('.linha__empate') !== null,
       };
     }),
   );

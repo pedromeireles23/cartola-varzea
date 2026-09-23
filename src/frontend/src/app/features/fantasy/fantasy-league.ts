@@ -14,9 +14,18 @@ import { Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Dialog, Loading } from '../../shared/ui';
-import { credits, points } from './fantasy-format';
+import {
+  Alert,
+  BackLink,
+  Button,
+  Card,
+  Dialog,
+  Loading,
+  PageHeader,
+  StandingsTable,
+} from '../../shared/ui';
 import { League, LeagueMember, LeagueService } from './league.service';
+import { StandingsTabs } from './standings-tabs';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -48,17 +57,29 @@ type Confirmacao =
 @Component({
   selector: 'app-fantasy-league',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Dialog, Loading, RouterLink],
+  imports: [
+    Alert,
+    BackLink,
+    Button,
+    Card,
+    Dialog,
+    Loading,
+    PageHeader,
+    RouterLink,
+    StandingsTable,
+    StandingsTabs,
+  ],
   template: `
-    <p class="intro"><a [routerLink]="['/c', campeonato(), 'ligas']">← Minhas ligas</a></p>
+    <app-back-link [link]="['/c', campeonato(), 'ligas']" label="Minhas ligas" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <app-card><app-loading label="Abrindo a liga…" /></app-card>
+        <app-page-header heading="Liga" />
+        <section class="painel-simples"><app-loading label="Abrindo a liga…" /></section>
       }
       @case ('erro') {
-        <h1>Liga</h1>
-        <app-card>
+        <app-page-header heading="Liga" />
+        <section class="painel-simples">
           @if (falha()!.status === 404) {
             <app-alert tone="warning">
               Não encontramos esta liga. Ela pode ter sido apagada, ou você pode ter saído dela.
@@ -68,14 +89,14 @@ type Confirmacao =
             <app-alert tone="danger">{{ falha()!.message }}</app-alert>
             <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
           }
-        </app-card>
+        </section>
       }
       @case ('pronto') {
-        <h1>{{ liga()!.name }}</h1>
-        <p class="apoio">
-          {{ participantes() }} · {{ liga()!.competitionName }} ·
-          <a [routerLink]="['/c', liga()!.competitionSlug, 'ranking']">ver o ranking geral</a>
-        </p>
+        <app-page-header
+          [heading]="liga()!.name"
+          [subtitle]="participantes() + ' · ' + liga()!.competitionName"
+        />
+        <app-standings-tabs [campeonato]="campeonato()" atual="liga" />
 
         @if (aviso(); as mensagem) {
           <div #avisoRef tabindex="-1" class="aviso">
@@ -86,143 +107,122 @@ type Confirmacao =
           <app-alert tone="danger">{{ mensagem }}</app-alert>
         }
 
-        @if (liga()!.isOwner) {
-          <app-card heading="Convite">
-            @if (liga()!.inviteCode; as codigo) {
-              <p class="apoio">
-                Quem tem este código entra na liga. Ele continua valendo, então dá para reenviar ao
-                grupo semanas depois.
-              </p>
-              <div class="convite">
-                <p class="convite__codigo" [class.convite__codigo--copiado]="copiado()">
-                  <span class="sr-only">Código do convite:</span>
-                  <span class="convite__valor">{{ agrupado(codigo) }}</span>
-                </p>
-                <app-button variant="secondary" (pressed)="copiar(codigo)">
-                  {{ copiado() ? 'Copiado' : 'Copiar código' }}
-                </app-button>
-              </div>
-              <p class="sr-only" role="status" aria-live="polite">
-                {{ copiado() ? 'Código copiado.' : '' }}
-              </p>
-              @if (copiaManual()) {
-                <p class="apoio">
-                  Seu navegador não deixou copiar sozinho: selecione o código acima e copie.
-                </p>
-              }
-              @if (liga()!.inviteExpiresAtLocal; as prazo) {
-                <p class="apoio">Este código vale até {{ prazo }}.</p>
-              }
-              <div class="acoes-da-tela">
-                <app-button variant="ghost" (pressed)="confirmar({ tipo: 'trocar' })">
-                  Trocar o código
-                </app-button>
-                <app-button variant="ghost" (pressed)="confirmar({ tipo: 'fechar' })">
-                  Fechar para novas entradas
-                </app-button>
-              </div>
-            } @else {
+        <div class="liga-grade">
+          <section class="liga-grade__principal" aria-labelledby="classificacao-liga">
+            <h2 id="classificacao-liga" class="sr-only">Classificação da liga</h2>
+            @if (liga()!.rounds === 0) {
               <app-alert tone="info">
-                A liga está fechada para novas entradas. Quem já está dentro continua disputando.
+                Nenhuma rodada foi apurada ainda. A classificação começa a se mexer quando o
+                primeiro resultado sair.
               </app-alert>
-              <app-button variant="secondary" [loading]="agindo()" (pressed)="trocar(false)">
-                Gerar um código novo
+            } @else if (liga()!.provisional) {
+              <app-alert tone="warning">
+                {{ liga()!.lastRoundName }} ainda é provisória: a classificação pode mudar se a liga
+                corrigir a súmula.
+              </app-alert>
+            } @else {
+              <p class="apoio">
+                {{ liga()!.rounds }}
+                {{ liga()!.rounds === 1 ? 'rodada apurada' : 'rodadas apuradas' }}, até
+                {{ liga()!.lastRoundName }}.
+              </p>
+            }
+
+            <app-standings-table
+              [linhas]="liga()!.members"
+              [rodadas]="liga()!.rounds"
+              [legenda]="'Classificação da liga ' + liga()!.name"
+              [acao]="gerenciando() ? remover : null"
+            />
+
+            @if (liga()!.isOwner && liga()!.members.length > 1) {
+              <app-button
+                variant="ghost"
+                [expanded]="gerenciando()"
+                (pressed)="gerenciando.set(!gerenciando())"
+              >
+                {{ gerenciando() ? 'Concluir' : 'Gerenciar participantes' }}
               </app-button>
             }
-          </app-card>
-        }
+          </section>
 
-        <app-card heading="Classificação">
-          @if (liga()!.rounds === 0) {
-            <app-alert tone="info">
-              Nenhuma rodada foi apurada ainda. A classificação começa a se mexer quando o primeiro
-              resultado sair.
-            </app-alert>
-          } @else if (liga()!.provisional) {
-            <app-alert tone="warning">
-              {{ liga()!.lastRoundName }} ainda é provisória: a classificação pode mudar se a liga
-              corrigir a súmula.
-            </app-alert>
-          } @else {
-            <p class="apoio">
-              {{ liga()!.rounds }}
-              {{ liga()!.rounds === 1 ? 'rodada apurada' : 'rodadas apuradas' }}, até
-              {{ liga()!.lastRoundName }}.
-            </p>
-          }
+          <div class="liga-grade__lado">
+            @if (liga()!.isOwner) {
+              <app-card heading="Convite">
+                @if (liga()!.inviteCode; as codigo) {
+                  <p class="apoio">
+                    Quem tem este código entra na liga. Ele continua valendo, então dá para reenviar
+                    ao grupo semanas depois.
+                  </p>
+                  <div class="convite">
+                    <p class="convite__codigo" [class.convite__codigo--copiado]="copiado()">
+                      <span class="sr-only">Código do convite:</span>
+                      <span class="convite__valor">{{ agrupado(codigo) }}</span>
+                    </p>
+                    <app-button variant="secondary" (pressed)="copiar(codigo)">
+                      {{ copiado() ? 'Copiado' : 'Copiar código' }}
+                    </app-button>
+                  </div>
+                  <p class="sr-only" role="status" aria-live="polite">
+                    {{ copiado() ? 'Código copiado.' : '' }}
+                  </p>
+                  @if (copiaManual()) {
+                    <p class="apoio">
+                      Seu navegador não deixou copiar sozinho: selecione o código acima e copie.
+                    </p>
+                  }
+                  @if (liga()!.inviteExpiresAtLocal; as prazo) {
+                    <p class="apoio">Este código vale até {{ prazo }}.</p>
+                  }
+                  <div class="acoes-da-tela">
+                    <app-button variant="ghost" (pressed)="confirmar({ tipo: 'trocar' })">
+                      Trocar o código
+                    </app-button>
+                    <app-button variant="ghost" (pressed)="confirmar({ tipo: 'fechar' })">
+                      Fechar para novas entradas
+                    </app-button>
+                  </div>
+                } @else {
+                  <app-alert tone="info">
+                    A liga está fechada para novas entradas. Quem já está dentro continua
+                    disputando.
+                  </app-alert>
+                  <app-button variant="secondary" [loading]="agindo()" (pressed)="trocar(false)">
+                    Gerar um código novo
+                  </app-button>
+                }
+              </app-card>
 
-          <ol class="classificacao">
-            @for (membro of liga()!.members; track membro.displayName + '-' + membro.position) {
-              <li class="linha" [class.linha--voce]="membro.isViewer" [style.--indice]="$index">
-                <span class="linha__posicao" [attr.aria-label]="colocacao(membro.position)">
-                  {{ membro.position }}º
-                </span>
-                <span class="linha__nome">
-                  {{ membro.displayName }}
-                  @if (membro.isOwner) {
-                    <app-badge>Dono</app-badge>
-                  }
-                  @if (membro.isViewer) {
-                    <app-badge tone="brand">Você</app-badge>
-                  }
-                  <span class="linha__detalhe">
-                    <span>
-                      {{ patrimonio(membro.netWorth) }}
-                      @if (liga()!.rounds > 0) {
-                        @if (membro.lastRoundPoints !== null) {
-                          · {{ pontos(membro.lastRoundPoints) }} na última
-                        } @else {
-                          · não jogou a última
-                        }
-                      }
-                      @if (membro.tied) {
-                        · empatado
-                      }
-                    </span>
-                    @if (gerenciando() && podeRemover(membro)) {
-                      <button class="linha__acao" type="button" (click)="pedirRemocao(membro)">
-                        Remover<span class="sr-only"> {{ membro.displayName }} da liga</span>
-                      </button>
-                    }
-                  </span>
-                </span>
-                <strong class="linha__pontos">{{ pontos(membro.totalPoints) }}</strong>
-              </li>
+              <app-card heading="Apagar a liga">
+                <p class="apoio">
+                  Quem criou a liga não sai dela: apaga. Ninguém perde pontos e a classificação do
+                  campeonato continua igual — só a liga deixa de existir para todo mundo.
+                </p>
+                <app-button variant="danger" (pressed)="confirmar({ tipo: 'apagar' })">
+                  Apagar esta liga
+                </app-button>
+              </app-card>
+            } @else {
+              <app-card heading="Sair da liga">
+                <p class="apoio">
+                  Você sai da classificação desta liga e continua jogando o campeonato normalmente.
+                  Para voltar, vai precisar do código de convite de novo.
+                </p>
+                <app-button variant="secondary" (pressed)="confirmar({ tipo: 'sair' })">
+                  Sair desta liga
+                </app-button>
+              </app-card>
             }
-          </ol>
+          </div>
+        </div>
 
-          @if (liga()!.isOwner && liga()!.members.length > 1) {
-            <app-button
-              variant="ghost"
-              [expanded]="gerenciando()"
-              (pressed)="gerenciando.set(!gerenciando())"
-            >
-              {{ gerenciando() ? 'Concluir' : 'Gerenciar participantes' }}
-            </app-button>
+        <ng-template #remover let-membro>
+          @if (podeRemover(membro)) {
+            <button class="linha__acao" type="button" (click)="pedirRemocao(membro)">
+              Remover<span class="sr-only"> {{ membro.displayName }} da liga</span>
+            </button>
           }
-        </app-card>
-
-        @if (liga()!.isOwner) {
-          <app-card heading="Apagar a liga">
-            <p class="apoio">
-              Quem criou a liga não sai dela: apaga. Ninguém perde pontos e a classificação do
-              campeonato continua igual — só a liga deixa de existir para todo mundo.
-            </p>
-            <app-button variant="danger" (pressed)="confirmar({ tipo: 'apagar' })">
-              Apagar esta liga
-            </app-button>
-          </app-card>
-        } @else {
-          <app-card heading="Sair da liga">
-            <p class="apoio">
-              Você sai da classificação desta liga e continua jogando o campeonato normalmente. Para
-              voltar, vai precisar do código de convite de novo.
-            </p>
-            <app-button variant="secondary" (pressed)="confirmar({ tipo: 'sair' })">
-              Sair desta liga
-            </app-button>
-          </app-card>
-        }
+        </ng-template>
 
         <app-dialog
           [open]="confirmacao() !== null"
@@ -275,7 +275,7 @@ type Confirmacao =
       }
     }
   `,
-  styleUrls: ['./fantasy.scss', '../../shared/ui/leaderboard.scss', './leagues.scss'],
+  styleUrls: ['./fantasy.scss', './leagues.scss'],
 })
 export class FantasyLeaguePage implements OnInit {
   private readonly service = inject(LeagueService);
@@ -327,19 +327,6 @@ export class FantasyLeaguePage implements OnInit {
   protected participantes(): string {
     const total = this.liga()?.members.length ?? 0;
     return total === 1 ? '1 participante' : `${total} participantes`;
-  }
-
-  /** "3º" sai como "terceiro lugar" no leitor de tela, que não lê o º sozinho. */
-  protected colocacao(posicao: number): string {
-    return `${posicao}º lugar`;
-  }
-
-  protected pontos(valor: number): string {
-    return points(valor);
-  }
-
-  protected patrimonio(valor: number): string {
-    return credits(valor);
   }
 
   /** Dez caracteres seguidos são difíceis de ditar; em dois blocos de cinco, não. */

@@ -11,10 +11,11 @@ import {
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
-import { ChevronRight } from 'lucide';
+import { ChevronRight, Users } from 'lucide';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Button, Card, FormField, Icon, Loading } from '../../shared/ui';
+import { Alert, Button, Card, FormField, Icon, Loading, PageHeader } from '../../shared/ui';
+import { CurrentCompetition } from '../participant/current-competition';
 import {
   LEAGUE_CODE_LENGTH,
   LEAGUE_LIMIT_CODE,
@@ -23,6 +24,7 @@ import {
   LeagueService,
   LeagueSummary,
 } from './league.service';
+import { StandingsTabs } from './standings-tabs';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -42,18 +44,17 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
 @Component({
   selector: 'app-fantasy-leagues',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, FormField, Icon, Loading, RouterLink],
+  imports: [Alert, Button, Card, FormField, Icon, Loading, PageHeader, RouterLink, StandingsTabs],
   template: `
-    <p class="intro"><a [routerLink]="['/c', campeonato()]">← Página do campeonato</a></p>
-
-    <h1>Ligas</h1>
+    <app-page-header heading="Classificação" [subtitle]="nomeDoCampeonato()" />
+    <app-standings-tabs [campeonato]="campeonato()" atual="ligas" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <app-card><app-loading label="Abrindo as suas ligas…" /></app-card>
+        <section class="painel-simples"><app-loading label="Abrindo as suas ligas…" /></section>
       }
       @case ('erro') {
-        <app-card>
+        <section class="painel-simples">
           @if (falha()!.status === 404) {
             <app-alert tone="warning">
               Não encontramos este campeonato. Ele pode ter saído do ar ou o endereço estar errado.
@@ -63,59 +64,31 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
             <app-alert tone="danger">{{ falha()!.message }}</app-alert>
             <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
           }
-        </app-card>
+        </section>
       }
       @case ('pronto') {
-        <p class="apoio">
-          Uma liga privada é um recorte do ranking entre pessoas que você conhece. A pontuação é a
-          mesma do campeonato: ninguém joga com regra diferente por estar numa liga.
-        </p>
-
-        @if (ligas().length === 0) {
-          <app-card heading="Você ainda não está em nenhuma liga">
-            <p>
-              Crie a sua e compartilhe o código com o grupo, ou entre na liga de alguém com o código
-              que você recebeu.
-            </p>
-          </app-card>
-        } @else {
-          <ul class="cartoes-link">
-            @for (liga of ligas(); track liga.id) {
-              <li class="cartao-link" [style.--indice]="$index">
-                <h2 class="cartao-link__titulo">
-                  <a [routerLink]="['/c', campeonato(), 'ligas', liga.id]">{{ liga.name }}</a>
-                </h2>
-                <p class="cartao-link__detalhe">
-                  {{ participantes(liga.members) }}
-                  @if (liga.position !== null) {
-                    · você está em {{ liga.position }}º
-                  }
-                  @if (liga.isOwner) {
-                    · liga criada por você
-                  }
-                </p>
-                <svg class="cartao-link__seta" [appIcon]="seta" />
-              </li>
-            }
-          </ul>
-        }
-
-        <div class="acoes-da-tela">
-          <app-button
-            [expanded]="painel() === 'criar'"
-            controls="painel-liga"
-            (pressed)="abrir('criar')"
-          >
-            Criar uma liga
-          </app-button>
-          <app-button
-            variant="secondary"
-            [expanded]="painel() === 'entrar'"
-            controls="painel-liga"
-            (pressed)="abrir('entrar')"
-          >
-            Entrar com um código
-          </app-button>
+        <div class="ligas-topo">
+          <p class="apoio">
+            Uma liga privada é um recorte do ranking entre pessoas que você conhece. A pontuação é a
+            mesma do campeonato: ninguém joga com regra diferente por estar numa liga.
+          </p>
+          <div class="acoes-da-tela">
+            <app-button
+              [expanded]="painel() === 'criar'"
+              controls="painel-liga"
+              (pressed)="abrir('criar')"
+            >
+              Criar uma liga
+            </app-button>
+            <app-button
+              variant="secondary"
+              [expanded]="painel() === 'entrar'"
+              controls="painel-liga"
+              (pressed)="abrir('entrar')"
+            >
+              Entrar com um código
+            </app-button>
+          </div>
         </div>
 
         @if (painel() !== 'nenhum') {
@@ -165,14 +138,52 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
             }
           </div>
         }
+
+        @if (ligas().length === 0) {
+          <section class="painel-simples" aria-labelledby="sem-ligas">
+            <h2 id="sem-ligas" class="painel-simples__titulo">
+              Você ainda não está em nenhuma liga
+            </h2>
+            <p class="apoio">
+              Crie a sua e compartilhe o código com o grupo, ou entre na liga de alguém com o código
+              que você recebeu.
+            </p>
+          </section>
+        } @else {
+          <ul class="ligas" aria-label="Suas ligas">
+            @for (liga of ligas(); track liga.id) {
+              <li>
+                <a class="liga" [routerLink]="['/c', campeonato(), 'ligas', liga.id]">
+                  <span class="liga__icone" aria-hidden="true"
+                    ><svg [appIcon]="icons.grupo"
+                  /></span>
+                  <span class="liga__texto">
+                    <span class="liga__nome">{{ liga.name }}</span>
+                    <span class="liga__meta">
+                      {{ participantes(liga.members) }}
+                      @if (liga.position !== null) {
+                        · você está em {{ liga.position }}º
+                      }
+                      @if (liga.isOwner) {
+                        · liga criada por você
+                      }
+                    </span>
+                  </span>
+                  <svg class="liga__seta" [appIcon]="icons.seta" />
+                </a>
+              </li>
+            }
+          </ul>
+        }
       }
     }
   `,
-  styleUrls: ['./fantasy.scss', '../../shared/ui/link-card.scss', './leagues.scss'],
+  styleUrls: ['./fantasy.scss', './leagues.scss'],
 })
 export class FantasyLeaguesPage implements OnInit {
-  protected readonly seta = ChevronRight;
+  protected readonly icons = { seta: ChevronRight, grupo: Users } as const;
   private readonly service = inject(LeagueService);
+  private readonly competicoes = inject(CurrentCompetition);
   private readonly router = inject(Router);
   private readonly title = inject(Title);
 
@@ -192,6 +203,13 @@ export class FantasyLeaguesPage implements OnInit {
   protected readonly erroNome = signal<string | null>(null);
   protected readonly erroCodigo = signal<string | null>(null);
   protected readonly erroEnvio = signal<string | null>(null);
+
+  /** O nome vem da lista de campeonatos da conta; a lista de ligas não o traz. */
+  protected readonly nomeDoCampeonato = computed(
+    () =>
+      this.competicoes.mine().find((item) => item.slug === this.campeonato())?.competitionName ??
+      null,
+  );
 
   protected readonly ligas = computed(() => {
     const atual = this.estado();

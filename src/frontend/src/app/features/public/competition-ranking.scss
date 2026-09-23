@@ -1,0 +1,57 @@
+@use '../../../styles/actions';
+
+// A tabela precisa de largura: a página ocupa a coluna inteira, como o início.
+:host {
+  max-width: none;
+}
+
+// A posição de quem lê, antes da tabela: três números lado a lado, divididos por fios.
+.resumo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  background-color: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.resumo__item {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+}
+
+.resumo__rotulo {
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+  font-weight: 500;
+}
+
+.resumo__valor {
+  font-size: var(--font-h2);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.resumo__apoio {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+  font-weight: 400;
+}
+
+.painel {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.acao {
+  @include actions.primary;
+}

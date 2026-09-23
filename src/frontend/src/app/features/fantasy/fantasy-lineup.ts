@@ -41,6 +41,7 @@ import {
 } from './lineup-model';
 import { LineupPicker } from './lineup-picker';
 import { MarketClock } from './market-clock';
+import { SquadMetrics } from './squad-metrics';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -87,6 +88,7 @@ function lerModo(): LineupView {
     MarketClock,
     PageHeader,
     RouterLink,
+    SquadMetrics,
   ],
   templateUrl: './fantasy-lineup.html',
   styleUrls: ['./fantasy.scss', './fantasy-lineup.scss'],
@@ -172,17 +174,6 @@ export class FantasyLineupPage implements OnInit {
       ? `${visao.competitionName} · ${visao.market.roundName}`
       : visao.competitionName;
   });
-
-  protected readonly escolhidos = computed(() => this.visao()?.entry?.slots.length ?? 0);
-
-  protected readonly vagas = computed(() => {
-    const perfil = this.visao()?.profile;
-    return perfil ? perfil.squadAthletes + 1 : 0;
-  });
-
-  protected readonly progresso = computed(() =>
-    this.vagas() === 0 ? 0 : Math.round((this.escolhidos() / this.vagas()) * 100),
-  );
 
   protected readonly capitao = computed(
     () => this.visao()?.entry?.slots.find((slot) => slot.isCaptain)?.name ?? null,

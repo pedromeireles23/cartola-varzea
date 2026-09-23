@@ -53,7 +53,11 @@ test('participante entra pela página pública, compra e vende no mercado aberto
   await expect(jogador.getByRole('heading', { name: 'União da Vila', level: 2 })).toBeVisible();
   await expect(jogador.getByRole('heading', { name: 'Estrela do Bairro', level: 2 })).toBeVisible();
 
-  await jogador.getByLabel('Posição').selectOption({ label: 'Goleiro' });
+  // A posição é um toque: um grupo de botões, e não um menu.
+  await jogador
+    .getByRole('group', { name: 'Posição' })
+    .getByRole('button', { name: 'Goleiro', exact: true })
+    .click();
   await expect(jogador.getByText('2 opções em 2 times')).toBeVisible();
 
   await jogador.getByRole('button', { name: 'Comprar Atleta 1', exact: true }).click();

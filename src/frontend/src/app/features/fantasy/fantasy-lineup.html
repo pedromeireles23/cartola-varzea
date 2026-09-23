@@ -55,40 +55,7 @@
       }
 
       @if (editavel()) {
-        <section class="metricas" aria-label="Seu elenco">
-          <div class="metrica metrica--elenco">
-            <p class="metrica__rotulo">Elenco</p>
-            <p class="metrica__valor num">{{ escolhidos() }} de {{ vagas() }}</p>
-            <div
-              class="metrica__barra"
-              role="progressbar"
-              aria-label="Elenco montado"
-              aria-valuemin="0"
-              [attr.aria-valuemax]="vagas()"
-              [attr.aria-valuenow]="escolhidos()"
-              [attr.aria-valuetext]="escolhidos() + ' de ' + vagas() + ' vagas'"
-            >
-              <span [style.width.%]="progresso()"></span>
-            </div>
-          </div>
-          <div class="metrica">
-            <p class="metrica__rotulo">Saldo</p>
-            <p class="metrica__valor num">{{ creditos(entrada.balance) }}</p>
-          </div>
-          <div class="metrica">
-            <p class="metrica__rotulo">Capitão</p>
-            <p class="metrica__valor" [class.metrica__valor--pendente]="!capitao()">
-              {{ capitao() ?? 'Pendente' }}
-            </p>
-          </div>
-          <div class="metrica metrica--limite">
-            <p class="metrica__rotulo">Por time</p>
-            <p class="metrica__valor">
-              até {{ visao()!.teamLimit.maxAthletes }}
-              <span class="metrica__apoio">({{ visao()!.teamLimit.maxStarters }} titulares)</span>
-            </p>
-          </div>
-        </section>
+        <app-squad-metrics [visao]="visao()!" />
       } @else if (fechada(); as rodada) {
         @switch (rodada.status) {
           @case ('Frozen') {

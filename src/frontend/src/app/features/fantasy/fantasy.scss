@@ -6,7 +6,6 @@
   flex-direction: column;
   gap: var(--space-4);
   max-width: 1040px;
-  margin-inline: auto;
 }
 
 h1 {
@@ -35,6 +34,21 @@ h1 {
 
 .acao--secundaria {
   @include actions.secondary;
+}
+
+// Painel funcional das telas do jogo: borda, sem sombra (06 §9).
+.painel-simples {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.painel-simples__titulo {
+  font-size: var(--font-h2);
 }
 
 .acoes-da-tela {
@@ -86,126 +100,6 @@ dd {
 .pendencias ul {
   margin: 0;
   padding-left: var(--space-5);
-}
-
-// Resumo do elenco que acompanha a rolagem do mercado: saldo e limites sempre à vista.
-.resumo {
-  position: sticky;
-  top: var(--space-2);
-  z-index: 5;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-@media (min-width: 640px) {
-  .resumo {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.resumo__item {
-  display: grid;
-  margin: 0;
-}
-
-.resumo__rotulo {
-  color: var(--color-ink-500);
-  font-size: var(--font-caption);
-}
-
-.filtros {
-  display: grid;
-  gap: var(--space-3);
-}
-
-@media (min-width: 640px) {
-  .filtros {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.grupo {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.grupo__topo {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-}
-
-.grupo__topo .apoio {
-  margin-top: var(--space-1);
-}
-
-.grupo__nome {
-  margin: 0;
-  font-size: var(--font-h3);
-}
-
-.escudo {
-  display: grid;
-  flex-shrink: 0;
-  width: 3rem;
-  aspect-ratio: 1;
-  place-items: center;
-  color: var(--color-ink-700);
-  font-weight: 600;
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: 50% 50% 45% 45%;
-}
-
-.itens {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.item {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
-  align-items: center;
-  justify-content: space-between;
-  padding-block: var(--space-3);
-  border-top: 1px solid var(--color-border);
-}
-
-.item__dados {
-  display: grid;
-  flex: 1 1 12rem;
-  gap: var(--space-1);
-  justify-items: start;
-}
-
-.item__nome {
-  margin: 0;
-  font-weight: 600;
-}
-
-.item__detalhe {
-  margin: 0;
-  color: var(--color-ink-700);
-  font-size: var(--font-small);
-}
-
-.item__motivo {
-  margin: 0;
-  color: var(--color-warning);
-  font-size: var(--font-small);
-}
-
-.item--indisponivel .item__nome,
-.item--indisponivel .item__detalhe {
-  color: var(--color-ink-500);
 }
 
 .rodadas {

@@ -1,6 +1,105 @@
 // Estilos das telas de liga privada: a lista, a liga aberta e o convite.
 
-// O painel nasce logo abaixo dos dois botoes que o abrem, entao ele desce de la.
+.ligas-topo {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .ligas-topo {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+// As ligas numa superfície só, uma linha por liga, como os campeonatos do início.
+.ligas {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.ligas li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.liga {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-ink-950);
+  text-decoration: none;
+}
+
+.liga:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.liga:hover .liga__nome {
+  text-decoration: underline;
+}
+
+.liga__icone {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-ink-500);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius-round);
+}
+
+.liga__texto {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.liga__nome {
+  font-weight: 500;
+}
+
+.liga__meta {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+.liga__seta {
+  color: var(--color-ink-500);
+}
+
+// A liga aberta: a classificação ocupa a coluna principal; convite e saída ficam ao lado.
+.liga-grade {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.liga-grade__principal,
+.liga-grade__lado {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.liga-grade__principal > app-button {
+  justify-self: start;
+}
+
+@media (min-width: 1024px) {
+  .liga-grade {
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  }
+}
+
+// O painel nasce logo abaixo dos dois botões que o abrem, então ele desce de lá.
 .painel {
   animation: painel-entra var(--motion-panel) var(--motion-easing) backwards;
 }
@@ -19,82 +118,63 @@
   align-items: center;
 }
 
-// O alfabeto do codigo ja exclui os caracteres que se confundem (sem O, 0, I, 1, L e
-// U), entao a fonte da interface basta; o espacamento e que faz a leitura caractere a
+// O alfabeto do código já exclui os caracteres que se confundem (sem O, 0, I, 1, L e
+// U), então a fonte da interface basta; o espaçamento é que faz a leitura caractere a
 // caractere.
 .convite__codigo {
   margin: 0;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   font-size: var(--font-h3);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.12em;
   white-space: nowrap;
-  background-color: var(--color-canvas);
-  border: 1px dashed var(--color-border);
+  background-color: var(--color-surface-alt);
+  border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-md);
   transition:
     background-color var(--motion-feedback) var(--motion-easing),
     border-color var(--motion-feedback) var(--motion-easing);
 }
 
-// `user-select: all` fica no valor, e nao no paragrafo: o rotulo ao lado existe para o
-// leitor de tela, e quem seleciona o codigo a mao nao pode leva-lo junto na copia.
+// `user-select: all` fica no valor, e não no parágrafo: o rótulo ao lado existe para o
+// leitor de tela, e quem seleciona o código à mão não pode levá-lo junto na cópia.
 .convite__valor {
   user-select: all;
 }
 
-// Confirmacao de que a copia saiu: a mesma cor de destaque da marca, por um instante.
+// Confirmação de que a cópia saiu: a cor de seleção da marca, por um instante.
 .convite__codigo--copiado {
   background-color: var(--color-brand-50);
   border-style: solid;
   border-color: var(--color-brand-500);
 }
 
-// Em modo de gestao a linha ganha uma acao; fora dele a classificacao fica so leitura.
-.linha__detalhe {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
-  align-items: center;
-  justify-content: space-between;
-}
-
+// Em modo de gestão a linha ganha uma ação; fora dele a classificação fica só leitura.
 .linha__acao {
-  min-height: 44px;
-  padding-inline: var(--space-4);
+  min-height: var(--touch-target);
+  padding-inline: var(--space-3);
   color: var(--color-ink-700);
   font-family: var(--font-body);
   font-size: var(--font-small);
   font-weight: 500;
   cursor: pointer;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
   transition:
     color var(--motion-feedback) var(--motion-easing),
-    border-color var(--motion-feedback) var(--motion-easing),
-    background-color var(--motion-feedback) var(--motion-easing);
-  animation: acao-entra var(--motion-feedback) var(--motion-easing) backwards;
+    border-color var(--motion-feedback) var(--motion-easing);
 }
 
 .linha__acao:hover {
   color: var(--color-danger);
-  background-color: var(--color-surface);
   border-color: var(--color-danger);
-}
-
-@keyframes acao-entra {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
 }
 
 // Sem movimento: tudo aparece no lugar, sem atraso nem deslocamento (02 §11).
 @media (prefers-reduced-motion: reduce) {
-  .painel,
-  .linha__acao {
+  .painel {
     animation: none;
   }
 }

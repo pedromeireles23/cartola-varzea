@@ -1,0 +1,199 @@
+@switch (estado().tipo) {
+  @case ('carregando') {
+    <app-page-header heading="Mercado" />
+    <section class="painel-simples"><app-loading label="Abrindo o mercado…" /></section>
+  }
+  @case ('erro') {
+    <app-page-header heading="Mercado" />
+    <section class="painel-simples">
+      @if (falha()!.status === 404) {
+        <app-alert tone="warning">
+          Não encontramos este campeonato. Ele pode ter saído do ar ou o endereço estar errado.
+        </app-alert>
+        <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
+      } @else {
+        <app-alert tone="danger">{{ falha()!.message }}</app-alert>
+        <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+      }
+    </section>
+  }
+  @case ('pronto') {
+    <app-page-header heading="Mercado" [subtitle]="subtitulo()">
+      @if (visao()!.entry) {
+        <a class="acao acao--secundaria" [routerLink]="['/c', campeonato(), 'escalacao']">
+          <svg [appIcon]="icons.time" />Meu time
+        </a>
+      }
+    </app-page-header>
+
+    <app-market-clock [market]="mercado()!.market" (closed)="carregar()" />
+
+    @if (daEscalacao() && podeOperar()) {
+      <app-alert tone="info">
+        Escolhendo {{ vagaEscolhida() }} para a escalação. Depois da compra você volta para o campo.
+        <a [routerLink]="['/c', campeonato(), 'escalacao']">Voltar para a escalação</a>
+      </app-alert>
+    }
+
+    @if (visao()!.entry) {
+      <app-squad-metrics [visao]="visao()!" />
+    } @else {
+      <app-alert tone="info">
+        Você ainda não entrou neste campeonato. Dá para olhar o mercado, mas para comprar é preciso
+        <a [routerLink]="['/c', campeonato(), 'jogar']">entrar no campeonato</a>.
+      </app-alert>
+    }
+
+    <p class="sr-only" role="status" aria-live="polite">{{ anuncio() }}</p>
+    @if (falhaNaOperacao(); as mensagem) {
+      <app-alert tone="danger">{{ mensagem }}</app-alert>
+    }
+
+    <section class="ferramentas" aria-label="Filtrar o mercado">
+      <div class="ferramentas__linha">
+        <label class="busca">
+          <span class="sr-only">Buscar atleta ou time</span>
+          <svg class="busca__icone" [appIcon]="icons.busca" />
+          <input
+            class="busca__campo"
+            type="search"
+            placeholder="Buscar atleta ou time"
+            [value]="busca()"
+            (input)="busca.set(valor($event))"
+          />
+        </label>
+        <label class="escolha">
+          <span class="escolha__rotulo">Situação</span>
+          <select class="escolha__campo" (change)="mudarSituacao($event)">
+            @for (opcao of opcoesSituacao; track opcao.value) {
+              <option [value]="opcao.value" [selected]="opcao.value === situacao()">
+                {{ opcao.label }}
+              </option>
+            }
+          </select>
+        </label>
+        <label class="escolha">
+          <span class="escolha__rotulo">Ordenar</span>
+          <select class="escolha__campo" (change)="mudarOrdem($event)">
+            @for (opcao of opcoesOrdem; track opcao.value) {
+              <option [value]="opcao.value" [selected]="opcao.value === ordem()">
+                {{ opcao.label }}
+              </option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="posicoes" role="group" aria-label="Posição">
+        @for (opcao of opcoesPosicao; track opcao.value) {
+          <button
+            type="button"
+            class="posicoes__opcao"
+            [attr.aria-pressed]="filtroPosicao() === opcao.value"
+            (click)="filtroPosicao.set(opcao.value)"
+          >
+            {{ opcao.label }}
+          </button>
+        }
+      </div>
+      <p class="ferramentas__contagem">{{ contagem() }}</p>
+    </section>
+
+    @if (agrupado()) {
+      @for (grupo of gruposVisiveis(); track grupo.timeId) {
+        <section class="grupo" [attr.aria-labelledby]="'time-' + grupo.timeId">
+          <header class="grupo__topo">
+            <span class="escudo" aria-hidden="true">{{ iniciais(grupo.time) }}</span>
+            <h2 class="grupo__nome" [id]="'time-' + grupo.timeId">{{ grupo.time }}</h2>
+            @if (visao()!.entry) {
+              <p class="grupo__limite">
+                No seu elenco: {{ doTime(grupo.timeId) }} de
+                {{ visao()!.teamLimit.maxAthletes }} atletas
+              </p>
+            }
+          </header>
+          <ul class="itens">
+            @for (item of grupo.itens; track item.id) {
+              <ng-container
+                *ngTemplateOutlet="itemTpl; context: { $implicit: item, comTime: false }"
+              />
+            }
+          </ul>
+        </section>
+      } @empty {
+        <section class="painel-simples">
+          <p class="apoio">Nenhum atleta ou técnico corresponde a esses filtros.</p>
+        </section>
+      }
+    } @else {
+      @if (itensVisiveis().length > 0) {
+        <section class="grupo" aria-label="Atletas e técnicos">
+          <ul class="itens">
+            @for (item of itensVisiveis(); track item.id) {
+              <ng-container
+                *ngTemplateOutlet="itemTpl; context: { $implicit: item, comTime: true }"
+              />
+            }
+          </ul>
+        </section>
+      } @else {
+        <section class="painel-simples">
+          <p class="apoio">Nenhum atleta ou técnico corresponde a esses filtros.</p>
+        </section>
+      }
+    }
+
+    @if (restantes() > 0) {
+      <app-button variant="secondary" (pressed)="mostrarMais()">
+        {{ agrupado() ? 'Mostrar mais times' : 'Mostrar mais' }} ({{ restantes() }})
+      </app-button>
+    }
+  }
+}
+
+<ng-template #itemTpl let-item let-comTime="comTime">
+  <li
+    class="item"
+    [class.item--meu]="item.isOwned"
+    [class.item--indisponivel]="!item.isAvailable && !item.isOwned"
+  >
+    <span class="item__sigla" aria-hidden="true">{{ sigla(item) }}</span>
+    <div class="item__dados">
+      <p class="item__nome">
+        {{ item.name }}
+        @if (item.isOwned) {
+          <app-badge tone="brand">No seu elenco</app-badge>
+        } @else if (!item.isAvailable) {
+          <app-badge tone="neutral">Indisponível</app-badge>
+        }
+      </p>
+      <p class="item__detalhe">{{ papel(item) }}{{ comTime ? ' · ' + item.realTeamName : '' }}</p>
+      @if (motivo(item); as texto) {
+        <p class="item__motivo">{{ texto }}</p>
+      }
+    </div>
+    <p class="item__preco num">{{ creditos(item.price) }}</p>
+    @if (podeOperar()) {
+      <div class="item__acao">
+        @if (item.isOwned) {
+          <app-button
+            variant="secondary"
+            [loading]="operando() === item.id"
+            [disabled]="operando() !== null"
+            (pressed)="vender(item)"
+          >
+            Vender<span class="sr-only"> {{ item.name }}</span>
+          </app-button>
+        } @else {
+          <app-button
+            variant="secondary"
+            [loading]="operando() === item.id"
+            [disabled]="item.blockCode !== null || operando() !== null"
+            (pressed)="comprar(item)"
+          >
+            Comprar<span class="sr-only"> {{ item.name }}</span>
+          </app-button>
+        }
+      </div>
+    }
+  </li>
+</ng-template>

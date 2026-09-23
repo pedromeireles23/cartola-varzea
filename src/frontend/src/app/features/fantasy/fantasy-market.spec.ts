@@ -80,6 +80,15 @@ describe('FantasyMarketPage', () => {
     return achado!;
   }
 
+  /** A posição é um grupo de botões: um toque, não um menu. */
+  function posicao(fixture: ComponentFixture<FantasyMarketPage>, rotulo: string): void {
+    const opcao = [...elemento(fixture).querySelectorAll('.posicoes button')].find(
+      (button) => button.textContent?.trim() === rotulo,
+    ) as HTMLButtonElement;
+    expect(opcao, `Posição "${rotulo}" não encontrada`).toBeDefined();
+    opcao.click();
+  }
+
   function selecionar(
     fixture: ComponentFixture<FantasyMarketPage>,
     rotulo: string,
@@ -150,7 +159,11 @@ describe('FantasyMarketPage', () => {
     expect(texto(fixture)).toContain('No seu elenco: 1 de 5 atletas');
     expect(texto(fixture)).toContain('Faltam C$ 2,00.');
     expect(texto(fixture)).not.toContain('Esse ativo já está no seu elenco.');
-    expect(texto(fixture)).toContain('Técnico · C$ 8,00');
+    const tecnico = [...elemento(fixture).querySelectorAll('.item')].find((linha) =>
+      linha.textContent?.includes('Técnico do Aurora'),
+    );
+    expect(tecnico?.querySelector('.item__detalhe')?.textContent?.trim()).toBe('Técnico');
+    expect(tecnico?.querySelector('.item__preco')?.textContent?.trim()).toBe('C$ 8,00');
     expect(botao(fixture, 'Comprar Duda').disabled).toBe(true);
     expect(botao(fixture, 'Comprar Bia').disabled).toBe(false);
     expect(botao(fixture, 'Vender Caio').disabled).toBe(false);
@@ -240,7 +253,7 @@ describe('FantasyMarketPage', () => {
     expect(texto(fixture)).toContain('Nena');
     expect(texto(fixture)).not.toContain('Caio');
 
-    selecionar(fixture, 'Posição', '');
+    posicao(fixture, 'Todas');
     await fixture.whenStable();
     expect(texto(fixture)).toContain('Caio');
   });
@@ -308,8 +321,37 @@ describe('FantasyMarketPage', () => {
     await fixture.whenStable();
     expect(times(fixture)).toHaveLength(8);
 
-    selecionar(fixture, 'Ordenar', 'maior');
+    selecionar(fixture, 'Situação', 'compraveis');
     await fixture.whenStable();
     expect(times(fixture)).toHaveLength(6);
+  });
+
+  it('ordenar por preço desfaz o agrupamento e mostra o time em cada linha', async () => {
+    const fixture = await abrir(
+      visao(),
+      mercado([
+        item({ id: 'a1', name: 'Caro', price: 12 }),
+        item({
+          id: 'a2',
+          name: 'Barato',
+          price: 5,
+          realTeamId: 't2',
+          realTeamName: 'Estrela',
+        }),
+        item({ id: 'a3', name: 'Médio', price: 8 }),
+      ]),
+    );
+
+    selecionar(fixture, 'Ordenar', 'menor');
+    await fixture.whenStable();
+
+    expect(times(fixture)).toEqual([]);
+    const nomes = [...elemento(fixture).querySelectorAll('.item__nome')].map((nome) =>
+      nome.textContent!.trim(),
+    );
+    expect(nomes).toEqual(['Barato', 'Médio', 'Caro']);
+    expect(texto(fixture)).toContain('Meio-campista · Estrela');
+    expect(texto(fixture)).toContain('3 opções');
+    expect(texto(fixture)).not.toContain('3 opções em');
   });
 });

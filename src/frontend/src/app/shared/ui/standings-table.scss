@@ -1,0 +1,149 @@
+// Classificação em tabela, compartilhada pelo ranking geral e pelo da liga (02 §8).
+:host {
+  display: block;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.classificacao {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  background-color: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.linha > td,
+.linha > th {
+  padding: var(--space-3);
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.linha:last-child > td,
+.linha:last-child > th {
+  border-bottom: 0;
+}
+
+.col-posicao,
+.linha__posicao {
+  width: 3.25rem;
+  padding-left: var(--space-4);
+}
+
+thead .col-posicao {
+  padding-left: var(--space-4);
+}
+
+.linha__posicao {
+  color: var(--color-ink-500);
+}
+
+.linha__nome {
+  font-weight: 500;
+}
+
+.linha__nome app-badge {
+  margin-left: var(--space-1);
+}
+
+.linha__empate {
+  margin-left: var(--space-1);
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+  font-weight: 400;
+}
+
+// No celular, a linha de apoio embaixo do nome leva o que as colunas extras dizem.
+.linha__detalhe {
+  display: block;
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+  font-weight: 400;
+}
+
+.col-numero {
+  text-align: right;
+  white-space: nowrap;
+}
+
+thead .col-numero {
+  text-align: right;
+}
+
+.linha > td.col-numero {
+  text-align: right;
+}
+
+.linha__pontos {
+  font-weight: 700;
+}
+
+.col-extra {
+  display: none;
+}
+
+.col-acao,
+.linha > td.col-acao {
+  width: 1%;
+  padding-right: var(--space-4);
+  text-align: right;
+  white-space: nowrap;
+}
+
+// Lista longa: a linha sob o cursor ajuda a não trocar de pessoa no meio da leitura.
+.linha:not(.linha--voce):hover > * {
+  background-color: var(--color-surface-alt);
+}
+
+// A linha de quem lê se destaca sem gritar; a barra repete o destaque sem depender da cor.
+.linha--voce > * {
+  background-color: var(--color-brand-50);
+}
+
+.linha--voce > .linha__posicao {
+  color: var(--color-brand-700);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--color-brand-500);
+}
+
+@media (min-width: 640px) {
+  .col-extra,
+  .linha > td.col-extra {
+    display: table-cell;
+  }
+
+  .linha__detalhe {
+    display: none;
+  }
+}
+
+// A lista entra de baixo para cima, em cascata curta, para que a ordem seja percebida
+// como ordem. O atraso para de crescer na oitava linha.
+.linha {
+  animation: linha-entra var(--motion-panel) var(--motion-easing) backwards;
+  animation-delay: calc(min(var(--indice, 0), 8) * 30ms);
+}
+
+@keyframes linha-entra {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linha {
+    animation: none;
+  }
+}

@@ -69,13 +69,18 @@ describe('CompetitionRankingPage', () => {
   it('mostra colocação, pontos, patrimônio e o que a pessoa fez na última rodada', async () => {
     const fixture = await abrir(ranking());
 
-    expect(texto(fixture)).toContain('Ranking de Copa da Vila');
+    expect(texto(fixture)).toContain('Classificação');
+    expect(texto(fixture)).toContain('Copa da Vila');
     expect(texto(fixture)).toContain('2 rodadas apuradas, até Rodada 2.');
     expect(texto(fixture)).toContain('1º');
     expect(texto(fixture)).toContain('Pessoa Um');
     expect(texto(fixture)).toContain('46,00 pts');
     expect(texto(fixture)).toContain('C$ 104,50');
     expect(texto(fixture)).toContain('16,00 pts na última');
+    // É uma tabela: cabeçalho de coluna e o nome como cabeçalho da linha.
+    const tabela = (fixture.nativeElement as HTMLElement).querySelector('table');
+    expect(tabela?.querySelectorAll('thead th')).toHaveLength(5);
+    expect(tabela?.querySelector('tbody th[scope="row"]')?.textContent).toContain('Pessoa Um');
   });
 
   it('avisa que a classificação pode mudar enquanto a última rodada é provisória', async () => {

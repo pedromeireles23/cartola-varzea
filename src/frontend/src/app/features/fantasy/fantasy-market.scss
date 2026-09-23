@@ -1,0 +1,271 @@
+// Mercado (02 §8, 06 §3.4): barra de ferramentas, a lista densa numa superfície por time
+// e cada item numa linha — posição, nome, preço e a ação. Nada de cartão por atleta.
+
+.acao--secundaria {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+// ------------------------------------------------------------ ferramentas
+
+.ferramentas {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+// No desktop a barra acompanha a rolagem, logo abaixo do topo da casca; no celular ela
+// ocuparia metade da tela e fica no lugar.
+@media (min-width: 1024px) {
+  .ferramentas {
+    position: sticky;
+    top: calc(64px + var(--space-2));
+    z-index: 5;
+  }
+}
+
+.ferramentas__linha {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-3);
+  align-items: end;
+}
+
+.busca {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--touch-target);
+  padding-inline: var(--space-3);
+  color: var(--color-ink-500);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.busca:focus-within {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+.busca__campo {
+  width: 100%;
+  min-width: 0;
+  color: var(--color-ink-950);
+  font-size: var(--font-body-size);
+  background: none;
+  border: 0;
+  outline: none;
+}
+
+@media (min-width: 768px) {
+  .ferramentas__linha {
+    grid-template-columns: minmax(0, 1fr) 11rem 11rem;
+  }
+
+  .busca {
+    grid-column: auto;
+  }
+}
+
+.escolha {
+  display: grid;
+  gap: 2px;
+}
+
+.escolha__rotulo {
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+  font-weight: 500;
+}
+
+.escolha__campo {
+  min-height: var(--touch-target);
+  padding: 0 var(--space-2);
+  color: var(--color-ink-950);
+  font-size: var(--font-small);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+// A posição é o filtro que mais se troca: um toque em vez de abrir um menu.
+.posicoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.posicoes__opcao {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  color: var(--color-ink-700);
+  font: inherit;
+  font-size: var(--font-small);
+  font-weight: 500;
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.posicoes__opcao:hover {
+  color: var(--color-ink-950);
+  border-color: var(--color-border-strong);
+}
+
+.posicoes__opcao[aria-pressed='true'] {
+  color: var(--color-brand-700);
+  background-color: var(--color-brand-50);
+  border-color: var(--color-brand-500);
+}
+
+@media (max-width: 639px) {
+  .posicoes__opcao {
+    min-height: var(--touch-target);
+  }
+}
+
+.ferramentas__contagem {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+// ------------------------------------------------------------ grupos e itens
+
+.grupo {
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.grupo__topo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.escudo {
+  display: grid;
+  grid-row: span 2;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: var(--color-ink-700);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+}
+
+.grupo__nome {
+  font-size: var(--font-h3);
+}
+
+.grupo__limite {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+.itens {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  grid-template-areas:
+    'sigla dados preco'
+    'sigla dados acao';
+  gap: 2px var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.item:first-child {
+  border-top: 0;
+}
+
+@media (min-width: 640px) {
+  .item {
+    grid-template-columns: 2.75rem minmax(0, 1fr) 6rem auto;
+    grid-template-areas: 'sigla dados preco acao';
+  }
+}
+
+.item__sigla {
+  grid-area: sigla;
+  align-self: start;
+  margin-top: 2px;
+  padding: 2px 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  text-align: center;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.item__dados {
+  display: grid;
+  grid-area: dados;
+  gap: 2px;
+  min-width: 0;
+}
+
+.item__nome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  font-weight: 500;
+}
+
+.item__detalhe {
+  overflow: hidden;
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item__motivo {
+  color: var(--color-warning);
+  font-size: var(--font-small);
+}
+
+.item__preco {
+  grid-area: preco;
+  justify-self: end;
+  font-weight: 600;
+}
+
+.item__acao {
+  grid-area: acao;
+  justify-self: end;
+}
+
+.item--meu {
+  background-color: var(--color-brand-50);
+  box-shadow: inset 3px 0 0 var(--color-brand-500);
+}
+
+.item--indisponivel .item__nome,
+.item--indisponivel .item__preco {
+  color: var(--color-ink-500);
+}

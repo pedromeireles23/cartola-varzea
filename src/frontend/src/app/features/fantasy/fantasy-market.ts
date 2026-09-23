@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,19 +11,11 @@ import {
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
+import { Search, Shirt } from 'lucide';
 import { forkJoin } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  FormField,
-  Loading,
-  SelectField,
-  SelectOption,
-} from '../../shared/ui';
+import { Alert, Badge, Button, Icon, Loading, PageHeader } from '../../shared/ui';
 import { AthletePosition } from '../organizer/competition-area/athlete.service';
 import {
   POSITION_LABELS,
@@ -41,7 +34,9 @@ import {
   MarketItem,
 } from './fantasy.service';
 import { FantasyNotice } from './fantasy-notice';
+import { siglaDaVaga } from './lineup-board';
 import { MarketClock } from './market-clock';
+import { SquadMetrics } from './squad-metrics';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -50,7 +45,8 @@ type Estado =
 
 type Posicao = AthletePosition | 'Coach' | '';
 type Situacao = 'todos' | 'compraveis' | 'elenco';
-type Ordem = 'nome' | 'menor' | 'maior';
+/** `time` agrupa por time real; as outras ordens mostram uma lista só. */
+type Ordem = 'time' | 'menor' | 'maior' | 'nome';
 
 interface Grupo {
   readonly timeId: string;
@@ -58,10 +54,18 @@ interface Grupo {
   readonly itens: readonly MarketItem[];
 }
 
+interface Opcao<T extends string> {
+  readonly value: T;
+  readonly label: string;
+}
+
 /** Times por página: o mercado de várzea costuma ter de 6 a 16 times. */
 const TIMES_POR_PAGINA = 6;
 
-/** `?posicao=` em português, como as rotas; é o que o campo de escalação vai mandar. */
+/** Na lista sem agrupamento, o mesmo tanto de linhas que cabe em seis times pequenos. */
+const ITENS_POR_PAGINA = 30;
+
+/** `?posicao=` em português, como as rotas; é o que o seletor do campo manda. */
 const POSICAO_NA_URL: Readonly<Record<string, Posicao>> = {
   goleiro: 'Goalkeeper',
   defensor: 'Defender',
@@ -76,170 +80,36 @@ const BLOQUEIOS_GERAIS = new Set(['not_joined', 'market_closed']);
 /**
  * Mercado do participante (02 §9.1, `/c/:campeonato/mercado`).
  *
- * Agrupado por time real, que é como se procura atleta na várzea: primeiro o time,
- * depois a pessoa (02 §8). Busca, posição, situação e ordenação atuam dentro do
- * agrupamento. O motivo de um item não poder ser comprado vem do servidor e aparece no
- * próprio item; o servidor continua recusando a compra mesmo se a tela for ignorada.
+ * Por padrão agrupa por time real, que é como se procura atleta na várzea: primeiro o
+ * time, depois a pessoa (02 §8). Ordenar por preço ou por nome desfaz o agrupamento,
+ * porque aí a pergunta é outra — quem cabe no saldo — e ela se responde numa lista só.
+ * A posição é um toque, não um menu, porque é o filtro que mais se troca. O motivo de um
+ * item não poder ser comprado vem do servidor e aparece no próprio item; o servidor
+ * continua recusando a compra mesmo se a tela for ignorada.
  */
 @Component({
   selector: 'app-fantasy-market',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, FormField, Loading, MarketClock, RouterLink, SelectField],
-  template: `
-    @switch (estado().tipo) {
-      @case ('carregando') {
-        <h1>Mercado</h1>
-        <app-card><app-loading label="Abrindo o mercado…" /></app-card>
-      }
-      @case ('erro') {
-        <h1>Mercado</h1>
-        <app-card>
-          @if (falha()!.status === 404) {
-            <app-alert tone="warning">
-              Não encontramos este campeonato. Ele pode ter saído do ar ou o endereço estar errado.
-            </app-alert>
-            <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
-          } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
-          }
-        </app-card>
-      }
-      @case ('pronto') {
-        <h1>Mercado</h1>
-        <p class="intro">{{ visao()!.competitionName }}</p>
-
-        <app-market-clock [market]="mercado()!.market" (closed)="carregar()" />
-
-        @if (daEscalacao() && podeOperar()) {
-          <app-alert tone="info">
-            Escolhendo {{ vagaEscolhida() }} para a escalação. Depois da compra você volta para o
-            campo.
-            <a [routerLink]="['/c', campeonato(), 'escalacao']">Voltar para a escalação</a>
-          </app-alert>
-        }
-
-        @if (visao()!.entry; as entrada) {
-          <section class="resumo" aria-label="Seu elenco no mercado">
-            <p class="resumo__item">
-              <span class="resumo__rotulo">Saldo</span>
-              <strong>{{ creditos(entrada.balance) }}</strong>
-            </p>
-            <p class="resumo__item">
-              <span class="resumo__rotulo">Atletas</span>
-              <strong>{{ atletasNoElenco() }} de {{ visao()!.profile.squadAthletes }}</strong>
-            </p>
-            <p class="resumo__item">
-              <span class="resumo__rotulo">Técnico</span>
-              <strong>{{ temTecnico() ? '1 de 1' : '0 de 1' }}</strong>
-            </p>
-            <p class="resumo__item">
-              <span class="resumo__rotulo">Por time</span>
-              <strong
-                >até {{ visao()!.teamLimit.maxAthletes }} ({{
-                  visao()!.teamLimit.maxStarters
-                }}
-                titulares)</strong
-              >
-            </p>
-          </section>
-        } @else {
-          <app-alert tone="info">
-            Você ainda não entrou neste campeonato. Dá para olhar o mercado, mas para comprar é
-            preciso <a [routerLink]="['/c', campeonato(), 'jogar']">entrar no campeonato</a>.
-          </app-alert>
-        }
-
-        <p class="sr-only" role="status" aria-live="polite">{{ anuncio() }}</p>
-        @if (falhaNaOperacao(); as mensagem) {
-          <app-alert tone="danger">{{ mensagem }}</app-alert>
-        }
-
-        <app-card heading="Filtros">
-          <div class="filtros">
-            <app-form-field label="Buscar por nome" placeholder="Ex.: Bia" [(value)]="busca" />
-            <app-select-field label="Posição" [options]="opcoesPosicao" [(value)]="filtroPosicao" />
-            <app-select-field label="Situação" [options]="opcoesSituacao" [(value)]="situacao" />
-            <app-select-field label="Ordenar" [options]="opcoesOrdem" [(value)]="ordem" />
-          </div>
-          <p class="apoio">{{ contagem() }}</p>
-        </app-card>
-
-        @for (grupo of gruposVisiveis(); track grupo.timeId) {
-          <app-card>
-            <section class="grupo" [attr.aria-labelledby]="'time-' + grupo.timeId">
-              <header class="grupo__topo">
-                <div class="escudo" aria-hidden="true">{{ iniciais(grupo.time) }}</div>
-                <div>
-                  <h2 class="grupo__nome" [id]="'time-' + grupo.timeId">{{ grupo.time }}</h2>
-                  @if (visao()!.entry) {
-                    <p class="apoio">
-                      No seu elenco: {{ doTime(grupo.timeId) }} de
-                      {{ visao()!.teamLimit.maxAthletes }} atletas
-                    </p>
-                  }
-                </div>
-              </header>
-
-              <ul class="itens">
-                @for (item of grupo.itens; track item.id) {
-                  <li class="item" [class.item--indisponivel]="!item.isAvailable && !item.isOwned">
-                    <div class="item__dados">
-                      <p class="item__nome">{{ item.name }}</p>
-                      <p class="item__detalhe">{{ papel(item) }} · {{ creditos(item.price) }}</p>
-                      @if (item.isOwned) {
-                        <app-badge tone="brand">No seu elenco</app-badge>
-                      } @else if (!item.isAvailable) {
-                        <app-badge tone="neutral">Indisponível</app-badge>
-                      }
-                      @if (motivo(item); as texto) {
-                        <p class="item__motivo">{{ texto }}</p>
-                      }
-                    </div>
-                    @if (podeOperar()) {
-                      @if (item.isOwned) {
-                        <app-button
-                          variant="secondary"
-                          [loading]="operando() === item.id"
-                          [disabled]="operando() !== null"
-                          (pressed)="vender(item)"
-                        >
-                          Vender<span class="sr-only"> {{ item.name }}</span>
-                        </app-button>
-                      } @else {
-                        <app-button
-                          [loading]="operando() === item.id"
-                          [disabled]="item.blockCode !== null || operando() !== null"
-                          (pressed)="comprar(item)"
-                        >
-                          Comprar<span class="sr-only"> {{ item.name }}</span>
-                        </app-button>
-                      }
-                    }
-                  </li>
-                }
-              </ul>
-            </section>
-          </app-card>
-        } @empty {
-          <app-card>
-            <p class="apoio">Nenhum atleta ou técnico corresponde a esses filtros.</p>
-          </app-card>
-        }
-
-        @if (timesRestantes() > 0) {
-          <app-button variant="secondary" (pressed)="mostrarMais()">
-            Mostrar mais times ({{ timesRestantes() }})
-          </app-button>
-        }
-      }
-    }
-  `,
-  styleUrl: './fantasy.scss',
+  imports: [
+    Alert,
+    Badge,
+    Button,
+    Icon,
+    Loading,
+    MarketClock,
+    NgTemplateOutlet,
+    PageHeader,
+    RouterLink,
+    SquadMetrics,
+  ],
+  templateUrl: './fantasy-market.html',
+  styleUrls: ['./fantasy.scss', './fantasy-market.scss'],
 })
 export class FantasyMarketPage implements OnInit {
   private readonly service = inject(FantasyService);
   private readonly title = inject(Title);
+  private readonly router = inject(Router);
+  private readonly notice = inject(FantasyNotice);
 
   /** Slug do campeonato na rota. */
   readonly campeonato = input.required<string>();
@@ -250,34 +120,34 @@ export class FantasyMarketPage implements OnInit {
   /** `?origem=escalacao`: a vaga do campo abriu o mercado, e a compra volta para lá. */
   readonly origem = input<string>();
 
-  private readonly router = inject(Router);
-  private readonly notice = inject(FantasyNotice);
+  protected readonly icons = { busca: Search, time: Shirt } as const;
 
-  protected readonly opcoesPosicao: readonly SelectOption[] = [
+  protected readonly opcoesPosicao: readonly Opcao<Posicao>[] = [
     { value: '', label: 'Todas' },
     ...POSITION_ORDER.map((position) => ({ value: position, label: POSITION_LABELS[position] })),
     { value: 'Coach', label: 'Técnico' },
   ];
 
-  protected readonly opcoesSituacao: readonly SelectOption[] = [
+  protected readonly opcoesSituacao: readonly Opcao<Situacao>[] = [
     { value: 'todos', label: 'Todos' },
     { value: 'compraveis', label: 'Posso comprar' },
     { value: 'elenco', label: 'No meu elenco' },
   ];
 
-  protected readonly opcoesOrdem: readonly SelectOption[] = [
-    { value: 'nome', label: 'Posição e nome' },
+  protected readonly opcoesOrdem: readonly Opcao<Ordem>[] = [
+    { value: 'time', label: 'Por time' },
     { value: 'menor', label: 'Menor preço' },
     { value: 'maior', label: 'Maior preço' },
+    { value: 'nome', label: 'Nome' },
   ];
 
   protected readonly estado = signal<Estado>({ tipo: 'carregando' });
   protected readonly busca = signal('');
-  protected readonly filtroPosicao = linkedSignal<string>(
+  protected readonly filtroPosicao = linkedSignal<Posicao>(
     () => POSICAO_NA_URL[this.posicao() ?? ''] ?? '',
   );
-  protected readonly situacao = signal<string>('todos');
-  protected readonly ordem = signal<string>('nome');
+  protected readonly situacao = signal<Situacao>('todos');
+  protected readonly ordem = signal<Ordem>('time');
   protected readonly operando = signal<string | null>(null);
   protected readonly anuncio = signal('');
   protected readonly falhaNaOperacao = signal<string | null>(null);
@@ -290,6 +160,15 @@ export class FantasyMarketPage implements OnInit {
   protected readonly mercado = computed(() => {
     const atual = this.estado();
     return atual.tipo === 'pronto' ? atual.mercado : null;
+  });
+
+  protected readonly subtitulo = computed(() => {
+    const visao = this.visao();
+    const rodada = this.mercado()?.market.roundName;
+    if (!visao) {
+      return null;
+    }
+    return rodada ? `${visao.competitionName} · ${rodada}` : visao.competitionName;
   });
 
   protected readonly daEscalacao = computed(() => this.origem() === 'escalacao');
@@ -309,21 +188,17 @@ export class FantasyMarketPage implements OnInit {
     () => this.visao()?.entry !== null && this.mercado()?.market.isOpen === true,
   );
 
-  protected readonly atletasNoElenco = computed(
-    () => this.visao()?.entry?.slots.filter((slot) => slot.kind === 'Athlete').length ?? 0,
-  );
-
-  protected readonly temTecnico = computed(
-    () => this.visao()?.entry?.slots.some((slot) => slot.kind === 'Coach') ?? false,
-  );
+  protected readonly agrupado = computed(() => this.ordem() === 'time');
 
   private readonly filtrados = computed(() => {
     const termo = normalizar(this.busca().trim());
-    const posicao = this.filtroPosicao() as Posicao;
-    const situacao = this.situacao() as Situacao;
+    const posicao = this.filtroPosicao();
+    const situacao = this.situacao();
     return (this.mercado()?.items ?? []).filter(
       (item) =>
-        (termo === '' || normalizar(item.name).includes(termo)) &&
+        (termo === '' ||
+          normalizar(item.name).includes(termo) ||
+          normalizar(item.realTeamName).includes(termo)) &&
         (posicao === '' ||
           (posicao === 'Coach' ? item.kind === 'Coach' : item.position === posicao)) &&
         (situacao === 'todos' ||
@@ -332,7 +207,6 @@ export class FantasyMarketPage implements OnInit {
   });
 
   protected readonly grupos = computed<readonly Grupo[]>(() => {
-    const ordem = this.ordem() as Ordem;
     const porTime = new Map<string, MarketItem[]>();
     for (const item of this.filtrados()) {
       porTime.set(item.realTeamId, [...(porTime.get(item.realTeamId) ?? []), item]);
@@ -341,9 +215,20 @@ export class FantasyMarketPage implements OnInit {
       .map(([timeId, itens]) => ({
         timeId,
         time: itens[0]!.realTeamName,
-        itens: [...itens].sort((a, b) => comparar(a, b, ordem)),
+        itens: [...itens].sort(porPosicaoENome),
       }))
       .sort((a, b) => a.time.localeCompare(b.time, 'pt-BR'));
+  });
+
+  /** A lista só, para as ordens por preço e por nome. */
+  private readonly ordenados = computed(() => {
+    const ordem = this.ordem();
+    return [...this.filtrados()].sort((a, b) =>
+      ordem === 'nome'
+        ? a.name.localeCompare(b.name, 'pt-BR')
+        : (ordem === 'menor' ? a.price - b.price : b.price - a.price) ||
+          a.name.localeCompare(b.name, 'pt-BR'),
+    );
   });
 
   private readonly filtro = computed(() =>
@@ -354,21 +239,30 @@ export class FantasyMarketPage implements OnInit {
    * Volta à primeira página quando o filtro muda. Reler o mercado depois de uma compra
    * não muda o filtro, então a pessoa continua onde estava.
    */
-  private readonly limite = linkedSignal({
-    source: this.filtro,
-    computation: () => TIMES_POR_PAGINA,
-  });
+  private readonly limite = linkedSignal({ source: this.filtro, computation: () => 1 });
 
-  protected readonly gruposVisiveis = computed(() => this.grupos().slice(0, this.limite()));
+  protected readonly gruposVisiveis = computed(() =>
+    this.grupos().slice(0, this.limite() * TIMES_POR_PAGINA),
+  );
 
-  protected readonly timesRestantes = computed(() =>
-    Math.max(0, this.grupos().length - this.limite()),
+  protected readonly itensVisiveis = computed(() =>
+    this.ordenados().slice(0, this.limite() * ITENS_POR_PAGINA),
+  );
+
+  protected readonly restantes = computed(() =>
+    this.agrupado()
+      ? Math.max(0, this.grupos().length - this.gruposVisiveis().length)
+      : Math.max(0, this.ordenados().length - this.itensVisiveis().length),
   );
 
   protected readonly contagem = computed(() => {
     const itens = this.filtrados().length;
+    const opcoes = `${itens} ${itens === 1 ? 'opção' : 'opções'}`;
+    if (!this.agrupado()) {
+      return opcoes;
+    }
     const times = this.grupos().length;
-    return `${itens} ${itens === 1 ? 'opção' : 'opções'} em ${times} ${times === 1 ? 'time' : 'times'}`;
+    return `${opcoes} em ${times} ${times === 1 ? 'time' : 'times'}`;
   });
 
   ngOnInit(): void {
@@ -380,12 +274,33 @@ export class FantasyMarketPage implements OnInit {
     return atual.tipo === 'erro' ? atual.falha : null;
   }
 
+  protected valor(evento: Event): string {
+    return (evento.target as HTMLInputElement | HTMLSelectElement).value;
+  }
+
+  protected mudarSituacao(evento: Event): void {
+    this.situacao.set(this.valor(evento) as Situacao);
+  }
+
+  protected mudarOrdem(evento: Event): void {
+    this.ordem.set(this.valor(evento) as Ordem);
+  }
+
   protected creditos(valor: number): string {
     return credits(valor);
   }
 
   protected papel(item: MarketItem): string {
     return assetRoleLabel(item.kind, item.position);
+  }
+
+  protected sigla(item: MarketItem): string {
+    return siglaDaVaga({
+      chave: item.id,
+      papel: item.kind === 'Coach' ? 'Coach' : 'Starter',
+      posicao: item.kind === 'Coach' ? null : item.position,
+      ocupante: null,
+    });
   }
 
   protected iniciais(nome: string): string {
@@ -408,7 +323,7 @@ export class FantasyMarketPage implements OnInit {
   }
 
   protected mostrarMais(): void {
-    this.limite.update((atual) => atual + TIMES_POR_PAGINA);
+    this.limite.update((atual) => atual + 1);
   }
 
   protected carregar(): void {
@@ -506,14 +421,11 @@ function normalizar(texto: string): string {
     .toLocaleLowerCase('pt-BR');
 }
 
-function comparar(a: MarketItem, b: MarketItem, ordem: Ordem): number {
-  if (ordem !== 'nome' && a.price !== b.price) {
-    return ordem === 'menor' ? a.price - b.price : b.price - a.price;
-  }
+/** Dentro do time, a ordem do campo — do gol ao ataque, técnico no fim — e o nome. */
+function porPosicaoENome(a: MarketItem, b: MarketItem): number {
   return posicaoIndice(a) - posicaoIndice(b) || a.name.localeCompare(b.name, 'pt-BR');
 }
 
-/** Técnico vem depois dos atletas, que seguem a ordem do campo: do gol ao ataque. */
 function posicaoIndice(item: MarketItem): number {
   return item.kind === 'Coach' || item.position === null
     ? POSITION_ORDER.length
