@@ -7,10 +7,13 @@ import { apiErrorInterceptor } from '../../core/api/api-error.interceptor';
 import { API_BASE_URL } from '../../core/config/api-base-url';
 import {
   LINEUP_URL,
+  MARKET_URL,
   MERCADO_FECHADO,
   OVERVIEW_URL,
   SLUG,
   entrada,
+  item,
+  mercado,
   vaga,
   visao,
 } from './fantasy-fixtures';
@@ -38,18 +41,27 @@ describe('FantasyLineupPage', () => {
   let http: HttpTestingController;
 
   beforeAll(() => {
+    // O jsdom não fecha o <dialog> com o evento `close`, que é o que a tela escuta.
     const prototipo = HTMLDialogElement.prototype as HTMLDialogElement & {
       showModal?: () => void;
+      show?: () => void;
     };
     prototipo.showModal ??= function (this: HTMLDialogElement) {
       this.setAttribute('open', '');
     };
+    prototipo.show ??= function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    };
     prototipo.close = function (this: HTMLDialogElement) {
-      this.removeAttribute('open');
+      if (this.hasAttribute('open')) {
+        this.removeAttribute('open');
+        this.dispatchEvent(new Event('close'));
+      }
     };
   });
 
   beforeEach(() => {
+    globalThis.localStorage?.clear();
     TestBed.configureTestingModule({
       imports: [FantasyLineupPage],
       providers: [
@@ -83,7 +95,7 @@ describe('FantasyLineupPage', () => {
 
   /** Nome acessível da vaga: é o texto escondido que o leitor de tela lê. */
   function vagas(fixture: ComponentFixture<FantasyLineupPage>, seletor: string): string[] {
-    return [...elemento(fixture).querySelectorAll(`${seletor} .sr-only`)].map((rotulo) =>
+    return [...elemento(fixture).querySelectorAll(`${seletor} > .sr-only`)].map((rotulo) =>
       rotulo.textContent!.trim(),
     );
   }
@@ -96,8 +108,8 @@ describe('FantasyLineupPage', () => {
     return achado!;
   }
 
-  function dialogo(fixture: ComponentFixture<FantasyLineupPage>): HTMLDialogElement {
-    return elemento(fixture).querySelector('dialog')!;
+  function painel(fixture: ComponentFixture<FantasyLineupPage>): HTMLDialogElement {
+    return elemento(fixture).querySelector('dialog.painel')!;
   }
 
   function fechada(parcial: Partial<ClosedRoundLineup>): ClosedRoundLineup {
@@ -112,13 +124,11 @@ describe('FantasyLineupPage', () => {
     };
   }
 
-  it('desenha o campo vazio com cada vaga levando ao mercado filtrado pela posição', async () => {
+  it('desenha o campo vazio com cada vaga pronta para escolher quem entra', async () => {
     const fixture = await abrir(visao());
 
     expect(texto(fixture)).toContain('Titulares 1-2-2-2');
-    const links = [...elemento(fixture).querySelectorAll<HTMLAnchorElement>('a.vaga')];
-    expect(links).toHaveLength(12);
-    expect(vagas(fixture, 'a.vaga')).toEqual([
+    expect(vagas(fixture, 'button.ficha--vazia')).toEqual([
       'Escolher atacante titular',
       'Escolher atacante titular',
       'Escolher meio-campista titular',
@@ -132,36 +142,95 @@ describe('FantasyLineupPage', () => {
       'Escolher reserva de atacante',
       'Escolher técnico',
     ]);
-    expect(links[6]!.getAttribute('href')).toBe(
-      `/c/${SLUG}/mercado?posicao=goleiro&origem=escalacao`,
-    );
-    expect(links[11]!.getAttribute('href')).toBe(
-      `/c/${SLUG}/mercado?posicao=tecnico&origem=escalacao`,
-    );
+    expect(texto(fixture)).toContain('0 de 12');
     expect(texto(fixture)).toContain('O que falta para a escalação valer');
     expect(texto(fixture)).toContain('Se o mercado fechar com algo faltando, você fica fora da');
+  });
+
+  it('a vaga vazia abre a escolha da posição e compra sem sair do campo', async () => {
+    const fixture = await abrir(visao({ entry: entrada({ slots: ELENCO.slice(1) }) }));
+
+    botao(fixture, 'Escolher goleiro titular').click();
+    await fixture.whenStable();
+    expect(painel(fixture).hasAttribute('open')).toBe(true);
+    expect(painel(fixture).textContent).toContain('Escolher goleiro titular');
+    http.expectOne(MARKET_URL).flush(
+      mercado([
+        item({ id: 'g2', name: 'Paredão', position: 'Goalkeeper', price: 9 }),
+        item({ id: 'g3', name: 'Muralha', position: 'Goalkeeper', price: 4 }),
+        item({
+          id: 'g4',
+          name: 'Gato',
+          position: 'Goalkeeper',
+          price: 30,
+          blockCode: 'insufficient_balance',
+          blockReason: 'Saldo insuficiente.',
+        }),
+        item({ id: 'g1', name: 'Pipoca', position: 'Goalkeeper', isOwned: true }),
+        item({ id: 'a1', name: 'Bia', position: 'Midfielder' }),
+      ]),
+    );
+    await fixture.whenStable();
+
+    // Só goleiros fora do elenco; quem pode ser comprado vem antes, do mais barato.
+    const nomes = [...painel(fixture).querySelectorAll('.opcao__nome')].map((nome) =>
+      nome.textContent!.trim(),
+    );
+    expect(nomes).toEqual(['Muralha', 'Paredão', 'Gato']);
+    expect(painel(fixture).textContent).toContain('Saldo insuficiente.');
+    expect(botao(fixture, 'Comprar Gato').disabled).toBe(true);
+
+    botao(fixture, 'Comprar Muralha').click();
+    await fixture.whenStable();
+    const pedido = http.expectOne(`/api/v1/fantasy/${SLUG}/squad/atleta/g3`);
+    expect(pedido.request.method).toBe('POST');
+    pedido.flush(
+      visao({
+        entry: entrada({
+          balance: 96,
+          slots: [
+            vaga({ assetId: 'g3', name: 'Muralha', position: 'Goalkeeper' }),
+            ...ELENCO.slice(1),
+          ],
+        }),
+      }),
+    );
+    await fixture.whenStable();
+
+    expect(painel(fixture).hasAttribute('open')).toBe(false);
+    expect(texto(fixture)).toContain('Muralha entrou como titular. Saldo: C$ 96,00.');
+    expect(vagas(fixture, 'button.ficha:not(.ficha--vazia)')).toContain(
+      'Goleiro titular: Muralha, União da Vila, C$ 8,00',
+    );
   });
 
   it('mostra quem está em cada vaga, com o capitão marcado por texto e não só por cor', async () => {
     const fixture = await abrir(visao({ entry: entrada({ slots: ELENCO }) }));
 
-    expect(vagas(fixture, 'button.vaga')).toEqual([
+    expect(vagas(fixture, 'button.ficha:not(.ficha--vazia)')).toEqual([
       'Defensor titular: Baiano, União da Vila, C$ 8,00, capitão',
       'Defensor titular: Zeca, Estrela do Bairro, C$ 8,00',
       'Goleiro titular: Pipoca, União da Vila, C$ 8,00',
       'Reserva de defensor: Tanque, União da Vila, C$ 8,00',
       'Técnico: Seu Zé, União da Vila, C$ 11,00',
     ]);
-    expect(elemento(fixture).querySelectorAll('a.vaga')).toHaveLength(7);
+    expect(elemento(fixture).querySelectorAll('button.ficha--vazia')).toHaveLength(7);
+    expect(elemento(fixture).querySelector('.ficha--capitao .ficha__capitao')?.textContent).toBe(
+      'C',
+    );
   });
 
-  it('escolhe o capitão pelo diálogo do atleta e anuncia o resultado', async () => {
+  it('escolhe o capitão pelo painel do atleta e anuncia o resultado', async () => {
     const fixture = await abrir(visao({ entry: entrada({ slots: ELENCO }) }));
 
     botao(fixture, 'Defensor titular: Zeca').click();
     await fixture.whenStable();
-    expect(dialogo(fixture).hasAttribute('open')).toBe(true);
-    expect(dialogo(fixture).textContent).toContain('Defensor titular · Estrela do Bairro');
+    expect(painel(fixture).hasAttribute('open')).toBe(true);
+    expect(painel(fixture).textContent).toContain('Defensor titular');
+    expect(painel(fixture).textContent).toContain('Estrela do Bairro · C$ 8,00');
+    expect(painel(fixture).querySelector(`a[href="/c/${SLUG}/atletas/d2"]`)?.textContent).toContain(
+      'Ver a página de Zeca',
+    );
 
     botao(fixture, 'Tornar capitão').click();
     await fixture.whenStable();
@@ -178,7 +247,7 @@ describe('FantasyLineupPage', () => {
     );
     await fixture.whenStable();
 
-    expect(dialogo(fixture).hasAttribute('open')).toBe(false);
+    expect(painel(fixture).hasAttribute('open')).toBe(false);
     expect(texto(fixture)).toContain('Zeca é o capitão.');
     expect(texto(fixture)).toContain('Escalação completa. Ela vale para a Rodada 1 e congela');
     expect(texto(fixture)).toContain('(Horário de Brasília)');
@@ -189,7 +258,7 @@ describe('FantasyLineupPage', () => {
 
     botao(fixture, 'Reserva de defensor: Tanque').click();
     await fixture.whenStable();
-    expect(dialogo(fixture).textContent).not.toContain('Tornar capitão');
+    expect(painel(fixture).textContent).not.toContain('Tornar capitão');
     botao(fixture, 'Entrar no lugar de Baiano').click();
     await fixture.whenStable();
 
@@ -204,7 +273,7 @@ describe('FantasyLineupPage', () => {
     );
   });
 
-  it('vende pelo diálogo e mostra o novo saldo', async () => {
+  it('vende pelo painel e mostra o novo saldo', async () => {
     const fixture = await abrir(visao({ entry: entrada({ slots: ELENCO }) }));
 
     botao(fixture, 'Técnico: Seu Zé').click();
@@ -218,10 +287,10 @@ describe('FantasyLineupPage', () => {
     await fixture.whenStable();
 
     expect(texto(fixture)).toContain('Seu Zé saiu do seu elenco. Saldo: C$ 61,00.');
-    expect(vagas(fixture, 'a.vaga')).toContain('Escolher técnico');
+    expect(vagas(fixture, 'button.ficha--vazia')).toContain('Escolher técnico');
   });
 
-  it('recusa de regra fica no diálogo, junto da ação que a provocou', async () => {
+  it('recusa de regra fica no painel, junto da ação que a provocou', async () => {
     const fixture = await abrir(visao({ entry: entrada({ slots: ELENCO }) }));
 
     botao(fixture, 'Reserva de defensor: Tanque').click();
@@ -239,13 +308,13 @@ describe('FantasyLineupPage', () => {
     );
     await fixture.whenStable();
 
-    expect(dialogo(fixture).hasAttribute('open')).toBe(true);
-    expect(dialogo(fixture).textContent).toContain(
+    expect(painel(fixture).hasAttribute('open')).toBe(true);
+    expect(painel(fixture).textContent).toContain(
       'Limite do time: no máximo 3 titulares do mesmo time.',
     );
   });
 
-  it('mercado fechado no meio da ação fecha o diálogo e relê o campo', async () => {
+  it('mercado fechado no meio da ação fecha o painel e relê o campo', async () => {
     const fixture = await abrir(visao({ entry: entrada({ slots: ELENCO }) }));
 
     botao(fixture, 'Goleiro titular: Pipoca').click();
@@ -267,9 +336,10 @@ describe('FantasyLineupPage', () => {
       .flush(visao({ market: MERCADO_FECHADO, entry: entrada({ slots: ELENCO }) }));
     await fixture.whenStable();
 
-    expect(dialogo(fixture).hasAttribute('open')).toBe(false);
-    expect(elemento(fixture).querySelectorAll('button.vaga, a.vaga')).toHaveLength(0);
+    expect(painel(fixture).hasAttribute('open')).toBe(false);
+    expect(elemento(fixture).querySelectorAll('button.ficha')).toHaveLength(0);
     expect(texto(fixture)).not.toContain('Resumo da escalação');
+    expect(texto(fixture)).toContain('Mercado fechado');
   });
 
   it('com o mercado fechado, mostra o retrato congelado com os nomes do fechamento', async () => {
@@ -301,12 +371,12 @@ describe('FantasyLineupPage', () => {
     expect(texto(fixture)).toContain(
       'Escalação congelada para a Rodada 1 desde dom., 20/09 às 19:00 (Horário de Brasília).',
     );
-    expect(vagas(fixture, '.vaga--leitura')).toContain(
+    expect(vagas(fixture, '.ficha--leitura')).toContain(
       'Goleiro titular: Pipoca (nome antigo), União da Vila, C$ 5,00, capitão',
     );
     expect(texto(fixture)).not.toContain('Baiano');
-    expect(elemento(fixture).querySelectorAll('button.vaga, a.vaga')).toHaveLength(0);
-    expect(vagas(fixture, '.vaga--vazia')).toContain('Vaga vazia de técnico');
+    expect(elemento(fixture).querySelectorAll('button.ficha')).toHaveLength(0);
+    expect(vagas(fixture, '.ficha--vazia')).toContain('Vaga vazia de técnico');
   });
 
   it('explica quando a escalação estava incompleta no fechamento', async () => {
@@ -320,7 +390,7 @@ describe('FantasyLineupPage', () => {
     expect(texto(fixture)).toContain(
       'Sua escalação não estava completa quando o mercado da Rodada 1 fechou',
     );
-    expect(vagas(fixture, '.vaga--leitura')).toContain(
+    expect(vagas(fixture, '.ficha--leitura')).toContain(
       'Goleiro titular: Pipoca, União da Vila, C$ 8,00',
     );
   });
@@ -345,10 +415,25 @@ describe('FantasyLineupPage', () => {
     expect(
       elemento(fixture).querySelector(`a[href="/c/${SLUG}/jogar"].acao`)?.textContent,
     ).toContain('Entrar no campeonato');
-    expect(elemento(fixture).querySelectorAll('.vaga')).toHaveLength(0);
+    expect(elemento(fixture).querySelectorAll('.ficha')).toHaveLength(0);
   });
 
-  it('anuncia o que entrou quando volta do mercado aberto por uma vaga', async () => {
+  it('mostra a mesma escalação em lista e lembra a escolha', async () => {
+    const fixture = await abrir(visao({ entry: entrada({ slots: ELENCO }) }));
+
+    botao(fixture, 'Lista').click();
+    await fixture.whenStable();
+
+    expect(elemento(fixture).querySelector('.gramado')).toBeNull();
+    expect(vagas(fixture, 'button.linha')).toContain(
+      'Goleiro titular: Pipoca, União da Vila, C$ 8,00',
+    );
+    expect(texto(fixture)).toContain('Escolher reserva de goleiro');
+    expect(botao(fixture, 'Lista').getAttribute('aria-pressed')).toBe('true');
+    expect(globalThis.localStorage?.getItem('cv.escalacao-modo')).toBe('lista');
+  });
+
+  it('anuncia o que entrou quando volta do mercado completo', async () => {
     TestBed.inject(FantasyNotice).deixar('Pipoca entrou como titular. Saldo: C$ 95,00.');
     const fixture = await abrir(visao({ entry: entrada({ slots: ELENCO.slice(0, 1) }) }));
 

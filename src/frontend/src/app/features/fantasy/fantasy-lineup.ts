@@ -1,7 +1,7 @@
-import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   OnInit,
   computed,
@@ -12,28 +12,24 @@ import {
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { CircleAlert, CircleCheck, LayoutGrid, List, X } from 'lucide';
 import { Observable } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Button, Card, Dialog, Loading } from '../../shared/ui';
-import {
-  assetRoleLabel,
-  assetSlug,
-  closingText,
-  credits,
-  fantasyRefusalText,
-  positionGroupLabel,
-} from './fantasy-format';
+import { Alert, Button, Icon, Loading, PageHeader } from '../../shared/ui';
+import { closingText, credits, fantasyRefusalText } from './fantasy-format';
 import { FantasyNotice } from './fantasy-notice';
 import {
   FANTASY_CONFLICT_CODE,
   FANTASY_MARKET_CLOSED_CODE,
+  FantasyMarket,
   FantasyOverview,
   FantasyService,
+  MarketItem,
 } from './fantasy.service';
+import { LineupBoard, LineupView, descricaoDaVaga } from './lineup-board';
 import {
   Campo,
-  LinhaDoCampo,
   Ocupante,
   Vaga,
   doElenco,
@@ -43,6 +39,7 @@ import {
   reservaDaPosicao,
   titularesDaPosicao,
 } from './lineup-model';
+import { LineupPicker } from './lineup-picker';
 import { MarketClock } from './market-clock';
 
 type Estado =
@@ -50,20 +47,27 @@ type Estado =
   | { readonly tipo: 'pronto'; readonly visao: FantasyOverview }
   | { readonly tipo: 'erro'; readonly falha: ApiFailure };
 
-/** Abreviação visível na vaga; o nome completo vai junto para o leitor de tela. */
-const SIGLAS = {
-  Goalkeeper: 'GOL',
-  Defender: 'DEF',
-  Midfielder: 'MEI',
-  Forward: 'ATA',
-} as const;
+/** A partir daqui o painel fica ao lado do campo; abaixo, sobe como folha (06 §4.3). */
+const DESKTOP = '(min-width: 1024px)';
+
+/** Onde fica a preferência de ver em campo ou em lista; só conveniência deste navegador. */
+const CHAVE_DO_MODO = 'cv.escalacao-modo';
+
+function lerModo(): LineupView {
+  try {
+    return globalThis.localStorage?.getItem(CHAVE_DO_MODO) === 'lista' ? 'lista' : 'campo';
+  } catch {
+    return 'campo';
+  }
+}
 
 /**
- * Escalação no campo (02 §8 "Lineup pitch" e §9.1, `/c/:campeonato/escalacao`).
+ * Meu time (02 §8 "Lineup pitch", 06 §4.2, `/c/:campeonato/escalacao`).
  *
- * O campo é o ponto de partida da montagem: cada vaga vazia abre o mercado filtrado
- * pela posição, e a compra volta para cá. Nada depende de arrastar — cada atleta abre
- * um diálogo com as ações que as regras permitem: capitão, troca com o banco e venda.
+ * O campo é o lugar de montar o time: a vaga vazia abre a escolha já filtrada pela
+ * posição e a vaga ocupada abre as ações do atleta — capitão, troca com o banco, venda —
+ * no mesmo painel. No desktop ele fica ao lado do campo, sem esconder o time; no celular
+ * sobe de baixo, com botão Fechar à vista. Nada depende de arrastar.
  *
  * O elenco é a própria escalação (decisão de 2026-09-18): cada ação já fica gravada no
  * servidor, por isso não existe botão de salvar. Quando o mercado fecha, o servidor
@@ -73,309 +77,18 @@ const SIGLAS = {
 @Component({
   selector: 'app-fantasy-lineup',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, Dialog, Loading, MarketClock, NgTemplateOutlet, RouterLink],
-  template: `
-    @switch (estado().tipo) {
-      @case ('carregando') {
-        <h1>Escalação</h1>
-        <app-card><app-loading label="Abrindo a escalação…" /></app-card>
-      }
-      @case ('erro') {
-        <h1>Escalação</h1>
-        <app-card>
-          @if (falha()!.status === 404) {
-            <app-alert tone="warning">
-              Não encontramos este campeonato. Ele pode ter saído do ar ou o endereço estar errado.
-            </app-alert>
-            <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
-          } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
-          }
-        </app-card>
-      }
-      @case ('pronto') {
-        <h1>Escalação</h1>
-        <p class="intro">{{ visao()!.competitionName }}</p>
-
-        <app-card>
-          <app-market-clock [market]="visao()!.market" (closed)="carregar()" />
-        </app-card>
-
-        @let campoAtual = campo()!;
-        @if (visao()!.entry; as entrada) {
-          <div #caixaDeAviso tabindex="-1" class="aviso">
-            @if (aviso(); as texto) {
-              <app-alert tone="success">{{ texto }}</app-alert>
-            }
-          </div>
-          @if (falhaGeral(); as mensagem) {
-            <app-alert tone="danger">{{ mensagem }}</app-alert>
-          }
-
-          @if (editavel()) {
-            <section class="resumo" aria-label="Seu elenco">
-              <p class="resumo__item">
-                <span class="resumo__rotulo">Saldo</span>
-                <strong>{{ creditos(entrada.balance) }}</strong>
-              </p>
-              <p class="resumo__item">
-                <span class="resumo__rotulo">Atletas</span>
-                <strong>{{ atletas() }} de {{ visao()!.profile.squadAthletes }}</strong>
-              </p>
-              <p class="resumo__item">
-                <span class="resumo__rotulo">Técnico</span>
-                <strong>{{ campoAtual.tecnico.ocupante ? '1 de 1' : '0 de 1' }}</strong>
-              </p>
-              <p class="resumo__item">
-                <span class="resumo__rotulo">Por time</span>
-                <strong
-                  >até {{ visao()!.teamLimit.maxAthletes }} ({{
-                    visao()!.teamLimit.maxStarters
-                  }}
-                  titulares)</strong
-                >
-              </p>
-            </section>
-          } @else if (fechada(); as rodada) {
-            @switch (rodada.status) {
-              @case ('Frozen') {
-                <app-alert tone="success">
-                  Escalação congelada para a {{ rodada.roundName }} desde
-                  {{ horario(rodada.marketClosedAtLocal) }}. É ela que vale na apuração.
-                </app-alert>
-              }
-              @case ('Incomplete') {
-                <app-alert tone="warning">
-                  Sua escalação não estava completa quando o mercado da
-                  {{ rodada.roundName }} fechou, {{ horario(rodada.marketClosedAtLocal) }}. Você
-                  fica fora dessa rodada e volta a escalar quando o mercado da próxima abrir.
-                </app-alert>
-              }
-              @case ('JoinedAfterClose') {
-                <app-alert tone="info">
-                  Você entrou depois do fechamento da {{ rodada.roundName }}. Seu jogo começa na
-                  próxima rodada com o mercado aberto.
-                </app-alert>
-              }
-            }
-          }
-
-          <section class="campo" aria-labelledby="titulares-titulo">
-            <h2 id="titulares-titulo" class="campo__titulo">
-              Titulares <span class="campo__formacao">{{ formacao() }}</span>
-            </h2>
-            @for (linha of campoAtual.linhas; track linha.posicao) {
-              <ul class="campo__linha" [attr.aria-label]="rotuloDaLinha(linha)">
-                @for (vaga of linha.vagas; track vaga.chave) {
-                  <li class="campo__vaga">
-                    <ng-container *ngTemplateOutlet="vagaTpl; context: { $implicit: vaga }" />
-                  </li>
-                }
-              </ul>
-            }
-          </section>
-
-          <section class="banco" aria-labelledby="banco-titulo">
-            <h2 id="banco-titulo" class="banco__titulo">Banco</h2>
-            <p class="apoio">O reserva só entra no lugar de alguém da mesma posição.</p>
-            <ul class="banco__vagas">
-              @for (vaga of campoAtual.banco; track vaga.chave) {
-                <li class="campo__vaga">
-                  <ng-container *ngTemplateOutlet="vagaTpl; context: { $implicit: vaga }" />
-                </li>
-              }
-            </ul>
-          </section>
-
-          <section class="banco" aria-labelledby="tecnico-titulo">
-            <h2 id="tecnico-titulo" class="banco__titulo">Técnico</h2>
-            <p class="apoio">Faz a média dos atletas do time dele que jogaram a rodada.</p>
-            <div class="banco__tecnico">
-              <ng-container
-                *ngTemplateOutlet="vagaTpl; context: { $implicit: campoAtual.tecnico }"
-              />
-            </div>
-          </section>
-
-          @if (editavel()) {
-            <app-card heading="Resumo da escalação">
-              @if (entrada.issues.length === 0) {
-                <app-alert tone="success">
-                  Escalação completa. Ela vale para a {{ visao()!.market.roundName }} e congela
-                  {{ horario(visao()!.market.closesAtLocal) }}.
-                </app-alert>
-                <dl class="dados">
-                  <div class="dados__item">
-                    <dt>Capitão</dt>
-                    <dd>{{ capitao() }}</dd>
-                  </div>
-                  <div class="dados__item">
-                    <dt>Técnico</dt>
-                    <dd>{{ campoAtual.tecnico.ocupante?.name }}</dd>
-                  </div>
-                  <div class="dados__item">
-                    <dt>Valor do elenco</dt>
-                    <dd>{{ creditos(entrada.patrimony - entrada.balance) }}</dd>
-                  </div>
-                  <div class="dados__item">
-                    <dt>Saldo</dt>
-                    <dd>{{ creditos(entrada.balance) }}</dd>
-                  </div>
-                </dl>
-              } @else {
-                <section class="pendencias" aria-labelledby="pendencias-titulo">
-                  <h3 id="pendencias-titulo" class="pendencias__titulo">
-                    O que falta para a escalação valer
-                  </h3>
-                  <ul>
-                    @for (pendencia of entrada.issues; track pendencia.message) {
-                      <li>{{ pendencia.message }}</li>
-                    }
-                  </ul>
-                </section>
-                <p class="apoio">
-                  Se o mercado fechar com algo faltando, você fica fora da
-                  {{ visao()!.market.roundName }}.
-                </p>
-              }
-              <p class="apoio">
-                Cada mudança já fica salva. Até o fechamento, dá para trocar à vontade.
-              </p>
-            </app-card>
-          }
-        } @else {
-          <app-card heading="Entre no campeonato">
-            <p>Para escalar, entre no campeonato primeiro: é lá que você recebe o orçamento.</p>
-            <a class="acao" [routerLink]="['/c', campeonato(), 'jogar']">Entrar no campeonato</a>
-          </app-card>
-        }
-
-        <app-dialog
-          [open]="selecionada() !== null"
-          [heading]="selecionada()?.ocupante?.name ?? ''"
-          (dismissed)="fecharAcoes()"
-        >
-          @if (selecionada(); as vaga) {
-            <p class="acoes__descricao">
-              {{ descricao(vaga) }} · {{ vaga.ocupante!.realTeamName }} ·
-              {{ creditos(vaga.ocupante!.price) }}
-            </p>
-            @if (vaga.ocupante!.isCaptain) {
-              <p class="acoes__descricao">É o capitão: dobra os pontos na rodada.</p>
-            }
-            @if (falhaNaAcao(); as mensagem) {
-              <app-alert tone="danger">{{ mensagem }}</app-alert>
-            }
-            <div class="acoes">
-              @if (vaga.papel === 'Starter' && !vaga.ocupante!.isCaptain) {
-                <app-button
-                  [fullWidth]="true"
-                  [disabled]="operando()"
-                  (pressed)="tornarCapitao(vaga)"
-                >
-                  Tornar capitão
-                </app-button>
-              }
-              @if (vaga.papel === 'Starter') {
-                @if (reservaDe(vaga); as reserva) {
-                  <app-button
-                    variant="secondary"
-                    [fullWidth]="true"
-                    [disabled]="operando()"
-                    (pressed)="trocar(vaga, reserva)"
-                  >
-                    Trocar com {{ reserva.ocupante!.name }}, do banco
-                  </app-button>
-                }
-              }
-              @if (vaga.papel === 'Bench') {
-                @for (titular of titularesDe(vaga); track titular.chave) {
-                  <app-button
-                    variant="secondary"
-                    [fullWidth]="true"
-                    [disabled]="operando()"
-                    (pressed)="trocar(titular, vaga)"
-                  >
-                    Entrar no lugar de {{ titular.ocupante!.name }}
-                  </app-button>
-                }
-              }
-              <app-button
-                variant="danger"
-                [fullWidth]="true"
-                [disabled]="operando()"
-                (pressed)="vender(vaga)"
-              >
-                Vender por {{ creditos(vaga.ocupante!.price) }}
-              </app-button>
-            </div>
-          }
-          <div dialogActions>
-            <app-button variant="ghost" (pressed)="fecharAcoes()">Fechar</app-button>
-          </div>
-        </app-dialog>
-      }
-    }
-
-    <ng-template #vagaTpl let-vaga>
-      @if (vaga.ocupante; as ocupante) {
-        @if (editavel()) {
-          <button
-            type="button"
-            class="vaga"
-            [class.vaga--capitao]="ocupante.isCaptain"
-            [class.vaga--indisponivel]="!ocupante.isAvailable"
-            (click)="abrirAcoes(vaga)"
-          >
-            <ng-container *ngTemplateOutlet="conteudoTpl; context: { $implicit: vaga }" />
-          </button>
-        } @else {
-          <div
-            class="vaga vaga--leitura"
-            [class.vaga--capitao]="ocupante.isCaptain"
-            [class.vaga--indisponivel]="!ocupante.isAvailable"
-          >
-            <ng-container *ngTemplateOutlet="conteudoTpl; context: { $implicit: vaga }" />
-          </div>
-        }
-      } @else if (editavel()) {
-        <a
-          class="vaga vaga--vazia"
-          [routerLink]="['/c', campeonato(), 'mercado']"
-          [queryParams]="{ posicao: slugDaVaga(vaga), origem: 'escalacao' }"
-        >
-          <span class="sr-only">Escolher {{ minusculas(descricao(vaga)) }}</span>
-          <span class="vaga__sigla" aria-hidden="true">{{ sigla(vaga) }}</span>
-          <span class="vaga__nome" aria-hidden="true">Escolher</span>
-        </a>
-      } @else {
-        <div class="vaga vaga--vazia vaga--leitura">
-          <span class="sr-only">Vaga vazia de {{ minusculas(descricao(vaga)) }}</span>
-          <span class="vaga__sigla" aria-hidden="true">{{ sigla(vaga) }}</span>
-          <span class="vaga__nome" aria-hidden="true">Vaga vazia</span>
-        </div>
-      }
-    </ng-template>
-
-    <!--
-      O leitor de tela lê uma frase só, com vírgulas; as partes visuais ficam escondidas
-      dele para que nome, time e preço não saiam colados.
-    -->
-    <ng-template #conteudoTpl let-vaga>
-      <span class="sr-only">{{ rotuloAcessivel(vaga) }}</span>
-      <span class="vaga__sigla" aria-hidden="true">{{ sigla(vaga) }}</span>
-      <span class="vaga__nome" aria-hidden="true">{{ vaga.ocupante.name }}</span>
-      <span class="vaga__detalhe" aria-hidden="true">{{ vaga.ocupante.realTeamName }}</span>
-      <span class="vaga__detalhe" aria-hidden="true">{{ creditos(vaga.ocupante.price) }}</span>
-      @if (vaga.ocupante.isCaptain) {
-        <span class="vaga__capitao" aria-hidden="true">C</span>
-      }
-      @if (!vaga.ocupante.isAvailable) {
-        <span class="vaga__alerta" aria-hidden="true">Indisponível</span>
-      }
-    </ng-template>
-  `,
+  imports: [
+    Alert,
+    Button,
+    Icon,
+    LineupBoard,
+    LineupPicker,
+    Loading,
+    MarketClock,
+    PageHeader,
+    RouterLink,
+  ],
+  templateUrl: './fantasy-lineup.html',
   styleUrls: ['./fantasy.scss', './fantasy-lineup.scss'],
 })
 export class FantasyLineupPage implements OnInit {
@@ -387,13 +100,31 @@ export class FantasyLineupPage implements OnInit {
   readonly campeonato = input.required<string>();
 
   private readonly avisoRef = viewChild<ElementRef<HTMLElement>>('caixaDeAviso');
+  private readonly painelRef = viewChild<ElementRef<HTMLDialogElement>>('painel');
+
+  protected readonly icons = {
+    campo: LayoutGrid,
+    lista: List,
+    fechar: X,
+    pendente: CircleAlert,
+    feito: CircleCheck,
+  } as const;
 
   protected readonly estado = signal<Estado>({ tipo: 'carregando' });
+  protected readonly modo = signal<LineupView>(lerModo());
   protected readonly selecionada = signal<Vaga | null>(null);
   protected readonly operando = signal(false);
+  /** Id do item sendo comprado no seletor, para o botão dele mostrar o carregamento. */
+  protected readonly comprando = signal<string | null>(null);
   protected readonly aviso = signal<string | null>(null);
   protected readonly falhaNaAcao = signal<string | null>(null);
   protected readonly falhaGeral = signal<string | null>(null);
+  protected readonly mercado = signal<FantasyMarket | null>(null);
+  protected readonly mercadoFalhou = signal(false);
+
+  private readonly desktop = signal(false);
+  /** Quem abriu o painel, para o foco voltar a ele quando o painel fechar. */
+  private gatilho: HTMLElement | null = null;
 
   protected readonly visao = computed(() => {
     const atual = this.estado();
@@ -432,13 +163,52 @@ export class FantasyLineupPage implements OnInit {
     return visao ? formacaoCurta(visao.profile) : '';
   });
 
-  protected readonly atletas = computed(
-    () => this.visao()?.entry?.slots.filter((slot) => slot.kind === 'Athlete').length ?? 0,
+  protected readonly subtitulo = computed(() => {
+    const visao = this.visao();
+    if (!visao) {
+      return null;
+    }
+    return visao.market.roundName
+      ? `${visao.competitionName} · ${visao.market.roundName}`
+      : visao.competitionName;
+  });
+
+  protected readonly escolhidos = computed(() => this.visao()?.entry?.slots.length ?? 0);
+
+  protected readonly vagas = computed(() => {
+    const perfil = this.visao()?.profile;
+    return perfil ? perfil.squadAthletes + 1 : 0;
+  });
+
+  protected readonly progresso = computed(() =>
+    this.vagas() === 0 ? 0 : Math.round((this.escolhidos() / this.vagas()) * 100),
   );
 
   protected readonly capitao = computed(
-    () => this.visao()?.entry?.slots.find((slot) => slot.isCaptain)?.name ?? 'Ainda não escolhido',
+    () => this.visao()?.entry?.slots.find((slot) => slot.isCaptain)?.name ?? null,
   );
+
+  protected readonly tecnico = computed(
+    () => this.visao()?.entry?.slots.find((slot) => slot.kind === 'Coach')?.name ?? null,
+  );
+
+  protected readonly tituloDoPainel = computed(() => {
+    const vaga = this.selecionada();
+    if (!vaga) {
+      return '';
+    }
+    return vaga.ocupante ? vaga.ocupante.name : `Escolher ${this.minusculas(this.descricao(vaga))}`;
+  });
+
+  constructor() {
+    const consulta = globalThis.matchMedia?.(DESKTOP);
+    if (consulta) {
+      this.desktop.set(consulta.matches);
+      const mudou = (evento: MediaQueryListEvent) => this.desktop.set(evento.matches);
+      consulta.addEventListener('change', mudou);
+      inject(DestroyRef).onDestroy(() => consulta.removeEventListener('change', mudou));
+    }
+  }
 
   ngOnInit(): void {
     this.carregar();
@@ -458,43 +228,21 @@ export class FantasyLineupPage implements OnInit {
     return local && visao ? closingText(local, visao.market.timeZoneId) : '';
   }
 
-  protected rotuloDaLinha(linha: LinhaDoCampo): string {
-    return positionGroupLabel(linha.posicao, linha.vagas.length);
-  }
-
-  protected sigla(vaga: Vaga): string {
-    return vaga.posicao === null ? 'TEC' : SIGLAS[vaga.posicao];
-  }
-
-  /** "Goleiro titular", "Reserva de defensor" ou "Técnico": o papel da vaga por extenso. */
   protected descricao(vaga: Vaga): string {
-    if (vaga.papel === 'Coach' || vaga.posicao === null) {
-      return 'Técnico';
-    }
-    const posicao = assetRoleLabel('Athlete', vaga.posicao);
-    return vaga.papel === 'Bench'
-      ? `Reserva de ${posicao.toLocaleLowerCase('pt-BR')}`
-      : `${posicao} titular`;
-  }
-
-  /** "Atacante titular: Bia, União da Vila, C$ 8,00, capitão". */
-  protected rotuloAcessivel(vaga: Vaga): string {
-    const ocupante = vaga.ocupante!;
-    return [
-      `${this.descricao(vaga)}: ${ocupante.name}`,
-      ocupante.realTeamName,
-      credits(ocupante.price),
-      ...(ocupante.isCaptain ? ['capitão'] : []),
-      ...(ocupante.isAvailable ? [] : ['indisponível']),
-    ].join(', ');
+    return descricaoDaVaga(vaga);
   }
 
   protected minusculas(texto: string): string {
     return texto.toLocaleLowerCase('pt-BR');
   }
 
-  protected slugDaVaga(vaga: Vaga): string {
-    return assetSlug(vaga.papel === 'Coach' ? 'Coach' : 'Athlete', vaga.posicao);
+  protected mudarModo(modo: LineupView): void {
+    this.modo.set(modo);
+    try {
+      globalThis.localStorage?.setItem(CHAVE_DO_MODO, modo);
+    } catch {
+      // Sem armazenamento, a escolha vale até sair da página.
+    }
   }
 
   protected reservaDe(vaga: Vaga): Vaga | null {
@@ -505,13 +253,46 @@ export class FantasyLineupPage implements OnInit {
     return titularesDaPosicao(this.campo()!, vaga.posicao);
   }
 
-  protected abrirAcoes(vaga: Vaga): void {
+  /** A vaga tocada no campo abre o painel: escolha, se vazia; ações, se ocupada. */
+  protected abrir(vaga: Vaga): void {
     this.falhaNaAcao.set(null);
+    const painel = this.painelRef()?.nativeElement;
+    if (!painel?.open) {
+      this.gatilho = document.activeElement as HTMLElement | null;
+    }
     this.selecionada.set(vaga);
+    if (!vaga.ocupante && this.mercado() === null) {
+      this.carregarMercado();
+    }
+    if (painel && !painel.open) {
+      // No desktop o painel não bloqueia o campo: dá para tocar outra vaga com ele aberto.
+      if (this.desktop()) {
+        painel.show();
+        setTimeout(() => painel.querySelector<HTMLElement>('input, button')?.focus());
+      } else {
+        painel.showModal();
+      }
+    }
   }
 
-  protected fecharAcoes(): void {
+  protected fecharPainel(): void {
+    this.painelRef()?.nativeElement.close();
+  }
+
+  /** Fechou por Esc, pelo botão ou pelo fundo: o foco volta para a vaga que abriu. */
+  protected aoFecharPainel(): void {
     this.selecionada.set(null);
+    const gatilho = this.gatilho;
+    this.gatilho = null;
+    if (gatilho?.isConnected) {
+      gatilho.focus();
+    }
+  }
+
+  protected fecharPeloFundo(evento: MouseEvent): void {
+    if (evento.target === this.painelRef()?.nativeElement) {
+      this.fecharPainel();
+    }
   }
 
   protected tornarCapitao(vaga: Vaga): void {
@@ -542,11 +323,32 @@ export class FantasyLineupPage implements OnInit {
     );
   }
 
+  /** O servidor decide o papel de quem entra; o recado diz onde ele ficou. */
+  protected comprar(item: MarketItem): void {
+    this.comprando.set(item.id);
+    this.executar(this.service.buy(this.campeonato(), item.kind, item.id), (visao) => {
+      const papel = visao.entry?.slots.find(
+        (slot) => slot.kind === item.kind && slot.assetId === item.id,
+      )?.role;
+      const onde =
+        papel === 'Bench' ? 'no banco' : papel === 'Coach' ? 'como técnico' : 'como titular';
+      return `${item.name} entrou ${onde}. Saldo: ${credits(visao.entry?.balance ?? 0)}.`;
+    });
+  }
+
+  protected carregarMercado(): void {
+    this.mercadoFalhou.set(false);
+    this.service.market(this.campeonato()).subscribe({
+      next: (mercado) => this.mercado.set(mercado),
+      error: () => this.mercadoFalhou.set(true),
+    });
+  }
+
   protected carregar(): void {
     this.service.overview(this.campeonato()).subscribe({
       next: (visao) => {
         this.mostrar(visao);
-        // A compra feita a partir de uma vaga volta para cá com o recado do mercado.
+        // A compra feita pelo mercado completo volta para cá com o recado dele.
         const recado = this.notice.retirar();
         if (recado) {
           this.anunciar(recado);
@@ -566,20 +368,26 @@ export class FantasyLineupPage implements OnInit {
     operacao.subscribe({
       next: (visao) => {
         this.operando.set(false);
-        this.selecionada.set(null);
+        this.comprando.set(null);
+        // Saldo e limites mudaram: o que o seletor sabia do mercado ficou velho.
+        this.mercado.set(null);
         this.mostrar(visao);
+        this.gatilho = null;
+        this.fecharPainel();
         this.anunciar(mensagem(visao));
       },
       error: (falha: ApiFailure) => {
         this.operando.set(false);
+        this.comprando.set(null);
         // Mercado fechado ou elenco alterado em outra aba: o campo ficou velho.
         if (falha.code === FANTASY_MARKET_CLOSED_CODE || falha.code === FANTASY_CONFLICT_CODE) {
-          this.selecionada.set(null);
+          this.gatilho = null;
+          this.fecharPainel();
           this.falhaGeral.set(falha.message);
           this.carregar();
           return;
         }
-        // Recusa de regra (limite do time, por exemplo): fica no diálogo, junto da ação.
+        // Recusa de regra (limite do time, por exemplo): fica no painel, junto da ação.
         this.falhaNaAcao.set(fantasyRefusalText(falha, this.visao()?.teamLimit));
       },
     });
@@ -593,6 +401,6 @@ export class FantasyLineupPage implements OnInit {
 
   private mostrar(visao: FantasyOverview): void {
     this.estado.set({ tipo: 'pronto', visao });
-    this.title.setTitle(`Escalação · ${visao.competitionName}`);
+    this.title.setTitle(`Meu time · ${visao.competitionName}`);
   }
 }

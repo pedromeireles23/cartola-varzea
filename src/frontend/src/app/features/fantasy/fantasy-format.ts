@@ -151,11 +151,15 @@ export function valuationGroupLabel(kind: AssetKind, position: AthletePosition |
   return positionGroupLabel(position, 2).toLocaleLowerCase('pt-BR');
 }
 
+/** Palavras que não entram nas iniciais do time. */
+const CONECTIVOS = new Set(['da', 'das', 'de', 'do', 'dos', 'e']);
+
 /** Até duas iniciais do nome do time, como o escudo de fallback da área de organização. */
 export function teamInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
+  const partes = name.split(/\s+/).filter(Boolean);
+  // "Estrela do Bairro" vira EB, não ED: conectivos não identificam o time.
+  const nomes = partes.filter((parte) => !CONECTIVOS.has(parte.toLocaleLowerCase('pt-BR')));
+  return (nomes.length > 0 ? nomes : partes)
     .slice(0, 2)
     .map((part) => part[0])
     .join('')

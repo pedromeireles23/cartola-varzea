@@ -1,17 +1,56 @@
+// Aviso de rodada (06 §9.4): fundo laranja suave, barra lateral e horário absoluto; a
+// contagem regressiva complementa. Fechado, o aviso fica neutro: não há ação a tomar.
 .relogio {
-  display: grid;
-  gap: var(--space-2);
-  justify-items: start;
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  color: #4d2a17;
+  background-color: var(--color-brand-50);
+  border-left: 3px solid var(--color-brand-500);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.relogio--fechado {
+  color: var(--color-ink-950);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-ink-500);
+}
+
+.relogio__icone {
+  margin-top: 1px;
+  color: var(--color-brand-700);
+}
+
+.relogio--fechado .relogio__icone {
+  color: var(--color-ink-500);
 }
 
 .relogio__texto {
-  margin: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.relogio__estado {
+  font-size: var(--font-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.relogio__prazo {
   font-weight: 500;
 }
 
-.relogio__contagem {
-  margin: 0;
+.relogio--fechado .relogio__prazo {
   color: var(--color-ink-700);
+  font-size: var(--font-small);
+  font-weight: 400;
+}
+
+.relogio__contagem {
   font-size: var(--font-small);
   font-variant-numeric: tabular-nums;
 }

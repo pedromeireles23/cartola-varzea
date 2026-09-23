@@ -1,0 +1,139 @@
+:host {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.ferramentas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
+
+.busca {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--touch-target);
+  padding-inline: var(--space-3);
+  color: var(--color-ink-500);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.busca:focus-within {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+.busca__campo {
+  width: 100%;
+  min-width: 0;
+  color: var(--color-ink-950);
+  font-size: var(--font-body-size);
+  background: none;
+  border: 0;
+  outline: none;
+}
+
+.ordem__campo {
+  min-height: var(--touch-target);
+  padding: 0 var(--space-2);
+  color: var(--color-ink-950);
+  font-size: var(--font-small);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.contagem,
+.vazio {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+}
+
+.contagem strong {
+  color: var(--color-ink-950);
+  font-weight: 600;
+}
+
+.opcoes {
+  margin: 0 calc(-1 * var(--space-4));
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.opcao {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'escudo texto preco'
+    'escudo texto botao';
+  gap: 2px var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.opcao__escudo {
+  display: grid;
+  grid-area: escudo;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: var(--color-ink-700);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+}
+
+.opcao__texto {
+  display: grid;
+  grid-area: texto;
+  min-width: 0;
+}
+
+.opcao__nome {
+  font-weight: 500;
+}
+
+.opcao__time {
+  overflow: hidden;
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opcao__motivo {
+  color: var(--color-warning);
+  font-size: var(--font-caption);
+}
+
+.opcao__preco {
+  grid-area: preco;
+  justify-self: end;
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.opcao app-button {
+  grid-area: botao;
+  justify-self: end;
+}
+
+.opcao--bloqueada .opcao__nome,
+.opcao--bloqueada .opcao__preco {
+  color: var(--color-ink-500);
+}
+
+.mercado {
+  justify-self: start;
+  font-size: var(--font-small);
+  font-weight: 500;
+}

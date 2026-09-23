@@ -67,7 +67,8 @@ describe('fantasy-format', () => {
   });
 
   it('usa até duas iniciais do time', () => {
-    expect(teamInitials('União da Vila')).toBe('UD');
+    expect(teamInitials('União da Vila')).toBe('UV');
+    expect(teamInitials('Bar do Nico FC')).toBe('BN');
     expect(teamInitials('Estrela')).toBe('E');
   });
 });

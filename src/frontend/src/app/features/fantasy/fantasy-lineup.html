@@ -1,0 +1,304 @@
+@switch (estado().tipo) {
+  @case ('carregando') {
+    <app-page-header heading="Meu time" />
+    <section class="painel-simples"><app-loading label="Abrindo o seu time…" /></section>
+  }
+  @case ('erro') {
+    <app-page-header heading="Meu time" />
+    <section class="painel-simples">
+      @if (falha()!.status === 404) {
+        <app-alert tone="warning">
+          Não encontramos este campeonato. Ele pode ter saído do ar ou o endereço estar errado.
+        </app-alert>
+        <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
+      } @else {
+        <app-alert tone="danger">{{ falha()!.message }}</app-alert>
+        <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+      }
+    </section>
+  }
+  @case ('pronto') {
+    @let campoAtual = campo()!;
+    <app-page-header heading="Meu time" [subtitle]="subtitulo()">
+      @if (visao()!.entry) {
+        <div class="alternar" role="group" aria-label="Como ver o time">
+          <button
+            type="button"
+            class="alternar__opcao"
+            [attr.aria-pressed]="modo() === 'campo'"
+            (click)="mudarModo('campo')"
+          >
+            <svg [appIcon]="icons.campo" />Campo
+          </button>
+          <button
+            type="button"
+            class="alternar__opcao"
+            [attr.aria-pressed]="modo() === 'lista'"
+            (click)="mudarModo('lista')"
+          >
+            <svg [appIcon]="icons.lista" />Lista
+          </button>
+        </div>
+      }
+    </app-page-header>
+
+    <app-market-clock [market]="visao()!.market" (closed)="carregar()" />
+
+    @if (visao()!.entry; as entrada) {
+      <div #caixaDeAviso tabindex="-1" class="aviso">
+        @if (aviso(); as texto) {
+          <app-alert tone="success">{{ texto }}</app-alert>
+        }
+      </div>
+      @if (falhaGeral(); as mensagem) {
+        <app-alert tone="danger">{{ mensagem }}</app-alert>
+      }
+
+      @if (editavel()) {
+        <section class="metricas" aria-label="Seu elenco">
+          <div class="metrica metrica--elenco">
+            <p class="metrica__rotulo">Elenco</p>
+            <p class="metrica__valor num">{{ escolhidos() }} de {{ vagas() }}</p>
+            <div
+              class="metrica__barra"
+              role="progressbar"
+              aria-label="Elenco montado"
+              aria-valuemin="0"
+              [attr.aria-valuemax]="vagas()"
+              [attr.aria-valuenow]="escolhidos()"
+              [attr.aria-valuetext]="escolhidos() + ' de ' + vagas() + ' vagas'"
+            >
+              <span [style.width.%]="progresso()"></span>
+            </div>
+          </div>
+          <div class="metrica">
+            <p class="metrica__rotulo">Saldo</p>
+            <p class="metrica__valor num">{{ creditos(entrada.balance) }}</p>
+          </div>
+          <div class="metrica">
+            <p class="metrica__rotulo">Capitão</p>
+            <p class="metrica__valor" [class.metrica__valor--pendente]="!capitao()">
+              {{ capitao() ?? 'Pendente' }}
+            </p>
+          </div>
+          <div class="metrica metrica--limite">
+            <p class="metrica__rotulo">Por time</p>
+            <p class="metrica__valor">
+              até {{ visao()!.teamLimit.maxAthletes }}
+              <span class="metrica__apoio">({{ visao()!.teamLimit.maxStarters }} titulares)</span>
+            </p>
+          </div>
+        </section>
+      } @else if (fechada(); as rodada) {
+        @switch (rodada.status) {
+          @case ('Frozen') {
+            <app-alert tone="success">
+              Escalação congelada para a {{ rodada.roundName }} desde
+              {{ horario(rodada.marketClosedAtLocal) }}. É ela que vale na apuração.
+            </app-alert>
+          }
+          @case ('Incomplete') {
+            <app-alert tone="warning">
+              Sua escalação não estava completa quando o mercado da {{ rodada.roundName }} fechou,
+              {{ horario(rodada.marketClosedAtLocal) }}. Você fica fora dessa rodada e volta a
+              escalar quando o mercado da próxima abrir.
+            </app-alert>
+          }
+          @case ('JoinedAfterClose') {
+            <app-alert tone="info">
+              Você entrou depois do fechamento da {{ rodada.roundName }}. Seu jogo começa na próxima
+              rodada com o mercado aberto.
+            </app-alert>
+          }
+        }
+      }
+
+      <div class="mesa">
+        <app-lineup-board
+          class="mesa__time"
+          [campo]="campoAtual"
+          [formacao]="formacao()"
+          [modo]="modo()"
+          [editavel]="editavel()"
+          [selecionada]="selecionada()?.chave ?? null"
+          (escolher)="abrir($event)"
+        />
+
+        <div class="mesa__lado">
+          @if (editavel()) {
+            <section class="resumo-time" aria-labelledby="resumo-titulo">
+              <h2 id="resumo-titulo" class="resumo-time__titulo">Resumo da escalação</h2>
+              @if (entrada.issues.length === 0) {
+                <app-alert tone="success">
+                  Escalação completa. Ela vale para a {{ visao()!.market.roundName }} e congela
+                  {{ horario(visao()!.market.closesAtLocal) }}.
+                </app-alert>
+                <dl class="dados">
+                  <div class="dados__item">
+                    <dt>Capitão</dt>
+                    <dd>{{ capitao() }}</dd>
+                  </div>
+                  <div class="dados__item">
+                    <dt>Técnico</dt>
+                    <dd>{{ tecnico() }}</dd>
+                  </div>
+                  <div class="dados__item">
+                    <dt>Valor do elenco</dt>
+                    <dd class="num">{{ creditos(entrada.patrimony - entrada.balance) }}</dd>
+                  </div>
+                  <div class="dados__item">
+                    <dt>Saldo</dt>
+                    <dd class="num">{{ creditos(entrada.balance) }}</dd>
+                  </div>
+                </dl>
+              } @else {
+                <h3 class="resumo-time__subtitulo">O que falta para a escalação valer</h3>
+                <ul class="faltas">
+                  @for (pendencia of entrada.issues; track pendencia.message) {
+                    <li class="faltas__item">
+                      <svg class="faltas__icone" [appIcon]="icons.pendente" />{{
+                        pendencia.message
+                      }}
+                    </li>
+                  }
+                </ul>
+                <p class="apoio">
+                  Toque numa vaga vazia para escolher quem entra. Se o mercado fechar com algo
+                  faltando, você fica fora da {{ visao()!.market.roundName }}.
+                </p>
+              }
+              <p class="apoio resumo-time__salvo">
+                <svg [appIcon]="icons.feito" />
+                Cada mudança já fica salva. Até o fechamento, dá para trocar à vontade.
+              </p>
+            </section>
+          }
+
+          <!--
+            O mesmo painel serve à escolha e às ações do atleta. No desktop abre sem bloquear o
+            campo; no celular é modal e sobe de baixo. O clique no fundo é atalho a mais: Esc e
+            o botão Fechar fazem o mesmo.
+          -->
+          <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+          <dialog
+            #painel
+            class="painel"
+            aria-labelledby="painel-titulo"
+            (close)="aoFecharPainel()"
+            (keydown.escape)="fecharPainel()"
+            (click)="fecharPeloFundo($event)"
+          >
+            <header class="painel__topo">
+              <div>
+                @if (selecionada()?.ocupante) {
+                  <p class="painel__apoio">{{ descricao(selecionada()!) }}</p>
+                }
+                <h2 id="painel-titulo" class="painel__titulo">{{ tituloDoPainel() }}</h2>
+              </div>
+              <button
+                type="button"
+                class="painel__fechar"
+                aria-label="Fechar"
+                (click)="fecharPainel()"
+              >
+                <svg [appIcon]="icons.fechar" [size]="20" />
+              </button>
+            </header>
+
+            <div class="painel__corpo">
+              @if (selecionada(); as vaga) {
+                @if (vaga.ocupante; as ocupante) {
+                  <div class="acoes-atleta">
+                    <p class="acoes-atleta__descricao">
+                      {{ ocupante.realTeamName }} · {{ creditos(ocupante.price) }}
+                    </p>
+                    @if (ocupante.isCaptain) {
+                      <p class="acoes-atleta__descricao">É o capitão: dobra os pontos na rodada.</p>
+                    }
+                    @if (!ocupante.isAvailable) {
+                      <app-alert tone="warning">
+                        Indisponível no momento: pode não entrar em campo nesta rodada.
+                      </app-alert>
+                    }
+                    @if (falhaNaAcao(); as mensagem) {
+                      <app-alert tone="danger">{{ mensagem }}</app-alert>
+                    }
+                    <div class="acoes">
+                      @if (vaga.papel === 'Starter' && !ocupante.isCaptain) {
+                        <app-button
+                          [fullWidth]="true"
+                          [disabled]="operando()"
+                          (pressed)="tornarCapitao(vaga)"
+                        >
+                          Tornar capitão
+                        </app-button>
+                      }
+                      @if (vaga.papel === 'Starter') {
+                        @if (reservaDe(vaga); as reserva) {
+                          <app-button
+                            variant="secondary"
+                            [fullWidth]="true"
+                            [disabled]="operando()"
+                            (pressed)="trocar(vaga, reserva)"
+                          >
+                            Trocar com {{ reserva.ocupante!.name }}, do banco
+                          </app-button>
+                        }
+                      }
+                      @if (vaga.papel === 'Bench') {
+                        @for (titular of titularesDe(vaga); track titular.chave) {
+                          <app-button
+                            variant="secondary"
+                            [fullWidth]="true"
+                            [disabled]="operando()"
+                            (pressed)="trocar(titular, vaga)"
+                          >
+                            Entrar no lugar de {{ titular.ocupante!.name }}
+                          </app-button>
+                        }
+                      }
+                      <app-button
+                        variant="danger"
+                        [fullWidth]="true"
+                        [disabled]="operando()"
+                        (pressed)="vender(vaga)"
+                      >
+                        Vender por {{ creditos(ocupante.price) }}
+                      </app-button>
+                    </div>
+                    @if (ocupante.kind === 'Athlete') {
+                      <a
+                        class="acoes-atleta__ficha"
+                        [routerLink]="['/c', campeonato(), 'atletas', ocupante.assetId]"
+                      >
+                        Ver a página de {{ ocupante.name }}
+                      </a>
+                    }
+                  </div>
+                } @else {
+                  <app-lineup-picker
+                    [vaga]="vaga"
+                    [campeonato]="campeonato()"
+                    [itens]="mercado()?.items ?? null"
+                    [saldo]="entrada.balance"
+                    [operando]="comprando()"
+                    [falha]="falhaNaAcao()"
+                    [falhouAoCarregar]="mercadoFalhou()"
+                    (comprar)="comprar($event)"
+                    (recarregar)="carregarMercado()"
+                  />
+                }
+              }
+            </div>
+          </dialog>
+        </div>
+      </div>
+    } @else {
+      <section class="painel-simples" aria-labelledby="entrar-titulo">
+        <h2 id="entrar-titulo" class="resumo-time__titulo">Entre no campeonato</h2>
+        <p>Para escalar, entre no campeonato primeiro: é lá que você recebe o orçamento.</p>
+        <a class="acao" [routerLink]="['/c', campeonato(), 'jogar']">Entrar no campeonato</a>
+      </section>
+    }
+  }
+}

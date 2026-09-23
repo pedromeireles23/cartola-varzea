@@ -10,13 +10,15 @@ import {
   signal,
 } from '@angular/core';
 
-import { Badge } from '../../shared/ui';
+import { Clock, Lock } from 'lucide';
+
+import { Icon } from '../../shared/ui';
 import { closingText, countdownText } from './fantasy-format';
 import { FantasyMarketStatus } from './fantasy.service';
 
 /**
- * Estado do mercado (02 §8, "Round status"): aberto com o horário absoluto do
- * fechamento e a contagem regressiva, ou fechado.
+ * Estado do mercado (02 §8, "Round status", no formato de aviso do 06 §9.4): aberto com o
+ * horário absoluto do fechamento e a contagem regressiva, ou fechado.
  *
  * O horário absoluto é o texto principal; a contagem só complementa e fica fora da
  * região viva, para o leitor de tela não anunciar cada segundo. Passado o fechamento,
@@ -30,23 +32,29 @@ const REPERGUNTA_MS = 5000;
 @Component({
   selector: 'app-market-clock',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Badge],
+  imports: [Icon],
   template: `
     @if (market().isOpen && market().closesAtLocal) {
       <div class="relogio">
-        <app-badge tone="success">Mercado aberto</app-badge>
-        <p class="relogio__texto">{{ market().roundName }} · fecha {{ fechamento() }}</p>
-        @if (contagem(); as falta) {
-          <p class="relogio__contagem" aria-hidden="true">Faltam {{ falta }}</p>
-        }
+        <svg class="relogio__icone" [appIcon]="icons.clock" [size]="20" />
+        <div class="relogio__texto">
+          <p class="relogio__estado">Mercado aberto</p>
+          <p class="relogio__prazo">{{ market().roundName }} · fecha {{ fechamento() }}</p>
+          @if (contagem(); as falta) {
+            <p class="relogio__contagem" aria-hidden="true">Faltam {{ falta }}</p>
+          }
+        </div>
       </div>
     } @else {
-      <div class="relogio">
-        <app-badge tone="neutral">Mercado fechado</app-badge>
-        <p class="relogio__texto">
-          O elenco não pode ser alterado agora. Ele volta a mudar quando o organizador abrir o
-          mercado da próxima rodada.
-        </p>
+      <div class="relogio relogio--fechado">
+        <svg class="relogio__icone" [appIcon]="icons.lock" [size]="20" />
+        <div class="relogio__texto">
+          <p class="relogio__estado">Mercado fechado</p>
+          <p class="relogio__prazo">
+            O elenco não pode ser alterado agora. Ele volta a mudar quando o organizador abrir o
+            mercado da próxima rodada.
+          </p>
+        </div>
       </div>
     }
   `,
@@ -56,6 +64,8 @@ export class MarketClock implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly market = input.required<FantasyMarketStatus>();
+
+  protected readonly icons = { clock: Clock, lock: Lock } as const;
 
   /** A contagem chegou a zero: hora de perguntar ao servidor. */
   readonly closed = output<void>();

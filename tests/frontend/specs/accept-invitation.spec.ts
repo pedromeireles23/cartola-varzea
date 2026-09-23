@@ -29,6 +29,8 @@ test('convidado aceita pelo link do e-mail, a conta errada não consome o convit
   const contextoConvidado = await browser.newContext();
   const convidado = await contextoConvidado.newPage();
   const emailConvidado = await entrarComContaNova(convidado, request, 'Pessoa Auxiliar');
+  // A entrada abre o início; encerrar a sessão fica em Conta.
+  await convidado.goto('/perfil');
   await convidado.getByRole('button', { name: 'Encerrar sessão' }).click();
   await expect(convidado).toHaveURL(/\/entrar/);
 

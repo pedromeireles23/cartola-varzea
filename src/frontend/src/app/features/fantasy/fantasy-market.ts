@@ -109,9 +109,7 @@ const BLOQUEIOS_GERAIS = new Set(['not_joined', 'market_closed']);
         <h1>Mercado</h1>
         <p class="intro">{{ visao()!.competitionName }}</p>
 
-        <app-card>
-          <app-market-clock [market]="mercado()!.market" (closed)="carregar()" />
-        </app-card>
+        <app-market-clock [market]="mercado()!.market" (closed)="carregar()" />
 
         @if (daEscalacao() && podeOperar()) {
           <app-alert tone="info">

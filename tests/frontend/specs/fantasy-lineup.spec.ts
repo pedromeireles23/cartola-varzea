@@ -32,16 +32,17 @@ test('participante monta a escalação pelo campo, escolhe o capitão e troca co
   await jogador.getByRole('button', { name: 'Entrar no campeonato' }).click();
   await jogador.getByRole('link', { name: 'Escalar meu time' }).click();
 
-  await expect(jogador.getByRole('heading', { name: 'Escalação', level: 1 })).toBeVisible();
+  await expect(jogador.getByRole('heading', { name: 'Meu time', level: 1 })).toBeVisible();
   await expect(jogador.getByRole('heading', { name: 'Titulares 1-2-2-2' })).toBeVisible();
-  await expect(jogador.getByRole('link', { name: /^Escolher / })).toHaveCount(VAGAS_DO_FUT7);
+  await expect(jogador.getByRole('button', { name: /^Escolher / })).toHaveCount(VAGAS_DO_FUT7);
   await semRolagemHorizontal(jogador);
 
-  // Cada vaga vazia abre o mercado filtrado; a compra volta para o campo.
-  await jogador.getByRole('link', { name: 'Escolher goleiro titular' }).click();
-  await expect(jogador).toHaveURL(/\/mercado\?posicao=goleiro&origem=escalacao$/);
-  await expect(jogador.getByText('Escolhendo um goleiro para a escalação.')).toBeVisible();
-  await expect(jogador.getByLabel('Posição')).toHaveValue('Goalkeeper');
+  // Cada vaga vazia abre a escolha filtrada pela posição no próprio campo: sem ida e
+  // volta ao mercado, a página não muda.
+  await jogador.getByRole('button', { name: 'Escolher goleiro titular' }).click();
+  const escolha = jogador.getByRole('dialog', { name: 'Escolher goleiro titular' });
+  await expect(escolha).toBeVisible();
+  await semRolagemHorizontal(jogador);
   const goleiro = await comprarOMaisBarato(jogador);
   await expect(jogador).toHaveURL(new RegExp(`/c/${slug}/escalacao$`));
   await expect(jogador.getByText(`${goleiro} entrou como titular.`)).toBeVisible();
@@ -53,11 +54,11 @@ test('participante monta a escalação pelo campo, escolhe o capitão e troca co
 
   for (let compra = 2; compra <= VAGAS_DO_FUT7; compra++) {
     await jogador
-      .getByRole('link', { name: /^Escolher / })
+      .getByRole('button', { name: /^Escolher / })
       .first()
       .click();
     await comprarOMaisBarato(jogador);
-    await expect(jogador.getByRole('link', { name: /^Escolher / })).toHaveCount(
+    await expect(jogador.getByRole('button', { name: /^Escolher / })).toHaveCount(
       VAGAS_DO_FUT7 - compra,
     );
   }
@@ -68,7 +69,7 @@ test('participante monta a escalação pelo campo, escolhe o capitão e troca co
 
   // Capitão: pelo diálogo do atleta, sem arrastar nada.
   const atacante = jogador.getByRole('list', { name: 'Atacantes' }).getByRole('button').first();
-  const nomeDoCapitao = (await atacante.locator('.vaga__nome').textContent())!.trim();
+  const nomeDoCapitao = (await atacante.locator('.ficha__nome').textContent())!.trim();
   await atacante.click();
   const acoes = jogador.getByRole('dialog', { name: nomeDoCapitao });
   await acoes.getByRole('button', { name: 'Tornar capitão' }).click();
@@ -80,7 +81,7 @@ test('participante monta a escalação pelo campo, escolhe o capitão e troca co
 
   // O reserva do gol entra no lugar do titular, que vai para o banco.
   const reserva = jogador.getByRole('button', { name: /^Reserva de goleiro:/ });
-  const nomeDoReserva = (await reserva.locator('.vaga__nome').textContent())!.trim();
+  const nomeDoReserva = (await reserva.locator('.ficha__nome').textContent())!.trim();
   await reserva.click();
   await jogador
     .getByRole('dialog', { name: nomeDoReserva })
@@ -146,7 +147,7 @@ test('a escalação completa congela quando o mercado fecha pelo relógio do ser
     timeout: fechamento.getTime() - Date.now() + 60_000,
   });
   await expect(jogador.getByText('Mercado fechado')).toBeVisible();
-  await expect(jogador.getByRole('link', { name: /^Escolher / })).toHaveCount(0);
+  await expect(jogador.getByRole('button', { name: /^Escolher / })).toHaveCount(0);
   await expect(
     jogador.getByRole('region', { name: 'Titulares 1-2-2-2' }).getByRole('button'),
   ).toHaveCount(0);
@@ -202,7 +203,7 @@ test('no futebol de campo, os 11 titulares cabem em 360 px sem encolher o alvo d
   await semRolagemHorizontal(jogador);
 
   // A vaga estreita na largura, mas nunca fica abaixo do alvo de toque mínimo (02 §6).
-  for (const vaga of await jogador.locator('.vaga').all()) {
+  for (const vaga of await jogador.locator('.ficha').all()) {
     const caixa = (await vaga.boundingBox())!;
     expect(caixa.width, 'Vaga mais estreita que 44 px').toBeGreaterThanOrEqual(44);
     expect(caixa.height, 'Vaga mais baixa que 44 px').toBeGreaterThanOrEqual(44);
@@ -230,32 +231,17 @@ async function organizacaoAprovada(
 }
 
 /**
- * No mercado aberto pela vaga, compra o item liberado mais barato — o orçamento de C$ 100
- * precisa fechar as 12 vagas — e devolve o nome de quem entrou.
+ * Na escolha aberta pela vaga, compra o liberado mais barato — o orçamento de C$ 100
+ * precisa fechar as 12 vagas — e devolve o nome de quem entrou. A lista já vem do mais
+ * barato para o mais caro, com quem está bloqueado no fim.
  */
 async function comprarOMaisBarato(jogador: Page): Promise<string> {
-  await expect(jogador.getByRole('heading', { name: 'Mercado', level: 1 })).toBeVisible();
-  const itens = jogador
-    .locator('li.item')
-    .filter({ has: jogador.getByRole('button', { name: /^Comprar/, disabled: false }) });
-  await expect(itens.first()).toBeVisible();
-
-  let escolhido = 0;
-  let menor = Number.POSITIVE_INFINITY;
-  const total = await itens.count();
-  for (let indice = 0; indice < total; indice++) {
-    const detalhe = (await itens.nth(indice).locator('.item__detalhe').textContent()) ?? '';
-    const preco = Number(/C\$\s([\d.,]+)/.exec(detalhe)![1]!.replace('.', '').replace(',', '.'));
-    if (preco < menor) {
-      menor = preco;
-      escolhido = indice;
-    }
-  }
-
-  const item = itens.nth(escolhido);
-  const nome = (await item.locator('.item__nome').textContent())!.trim();
-  await item.getByRole('button', { name: /^Comprar/ }).click();
-  await expect(jogador.getByRole('heading', { name: 'Escalação', level: 1 })).toBeVisible();
+  const escolha = jogador.getByRole('dialog');
+  const comprar = escolha.getByRole('button', { name: /^Comprar /, disabled: false }).first();
+  await expect(comprar).toBeVisible();
+  const nome = ((await comprar.textContent()) ?? '').replace(/^\s*Comprar\s*/, '').trim();
+  await comprar.click();
+  await expect(escolha).toBeHidden();
   return nome;
 }
 

@@ -1,0 +1,124 @@
+// A mesma escalação em lista: mais compacta no celular e a leitura mais direta para quem
+// usa leitor de tela. Um painel por grupo, linhas separadas por divisor (06 §3.4).
+.lista {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.lista__grupo {
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.lista__titulo {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-h3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.lista__linhas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista__item + .lista__item {
+  border-top: 1px solid var(--color-border);
+}
+
+.linha {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-ink-950);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+button.linha:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.linha--selecionada,
+button.linha--selecionada:hover {
+  background-color: var(--color-brand-50);
+  box-shadow: inset 3px 0 0 var(--color-brand-500);
+}
+
+.linha--leitura {
+  cursor: default;
+}
+
+.linha__sigla {
+  flex: 0 0 2.75rem;
+  padding: 2px 0;
+  color: var(--color-ink-700);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  text-align: center;
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.linha__texto {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.linha__nome {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 500;
+}
+
+.linha__capitao {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: var(--color-surface);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background-color: var(--color-brand-700);
+  border-radius: var(--radius-round);
+}
+
+.linha__time {
+  overflow: hidden;
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linha__preco {
+  font-size: var(--font-small);
+  font-weight: 500;
+}
+
+.linha__vazia {
+  color: var(--color-brand-700);
+  font-weight: 500;
+}
+
+.linha--leitura .linha__vazia {
+  color: var(--color-ink-500);
+}
+
+.linha__mais {
+  color: var(--color-brand-700);
+}
