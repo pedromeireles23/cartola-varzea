@@ -130,16 +130,16 @@
 }
 
 // O numero e o unico ornamento da secao: grande, chapado e sem circulo em volta.
+//
+// Ele nasceu em brand-300, que da 1,24:1 sobre a superficie — quase invisivel, e so
+// legivel ao passar o cursor, o que o dedo nunca alcanca. Agora e brand-700, 5,06:1,
+// que passa em AA e nao depende de hover para existir. O cursor muda so a borda do
+// cartao, que e enfeite de verdade.
 .passo__numero {
   font-family: var(--font-heading);
   font-size: 2.5rem;
   font-weight: 700;
   line-height: 1;
-  color: var(--color-brand-300);
-  transition: color var(--motion-feedback) var(--motion-easing);
-}
-
-.passo:hover .passo__numero {
   color: var(--color-brand-700);
 }
 

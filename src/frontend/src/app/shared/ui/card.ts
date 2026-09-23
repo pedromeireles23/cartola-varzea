@@ -13,7 +13,11 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   template: `
     <section class="card" [attr.aria-labelledby]="heading() ? headingId() : null">
       @if (heading()) {
-        <h2 class="card__heading" [id]="headingId()">{{ heading() }}</h2>
+        @if (headingLevel() === 1) {
+          <h1 class="card__heading" [id]="headingId()">{{ heading() }}</h1>
+        } @else {
+          <h2 class="card__heading" [id]="headingId()">{{ heading() }}</h2>
+        }
       }
       <ng-content />
     </section>
@@ -24,6 +28,13 @@ export class Card {
   private static nextId = 0;
 
   readonly heading = input<string>();
+
+  /**
+   * Nivel do titulo. Quando o cartao e o assunto da pagina inteira — as telas de conta,
+   * por exemplo —, ele precisa ser o `h1`: uma pagina que comeca em `h2` quebra a ordem
+   * de cabecalho e deixa quem usa leitor de tela sem o titulo principal (02 §12).
+   */
+  readonly headingLevel = input<1 | 2>(2);
 
   private readonly instanceId = Card.nextId++;
 

@@ -10,7 +10,7 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Alert, Button, Card, FormField, RouterLink],
   template: `
-    <app-card heading="Criar conta">
+    <app-card heading="Criar conta" [headingLevel]="1">
       @if (enviado()) {
         <app-alert tone="success">{{ enviado() }}</app-alert>
         <p class="apoio">Confira sua caixa de entrada e clique no link de confirmação.</p>

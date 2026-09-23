@@ -11,7 +11,7 @@ import { Alert, Card, Loading } from '../../shared/ui';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Alert, Card, Loading, RouterLink],
   template: `
-    <app-card heading="Confirmação de e-mail">
+    <app-card heading="Confirmação de e-mail" [headingLevel]="1">
       @switch (estado()) {
         @case ('verificando') {
           <app-loading label="Confirmando seu e-mail…" />

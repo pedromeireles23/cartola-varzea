@@ -10,7 +10,7 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Alert, Button, Card, FormField, RouterLink],
   template: `
-    <app-card heading="Entrar">
+    <app-card heading="Entrar" [headingLevel]="1">
       <form (submit)="entrar($event)">
         @if (erro()) {
           <app-alert tone="danger">{{ erro() }}</app-alert>

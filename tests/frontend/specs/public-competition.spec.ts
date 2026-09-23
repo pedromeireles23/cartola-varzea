@@ -1,5 +1,6 @@
 import { Page, expect, test } from '@playwright/test';
 
+import { semViolacoes } from '../support/acessibilidade';
 import { ADMIN_E2E_EMAIL, entrarComoAdmin } from '../support/conta';
 import { criarOrganizacaoAprovada } from '../support/organizacao';
 
@@ -83,6 +84,7 @@ test('visitante sem conta encontra o campeonato publicado e não o rascunho', as
   await visitante.getByRole('link', { name: publicado }).click();
   await expect(visitante).toHaveURL(new RegExp(`${endereco}$`));
   await expect(visitante.getByRole('heading', { name: publicado, level: 1 })).toBeVisible();
+  await semViolacoes(visitante, 'página do campeonato');
   await expect(visitante.getByText(organizacao)).toBeVisible();
   await expect(visitante.getByText('1. Fase única')).toBeVisible();
   // Os times da fase saem em ordem alfabética, não na ordem em que foram cadastrados.
@@ -99,6 +101,8 @@ test('visitante sem conta encontra o campeonato publicado e não o rascunho', as
   ).toBeVisible();
   await expect(visitante.getByText('Nenhuma rodada foi apurada ainda')).toBeVisible();
   await expect(visitante.getByText('Ninguém entrou neste campeonato ainda')).toBeVisible();
+  await semViolacoes(visitante, 'ranking do campeonato');
+
   await visitante.getByRole('link', { name: 'Voltar ao campeonato' }).click();
 
   // Recarregar prova que o endereço vale sozinho, sem depender da navegação.
@@ -108,6 +112,16 @@ test('visitante sem conta encontra o campeonato publicado e não o rascunho', as
   // Endereço inexistente é um estado explicado, não um erro.
   await visitante.goto('/c/campeonato-que-nao-existe-2026');
   await expect(visitante.getByText('Não encontramos este campeonato.')).toBeVisible();
+
+  // Calendário e elenco também são varridos, com o campeonato já montado.
+  await visitante.goto(`${endereco}/partidas`);
+  await expect(visitante.getByRole('heading', { level: 1 })).toBeVisible();
+  await semViolacoes(visitante, 'partidas do campeonato');
+
+  await visitante.goto(endereco);
+  await visitante.getByRole('link', { name: 'Estrela do Bairro' }).click();
+  await expect(visitante.getByRole('heading', { level: 1 })).toBeVisible();
+  await semViolacoes(visitante, 'time e elenco');
 
   // Voltar para rascunho tira o campeonato do ar para quem está de fora.
   await page.getByRole('button', { name: 'Voltar para rascunho' }).click();

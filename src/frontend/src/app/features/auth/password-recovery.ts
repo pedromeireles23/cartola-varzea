@@ -16,7 +16,7 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Alert, Button, Card, FormField, RouterLink],
   template: `
-    <app-card [heading]="temToken() ? 'Criar senha nova' : 'Recuperar senha'">
+    <app-card [heading]="temToken() ? 'Criar senha nova' : 'Recuperar senha'" [headingLevel]="1">
       @if (mensagem()) {
         <app-alert tone="success">{{ mensagem() }}</app-alert>
         @if (temToken()) {
