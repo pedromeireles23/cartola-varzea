@@ -39,6 +39,14 @@ export const routes: Routes = [
           import('./features/public/public-competition').then((m) => m.PublicCompetitionPage),
       },
       {
+        // Regra é catálogo do domínio, não dado de campeonato: dá para entender como se
+        // pontua antes de escolher onde jogar.
+        path: 'regras',
+        title: 'Regras de pontuação',
+        loadComponent: () =>
+          import('./features/public/scoring-rules').then((m) => m.ScoringRulesPage),
+      },
+      {
         // O ranking é conteúdo público (01 §10): quem não tem conta vê a classificação.
         path: 'c/:campeonato/ranking',
         title: 'Ranking',

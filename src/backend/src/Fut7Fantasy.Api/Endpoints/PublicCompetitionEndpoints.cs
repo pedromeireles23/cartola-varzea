@@ -15,6 +15,14 @@ public static class PublicCompetitionEndpoints
     {
         ArgumentNullException.ThrowIfNull(routes);
 
+        // Regra é catálogo do domínio, não dado de campeonato: quem quer entender como
+        // se pontua não precisa antes escolher onde jogar.
+        routes.MapGet("/api/v1/public/scoring-rules", () => Results.Ok(PublicScoringRules.Build()))
+            .AllowAnonymous()
+            .WithTags("Campeonatos públicos")
+            .WithName("GetPublicScoringRules")
+            .WithSummary("Pontuação e valorização vigentes das três modalidades.");
+
         var competitions = routes.MapGroup("/api/v1/public/competitions")
             .WithTags("Campeonatos públicos");
 

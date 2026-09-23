@@ -24,6 +24,7 @@ import { NotificationBell } from '../notification-bell/notification-bell';
         <a class="topo__marca" routerLink="/">Cartola Várzea</a>
         <nav class="topo__nav" aria-label="Navegação principal">
           <a routerLink="/campeonatos">Campeonatos</a>
+          <a routerLink="/regras">Regras</a>
           @if (conta(); as dados) {
             <app-notification-bell />
             <a routerLink="/perfil">{{ dados.displayName }}</a>

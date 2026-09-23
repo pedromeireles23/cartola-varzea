@@ -1,0 +1,83 @@
+// Pagina de regras: uma tabela de valores por modalidade, sem ornamento.
+
+.modalidades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.modalidades__botao {
+  flex: 1 1 auto;
+  min-height: var(--touch-target);
+  padding-inline: var(--space-4);
+  color: var(--color-ink-700);
+  font-family: var(--font-body);
+  font-size: var(--font-body-size);
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--motion-feedback) var(--motion-easing),
+    background-color var(--motion-feedback) var(--motion-easing);
+}
+
+.modalidades__botao:hover {
+  color: var(--color-ink-950);
+  background: var(--color-brand-50);
+}
+
+// A escolha e dita por aria-pressed tambem, nao so pela cor (02 §2).
+.modalidades__botao--atual {
+  color: var(--color-ink-950);
+  font-weight: 600;
+  background: var(--color-brand-100);
+  box-shadow: inset 0 -3px 0 var(--color-brand-700);
+}
+
+.eventos {
+  display: grid;
+  gap: var(--space-1);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.evento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--motion-feedback) var(--motion-easing);
+}
+
+.evento:last-child {
+  border-bottom: none;
+}
+
+// Lista longa de numeros: a linha sob o cursor evita trocar de valor na leitura.
+.evento:hover {
+  background-color: var(--color-canvas);
+}
+
+.evento__valor {
+  font-variant-numeric: tabular-nums;
+}
+
+// Verde e vermelho nunca sao o unico sinal (02 §4): o numero ja vem com o sinal.
+.evento__valor--alta {
+  color: var(--color-success);
+}
+
+.evento__valor--queda {
+  color: var(--color-danger);
+}
