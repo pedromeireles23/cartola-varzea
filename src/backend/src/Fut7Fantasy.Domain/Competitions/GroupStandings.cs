@@ -197,16 +197,16 @@ public static class GroupStandings
         TeamRecord right,
         IReadOnlyList<StandingsMatch> matches,
         IReadOnlyList<TeamRecord> all) => criterion switch
-    {
-        TiebreakCriterion.Wins => right.Wins.CompareTo(left.Wins),
-        TiebreakCriterion.GoalDifference => right.GoalDifference.CompareTo(left.GoalDifference),
-        TiebreakCriterion.GoalsFor => right.GoalsFor.CompareTo(left.GoalsFor),
-        TiebreakCriterion.HeadToHead => HeadToHead(left, right, matches, all),
+        {
+            TiebreakCriterion.Wins => right.Wins.CompareTo(left.Wins),
+            TiebreakCriterion.GoalDifference => right.GoalDifference.CompareTo(left.GoalDifference),
+            TiebreakCriterion.GoalsFor => right.GoalsFor.CompareTo(left.GoalsFor),
+            TiebreakCriterion.HeadToHead => HeadToHead(left, right, matches, all),
 
-        // Cartões ainda não chegam à tabela: eles vivem na súmula do fantasy, e trazê-los
-        // para cá exigiria somá-los por time real. Fica registrado no roadmap.
-        _ => 0,
-    };
+            // Cartões ainda não chegam à tabela: eles vivem na súmula do fantasy, e trazê-los
+            // para cá exigiria somá-los por time real. Fica registrado no roadmap.
+            _ => 0,
+        };
 
     /// <summary>
     /// Confronto direto entre os times que empataram em pontos, e não só entre os dois
