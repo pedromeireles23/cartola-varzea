@@ -1,0 +1,76 @@
+// Painéis da página de rodadas: borda, sem sombra, e a lista separada por divisores
+// em vez de um cartão por rodada (06 §3.4).
+.painel {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.painel--lista {
+  justify-items: stretch;
+}
+
+.painel__titulo {
+  font-size: var(--font-h2);
+}
+
+.rodadas {
+  display: grid;
+  margin: 0 calc(-1 * var(--space-5));
+  padding: 0;
+  list-style: none;
+}
+
+.rodada {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+  padding: 0 var(--space-5) var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.rodada__link {
+  display: flex;
+  flex: 1 1 100%;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: var(--touch-target);
+  padding-top: var(--space-2);
+  color: var(--color-ink-950);
+  text-decoration: none;
+}
+
+.rodada__link:hover .rodada__nome {
+  text-decoration: underline;
+}
+
+.rodada__nome {
+  flex: 1;
+  font-weight: 500;
+}
+
+.rodada__pontos {
+  font-weight: 600;
+}
+
+.rodada__seta {
+  color: var(--color-ink-500);
+}
+
+.rodada:not(:has(app-badge)) {
+  padding-bottom: 0;
+}
+
+.calendario {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--touch-target);
+  font-weight: 500;
+}

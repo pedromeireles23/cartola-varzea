@@ -21,7 +21,6 @@ import {
   signed,
   valuationGroupLabel,
 } from './fantasy-format';
-import { FantasyNav } from './fantasy-nav';
 import { FantasyRoundScore, FantasyRoundSlot, FantasyService } from './fantasy.service';
 
 type Estado =
@@ -44,10 +43,8 @@ interface Grupo {
 @Component({
   selector: 'app-fantasy-score',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, FantasyNav, Loading, RouterLink],
+  imports: [Alert, Badge, Button, Card, Loading, RouterLink],
   template: `
-    <app-fantasy-nav [campeonato]="campeonato()" />
-
     @switch (estado().tipo) {
       @case ('carregando') {
         <h1>Pontuação</h1>

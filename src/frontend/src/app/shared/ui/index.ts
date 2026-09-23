@@ -4,5 +4,7 @@ export { Button, type ButtonVariant } from './button';
 export { Card } from './card';
 export { Dialog } from './dialog';
 export { FormField } from './form-field';
+export { Icon } from './icon';
 export { Loading } from './loading';
+export { PageHeader } from './page-header';
 export { SelectField, type SelectOption } from './select-field';

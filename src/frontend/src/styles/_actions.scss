@@ -1,0 +1,45 @@
+// Link com cara de botão (06 §9.3). Navegar não é executar, então continua sendo <a>;
+// a aparência é a mesma do <app-button> para que o primário seja um só em toda a
+// aplicação, venha de um link ou de um botão.
+@mixin base {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-small);
+  font-weight: 500;
+  line-height: 1.25;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--motion-feedback) var(--motion-easing),
+    border-color var(--motion-feedback) var(--motion-easing);
+}
+
+@mixin primary {
+  @include base;
+
+  color: var(--color-surface);
+  background-color: var(--color-brand-700);
+  border-color: var(--color-brand-700);
+
+  &:hover {
+    background-color: var(--color-brand-800);
+    border-color: var(--color-brand-800);
+  }
+}
+
+@mixin secondary {
+  @include base;
+
+  color: var(--color-ink-950);
+  background-color: var(--color-surface);
+  border-color: var(--color-border-strong);
+
+  &:hover {
+    background-color: var(--color-surface-alt);
+  }
+}

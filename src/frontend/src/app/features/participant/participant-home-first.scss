@@ -1,0 +1,97 @@
+// Conta nova (06 §5.1): o texto que orienta à esquerda, os campeonatos abertos à direita.
+.primeiro {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .primeiro {
+    grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
+  }
+}
+
+.primeiro__passo {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+  padding-block: var(--space-2);
+}
+
+.primeiro__titulo {
+  font-size: 1.3125rem;
+}
+
+.primeiro__texto {
+  max-width: 44ch;
+  color: var(--color-ink-700);
+}
+
+.atalho {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 26rem;
+}
+
+.atalho__rotulo {
+  font-size: var(--font-small);
+  font-weight: 500;
+}
+
+.atalho__linha {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.atalho__campo {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-ink-950);
+  font-size: var(--font-body-size);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.atalho__botao {
+  display: inline-grid;
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
+  padding-inline: var(--space-3);
+  place-items: center;
+  color: var(--color-ink-950);
+  font-size: var(--font-small);
+  font-weight: 500;
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.atalho__botao:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.emblema {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-ink-500);
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius-round);
+}
+
+@media (max-width: 479px) {
+  .primeiro .linha {
+    flex-wrap: wrap;
+  }
+
+  .primeiro .linha .acao--secundaria {
+    width: 100%;
+  }
+}

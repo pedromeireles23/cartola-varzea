@@ -13,10 +13,10 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
+import { CurrentCompetition } from '../participant/current-competition';
 import { Alert, Button, Card, Loading } from '../../shared/ui';
 import { formationText } from '../organizer/competition-area/competition-format';
 import { credits, points } from './fantasy-format';
-import { FantasyNav } from './fantasy-nav';
 import { FantasyOverview, FantasyRoundSummary, FantasyService } from './fantasy.service';
 import { MarketClock } from './market-clock';
 
@@ -35,10 +35,9 @@ type Estado =
 @Component({
   selector: 'app-fantasy-play',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, FantasyNav, Loading, MarketClock, RouterLink],
+  imports: [Alert, Button, Card, Loading, MarketClock, RouterLink],
   template: `
     <p class="intro"><a [routerLink]="['/c', campeonato()]">← Página do campeonato</a></p>
-    <app-fantasy-nav [campeonato]="campeonato()" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
@@ -182,6 +181,7 @@ type Estado =
   styleUrl: './fantasy.scss',
 })
 export class FantasyPlayPage implements OnInit {
+  private readonly competitions = inject(CurrentCompetition);
   private readonly service = inject(FantasyService);
   private readonly title = inject(Title);
 
@@ -249,6 +249,8 @@ export class FantasyPlayPage implements OnInit {
         this.entrando.set(false);
         this.recemChegado.set(true);
         this.mostrar(visao);
+        // A navegação do jogo aparece agora que existe um campeonato para ela.
+        this.competitions.reload();
         this.carregarRodadas(visao);
         // O cartão de adesão some; o foco vai para a confirmação que o substitui.
         setTimeout(() => this.aviso()?.nativeElement.focus());

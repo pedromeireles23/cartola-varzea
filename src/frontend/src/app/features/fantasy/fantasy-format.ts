@@ -75,6 +75,18 @@ export function closingText(closesAtLocal: string, timeZoneId: string): string {
   return `${WEEKDAYS[weekday]}, ${day}/${month} às ${hour}:${minute} (${timeZoneLabel(timeZoneId)})`;
 }
 
+/** "qui., 25/09 · 20:00": dia e hora de uma partida, já no fuso do campeonato. */
+export function kickoffText(kickoffLocal: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(kickoffLocal);
+  if (!match) {
+    return kickoffLocal;
+  }
+
+  const [, year, month, day, hour, minute] = match;
+  const weekday = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))).getUTCDay();
+  return `${WEEKDAYS[weekday]}, ${day}/${month} · ${hour}:${minute}`;
+}
+
 /**
  * Quanto falta até o fechamento, do maior para o menor: "2 d 3 h", "3 h 12 min",
  * "12 min 5 s". Zero ou negativo vira `null`: a tela deve tratar como fechado.

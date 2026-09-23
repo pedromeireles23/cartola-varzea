@@ -8,10 +8,11 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ChevronRight } from 'lucide';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Button, Card, FormField, Loading } from '../../shared/ui';
+import { Alert, Button, Card, FormField, Icon, Loading } from '../../shared/ui';
 import { MODALITY_LABELS } from '../organizer/competition.service';
 import { PublicCompetitionService, PublicCompetitionSummary } from './public-competition.service';
 
@@ -30,7 +31,7 @@ type Estado =
 @Component({
   selector: 'app-competition-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, DatePipe, FormField, Loading, RouterLink],
+  imports: [Alert, Button, Card, DatePipe, FormField, Icon, Loading, RouterLink],
   template: `
     <h1>Campeonatos</h1>
     <p class="intro">
@@ -79,7 +80,7 @@ type Estado =
                 {{ campeonato.organizationName }} · publicado em
                 {{ campeonato.publishedAt | date: 'dd/MM/yyyy' }}
               </p>
-              <span class="cartao-link__seta" aria-hidden="true">→</span>
+              <svg class="cartao-link__seta" [appIcon]="seta" />
             </li>
           } @empty {
             <li>
@@ -101,6 +102,7 @@ type Estado =
   styleUrls: ['./public.scss', '../../shared/ui/link-card.scss'],
 })
 export class CompetitionSearchPage implements OnInit {
+  protected readonly seta = ChevronRight;
   private readonly service = inject(PublicCompetitionService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);

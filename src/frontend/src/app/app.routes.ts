@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { anonymousGuard, authGuard } from './core/auth/auth.guard';
-import { PublicLayout } from './layouts/public-layout/public-layout';
+import { Shell } from './layouts/shell/shell';
 
 /**
  * Rotas em pt-BR porque aparecem para o usuario (02 §9.1). As areas do
@@ -10,7 +10,7 @@ import { PublicLayout } from './layouts/public-layout/public-layout';
 export const routes: Routes = [
   {
     path: '',
-    component: PublicLayout,
+    component: Shell,
     children: [
       {
         // A raiz é a porta de entrada do produto (Fase 8); antes ela redirecionava para
@@ -24,6 +24,13 @@ export const routes: Routes = [
         title: 'Estado do sistema',
         loadComponent: () =>
           import('./features/system-info/system-info').then((m) => m.SystemInfoPage),
+      },
+      {
+        path: 'inicio',
+        title: 'Início',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/participant/participant-home').then((m) => m.ParticipantHomePage),
       },
       {
         path: 'campeonatos',
@@ -100,6 +107,14 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/fantasy/fantasy-market').then((m) => m.FantasyMarketPage),
+      },
+      {
+        // Rodadas do jogo: o mercado de agora e a pontuação de cada rodada apurada.
+        path: 'c/:campeonato/rodadas',
+        title: 'Rodadas',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/fantasy/fantasy-rounds').then((m) => m.FantasyRoundsPage),
       },
       {
         path: 'c/:campeonato/pontuacao/:rodada',

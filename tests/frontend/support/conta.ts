@@ -62,7 +62,7 @@ export async function tentarEntrar(page: Page, email: string, senha = SENHA): Pr
   // A espera que perde a corrida é encerrada com a página; o catch evita rejeição solta.
   return Promise.race([
     page
-      .waitForURL(/\/perfil$/)
+      .waitForURL(/\/inicio$/)
       .then(() => true)
       .catch(() => false),
     page
@@ -106,7 +106,7 @@ export async function entrarComContaNova(
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Senha').fill(SENHA);
   await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page).toHaveURL(/\/perfil$/);
+  await expect(page).toHaveURL(/\/inicio$/);
 
   return email;
 }

@@ -1,9 +1,11 @@
+@use '../../../styles/actions';
+
 // Estilos compartilhados pelas telas do jogo (início, mercado e escalação).
 :host {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  max-width: 720px;
+  max-width: 1040px;
   margin-inline: auto;
 }
 
@@ -26,30 +28,13 @@ h1 {
 }
 
 .acao {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  min-height: var(--touch-target);
-  padding: var(--space-3) var(--space-5);
-  color: var(--color-ink-950);
-  font-weight: 500;
-  text-decoration: none;
-  background-color: var(--color-brand-500);
-  border: 1px solid var(--color-brand-500);
-  border-radius: var(--radius-md);
-}
+  @include actions.primary;
 
-.acao:hover {
-  background-color: var(--color-brand-300);
+  align-self: flex-start;
 }
 
 .acao--secundaria {
-  background-color: var(--color-surface);
-  border-color: var(--color-ink-950);
-}
-
-.acao--secundaria:hover {
-  background-color: var(--color-brand-50);
+  @include actions.secondary;
 }
 
 .acoes-da-tela {
@@ -106,16 +91,15 @@ dd {
 // Resumo do elenco que acompanha a rolagem do mercado: saldo e limites sempre à vista.
 .resumo {
   position: sticky;
-  top: 0;
-  z-index: 1;
+  top: var(--space-2);
+  z-index: 5;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2) var(--space-4);
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-1);
+  border-radius: var(--radius-lg);
 }
 
 @media (min-width: 640px) {
@@ -171,10 +155,10 @@ dd {
   width: 3rem;
   aspect-ratio: 1;
   place-items: center;
-  color: var(--color-brand-700);
-  font-weight: 700;
-  background: var(--color-brand-100);
-  border: 1px solid var(--color-brand-300);
+  color: var(--color-ink-700);
+  font-weight: 600;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
   border-radius: 50% 50% 45% 45%;
 }
 

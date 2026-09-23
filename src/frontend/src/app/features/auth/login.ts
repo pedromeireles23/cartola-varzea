@@ -64,7 +64,7 @@ export class LoginPage {
       // O destino volta da rota de origem, para que quem foi barrado numa página
       // privada caia de volta nela e não na home.
       const destino = new URLSearchParams(globalThis.location.search).get('destino');
-      await this.router.navigateByUrl(destino ?? '/perfil');
+      await this.router.navigateByUrl(destino ?? '/inicio');
     } catch (falha) {
       // A mensagem é a mesma para e-mail inexistente e senha errada: a API não
       // distingue os dois e a interface não deve inventar essa distinção.

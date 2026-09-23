@@ -1,60 +1,73 @@
+// Botão (06 §9.3): uma ação primária por grupo, com verbo específico no rótulo.
 .btn {
   display: inline-flex;
   gap: var(--space-2);
   align-items: center;
   justify-content: center;
   min-height: var(--touch-target);
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-2) var(--space-4);
   font-family: var(--font-body);
-  font-size: var(--font-body-size);
+  font-size: var(--font-small);
   font-weight: 500;
+  line-height: 1.25;
   cursor: pointer;
   background: none;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  transition: background-color var(--motion-feedback) var(--motion-easing);
+  transition:
+    background-color var(--motion-feedback) var(--motion-easing),
+    border-color var(--motion-feedback) var(--motion-easing);
 }
 
 .btn:disabled {
   cursor: not-allowed;
-  opacity: 60%;
+  opacity: 55%;
 }
 
 .btn--block {
   width: 100%;
 }
 
-// Verde-limao nunca recebe texto branco (02 §4).
 .btn--primary {
-  color: var(--color-ink-950);
-  background-color: var(--color-brand-500);
+  color: var(--color-surface);
+  background-color: var(--color-brand-700);
+  border-color: var(--color-brand-700);
 }
 
 .btn--primary:hover:not(:disabled) {
-  background-color: var(--color-brand-300);
+  background-color: var(--color-brand-800);
+  border-color: var(--color-brand-800);
 }
 
 .btn--secondary {
   color: var(--color-ink-950);
   background-color: var(--color-surface);
-  border-color: var(--color-border);
+  border-color: var(--color-border-strong);
 }
 
 .btn--secondary:hover:not(:disabled) {
-  background-color: var(--color-brand-50);
+  background-color: var(--color-surface-alt);
 }
 
+// Ghost só para baixa prioridade em barra de ferramentas.
 .btn--ghost {
   color: var(--color-ink-700);
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background-color: var(--color-brand-50);
+  color: var(--color-ink-950);
+  background-color: var(--color-surface-alt);
 }
 
 .btn--danger {
   color: var(--color-surface);
   background-color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background-color: #912018;
+  border-color: #912018;
 }
 
 .spinner {
@@ -62,7 +75,7 @@
   height: 1em;
   border: 2px solid currentcolor;
   border-top-color: transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-round);
   animation: spin 700ms linear infinite;
 }
 
@@ -73,6 +86,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+
   .spinner {
     animation-duration: 2s;
   }

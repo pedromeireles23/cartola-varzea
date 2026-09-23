@@ -1,23 +1,41 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { PublicLayout } from '../public-layout/public-layout';
+import { API_BASE_URL } from '../../core/config/api-base-url';
+import { Shell } from '../shell/shell';
+
+/** A conta de demonstração sempre tem sessão: é uma conta pública somente leitura. */
+const CONTA = {
+  id: 'conta-demo',
+  email: 'demo@exemplo.local',
+  displayName: 'Visitante',
+  emailConfirmed: true,
+  roles: ['DemoViewer'],
+};
 
 describe('Faixa de modo demonstração', () => {
   function montar(demo: boolean): HTMLElement {
     TestBed.configureTestingModule({
-      imports: [PublicLayout],
+      imports: [Shell],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: '/api/v1' },
         {
           provide: AuthService,
-          useValue: { current: signal(null), isDemoViewer: signal(demo) },
+          useValue: {
+            current: signal({ ...CONTA, roles: demo ? ['DemoViewer'] : [] }),
+            isDemoViewer: signal(demo),
+          },
         },
       ],
     });
-    const fixture = TestBed.createComponent(PublicLayout);
+    const fixture = TestBed.createComponent(Shell);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }

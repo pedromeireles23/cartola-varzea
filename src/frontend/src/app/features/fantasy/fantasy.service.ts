@@ -94,6 +94,20 @@ export interface FantasyOverview {
   readonly entry: FantasyEntry | null;
 }
 
+/** Campeonato da conta no início autenticado, sem carregar o catálogo inteiro. */
+export interface MyFantasyCompetition {
+  readonly competitionName: string;
+  readonly slug: string;
+  readonly season: string;
+  readonly modality: string;
+  readonly balance: number;
+  readonly squadSize: number;
+  readonly squadSizeTarget: number;
+  readonly hasCaptain: boolean;
+  readonly joinedAt: string;
+  readonly market: FantasyMarketStatus;
+}
+
 /** Ativo à venda; `blockCode` e `blockReason` dizem por que não dá para comprar agora. */
 export interface MarketItem {
   readonly kind: AssetKind;
@@ -205,6 +219,10 @@ export const FANTASY_CONFLICT_CODE = 'fantasy_conflict';
 export class FantasyService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
+
+  myCompetitions(): Observable<MyFantasyCompetition[]> {
+    return this.http.get<MyFantasyCompetition[]>(`${this.baseUrl}/fantasy`);
+  }
 
   overview(slug: string): Observable<FantasyOverview> {
     return this.http.get<FantasyOverview>(`${this.url(slug)}/`);

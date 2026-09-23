@@ -2,36 +2,46 @@
   position: relative;
 }
 
+// Mesmo botão de ícone do topo da casca: 44 px, borda neutra (06 §4.4 e §8).
 .sino__botao {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  // Alvo de toque de 44 px, como o resto da navegacao (02 §7).
-  min-width: 44px;
-  min-height: 44px;
-  padding: var(--space-2);
-  color: inherit;
+  position: relative;
+  display: grid;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  place-items: center;
+  color: var(--color-ink-700);
   cursor: pointer;
-  background: none;
-  border: 1px solid transparent;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
 
-.sino__botao:hover {
-  border-color: var(--color-border);
+.sino__botao:hover,
+.sino__botao[aria-expanded='true'] {
+  color: var(--color-ink-950);
+  background-color: var(--color-surface-alt);
 }
 
+// O número é o sinal de novidade; a cor sozinha não diria quantos (02 §2).
 .sino__contador {
-  padding: 0 var(--space-2);
-  font-size: var(--font-small);
-  font-weight: 600;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  padding: 0 5px;
   color: var(--color-surface);
-  background-color: var(--color-danger);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  background-color: var(--color-brand-700);
+  border: 2px solid var(--color-surface);
   border-radius: var(--radius-pill);
 }
 
 .painel {
   position: absolute;
+  top: calc(100% + var(--space-2));
   right: 0;
   z-index: 20;
   // Larga o bastante para uma frase inteira, sem passar da largura do celular.
@@ -42,6 +52,7 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
 }
 
 .painel__vazio {

@@ -1,0 +1,366 @@
+// Casca da aplicação (06 §4). A barra lateral só existe a partir de 1024 px; abaixo
+// disso o celular usa o cabeçalho compacto e a barra inferior de shell-mobile.scss.
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  z-index: 100;
+}
+
+.skip:focus {
+  top: var(--space-2);
+  left: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-surface);
+  background-color: var(--color-ink-950);
+  border-radius: var(--radius-md);
+}
+
+// Marca: o sinal é tipográfico, sem ilustração (06 §6.3).
+.marca {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--touch-target);
+  color: var(--color-ink-950);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+}
+
+.marca--clara {
+  color: #f8f7f2;
+}
+
+.marca__sinal {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: var(--color-surface);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background-color: var(--color-brand-500);
+  border-radius: var(--radius-sm);
+}
+
+// Barra lateral escura, persistente no desktop.
+.lateral {
+  display: none;
+}
+
+.lateral__grupo {
+  display: grid;
+  gap: 2px;
+}
+
+.lateral__rotulo {
+  margin: var(--space-4) 10px 6px;
+  color: var(--color-sidebar-muted);
+  font-size: var(--font-caption);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lateral__link {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 40px;
+  padding: var(--space-2) 10px;
+  color: var(--color-sidebar-text);
+  font-size: var(--font-small);
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: background-color var(--motion-feedback) var(--motion-easing);
+}
+
+.lateral__link:hover {
+  background-color: var(--color-sidebar-hover);
+}
+
+.lateral__link[aria-current='page'] {
+  color: var(--color-surface);
+  background-color: var(--color-brand-500);
+}
+
+.lateral__campeonato {
+  padding: 6px 10px var(--space-2);
+  color: #f8f7f2;
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.seletor {
+  width: 100%;
+  min-height: 42px;
+  margin-bottom: 6px;
+  padding: 0 10px;
+  color: #f7f6f0;
+  font-size: var(--font-small);
+  font-weight: 500;
+  color-scheme: dark;
+  background-color: #242420;
+  border: 1px solid #4a4a43;
+  border-radius: var(--radius-md);
+}
+
+.lateral__conta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: auto;
+  padding: var(--space-3) var(--space-2) 2px;
+  color: #f8f7f2;
+  text-decoration: none;
+  border-top: 1px solid var(--color-sidebar-border);
+}
+
+.lateral__conta:hover .lateral__conta-nome,
+.lateral__conta[aria-current='page'] .lateral__conta-nome {
+  text-decoration: underline;
+}
+
+.avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-ink-950);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  background-color: var(--color-brand-100);
+  border-radius: var(--radius-round);
+}
+
+.lateral__conta-texto {
+  display: grid;
+  min-width: 0;
+}
+
+.lateral__conta-nome,
+.lateral__conta-apoio {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lateral__conta-nome {
+  font-size: var(--font-small);
+  font-weight: 500;
+}
+
+.lateral__conta-apoio {
+  color: var(--color-sidebar-muted);
+  font-size: var(--font-caption);
+}
+
+// Coluna do conteúdo: topo com o contexto, a página e o rodapé.
+.principal {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.topo {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  min-height: 56px;
+  padding-inline: var(--gutter);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.topo__contexto {
+  display: none;
+  gap: var(--space-2);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.topo__titulo {
+  font-weight: 600;
+}
+
+.topo__campeonato {
+  overflow: hidden;
+  color: var(--color-ink-500);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topo__campeonato::before {
+  margin-right: var(--space-2);
+  content: '·' / '';
+}
+
+.topo__acoes {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-left: auto;
+}
+
+.botao-icone {
+  display: grid;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  place-items: center;
+  color: var(--color-ink-700);
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.botao-icone:hover {
+  color: var(--color-ink-950);
+  background-color: var(--color-surface-alt);
+}
+
+.conteudo {
+  flex: 1;
+  width: 100%;
+  max-width: calc(var(--container-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-12);
+}
+
+// O conteúdo recebe foco pelo atalho de pular; o anel ficaria em volta da página toda.
+.conteudo:focus {
+  outline: none;
+}
+
+.rodape {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  justify-content: space-between;
+  width: 100%;
+  max-width: calc(var(--container-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--space-4) var(--gutter) var(--space-6);
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+}
+
+.rodape a {
+  color: var(--color-ink-700);
+}
+
+// Cabeçalho de quem ainda não entrou.
+.publico {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.publico__interno {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  max-width: calc(var(--container-max) + 2 * var(--gutter));
+  min-height: 64px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.publico__nav {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.publico__nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  padding-inline: var(--space-2);
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+
+.publico__nav a:hover {
+  color: var(--color-ink-950);
+  background-color: var(--color-surface-alt);
+}
+
+.publico__nav a.ativo {
+  color: var(--color-ink-950);
+  box-shadow: inset 0 -2px 0 var(--color-brand-500);
+  border-radius: 0;
+}
+
+.publico__nav a.publico__cta {
+  margin-left: var(--space-2);
+  padding-inline: var(--space-4);
+  color: var(--color-surface);
+  background-color: var(--color-brand-700);
+}
+
+.publico__nav a.publico__cta:hover {
+  background-color: var(--color-brand-800);
+}
+
+// A 320 px cabem o sinal e três links; o nome da marca e o cadastro saem primeiro, e o
+// cadastro continua a um toque na própria entrada.
+@media (max-width: 639px) {
+  .publico .marca__nome,
+  .publico__nav a.publico__cta {
+    display: none;
+  }
+}
+
+@media (max-width: 379px) {
+  .publico__nav a[href='/regras'] {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    min-height: 100vh;
+  }
+
+  .lateral {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: var(--space-5) 14px var(--space-4);
+    overflow-y: auto;
+    background-color: var(--color-sidebar);
+  }
+
+  .lateral > .marca {
+    padding: 0 var(--space-2) var(--space-2);
+  }
+
+  .topo {
+    min-height: 64px;
+  }
+
+  .topo__marca,
+  .topo__conta {
+    display: none;
+  }
+
+  .topo__contexto {
+    display: flex;
+  }
+}

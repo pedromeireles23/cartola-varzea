@@ -66,6 +66,8 @@ describe('FantasyPlayPage', () => {
     pedido.flush(visao());
     await fixture.whenStable();
     http.expectOne(ROUNDS_URL).flush([]);
+    // A navegação do jogo relê os campeonatos da conta para mostrar o recém-chegado.
+    http.expectOne('/api/v1/fantasy').flush([]);
     await fixture.whenStable();
 
     expect(texto(fixture)).toContain('Você entrou no campeonato e recebeu C$ 100,00.');

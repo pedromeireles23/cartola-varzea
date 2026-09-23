@@ -1,20 +1,23 @@
+// Diálogo: única superfície com sombra, junto de menus e popovers (06 §9.2). No
+// celular ele vira folha presa à base da tela, com o polegar perto das ações.
 .dialog {
-  max-width: min(480px, calc(100vw - 2 * var(--gutter)));
+  width: min(480px, calc(100vw - 2 * var(--gutter)));
+  max-width: none;
   padding: var(--space-6);
   color: var(--color-ink-950);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--shadow-overlay);
 }
 
 .dialog::backdrop {
-  background-color: rgb(16 24 40 / 45%);
+  background-color: rgb(25 25 22 / 45%);
 }
 
 .dialog__heading {
   margin-bottom: var(--space-3);
-  font-size: var(--font-h3);
+  font-size: var(--font-h2);
 }
 
 .dialog__body {
@@ -26,4 +29,26 @@
   gap: var(--space-3);
   justify-content: flex-end;
   margin-top: var(--space-6);
+}
+
+@media (max-width: 639px) {
+  .dialog {
+    width: 100%;
+    max-height: 85vh;
+    margin: auto 0 0;
+    padding: var(--space-5) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom));
+    border-width: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .dialog[open] {
+    animation: dialog-sobe var(--motion-panel) var(--motion-easing);
+  }
+}
+
+@keyframes dialog-sobe {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
 }

@@ -11,10 +11,10 @@ import {
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
+import { ChevronRight } from 'lucide';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Button, Card, FormField, Loading } from '../../shared/ui';
-import { FantasyNav } from './fantasy-nav';
+import { Alert, Button, Card, FormField, Icon, Loading } from '../../shared/ui';
 import {
   LEAGUE_CODE_LENGTH,
   LEAGUE_LIMIT_CODE,
@@ -42,10 +42,9 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
 @Component({
   selector: 'app-fantasy-leagues',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, FantasyNav, FormField, Loading, RouterLink],
+  imports: [Alert, Button, Card, FormField, Icon, Loading, RouterLink],
   template: `
     <p class="intro"><a [routerLink]="['/c', campeonato()]">← Página do campeonato</a></p>
-    <app-fantasy-nav [campeonato]="campeonato()" />
 
     <h1>Ligas</h1>
 
@@ -95,7 +94,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
                     · liga criada por você
                   }
                 </p>
-                <span class="cartao-link__seta" aria-hidden="true">→</span>
+                <svg class="cartao-link__seta" [appIcon]="seta" />
               </li>
             }
           </ul>
@@ -172,6 +171,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
   styleUrls: ['./fantasy.scss', '../../shared/ui/link-card.scss', './leagues.scss'],
 })
 export class FantasyLeaguesPage implements OnInit {
+  protected readonly seta = ChevronRight;
   private readonly service = inject(LeagueService);
   private readonly router = inject(Router);
   private readonly title = inject(Title);

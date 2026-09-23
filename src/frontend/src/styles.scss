@@ -18,6 +18,7 @@ body {
   font-family: var(--font-body);
   font-size: var(--font-body-size);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
@@ -25,22 +26,21 @@ h2,
 h3 {
   margin: 0;
   font-family: var(--font-heading);
-  line-height: 1.2;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
 }
 
 h1 {
   font-size: var(--font-h1);
-  font-weight: 600;
 }
 
 h2 {
   font-size: var(--font-h2);
-  font-weight: 600;
 }
 
 h3 {
   font-size: var(--font-h3);
-  font-weight: 600;
 }
 
 p {
@@ -50,17 +50,36 @@ p {
 a {
   color: var(--color-brand-700);
   text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
-// Foco sempre visivel, nunca removido sem substituto (02 §12).
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+// Números de placar, preço e pontos alinham em coluna.
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+// Foco sempre visivel, nunca removido sem substituto (02 §12). O laranja da marca dá
+// 4,5:1 sobre a superficie e 4:1 sobre o fundo, acima dos 3:1 que o indicador pede.
 :focus-visible {
-  outline: 2px solid var(--color-ink-950);
+  outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
 }
 
 img {
   max-width: 100%;
   height: auto;
+}
+
+// Os icones Lucide herdam a cor do texto e nao encolhem dentro de flex.
+svg.lucide {
+  flex: 0 0 auto;
 }
 
 // Conteudo apenas para leitor de tela.

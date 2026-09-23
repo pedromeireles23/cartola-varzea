@@ -1,10 +1,18 @@
+// Aviso (02 §8 e 06 §9.4): fundo suave, barra lateral na cor do tom, ícone e rótulo.
+// O tom nunca depende só da cor: o rótulo escrito diz o que é.
 .alert {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px var(--space-3);
+  align-items: start;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid;
-  border-radius: var(--radius-md);
+  border-left: 3px solid;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.alert__icon {
+  grid-row: span 2;
+  margin-top: 2px;
 }
 
 .alert__label {
@@ -12,30 +20,27 @@
   font-weight: 600;
 }
 
+.alert__body {
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
 .alert--info {
   color: var(--color-info);
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
+  background-color: var(--color-info-50);
 }
 
 .alert--success {
   color: var(--color-success);
-  background-color: var(--color-brand-50);
-  border-color: var(--color-brand-300);
+  background-color: var(--color-success-50);
 }
 
 .alert--warning {
   color: var(--color-warning);
-  background-color: #fffbeb;
-  border-color: #fde68a;
+  background-color: var(--color-warning-50);
 }
 
 .alert--danger {
   color: var(--color-danger);
-  background-color: #fef3f2;
-  border-color: #fecdca;
-}
-
-.alert__body {
-  color: var(--color-ink-700);
+  background-color: var(--color-danger-50);
 }

@@ -34,7 +34,12 @@ test('cadastro, confirmação por e-mail, entrada e saída', async ({ page, requ
   await page.getByLabel('Senha').fill(SENHA);
   await page.getByRole('button', { name: 'Entrar' }).click();
 
-  await expect(page).toHaveURL(/\/perfil$/);
+  // A entrada abre o início, que orienta a conta nova; os dados ficam em Conta.
+  await expect(page).toHaveURL(/\/inicio$/);
+  await expect(
+    page.getByText('Sua conta está pronta. Agora escolha onde quer jogar.'),
+  ).toBeVisible();
+  await page.goto('/perfil');
   await expect(page.getByText(email)).toBeVisible();
   await expect(page.getByText('E-mail confirmado')).toBeVisible();
 
@@ -76,7 +81,7 @@ test('cadastro, confirmação por e-mail, entrada e saída', async ({ page, requ
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Senha').fill('outra-senha-bem-longa-2026');
   await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page).toHaveURL(/\/perfil$/);
+  await expect(page).toHaveURL(/\/inicio$/);
 });
 
 test('entrada com senha errada não revela se a conta existe', async ({ page }) => {

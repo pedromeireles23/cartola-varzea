@@ -24,7 +24,6 @@ import {
   fantasyRefusalText,
   positionGroupLabel,
 } from './fantasy-format';
-import { FantasyNav } from './fantasy-nav';
 import { FantasyNotice } from './fantasy-notice';
 import {
   FANTASY_CONFLICT_CODE,
@@ -74,20 +73,8 @@ const SIGLAS = {
 @Component({
   selector: 'app-fantasy-lineup',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Alert,
-    Button,
-    Card,
-    Dialog,
-    FantasyNav,
-    Loading,
-    MarketClock,
-    NgTemplateOutlet,
-    RouterLink,
-  ],
+  imports: [Alert, Button, Card, Dialog, Loading, MarketClock, NgTemplateOutlet, RouterLink],
   template: `
-    <app-fantasy-nav [campeonato]="campeonato()" />
-
     @switch (estado().tipo) {
       @case ('carregando') {
         <h1>Escalação</h1>

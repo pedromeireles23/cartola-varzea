@@ -40,7 +40,6 @@ import {
   FantasyService,
   MarketItem,
 } from './fantasy.service';
-import { FantasyNav } from './fantasy-nav';
 import { FantasyNotice } from './fantasy-notice';
 import { MarketClock } from './market-clock';
 
@@ -85,21 +84,8 @@ const BLOQUEIOS_GERAIS = new Set(['not_joined', 'market_closed']);
 @Component({
   selector: 'app-fantasy-market',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    Alert,
-    Badge,
-    Button,
-    Card,
-    FantasyNav,
-    FormField,
-    Loading,
-    MarketClock,
-    RouterLink,
-    SelectField,
-  ],
+  imports: [Alert, Badge, Button, Card, FormField, Loading, MarketClock, RouterLink, SelectField],
   template: `
-    <app-fantasy-nav [campeonato]="campeonato()" />
-
     @switch (estado().tipo) {
       @case ('carregando') {
         <h1>Mercado</h1>

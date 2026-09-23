@@ -16,7 +16,6 @@ import { Observable } from 'rxjs';
 import { ApiFailure } from '../../core/api/problem-details';
 import { Alert, Badge, Button, Card, Dialog, Loading } from '../../shared/ui';
 import { credits, points } from './fantasy-format';
-import { FantasyNav } from './fantasy-nav';
 import { League, LeagueMember, LeagueService } from './league.service';
 
 type Estado =
@@ -49,10 +48,9 @@ type Confirmacao =
 @Component({
   selector: 'app-fantasy-league',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Dialog, FantasyNav, Loading, RouterLink],
+  imports: [Alert, Badge, Button, Card, Dialog, Loading, RouterLink],
   template: `
     <p class="intro"><a [routerLink]="['/c', campeonato(), 'ligas']">← Minhas ligas</a></p>
-    <app-fantasy-nav [campeonato]="campeonato()" />
 
     @switch (estado().tipo) {
       @case ('carregando') {

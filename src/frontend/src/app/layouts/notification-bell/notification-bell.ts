@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Bell } from 'lucide';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { NotificationService } from '../../core/notifications/notification.service';
+import { Icon } from '../../shared/ui/icon';
 
 /**
  * O sino dos avisos internos (01 §14, 02 §8).
@@ -15,7 +17,7 @@ import { NotificationService } from '../../core/notifications/notification.servi
 @Component({
   selector: 'app-notification-bell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [Icon, RouterLink],
   // Escape fecha o painel de onde quer que o foco esteja dentro do sino. Fica no host
   // porque o elemento que envolve o painel não é focável, e não deve ser.
   host: { '(keydown.escape)': 'fechar()' },
@@ -30,7 +32,7 @@ import { NotificationService } from '../../core/notifications/notification.servi
           [attr.aria-label]="rotulo()"
           (click)="alternar()"
         >
-          <span aria-hidden="true">🔔</span>
+          <svg [appIcon]="bell" [size]="20" />
           @if (naoLidas() > 0) {
             <span class="sino__contador" aria-hidden="true">{{ naoLidas() }}</span>
           }
@@ -72,6 +74,7 @@ export class NotificationBell {
   private readonly service = inject(NotificationService);
   protected readonly conta = inject(AuthService).current;
   protected readonly aberto = signal(false);
+  protected readonly bell = Bell;
   protected readonly naoLidas = this.service.naoLidas;
   protected readonly itens = computed(() => this.service.inbox().items);
 

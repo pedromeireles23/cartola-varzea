@@ -1,0 +1,342 @@
+@if (!competitions.loaded()) {
+  <app-page-header [heading]="saudacao()" />
+  <section class="painel painel--corpo"><app-loading label="Abrindo o seu jogo…" /></section>
+} @else if (atual(); as campeonato) {
+  <app-page-header
+    [heading]="saudacao()"
+    subtitle="Aqui está o que importa antes da próxima rodada."
+  />
+
+  @switch (painel().tipo) {
+    @case ('carregando') {
+      <section class="painel painel--corpo"><app-loading label="Abrindo a rodada…" /></section>
+    }
+    @case ('erro') {
+      <section class="painel painel--corpo">
+        <app-alert tone="danger">
+          Não deu para abrir {{ campeonato.competitionName }} agora.
+        </app-alert>
+        <app-button variant="secondary" (pressed)="tentarDeNovo()">Tentar de novo</app-button>
+      </section>
+    }
+    @case ('pronto') {
+      @let rodada = mercado()!;
+      @let entrada = visao()!.entry;
+
+      <!-- 1. Prazo absoluto do mercado, com a ação quando ela existe (06 §9.4). -->
+      @if (rodada.isOpen && fechamento()) {
+        <section class="prazo" aria-labelledby="prazo-titulo">
+          <svg class="prazo__icone" [appIcon]="icons.clock" [size]="20" />
+          <div class="prazo__texto">
+            <h2 id="prazo-titulo" class="prazo__titulo">
+              Mercado da {{ rodada.roundName }} fecha {{ fechamento() }}
+            </h2>
+            <p class="prazo__apoio">
+              @if (faltam(); as falta) {
+                Faltam {{ falta }}.
+              }
+              @if (completa()) {
+                Sua escalação está completa e já vale para a rodada.
+              } @else {
+                Até lá, cada mudança no time fica salva.
+              }
+            </p>
+          </div>
+          @if (!completa()) {
+            <a class="acao prazo__acao" [routerLink]="['/c', campeonato.slug, 'escalacao']">
+              {{ chamada() }}
+              <svg [appIcon]="icons.arrow" />
+            </a>
+          }
+        </section>
+      } @else {
+        <section class="prazo prazo--fechado" aria-labelledby="prazo-titulo">
+          <svg class="prazo__icone" [appIcon]="icons.clock" [size]="20" />
+          <div class="prazo__texto">
+            <h2 id="prazo-titulo" class="prazo__titulo">Mercado fechado</h2>
+            <p class="prazo__apoio">
+              O time não muda agora. Ele volta a mudar quando o organizador abrir o mercado da
+              próxima rodada.
+              @if (ultimaRodada(); as ultima) {
+                Resultado mais recente: {{ ultima.roundName }},
+                {{ ultima.total === null ? 'você não jogou' : pontos(ultima.total) }}.
+              }
+            </p>
+          </div>
+        </section>
+      }
+
+      @if (avisoDeApuracao(); as apurada) {
+        <app-alert [tone]="apurada.underCorrection ? 'warning' : 'info'">
+          @if (apurada.underCorrection) {
+            A {{ apurada.roundName }} foi reaberta para correção; seus pontos podem mudar.
+          } @else {
+            A {{ apurada.roundName }} foi apurada:
+            {{ apurada.total === null ? 'você não jogou' : pontos(apurada.total) }}. O resultado é
+            provisório até {{ consolida(apurada) }}.
+          }
+          <a [routerLink]="['/c', campeonato.slug, 'pontuacao', apurada.roundId]">Ver pontuação</a>
+        </app-alert>
+      }
+
+      <div class="grade">
+        <!-- 2 e 3. Escalação: progresso, o que falta e o orçamento. -->
+        <section class="painel" aria-labelledby="escalacao-titulo">
+          <header class="painel__topo">
+            <div>
+              @if (rodada.roundName) {
+                <p class="painel__apoio">{{ rodada.roundName }}</p>
+              }
+              <h2 id="escalacao-titulo" class="painel__titulo">Sua escalação</h2>
+            </div>
+            @if (completa()) {
+              <app-badge tone="success">
+                <svg [appIcon]="icons.check" [size]="14" />Completa
+              </app-badge>
+            } @else {
+              <app-badge tone="warning">
+                <svg [appIcon]="icons.pending" [size]="14" />Incompleta
+              </app-badge>
+            }
+          </header>
+
+          <div class="painel__corpo">
+            <p class="escalacao__meta">
+              {{ campeonato.competitionName }} · Formação {{ formacao() }} ·
+              {{ capitao() ? 'Capitão: ' + capitao() : 'Capitão pendente' }}
+            </p>
+
+            <div class="progresso">
+              <p class="progresso__texto">
+                <span>{{ escolhidos() }} de {{ vagas() }} escolhidos</span>
+                <span class="num">{{ progresso() }}%</span>
+              </p>
+              <div
+                class="progresso__barra"
+                role="progressbar"
+                aria-label="Elenco montado"
+                aria-valuemin="0"
+                [attr.aria-valuemax]="vagas()"
+                [attr.aria-valuenow]="escolhidos()"
+                [attr.aria-valuetext]="escolhidos() + ' de ' + vagas() + ' vagas'"
+              >
+                <span [style.width.%]="progresso()"></span>
+              </div>
+            </div>
+
+            @if (entrada && entrada.issues.length > 0 && rodada.isOpen) {
+              <ul class="pendencias" aria-label="O que falta para a escalação valer">
+                @for (pendencia of entrada.issues.slice(0, 3); track pendencia.message) {
+                  <li>{{ pendencia.message }}</li>
+                }
+              </ul>
+            }
+          </div>
+
+          <footer class="painel__rodape">
+            <p class="orcamento">
+              Orçamento disponível
+              <strong class="num">{{ creditos(entrada?.balance ?? 0) }}</strong>
+            </p>
+            <a
+              class="acao acao--secundaria"
+              [routerLink]="['/c', campeonato.slug, rodada.isOpen ? 'mercado' : 'escalacao']"
+            >
+              {{ rodada.isOpen ? 'Abrir mercado' : 'Ver meu time' }}
+            </a>
+          </footer>
+        </section>
+
+        <!-- 4. Posição no campeonato. -->
+        <section class="painel" aria-labelledby="campeonato-titulo">
+          <header class="painel__topo">
+            <h2 id="campeonato-titulo" class="painel__titulo">No campeonato</h2>
+            <a class="painel__link" [routerLink]="['/c', campeonato.slug, 'ranking']">
+              Ver tabela
+            </a>
+          </header>
+          <div class="painel__corpo">
+            @if (ranking(); as tabela) {
+              @if (tabela.rounds === 0 || !minhaLinha()) {
+                <p class="apoio">
+                  A classificação começa depois da primeira rodada apurada. Até lá, todo mundo está
+                  empatado em zero.
+                </p>
+              } @else {
+                @let eu = minhaLinha()!;
+                <p class="posicao">
+                  <strong class="posicao__numero num">{{ eu.position }}º</strong>
+                  <span class="posicao__total"> de {{ tabela.entries.length }}</span>
+                </p>
+                <p class="apoio">
+                  Depois da {{ tabela.lastRoundName }}{{ tabela.provisional ? ', provisório' : '' }}
+                </p>
+                <dl class="placar">
+                  <div>
+                    <dt>Seus pontos</dt>
+                    <dd class="num">{{ pontos(eu.totalPoints) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Líder</dt>
+                    <dd class="num">{{ pontos(lider()!.totalPoints) }}</dd>
+                  </div>
+                </dl>
+                <ol class="mini-tabela" aria-label="Topo da classificação e a sua posição">
+                  @for (linha of linhasDoRanking(); track linha.position + linha.displayName) {
+                    <li [class.mini-tabela__voce]="linha.isViewer">
+                      <span>{{ linha.position }}. {{ linha.displayName }}</span>
+                      <span class="num">{{ pontos(linha.totalPoints) }}</span>
+                    </li>
+                  }
+                </ol>
+              }
+            } @else {
+              <app-loading label="Buscando a classificação…" />
+            }
+          </div>
+        </section>
+      </div>
+
+      <!-- 5. Próximas partidas. -->
+      <section class="painel" aria-labelledby="jogos-titulo">
+        <header class="painel__topo">
+          <h2 id="jogos-titulo" class="painel__titulo">Próximas partidas</h2>
+          <a class="painel__link" [routerLink]="['/c', campeonato.slug, 'partidas']">Calendário</a>
+        </header>
+        @if (jogos() === null) {
+          <div class="painel__corpo"><app-loading label="Buscando as partidas…" /></div>
+        } @else if (proximosJogos().length === 0) {
+          <p class="painel__corpo apoio">Nenhuma partida marcada por enquanto.</p>
+        } @else {
+          <ul class="linhas">
+            @for (jogo of proximosJogos(); track jogo.id) {
+              <li class="linha">
+                <span class="linha__principal">
+                  {{ jogo.homeTeamName }} <span aria-hidden="true">×</span
+                  ><span class="sr-only">contra</span> {{ jogo.awayTeamName }}
+                </span>
+                <span class="linha__meta">{{ quando(jogo) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      @if (outros().length > 0) {
+        <section class="painel" aria-labelledby="outros-titulo">
+          <header class="painel__topo">
+            <h2 id="outros-titulo" class="painel__titulo">Seus outros campeonatos</h2>
+          </header>
+          <ul class="linhas">
+            @for (item of outros(); track item.slug) {
+              <li class="linha">
+                <span class="linha__texto">
+                  <span class="linha__principal">{{ item.competitionName }}</span>
+                  <span class="linha__meta">
+                    {{ elenco(item) }} ·
+                    {{ item.market.isOpen ? 'mercado aberto' : 'mercado fechado' }}
+                  </span>
+                </span>
+                <app-button variant="secondary" (pressed)="trocar(item.slug)">Abrir</app-button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  }
+} @else if (competitions.failed()) {
+  <app-page-header [heading]="saudacao()" />
+  <section class="painel painel--corpo">
+    <app-alert tone="danger">Não conseguimos carregar seus campeonatos agora.</app-alert>
+    <app-button variant="secondary" (pressed)="tentarDeNovo()">Tentar de novo</app-button>
+  </section>
+} @else {
+  <!-- Conta nova (06 §5.1): pronta, com o próximo passo à vista. -->
+  <app-page-header
+    [heading]="saudacao()"
+    subtitle="Sua conta está pronta. Agora escolha onde quer jogar."
+  />
+
+  <div class="primeiro">
+    <section class="primeiro__passo" aria-labelledby="primeiro-titulo">
+      <h2 id="primeiro-titulo" class="primeiro__titulo">
+        Você ainda não participa de um campeonato
+      </h2>
+      <p class="primeiro__texto">
+        Entre em um campeonato publicado para receber o orçamento em créditos virtuais e montar seu
+        time. Assim que entrar, Meu time, Mercado, Classificação e Rodadas aparecem no menu.
+      </p>
+      <a class="acao" routerLink="/campeonatos">
+        Explorar campeonatos
+        <svg [appIcon]="icons.arrow" />
+      </a>
+
+      <form class="atalho" role="search" (submit)="buscar($event)">
+        <label class="atalho__rotulo" for="busca-inicio">Buscar campeonato por nome</label>
+        <div class="atalho__linha">
+          <input
+            id="busca-inicio"
+            class="atalho__campo"
+            type="search"
+            placeholder="Ex.: Copa da Vila"
+            [value]="busca()"
+            (input)="busca.set(valor($event))"
+          />
+          <button class="atalho__botao" type="submit" aria-label="Buscar">
+            <svg [appIcon]="icons.search" />
+          </button>
+        </div>
+      </form>
+
+      <form class="atalho" (submit)="usarConvite($event)">
+        <label class="atalho__rotulo" for="convite-inicio">Recebeu convite para uma liga?</label>
+        <div class="atalho__linha">
+          <input
+            id="convite-inicio"
+            class="atalho__campo"
+            type="text"
+            autocomplete="off"
+            placeholder="Código do convite"
+            [value]="convite()"
+            (input)="convite.set(valor($event))"
+          />
+          <button class="atalho__botao atalho__botao--texto" type="submit">Usar convite</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="painel" aria-labelledby="abertos-titulo">
+      <header class="painel__topo">
+        <h2 id="abertos-titulo" class="painel__titulo">Campeonatos abertos</h2>
+        <a class="painel__link" routerLink="/campeonatos">Ver todos</a>
+      </header>
+      @if (abertos() === null) {
+        <div class="painel__corpo"><app-loading label="Buscando campeonatos…" /></div>
+      } @else if (abertos()!.length === 0) {
+        <p class="painel__corpo apoio">
+          Nenhum campeonato publicado ainda. Quando uma liga publicar o dela, ele aparece aqui.
+        </p>
+      } @else {
+        <ul class="linhas">
+          @for (item of abertos(); track item.slug) {
+            <li class="linha">
+              <span class="emblema" aria-hidden="true">
+                <svg [appIcon]="icons.trophy" />
+              </span>
+              <span class="linha__texto">
+                <span class="linha__principal">{{ item.name }}</span>
+                <span class="linha__meta">
+                  {{ modalidade(item.modality) }} · {{ item.season }} · {{ item.organizationName }}
+                </span>
+              </span>
+              <a class="acao acao--secundaria" [routerLink]="['/c', item.slug, 'jogar']">
+                Participar<span class="sr-only"> de {{ item.name }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+}

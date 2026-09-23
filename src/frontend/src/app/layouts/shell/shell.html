@@ -1,0 +1,258 @@
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+@if (account(); as conta) {
+  <div class="app">
+    <aside class="lateral">
+      <a class="marca marca--clara" routerLink="/inicio">
+        <span class="marca__sinal" aria-hidden="true">CV</span>
+        <span class="marca__nome">Cartola Várzea</span>
+      </a>
+
+      <nav class="lateral__grupo" aria-label="Navegação principal">
+        <p class="lateral__rotulo" aria-hidden="true">Principal</p>
+        @for (item of globalItems; track item.section) {
+          <a
+            class="lateral__link"
+            [routerLink]="globalRoute(item.section)"
+            [attr.aria-current]="isCurrentGlobal(item.section) ? 'page' : null"
+          >
+            <svg [appIcon]="item.icon" />{{ item.label }}
+          </a>
+        }
+      </nav>
+
+      @if (current(); as campeonato) {
+        <div class="lateral__grupo">
+          <p class="lateral__rotulo" id="rotulo-campeonato-lateral">Campeonato atual</p>
+          @if (mine().length > 1) {
+            <select
+              class="seletor"
+              aria-labelledby="rotulo-campeonato-lateral"
+              (change)="switchCompetition($event)"
+            >
+              @for (item of mine(); track item.slug) {
+                <option [value]="item.slug" [selected]="item.slug === campeonato.slug">
+                  {{ item.competitionName }}
+                </option>
+              }
+            </select>
+          } @else {
+            <p class="lateral__campeonato">{{ campeonato.competitionName }}</p>
+          }
+          <nav aria-label="Navegação do jogo">
+            @for (item of gameItems; track item.section) {
+              <a
+                class="lateral__link"
+                [routerLink]="['/c', campeonato.slug, item.path]"
+                [attr.aria-current]="isCurrentGame(item.section) ? 'page' : null"
+              >
+                <svg [appIcon]="item.icon" />{{ item.label }}
+              </a>
+            }
+          </nav>
+        </div>
+      }
+
+      <nav class="lateral__grupo" aria-label="Apoio">
+        <a
+          class="lateral__link"
+          routerLink="/regras"
+          [attr.aria-current]="isCurrentGlobal('rules') ? 'page' : null"
+        >
+          <svg [appIcon]="icons.rules" />Regras
+        </a>
+        @if (canOrganize()) {
+          <a
+            class="lateral__link"
+            routerLink="/organizar"
+            [attr.aria-current]="isCurrentGlobal('organize') ? 'page' : null"
+          >
+            <svg [appIcon]="icons.organize" />Organizar
+          </a>
+        }
+      </nav>
+
+      <a
+        class="lateral__conta"
+        routerLink="/perfil"
+        [attr.aria-current]="isCurrentGlobal('account') ? 'page' : null"
+      >
+        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <span class="lateral__conta-texto">
+          <span class="lateral__conta-nome">{{ conta.displayName }}</span>
+          <span class="lateral__conta-apoio">Conta e preferências</span>
+        </span>
+      </a>
+    </aside>
+
+    <div class="principal">
+      <header class="topo">
+        <a class="marca topo__marca" routerLink="/inicio">
+          <span class="marca__sinal" aria-hidden="true">CV</span>
+          <span class="marca__nome">Cartola Várzea</span>
+        </a>
+        <p class="topo__contexto">
+          <span class="topo__titulo">{{ sectionTitle() }}</span>
+          @if (contextName(); as nome) {
+            <span class="topo__campeonato">{{ nome }}</span>
+          }
+        </p>
+        <div class="topo__acoes">
+          <app-notification-bell />
+          <a class="botao-icone topo__conta" routerLink="/perfil" aria-label="Conta">
+            <svg [appIcon]="icons.account" [size]="20" />
+          </a>
+        </div>
+      </header>
+
+      <app-demo-banner />
+
+      <main id="conteudo" class="conteudo" tabindex="-1">
+        <router-outlet />
+      </main>
+
+      <footer class="rodape">
+        <p>
+          Demonstração de portfólio, com dados fictícios. Sem pagamentos, apostas ou premiações.
+        </p>
+        <p><a routerLink="/sistema">Estado do sistema</a></p>
+      </footer>
+    </div>
+
+    <nav class="inferior" aria-label="Navegação principal no celular">
+      @for (item of globalItems; track item.section) {
+        <a
+          class="inferior__item"
+          [routerLink]="globalRoute(item.section)"
+          [attr.aria-current]="isCurrentGlobal(item.section) ? 'page' : null"
+        >
+          <svg [appIcon]="item.icon" [size]="20" />{{ item.label }}
+        </a>
+      }
+      @if (current(); as campeonato) {
+        <a
+          class="inferior__item"
+          [routerLink]="['/c', campeonato.slug, 'escalacao']"
+          [attr.aria-current]="isCurrentGame('team') ? 'page' : null"
+        >
+          <svg [appIcon]="icons.team" [size]="20" />Meu time
+        </a>
+      }
+      <button
+        type="button"
+        class="inferior__item"
+        aria-haspopup="dialog"
+        aria-controls="folha-mais"
+        [attr.aria-expanded]="moreOpen()"
+        (click)="openMore()"
+      >
+        <svg [appIcon]="icons.menu" [size]="20" />Mais
+      </button>
+    </nav>
+
+    <!--
+      O clique no fundo escurecido é atalho a mais: o <dialog> nativo já fecha no Esc e
+      a folha tem botão Fechar visível, então teclado e leitor de tela não dependem dele.
+    -->
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+    <dialog
+      #mais
+      id="folha-mais"
+      class="folha"
+      aria-labelledby="folha-mais-titulo"
+      (close)="moreOpen.set(false)"
+      (click)="closeOnBackdrop($event)"
+    >
+      <div class="folha__topo">
+        <h2 id="folha-mais-titulo" class="folha__titulo">Mais opções</h2>
+        <button type="button" class="botao-icone" aria-label="Fechar" (click)="closeMore()">
+          <svg [appIcon]="icons.close" [size]="20" />
+        </button>
+      </div>
+
+      @if (current(); as campeonato) {
+        <p class="folha__rotulo" id="rotulo-campeonato-folha">Campeonato atual</p>
+        @if (mine().length > 1) {
+          <select
+            class="seletor seletor--claro"
+            aria-labelledby="rotulo-campeonato-folha"
+            (change)="switchCompetition($event)"
+          >
+            @for (item of mine(); track item.slug) {
+              <option [value]="item.slug" [selected]="item.slug === campeonato.slug">
+                {{ item.competitionName }}
+              </option>
+            }
+          </select>
+        } @else {
+          <p class="folha__campeonato">{{ campeonato.competitionName }}</p>
+        }
+        <nav class="folha__grade" aria-label="Navegação do jogo">
+          @for (item of gameItems; track item.section) {
+            @if (item.section !== 'team') {
+              <a
+                class="folha__link"
+                [routerLink]="['/c', campeonato.slug, item.path]"
+                [attr.aria-current]="isCurrentGame(item.section) ? 'page' : null"
+              >
+                <svg [appIcon]="item.icon" />{{ item.label }}
+              </a>
+            }
+          }
+        </nav>
+      }
+
+      <nav class="folha__grade" aria-label="Outras páginas">
+        <a
+          class="folha__link"
+          routerLink="/regras"
+          [attr.aria-current]="isCurrentGlobal('rules') ? 'page' : null"
+        >
+          <svg [appIcon]="icons.rules" />Regras
+        </a>
+        @if (canOrganize()) {
+          <a
+            class="folha__link"
+            routerLink="/organizar"
+            [attr.aria-current]="isCurrentGlobal('organize') ? 'page' : null"
+          >
+            <svg [appIcon]="icons.organize" />Organizar
+          </a>
+        }
+        <a
+          class="folha__link"
+          routerLink="/perfil"
+          [attr.aria-current]="isCurrentGlobal('account') ? 'page' : null"
+        >
+          <svg [appIcon]="icons.account" />Conta
+        </a>
+      </nav>
+    </dialog>
+  </div>
+} @else {
+  <header class="publico">
+    <div class="publico__interno">
+      <a class="marca" routerLink="/" aria-label="Cartola Várzea, página inicial">
+        <span class="marca__sinal" aria-hidden="true">CV</span>
+        <span class="marca__nome" aria-hidden="true">Cartola Várzea</span>
+      </a>
+      <nav class="publico__nav" aria-label="Navegação principal">
+        <a routerLink="/campeonatos" routerLinkActive="ativo" ariaCurrentWhenActive="page">
+          Campeonatos
+        </a>
+        <a routerLink="/regras" routerLinkActive="ativo" ariaCurrentWhenActive="page">Regras</a>
+        <a routerLink="/entrar" routerLinkActive="ativo" ariaCurrentWhenActive="page">Entrar</a>
+        <a class="publico__cta" routerLink="/cadastro">Criar conta</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" class="conteudo conteudo--publico" tabindex="-1">
+    <router-outlet />
+  </main>
+
+  <footer class="rodape rodape--publico">
+    <p>Demonstração de portfólio, com dados fictícios. Sem pagamentos, apostas ou premiações.</p>
+    <p><a routerLink="/sistema">Estado do sistema</a></p>
+  </footer>
+}

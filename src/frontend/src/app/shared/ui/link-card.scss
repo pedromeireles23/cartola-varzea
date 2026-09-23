@@ -11,22 +11,16 @@
   position: relative;
   display: grid;
   gap: var(--space-1);
-  padding: var(--space-5);
-  padding-right: var(--space-12);
+  padding: var(--space-4) var(--space-12) var(--space-4) var(--space-5);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  transition:
-    border-color var(--motion-feedback) var(--motion-easing),
-    box-shadow var(--motion-feedback) var(--motion-easing),
-    transform var(--motion-feedback) var(--motion-easing);
+  transition: border-color var(--motion-feedback) var(--motion-easing);
 }
 
-// Um pixel: o cartao responde ao cursor sem sair do lugar na grade.
+// A borda escurece sob o cursor; sombra fica para o que se sobrepõe (06 §9.2).
 .cartao-link:hover {
-  border-color: var(--color-brand-300);
-  box-shadow: var(--shadow-2);
-  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
 }
 
 // Quem chega pelo teclado precisa ver o cartao todo reagir, nao so o texto do link.
@@ -64,9 +58,8 @@
 .cartao-link__seta {
   position: absolute;
   top: 50%;
-  right: var(--space-5);
+  right: var(--space-4);
   color: var(--color-ink-500);
-  font-size: var(--font-h3);
   transform: translateY(-50%);
   transition:
     color var(--motion-feedback) var(--motion-easing),
@@ -104,10 +97,6 @@
 @media (prefers-reduced-motion: reduce) {
   .cartoes-link > * {
     animation: none;
-  }
-
-  .cartao-link:hover {
-    transform: none;
   }
 
   .cartao-link:hover .cartao-link__seta {

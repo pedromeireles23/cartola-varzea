@@ -7,9 +7,10 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ChevronRight } from 'lucide';
 
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Loading } from '../../shared/ui';
+import { Icon, Loading } from '../../shared/ui';
 import { MODALITY_LABELS } from '../organizer/competition.service';
 import { PublicCompetitionService, PublicCompetitionSummary } from './public-competition.service';
 
@@ -35,7 +36,7 @@ type Estado =
 @Component({
   selector: 'app-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Loading, RouterLink],
+  imports: [Icon, Loading, RouterLink],
   template: `
     <section class="capa">
       <!-- Linhas de campo, geometricas e sem marca (02 §7): decoram sem competir. -->
@@ -117,7 +118,7 @@ type Estado =
                     {{ rotulo(campeonato.modality) }} · Temporada {{ campeonato.season }} ·
                     {{ campeonato.organizationName }}
                   </p>
-                  <span class="cartao-link__seta" aria-hidden="true">→</span>
+                  <svg class="cartao-link__seta" [appIcon]="seta" />
                 </li>
               }
             </ul>
@@ -129,6 +130,7 @@ type Estado =
   styleUrls: ['../../shared/ui/link-card.scss', './landing.scss'],
 })
 export class LandingPage implements OnInit {
+  protected readonly seta = ChevronRight;
   private readonly service = inject(PublicCompetitionService);
   private readonly meta = inject(PageMetaService);
 

@@ -33,5 +33,5 @@ export const anonymousGuard: CanActivateFn = async () => {
     await auth.load();
   }
 
-  return auth.isAuthenticated() ? router.createUrlTree(['/perfil']) : true;
+  return auth.isAuthenticated() ? router.createUrlTree(['/inicio']) : true;
 };

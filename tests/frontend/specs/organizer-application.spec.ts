@@ -9,7 +9,10 @@ test('pessoa com conta solicita acesso de organizador e acompanha o pedido', asy
   await entrarComContaNova(page, request);
   const organizacao = `Liga E2E ${Date.now()}`;
 
-  // 1. O caminho parte do perfil, como no mapa de navegação.
+  // 1. O caminho parte da conta, como no mapa de navegação: a entrada abre o início, e
+  // a conta está na barra lateral do desktop e no topo do celular.
+  await page.getByRole('link', { name: /Conta/ }).click();
+  await expect(page).toHaveURL(/\/perfil$/);
   await page.getByRole('link', { name: 'Quero organizar' }).click();
   await expect(page).toHaveURL(/\/organizar\/solicitar$/);
   await expect(page.getByRole('heading', { name: 'Organizar campeonatos' })).toBeVisible();
