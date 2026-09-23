@@ -44,6 +44,10 @@ public static class PublicCompetitionEndpoints
             .AllowAnonymous()
             .WithName("GetPublicCompetitionFixtures")
             .WithSummary("Calendário do campeonato; placar só nas rodadas com resultado publicado.");
+        competitions.MapGet("/{slug}/standings", StandingsAsync)
+            .AllowAnonymous()
+            .WithName("GetPublicCompetitionStandings")
+            .WithSummary("Classificação por fase e grupo; mata-mata vem sem tabela, de propósito.");
         competitions.MapGet("/{slug}/teams/{teamId:guid}", TeamAsync)
             .AllowAnonymous()
             .WithName("GetPublicTeam")
@@ -107,6 +111,21 @@ public static class PublicCompetitionEndpoints
 
         return await service.MatchAsync(slug, matchId, cancellationToken).ConfigureAwait(false) is { } match
             ? Results.Ok(match)
+            : Results.NotFound();
+    }
+
+    private static async Task<IResult> StandingsAsync(
+        string slug,
+        IPublicFixtureService service,
+        CancellationToken cancellationToken)
+    {
+        if (!CompetitionSlug.IsValid(slug))
+        {
+            return Results.NotFound();
+        }
+
+        return await service.StandingsAsync(slug, cancellationToken).ConfigureAwait(false) is { } tabela
+            ? Results.Ok(tabela)
             : Results.NotFound();
     }
 

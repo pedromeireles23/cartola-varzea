@@ -144,6 +144,71 @@ public sealed class PublicFixtureTests(SqlServerFixture sqlServer) : IClassFixtu
         }
     }
 
+    [Fact]
+    public async Task StandingsCountOnlyPublishedResults()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+        using var visitante = factory.CreateClient();
+
+        // Antes de publicar, a fase existe e a campanha de todo mundo está zerada.
+        var antes = await StandingsAsync(visitante, world.Slug, cancellationToken);
+        var fase = antes.GetProperty("stages")[0];
+        Assert.Equal("Groups", fase.GetProperty("format").GetString());
+        var linhasAntes = fase.GetProperty("groups")[0].GetProperty("rows").EnumerateArray().ToList();
+        Assert.NotEmpty(linhasAntes);
+        Assert.All(linhasAntes, linha => Assert.Equal(0, linha.GetProperty("played").GetInt32()));
+        Assert.All(linhasAntes, linha => Assert.Equal(0, linha.GetProperty("points").GetInt32()));
+
+        clock.Advance(TimeSpan.FromDays(3));
+        await FillSheetAsync(world, world.RoundId, cancellationToken, goals: 2);
+        await SendToReviewAsync(world, world.RoundId, cancellationToken);
+
+        // Em conferência ainda não conta: fato em edição não é fato público.
+        var conferindo = await StandingsAsync(visitante, world.Slug, cancellationToken);
+        Assert.All(
+            conferindo.GetProperty("stages")[0].GetProperty("groups")[0].GetProperty("rows").EnumerateArray(),
+            linha => Assert.Equal(0, linha.GetProperty("played").GetInt32()));
+
+        await PublishRoundAsync(world, world.RoundId, cancellationToken);
+
+        var depois = await StandingsAsync(visitante, world.Slug, cancellationToken);
+        var linhas = depois.GetProperty("stages")[0]
+            .GetProperty("groups")[0]
+            .GetProperty("rows")
+            .EnumerateArray()
+            .ToList();
+
+        // O mandante venceu por 2 a 0: três pontos, saldo 2, e o visitante sem ponto.
+        var lider = linhas[0];
+        Assert.Equal(3, lider.GetProperty("points").GetInt32());
+        Assert.Equal(1, lider.GetProperty("wins").GetInt32());
+        Assert.Equal(2, lider.GetProperty("goalsFor").GetInt32());
+        Assert.Equal(0, lider.GetProperty("goalsAgainst").GetInt32());
+        Assert.Equal(2, lider.GetProperty("goalDifference").GetInt32());
+        Assert.Equal(1, lider.GetProperty("position").GetInt32());
+
+        // Quem perdeu jogou e não pontuou; quem nem entrou em campo segue zerado.
+        var comDerrota = linhas.Single(linha =>
+            linha.GetProperty("losses").GetInt32() == 1);
+        Assert.Equal(0, comDerrota.GetProperty("points").GetInt32());
+        Assert.Equal(1, comDerrota.GetProperty("played").GetInt32());
+        Assert.Contains(linhas, linha => linha.GetProperty("played").GetInt32() == 0);
+    }
+
+    private static async Task<JsonElement> StandingsAsync(
+        HttpClient client,
+        string slug,
+        CancellationToken cancellationToken) =>
+        await client.GetFromJsonAsync<JsonElement>(
+            new Uri($"/api/v1/public/competitions/{slug}/standings", UriKind.Relative),
+            cancellationToken);
+
     private static Uri Match(string slug, Guid matchId) =>
         new($"/api/v1/public/competitions/{slug}/matches/{matchId}", UriKind.Relative);
 

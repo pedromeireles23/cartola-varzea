@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-/** As seções públicas de um campeonato. A tabela entra quando a classificação existir. */
-type Secao = 'visao' | 'partidas' | 'ranking';
+/** As seções públicas de um campeonato. */
+type Secao = 'visao' | 'tabela' | 'partidas' | 'ranking';
 
 /**
  * Navegação entre as seções públicas de um campeonato (02 §9.1).
@@ -39,6 +39,7 @@ export class PublicNav {
     const slug = this.campeonato();
     return [
       { secao: 'visao' as const, rotulo: 'Visão geral', caminho: ['/c', slug] },
+      { secao: 'tabela' as const, rotulo: 'Tabela', caminho: ['/c', slug, 'tabela'] },
       { secao: 'partidas' as const, rotulo: 'Partidas', caminho: ['/c', slug, 'partidas'] },
       { secao: 'ranking' as const, rotulo: 'Ranking', caminho: ['/c', slug, 'ranking'] },
     ];

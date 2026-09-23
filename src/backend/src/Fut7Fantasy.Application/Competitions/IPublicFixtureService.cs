@@ -21,7 +21,50 @@ public interface IPublicFixtureService
     /// dele, ou a rodada ainda não publicou resultado.
     /// </summary>
     Task<PublicMatchView?> MatchAsync(string slug, Guid matchId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A classificação por fase e grupo. Só resultado publicado conta, e partida adiada
+    /// ou cancelada fica de fora (decisão do Pedro em 2026-09-23).
+    /// </summary>
+    Task<PublicStandingsView?> StandingsAsync(string slug, CancellationToken cancellationToken);
 }
+
+/// <summary>A tabela do campeonato, fase a fase.</summary>
+public sealed record PublicStandingsView(
+    string Slug,
+    string Name,
+    IReadOnlyList<PublicStageStandingsView> Stages);
+
+/// <summary>
+/// A classificação de uma fase. Mata-mata vem com <see cref="Groups"/> vazio e o formato
+/// declarado: ele não tem tabela, e a tela precisa dizer isso em vez de mostrar um vazio
+/// sem explicação. <see cref="Tiebreakers"/> é a ordem que a organização escolheu, para
+/// que a tabela possa contar por que um time está na frente do outro.
+/// </summary>
+public sealed record PublicStageStandingsView(
+    string Name,
+    int Sequence,
+    string Format,
+    IReadOnlyList<string> Tiebreakers,
+    IReadOnlyList<PublicGroupStandingsView> Groups);
+
+/// <summary>Um grupo e a tabela dele; o nome é nulo quando a fase não tem grupos.</summary>
+public sealed record PublicGroupStandingsView(string? Name, IReadOnlyList<PublicStandingsRowView> Rows);
+
+/// <summary>Uma linha da tabela, com a campanha inteira do time.</summary>
+public sealed record PublicStandingsRowView(
+    int Position,
+    bool Tied,
+    Guid TeamId,
+    string TeamName,
+    int Played,
+    int Wins,
+    int Draws,
+    int Losses,
+    int GoalsFor,
+    int GoalsAgainst,
+    int GoalDifference,
+    int Points);
 
 /// <summary>Calendário público do campeonato.</summary>
 public sealed record PublicFixturesView(

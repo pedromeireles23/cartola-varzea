@@ -1,0 +1,80 @@
+// Tabela de classificacao. Tabela de verdade, com <table>: e dado tabular, e o leitor
+// de tela precisa dos cabecalhos de linha e coluna para navegar por ele.
+
+.grupo-tabela {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.grupo-tabela__nome {
+  margin: 0;
+  font-size: var(--font-body-size);
+  color: var(--color-ink-500);
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela th,
+.tabela td {
+  padding: var(--space-2) var(--space-1);
+  text-align: right;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabela thead th {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+  font-weight: 500;
+}
+
+.tabela tbody tr {
+  transition: background-color var(--motion-feedback) var(--motion-easing);
+}
+
+// Linha longa de numeros: o realce sob o cursor evita trocar de time na leitura.
+.tabela tbody tr:hover {
+  background-color: var(--color-canvas);
+}
+
+.tabela tbody tr:last-child th,
+.tabela tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tabela__posicao {
+  width: 2.5rem;
+  color: var(--color-ink-500);
+  text-align: left;
+}
+
+// O nome do time e o cabecalho da linha: e por ele que a celula faz sentido.
+.tabela__time {
+  font-weight: 600;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.tabela__time a {
+  color: var(--color-ink-950);
+  text-decoration: none;
+}
+
+.tabela__time a:hover {
+  text-decoration: underline;
+}
+
+// "Empatado" aparece escrito, e nao so pela colocacao repetida (02 §2).
+.tabela__empate {
+  display: block;
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+  font-weight: 400;
+}
+
+.tabela__pontos {
+  font-weight: 700;
+}

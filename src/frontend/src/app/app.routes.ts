@@ -54,6 +54,13 @@ export const routes: Routes = [
           import('./features/public/competition-ranking').then((m) => m.CompetitionRankingPage),
       },
       {
+        // Mata-mata não tem tabela; a fase vem declarada e a tela explica.
+        path: 'c/:campeonato/tabela',
+        title: 'Tabela',
+        loadComponent: () =>
+          import('./features/public/competition-standings').then((m) => m.CompetitionStandingsPage),
+      },
+      {
         path: 'c/:campeonato/times/:timeId',
         title: 'Time',
         loadComponent: () => import('./features/public/public-team').then((m) => m.PublicTeamPage),

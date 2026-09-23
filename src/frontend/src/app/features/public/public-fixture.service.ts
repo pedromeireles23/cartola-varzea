@@ -91,6 +91,42 @@ export interface PublicMatch {
   readonly teams: readonly PublicMatchTeam[];
 }
 
+export interface StandingsRow {
+  readonly position: number;
+  readonly tied: boolean;
+  readonly teamId: string;
+  readonly teamName: string;
+  readonly played: number;
+  readonly wins: number;
+  readonly draws: number;
+  readonly losses: number;
+  readonly goalsFor: number;
+  readonly goalsAgainst: number;
+  readonly goalDifference: number;
+  readonly points: number;
+}
+
+/** Um grupo e a tabela dele; o nome é nulo quando a fase não tem grupos. */
+export interface GroupStandings {
+  readonly name: string | null;
+  readonly rows: readonly StandingsRow[];
+}
+
+/** Mata-mata vem com `groups` vazio: ele não tem classificação por pontos. */
+export interface StageStandings {
+  readonly name: string;
+  readonly sequence: number;
+  readonly format: 'Groups' | 'Knockout';
+  readonly tiebreakers: readonly string[];
+  readonly groups: readonly GroupStandings[];
+}
+
+export interface PublicStandings {
+  readonly slug: string;
+  readonly name: string;
+  readonly stages: readonly StageStandings[];
+}
+
 /** Calendário e súmulas públicas de um campeonato (Fase 8). */
 @Injectable({ providedIn: 'root' })
 export class PublicFixtureService {
@@ -99,6 +135,10 @@ export class PublicFixtureService {
 
   fixtures(slug: string): Observable<PublicFixtures> {
     return this.http.get<PublicFixtures>(`${this.competitionUrl(slug)}/fixtures`);
+  }
+
+  standings(slug: string): Observable<PublicStandings> {
+    return this.http.get<PublicStandings>(`${this.competitionUrl(slug)}/standings`);
   }
 
   match(slug: string, matchId: string): Observable<PublicMatch> {

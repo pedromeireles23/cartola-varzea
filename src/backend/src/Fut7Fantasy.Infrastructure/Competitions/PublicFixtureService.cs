@@ -15,6 +15,9 @@ namespace Fut7Fantasy.Infrastructure.Competitions;
 public sealed class PublicFixtureService(Fut7FantasyDbContext dbContext, TimeProvider clock)
     : IPublicFixtureService
 {
+    private const string GroupsNavigation = "_groups";
+
+
     public async Task<PublicFixturesView?> FixturesAsync(string slug, CancellationToken cancellationToken)
     {
         var competition = await PublishedAsync(slug, cancellationToken).ConfigureAwait(false);
@@ -172,6 +175,141 @@ public sealed class PublicFixtureService(Fut7FantasyDbContext dbContext, TimePro
             ]);
     }
 
+    public async Task<PublicStandingsView?> StandingsAsync(
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        var competition = await PublishedAsync(slug, cancellationToken).ConfigureAwait(false);
+        if (competition is null)
+        {
+            return null;
+        }
+
+        var stages = await dbContext.Stages
+            .AsNoTracking()
+            // `Groups` é propriedade computada sobre o campo privado; o EF só inclui a
+            // navegação pelo nome do campo, como o serviço de fases já faz.
+            .Include(GroupsNavigation)
+            .Where(stage => stage.CompetitionId == competition.Id)
+            .OrderBy(stage => stage.Sequence)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (stages.Count == 0)
+        {
+            return new(competition.Slug!, competition.Name, []);
+        }
+
+        var participants = await dbContext.StageParticipants
+            .AsNoTracking()
+            .Where(item => stages.Select(stage => stage.Id).Contains(item.StageId))
+            .Select(item => new ParticipantRow(item.StageId, item.RealTeamId, item.StageGroupId))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var nomes = await dbContext.RealTeams
+            .AsNoTracking()
+            .Where(team => team.CompetitionId == competition.Id)
+            .ToDictionaryAsync(team => team.Id, team => team.Name, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Só placar publicado entra, e partida adiada ou cancelada fica de fora.
+        var resultados = await (
+                from match in dbContext.Matches.AsNoTracking()
+                where match.CompetitionId == competition.Id && match.Status == MatchStatus.Scheduled
+                join round in dbContext.Rounds.AsNoTracking() on match.RoundId equals round.Id
+                where round.Status == RoundStatus.Published
+                join sheet in dbContext.MatchSheets.AsNoTracking() on match.Id equals sheet.MatchId
+                select new
+                {
+                    match.StageId,
+                    match.HomeTeamId,
+                    match.AwayTeamId,
+                    sheet.HomeScore,
+                    sheet.AwayScore,
+                })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var porFase = resultados.ToLookup(item => item.StageId);
+
+        return new(
+            competition.Slug!,
+            competition.Name,
+            [
+                .. stages.Select(stage =>
+                {
+                    var daFase = porFase[stage.Id]
+                        .Select(item => new StandingsMatch(
+                            item.HomeTeamId, item.HomeScore, item.AwayTeamId, item.AwayScore))
+                        .ToList();
+                    var naFase = participants.Where(item => item.StageId == stage.Id).ToList();
+
+                    // Mata-mata não tem tabela: a fase vem declarada e sem grupo nenhum.
+                    var grupos = stage.Format != StageFormat.Groups
+                        ? []
+                        : Tabelas(stage, naFase, daFase, nomes);
+
+                    return new PublicStageStandingsView(
+                        stage.Name,
+                        stage.Sequence,
+                        stage.Format.ToString(),
+                        [.. stage.Tiebreakers.Select(criterio => criterio.ToString())],
+                        grupos);
+                }),
+            ]);
+    }
+
+    /// <summary>
+    /// Uma tabela por grupo; sem grupos, uma só com todo mundo da fase. Cada tabela conta
+    /// apenas os jogos entre os times dela, que é o que faz um grupo ser um grupo.
+    /// </summary>
+    private static List<PublicGroupStandingsView> Tabelas(
+        Stage stage,
+        IReadOnlyList<ParticipantRow> naFase,
+        IReadOnlyList<StandingsMatch> daFase,
+        IReadOnlyDictionary<Guid, string> nomes)
+    {
+        List<(string? Nome, List<Guid> Times)> blocos = stage.Groups.Count > 0
+            ? [.. stage.Groups.Select(grupo => (
+                (string?)grupo.Name,
+                naFase
+                    .Where(item => item.StageGroupId == grupo.Id)
+                    .Select(item => item.RealTeamId)
+                    .ToList()))]
+            : [(null, naFase.Select(item => item.RealTeamId).ToList())];
+
+        return
+        [
+            .. blocos.Select(bloco =>
+            {
+                var doBloco = bloco.Times.ToHashSet();
+                var jogos = daFase
+                    .Where(jogo => doBloco.Contains(jogo.HomeTeamId) && doBloco.Contains(jogo.AwayTeamId))
+                    .ToList();
+                var linhas = GroupStandings.Order(
+                    GroupStandings.Build(bloco.Times, jogos),
+                    jogos,
+                    stage.Tiebreakers);
+
+                return new PublicGroupStandingsView(
+                    bloco.Nome,
+                    [
+                        .. linhas.Select(linha => new PublicStandingsRowView(
+                            linha.Position,
+                            linha.Tied,
+                            linha.Record.TeamId,
+                            nomes.GetValueOrDefault(linha.Record.TeamId, "Time"),
+                            linha.Record.Played,
+                            linha.Record.Wins,
+                            linha.Record.Draws,
+                            linha.Record.Losses,
+                            linha.Record.GoalsFor,
+                            linha.Record.GoalsAgainst,
+                            linha.Record.GoalDifference,
+                            linha.Record.Points)),
+                    ]);
+            }),
+        ];
+    }
+
     private static int Total(ILookup<Guid, StatRow> events, Guid athleteId, StatEventType type) =>
         events[athleteId].Where(item => item.Type == type).Sum(item => item.Quantity);
 
@@ -221,6 +359,8 @@ public sealed class PublicFixtureService(Fut7FantasyDbContext dbContext, TimePro
     }
 
     private sealed record StatRow(Guid AthleteId, StatEventType Type, int Quantity);
+
+    private sealed record ParticipantRow(Guid StageId, Guid RealTeamId, Guid? StageGroupId);
 
     private sealed record MatchRow(
         Match Match,
