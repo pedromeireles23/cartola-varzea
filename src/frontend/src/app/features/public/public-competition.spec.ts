@@ -8,9 +8,46 @@ import { API_BASE_URL } from '../../core/config/api-base-url';
 import { PERFIS } from '../organizer/competition-area/competition-fixtures';
 import { PublicCompetitionPage } from './public-competition';
 import { PublicCompetition } from './public-competition.service';
+import { PublicFixture, PublicRound } from './public-fixture.service';
 
 const SLUG = 'copa-da-varzea-2026';
 const URL = `/api/v1/public/competitions/${SLUG}`;
+const FIXTURES = `${URL}/fixtures`;
+
+/** Daqui a tantas horas, no formato que o servidor devolve. */
+function daqui(horas: number): string {
+  return new Date(Date.now() + horas * 3_600_000).toISOString();
+}
+
+function jogo(changes: Partial<PublicFixture> = {}): PublicFixture {
+  return {
+    id: 'jogo-1',
+    stageName: 'Fase única',
+    homeTeamName: 'Alpha',
+    awayTeamName: 'Beta',
+    kickoffAt: daqui(24),
+    kickoffLocal: '24/09/2026 10:00',
+    status: 'Scheduled',
+    homeScore: null,
+    awayScore: null,
+    hasSheet: false,
+    ...changes,
+  };
+}
+
+function rodada(changes: Partial<PublicRound> = {}): PublicRound {
+  return {
+    id: 'rodada-1',
+    name: 'Rodada 1',
+    sequence: 1,
+    phase: 'MarketOpen',
+    resultPublished: false,
+    underCorrection: false,
+    provisional: false,
+    matches: [jogo()],
+    ...changes,
+  };
+}
 
 function campeonato(parcial: Partial<PublicCompetition> = {}): PublicCompetition {
   return {
@@ -57,10 +94,22 @@ describe('PublicCompetitionPage', () => {
 
   afterEach(() => http.verify());
 
-  async function abrir(): Promise<ComponentFixture<PublicCompetitionPage>> {
+  /**
+   * O calendário é acessório nesta página, então ele é respondido por padrão com nada;
+   * quem testa "agora" e "próximos jogos" passa as rodadas.
+   */
+  async function abrir(
+    rodadas: PublicRound[] = [],
+  ): Promise<ComponentFixture<PublicCompetitionPage>> {
     const fixture = TestBed.createComponent(PublicCompetitionPage);
     fixture.componentRef.setInput('campeonato', SLUG);
     await fixture.whenStable();
+    http.expectOne(FIXTURES).flush({
+      slug: SLUG,
+      name: 'Copa da Várzea',
+      timeZoneId: 'America/Sao_Paulo',
+      rounds: rodadas,
+    });
     return fixture;
   }
 
@@ -156,6 +205,61 @@ describe('PublicCompetitionPage', () => {
       'a.jogar',
     );
     expect(jogar?.getAttribute('href')).toBe(`/c/${SLUG}/jogar`);
+  });
+
+  it('diz em que pé a rodada está e o que vem por aí', async () => {
+    const fixture = await abrir([rodada()]);
+    http.expectOne(URL).flush(campeonato());
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('Agora');
+    expect(texto(fixture)).toContain('Rodada 1');
+    expect(texto(fixture)).toContain('Mercado aberto');
+    expect(texto(fixture)).toContain('Próximos jogos');
+    expect(texto(fixture)).toContain('Alpha');
+    expect(texto(fixture)).toContain('24/09/2026 10:00 · Fase única');
+  });
+
+  it('rodada em correção avisa que os números vão mudar', async () => {
+    const fixture = await abrir([
+      rodada({ phase: 'ReopenedForCorrection', underCorrection: true, matches: [] }),
+    ]);
+    http.expectOne(URL).flush(campeonato());
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('Em correção');
+    expect(texto(fixture)).toContain('Os números voltam quando ela republicar');
+  });
+
+  it('sem jogo futuro, mostra o último resultado no lugar', async () => {
+    const fixture = await abrir([
+      rodada({
+        phase: 'Consolidated',
+        resultPublished: true,
+        matches: [jogo({ kickoffAt: daqui(-48), homeScore: 3, awayScore: 1, hasSheet: true })],
+      }),
+    ]);
+    http.expectOne(URL).flush(campeonato());
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('Último resultado · Rodada 1');
+    expect(texto(fixture)).toContain('3');
+    expect(texto(fixture)).not.toContain('Próximos jogos');
+    // Todas as rodadas fechadas: não há "agora" a mostrar.
+    expect(texto(fixture)).not.toContain('Agora');
+  });
+
+  it('calendário fora do ar não derruba a página do campeonato', async () => {
+    const fixture = TestBed.createComponent(PublicCompetitionPage);
+    fixture.componentRef.setInput('campeonato', SLUG);
+    await fixture.whenStable();
+    http.expectOne(FIXTURES).flush(null, { status: 500, statusText: 'Server Error' });
+    http.expectOne(URL).flush(campeonato());
+    await fixture.whenStable();
+
+    expect(texto(fixture)).toContain('Copa da Várzea');
+    expect(texto(fixture)).toContain('Como se joga');
+    expect(texto(fixture)).not.toContain('Próximos jogos');
   });
 
   it('endereço inexistente não parece erro do sistema', async () => {

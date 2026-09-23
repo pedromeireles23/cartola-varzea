@@ -12,11 +12,13 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Button, Card, Loading } from '../../shared/ui';
+import { Alert, Badge, Button, Card, Loading } from '../../shared/ui';
 import { formationText, timeZoneLabel } from '../organizer/competition-area/competition-format';
 import { FORMAT_LABELS } from '../organizer/competition-area/stage.service';
 import { MODALITY_LABELS } from '../organizer/competition.service';
 import { PublicCompetition, PublicCompetitionService } from './public-competition.service';
+import { PublicFixtureService, PublicRound, ROUND_PHASE_LABELS } from './public-fixture.service';
+import { PublicNav } from './public-nav';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -34,7 +36,7 @@ type Estado =
 @Component({
   selector: 'app-public-competition',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, DatePipe, DecimalPipe, Loading, RouterLink],
+  imports: [Alert, Badge, Button, Card, DatePipe, DecimalPipe, Loading, PublicNav, RouterLink],
   template: `
     <p class="intro"><a routerLink="/campeonatos">← Todos os campeonatos</a></p>
 
@@ -66,6 +68,8 @@ type Estado =
         <p class="intro">
           {{ modalidade() }} · Temporada {{ dados()!.season }} · {{ dados()!.organizationName }}
         </p>
+        <app-public-nav [campeonato]="dados()!.slug" atual="visao" />
+
         <p class="acoes-publicas">
           @if (!semCatalogo()) {
             <a class="jogar" [routerLink]="['/c', dados()!.slug, 'jogar']"
@@ -85,6 +89,60 @@ type Estado =
               o campeonato abre para quem quiser montar uma equipe.
             </p>
             <a class="acao acao--secundaria" routerLink="/campeonatos">Ver outros campeonatos</a>
+          </app-card>
+        }
+
+        @if (rodadaAtual(); as rodada) {
+          <app-card heading="Agora">
+            <p class="agora">
+              <strong>{{ rodada.name }}</strong>
+              <app-badge [tone]="rodada.underCorrection ? 'warning' : 'brand'">
+                {{ situacao(rodada) }}
+              </app-badge>
+            </p>
+            @if (rodada.underCorrection) {
+              <p class="apoio">
+                A liga está refazendo a súmula desta rodada. Os números voltam quando ela
+                republicar.
+              </p>
+            }
+          </app-card>
+        }
+
+        @if (proximosJogos().length > 0) {
+          <app-card heading="Próximos jogos">
+            <ul class="jogos">
+              @for (jogo of proximosJogos(); track jogo.id) {
+                <li class="jogo">
+                  <span class="jogo__time jogo__time--casa">{{ jogo.homeTeamName }}</span>
+                  <span class="jogo__placar"><span aria-hidden="true">×</span></span>
+                  <span class="jogo__time">{{ jogo.awayTeamName }}</span>
+                  <span class="jogo__detalhe">{{ jogo.kickoffLocal }} · {{ jogo.stageName }}</span>
+                </li>
+              }
+            </ul>
+            <a class="acao acao--secundaria" [routerLink]="['/c', dados()!.slug, 'partidas']">
+              Ver todas as partidas
+            </a>
+          </app-card>
+        } @else if (ultimoResultado(); as rodada) {
+          <app-card [heading]="'Último resultado · ' + rodada.name">
+            <ul class="jogos">
+              @for (jogo of rodada.matches; track jogo.id) {
+                <li class="jogo">
+                  <span class="jogo__time jogo__time--casa">{{ jogo.homeTeamName }}</span>
+                  <span class="jogo__placar">
+                    {{ jogo.homeScore }}<span aria-hidden="true">×</span>{{ jogo.awayScore }}
+                    <span class="sr-only">a</span>
+                  </span>
+                  <span class="jogo__time">{{ jogo.awayTeamName }}</span>
+                  <span class="jogo__detalhe">{{ jogo.kickoffLocal }} · {{ jogo.stageName }}</span>
+                </li>
+              }
+            </ul>
+            <a class="acao acao--secundaria" [routerLink]="['/c', dados()!.slug, 'partidas']">
+              Ver todas as partidas
+            </a>
           </app-card>
         }
 
@@ -165,16 +223,23 @@ type Estado =
       }
     }
   `,
-  styleUrl: './public.scss',
+  styleUrls: ['./public.scss', './fixtures.scss'],
 })
 export class PublicCompetitionPage implements OnInit {
   private readonly service = inject(PublicCompetitionService);
+  private readonly calendario = inject(PublicFixtureService);
   private readonly meta = inject(PageMetaService);
 
   /** Slug do campeonato na rota. */
   readonly campeonato = input.required<string>();
 
   protected readonly estado = signal<Estado>({ tipo: 'carregando' });
+
+  /**
+   * O calendário é acessório aqui: se ele falhar, a página do campeonato continua de pé
+   * sem a régua de "agora" e sem os próximos jogos.
+   */
+  protected readonly rodadas = signal<readonly PublicRound[]>([]);
 
   protected readonly dados = computed(() => {
     const atual = this.estado();
@@ -207,8 +272,43 @@ export class PublicCompetitionPage implements OnInit {
     () => this.semCatalogo() && (this.dados()?.stages.length ?? 0) === 0,
   );
 
+  /**
+   * A rodada que está em jogo: a primeira que ainda não fechou resultado. Quando todas
+   * fecharam, não há "agora" a mostrar — quem manda na tela então é o último resultado.
+   */
+  protected readonly rodadaAtual = computed(() =>
+    this.rodadas().find(
+      (rodada) =>
+        rodada.underCorrection ||
+        (rodada.phase !== 'Consolidated' &&
+          rodada.phase !== 'Published' &&
+          rodada.phase !== 'Cancelled' &&
+          rodada.phase !== 'Draft'),
+    ),
+  );
+
+  /** O que vem por aí, no relógio de quem está lendo, no máximo três. */
+  protected readonly proximosJogos = computed(() => {
+    const agora = Date.now();
+    return this.rodadas()
+      .flatMap((rodada) => rodada.matches)
+      .filter((jogo) => jogo.status === 'Scheduled' && Date.parse(jogo.kickoffAt) > agora)
+      .sort((um, outro) => Date.parse(um.kickoffAt) - Date.parse(outro.kickoffAt))
+      .slice(0, 3);
+  });
+
+  /** A última rodada com resultado no ar; some enquanto ela está em correção. */
+  protected readonly ultimoResultado = computed(() => {
+    const publicadas = this.rodadas().filter((rodada) => rodada.resultPublished);
+    return publicadas.length > 0 ? publicadas[publicadas.length - 1] : undefined;
+  });
+
   ngOnInit(): void {
     this.carregar();
+  }
+
+  protected situacao(rodada: PublicRound): string {
+    return ROUND_PHASE_LABELS[rodada.phase];
   }
 
   protected falha(): ApiFailure | null {
@@ -228,6 +328,11 @@ export class PublicCompetitionPage implements OnInit {
         });
       },
       error: (falha: ApiFailure) => this.estado.set({ tipo: 'erro', falha }),
+    });
+
+    this.calendario.fixtures(this.campeonato()).subscribe({
+      next: (calendario) => this.rodadas.set(calendario.rounds),
+      error: () => this.rodadas.set([]),
     });
   }
 

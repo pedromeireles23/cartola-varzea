@@ -137,3 +137,12 @@
   color: var(--color-ink-700);
   font-size: var(--font-small);
 }
+
+// Regua de "agora" na pagina do campeonato: o nome da rodada e o estado dela.
+.agora {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  margin: 0;
+}
