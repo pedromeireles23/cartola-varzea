@@ -50,6 +50,7 @@ public sealed class AuthorizationMatrixTests
         "GET /api/v1/competitions/{competitionId:guid}/settings -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/stages/ -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/teams/ -> competition-member",
+        "GET /api/v1/fantasy -> " + Authenticated,
         "GET /api/v1/fantasy/{slug}/ -> " + Authenticated,
         "GET /api/v1/fantasy/{slug}/market -> " + Authenticated,
         "GET /api/v1/fantasy/{slug}/leagues/ -> " + Authenticated,

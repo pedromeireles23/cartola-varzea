@@ -26,6 +26,33 @@ public sealed class FantasyFlowTests(SqlServerFixture sqlServer) : IClassFixture
     private static readonly string[] Positions = ["Goalkeeper", "Defender", "Midfielder", "Forward"];
 
     [Fact]
+    public async Task ParticipantHomeListsJoinedCompetitionsAndTheirSquadProgress()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var factory = CreateApi(new FakeTimeProvider(ApiFactory.FixedNow));
+        var world = await BuildAsync(factory, cancellationToken);
+        var playerEmail = UniqueEmail("fantasy-home");
+        await CreateUserAsync(factory, playerEmail);
+        using var player = await CreateAuthenticatedClientAsync(factory, playerEmail, cancellationToken);
+
+        var before = await player.GetFromJsonAsync<JsonElement>("/api/v1/fantasy", cancellationToken);
+        Assert.Empty(before.EnumerateArray());
+
+        using var joined = await player.PostAsync(Uri(world.Slug, "entry"), null, cancellationToken);
+        joined.EnsureSuccessStatusCode();
+
+        var competitions = await player.GetFromJsonAsync<JsonElement>("/api/v1/fantasy", cancellationToken);
+        var competition = Assert.Single(competitions.EnumerateArray());
+        Assert.Equal(world.Slug, competition.GetProperty("slug").GetString());
+        Assert.Equal(0, competition.GetProperty("squadSize").GetInt32());
+        Assert.Equal(12, competition.GetProperty("squadSizeTarget").GetInt32());
+        Assert.False(competition.GetProperty("hasCaptain").GetBoolean());
+        Assert.Equal(100m, competition.GetProperty("balance").GetDecimal());
+    }
+
+    [Fact]
     public async Task ParticipantJoinsAndBuildsAValidSquadWhileTheServerEnforcesTheRules()
     {
         Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);

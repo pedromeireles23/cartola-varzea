@@ -11,6 +11,9 @@ namespace Fut7Fantasy.Application.Fantasy;
 /// </summary>
 public interface IFantasyService
 {
+    /// <summary>Campeonatos publicados dos quais a conta participa, para a porta de entrada do jogo.</summary>
+    Task<IReadOnlyList<MyFantasyCompetitionView>> MyCompetitionsAsync(CancellationToken cancellationToken);
+
     Task<FantasyOverview?> OverviewAsync(string slug, CancellationToken cancellationToken);
 
     /// <summary>Adere ao campeonato. Aderir de novo devolve a participação que já existe.</summary>
@@ -41,6 +44,22 @@ public interface IFantasyService
         Guid athleteId,
         CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// Resumo leve da participação para o início autenticado. Não carrega catálogo nem pontuação:
+/// responde somente qual jogo continuar, quanto do elenco já foi montado e o prazo atual.
+/// </summary>
+public sealed record MyFantasyCompetitionView(
+    string CompetitionName,
+    string Slug,
+    string Season,
+    string Modality,
+    decimal Balance,
+    int SquadSize,
+    int SquadSizeTarget,
+    bool HasCaptain,
+    DateTimeOffset JoinedAt,
+    FantasyMarketStatus Market);
 
 public enum FantasyCommandOutcome
 {

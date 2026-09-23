@@ -17,6 +17,55 @@ public sealed class FantasyService(
     TimeProvider clock,
     LineupSnapshotMaterializer snapshotMaterializer) : IFantasyService
 {
+    public async Task<IReadOnlyList<MyFantasyCompetitionView>> MyCompetitionsAsync(
+        CancellationToken cancellationToken)
+    {
+        var entries = await dbContext.FantasyEntries
+            .AsNoTracking()
+            .Include(entry => entry.Slots)
+            .Where(entry => entry.UserId == UserId)
+            .OrderByDescending(entry => entry.UpdatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (entries.Count == 0)
+        {
+            return [];
+        }
+
+        var competitionIds = entries.Select(entry => entry.CompetitionId).ToList();
+        var competitions = await dbContext.Competitions
+            .AsNoTracking()
+            .Where(competition => competitionIds.Contains(competition.Id)
+                && competition.Status == CompetitionStatus.Published
+                && competition.Slug != null)
+            .ToDictionaryAsync(competition => competition.Id, cancellationToken)
+            .ConfigureAwait(false);
+
+        List<MyFantasyCompetitionView> result = [];
+        foreach (var entry in entries)
+        {
+            if (!competitions.TryGetValue(entry.CompetitionId, out var competition))
+            {
+                continue;
+            }
+
+            var profile = competition.ModalityProfile;
+            result.Add(new(
+                competition.Name,
+                competition.Slug!,
+                competition.Season,
+                competition.Modality.ToString(),
+                entry.Balance,
+                entry.Slots.Count,
+                profile.SquadAthletes + 1,
+                entry.CaptainAthleteId is not null,
+                entry.JoinedAt,
+                await MarketAsync(competition, cancellationToken).ConfigureAwait(false)));
+        }
+
+        return result;
+    }
+
     public async Task<FantasyOverview?> OverviewAsync(string slug, CancellationToken cancellationToken)
     {
         var context = await ContextAsync(slug, cancellationToken).ConfigureAwait(false);

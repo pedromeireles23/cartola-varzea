@@ -24,6 +24,12 @@ public static class FantasyEndpoints
     {
         ArgumentNullException.ThrowIfNull(routes);
 
+        routes.MapGet("/api/v1/fantasy", MyCompetitionsAsync)
+            .RequireAuthorization()
+            .WithTags("Fantasy")
+            .WithName("ListMyFantasyCompetitions")
+            .WithSummary("Campeonatos dos quais a conta participa, para o início do jogador.");
+
         var fantasy = routes.MapGroup("/api/v1/fantasy/{slug}").WithTags("Fantasy");
 
         fantasy.MapGet("/", OverviewAsync)
@@ -65,6 +71,11 @@ public static class FantasyEndpoints
 
         return routes;
     }
+
+    private static async Task<IResult> MyCompetitionsAsync(
+        IFantasyService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await service.MyCompetitionsAsync(cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> OverviewAsync(
         string slug,
