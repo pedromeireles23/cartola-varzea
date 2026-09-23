@@ -30,8 +30,11 @@ public sealed record PublicCompetitionSummary(
     string OrganizationName,
     DateTimeOffset PublishedAt);
 
-/// <summary>Time de um campeonato, na visão pública.</summary>
-public sealed record PublicTeamView(string Name, int Athletes);
+/// <summary>
+/// Time de um campeonato, na visão pública. O identificador entra para que a página do
+/// campeonato consiga levar ao elenco; ele não é adivinhável e não diz nada sozinho.
+/// </summary>
+public sealed record PublicTeamView(Guid Id, string Name, int Athletes);
 
 /// <summary>Grupo de uma fase com os times que a organização confirmou nele.</summary>
 public sealed record PublicStageGroupView(string Name, IReadOnlyList<string> Teams);

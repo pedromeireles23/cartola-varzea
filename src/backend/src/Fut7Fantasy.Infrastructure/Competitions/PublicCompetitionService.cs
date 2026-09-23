@@ -163,6 +163,7 @@ public sealed class PublicCompetitionService(Fut7FantasyDbContext dbContext) : I
             where team.CompetitionId == competitionId && team.ArchivedAt == null
             orderby team.Name
             select new PublicTeamView(
+                team.Id,
                 team.Name,
                 dbContext.RosterRegistrations.Count(registration =>
                     registration.RealTeamId == team.Id

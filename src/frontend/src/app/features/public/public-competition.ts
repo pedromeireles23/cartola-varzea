@@ -206,9 +206,9 @@ type Estado =
 
           <app-card heading="Times">
             <ul class="times">
-              @for (time of dados()!.teams; track time.name) {
+              @for (time of dados()!.teams; track time.id) {
                 <li class="time">
-                  <span>{{ time.name }}</span>
+                  <a [routerLink]="['/c', dados()!.slug, 'times', time.id]">{{ time.name }}</a>
                   <span class="time__elenco">{{ elenco(time.athletes) }}</span>
                 </li>
               } @empty {

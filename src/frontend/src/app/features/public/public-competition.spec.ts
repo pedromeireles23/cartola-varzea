@@ -69,8 +69,8 @@ function campeonato(parcial: Partial<PublicCompetition> = {}): PublicCompetition
       },
     ],
     teams: [
-      { name: 'Alpha', athletes: 6 },
-      { name: 'Beta', athletes: 5 },
+      { id: 'time-alpha', name: 'Alpha', athletes: 6 },
+      { id: 'time-beta', name: 'Beta', athletes: 5 },
     ],
     ...parcial,
   };

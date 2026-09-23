@@ -44,6 +44,14 @@ public static class PublicCompetitionEndpoints
             .AllowAnonymous()
             .WithName("GetPublicCompetitionFixtures")
             .WithSummary("Calendário do campeonato; placar só nas rodadas com resultado publicado.");
+        competitions.MapGet("/{slug}/teams/{teamId:guid}", TeamAsync)
+            .AllowAnonymous()
+            .WithName("GetPublicTeam")
+            .WithSummary("Time do campeonato, com o elenco inscrito e o técnico.");
+        competitions.MapGet("/{slug}/athletes/{athleteId:guid}", AthleteAsync)
+            .AllowAnonymous()
+            .WithName("GetPublicAthlete")
+            .WithSummary("Perfil público do atleta, com estatísticas e histórico de preço.");
         competitions.MapGet("/{slug}/matches/{matchId:guid}", MatchAsync)
             .AllowAnonymous()
             .WithName("GetPublicMatch")
@@ -99,6 +107,38 @@ public static class PublicCompetitionEndpoints
 
         return await service.MatchAsync(slug, matchId, cancellationToken).ConfigureAwait(false) is { } match
             ? Results.Ok(match)
+            : Results.NotFound();
+    }
+
+    private static async Task<IResult> TeamAsync(
+        string slug,
+        Guid teamId,
+        IPublicCatalogService service,
+        CancellationToken cancellationToken)
+    {
+        if (!CompetitionSlug.IsValid(slug))
+        {
+            return Results.NotFound();
+        }
+
+        return await service.TeamAsync(slug, teamId, cancellationToken).ConfigureAwait(false) is { } team
+            ? Results.Ok(team)
+            : Results.NotFound();
+    }
+
+    private static async Task<IResult> AthleteAsync(
+        string slug,
+        Guid athleteId,
+        IPublicCatalogService service,
+        CancellationToken cancellationToken)
+    {
+        if (!CompetitionSlug.IsValid(slug))
+        {
+            return Results.NotFound();
+        }
+
+        return await service.AthleteAsync(slug, athleteId, cancellationToken).ConfigureAwait(false) is { } athlete
+            ? Results.Ok(athlete)
             : Results.NotFound();
     }
 

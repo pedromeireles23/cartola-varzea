@@ -17,6 +17,8 @@ export interface PublicCompetitionSummary {
 }
 
 export interface PublicTeam {
+  /** Identificador do time; é por ele que a página do elenco é aberta. */
+  readonly id: string;
   readonly name: string;
   readonly athletes: number;
 }

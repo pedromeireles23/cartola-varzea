@@ -63,6 +63,8 @@ public sealed class AuthorizationMatrixTests
         "GET /api/v1/public/scoring-rules -> " + Anonymous,
         "GET /api/v1/public/competitions/{slug}/ranking -> " + Anonymous,
         "GET /api/v1/public/competitions/{slug}/fixtures -> " + Anonymous,
+        "GET /api/v1/public/competitions/{slug}/teams/{teamId:guid} -> " + Anonymous,
+        "GET /api/v1/public/competitions/{slug}/athletes/{athleteId:guid} -> " + Anonymous,
         "GET /api/v1/public/competitions/{slug}/matches/{matchId:guid} -> " + Anonymous,
         "GET /api/v1/organizations/{organizationId:guid}/competitions/ -> organization-member",
         "GET /api/v1/auth/me -> " + Anonymous,
