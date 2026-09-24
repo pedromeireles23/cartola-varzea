@@ -4,6 +4,9 @@
 // dobra; bordas e divisores organizam, sem sombra e sem cartão dentro de cartão.
 :host {
   display: grid;
+  // Coluna presa à largura disponível: sem isso a grade cresce até o conteúdo mínimo
+  // do formulário de convite e a página rola para o lado a 320 px.
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
@@ -85,61 +88,6 @@
     grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.85fr);
     align-items: start;
   }
-}
-
-.painel {
-  min-width: 0;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.painel--corpo {
-  display: grid;
-  gap: var(--space-3);
-  justify-items: start;
-  padding: var(--space-5);
-}
-
-.painel__topo {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.painel__apoio {
-  color: var(--color-ink-500);
-  font-size: var(--font-caption);
-}
-
-.painel__titulo {
-  font-size: var(--font-h2);
-  white-space: nowrap;
-}
-
-.painel__link {
-  font-size: var(--font-small);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.painel__corpo {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-5);
-}
-
-.painel__rodape {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) var(--space-5);
-  border-top: 1px solid var(--color-border);
 }
 
 .escalacao__meta {
@@ -254,40 +202,4 @@
   color: var(--color-brand-700);
   font-weight: 600;
   border-left: 2px solid var(--color-brand-500);
-}
-
-.linhas {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.linha {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  justify-content: space-between;
-  min-height: 56px;
-  padding: var(--space-3) var(--space-5);
-  border-top: 1px solid var(--color-border);
-}
-
-.linha:first-child {
-  border-top: 0;
-}
-
-.linha__texto {
-  display: grid;
-  flex: 1;
-  min-width: 0;
-}
-
-.linha__principal {
-  font-weight: 500;
-}
-
-.linha__meta {
-  color: var(--color-ink-500);
-  font-size: var(--font-small);
-  white-space: nowrap;
 }

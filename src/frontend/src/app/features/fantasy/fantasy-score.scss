@@ -1,8 +1,8 @@
-// Detalhamento da pontuação (02 §8): o total nunca é uma caixa-preta.
+// Detalhamento da pontuação (02 §8): o total nunca é uma caixa-preta. Painéis e listas
+// vêm de shared/ui/panel.scss; aqui, o total e a anatomia de cada vaga.
 .total {
   display: grid;
   gap: var(--space-1);
-  margin: 0;
 }
 
 .total__rotulo {
@@ -12,33 +12,30 @@
 
 .total__valor {
   font-size: var(--font-h1);
-  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }
 
-.vagas {
-  display: grid;
-  gap: var(--space-4);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.publicacao {
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
 }
 
 .vaga-linha {
   display: grid;
   gap: var(--space-2);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
 }
 
-.vaga-linha:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+.vaga-linha:first-child {
+  border-top: 0;
 }
 
-// Quem não entrou no total fica atenuado, mas continua legível e explicado por texto.
-.vaga-linha--fora .vaga-linha__nome,
+// Quem não entrou no total fica atenuado, mas continua legível, com o selo "Fora do
+// total" e a frase que explica por quê: estado nunca depende só de cor.
 .vaga-linha--fora .vaga-linha__pontos {
   color: var(--color-ink-500);
+  font-weight: 500;
 }
 
 .vaga-linha__topo {
@@ -48,43 +45,66 @@
   justify-content: space-between;
 }
 
+.vaga-linha__quem {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
 .vaga-linha__nome {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-1) var(--space-2);
   align-items: center;
-  margin: 0;
   font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.vaga-linha__papel {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
 }
 
 .vaga-linha__pontos {
   font-size: var(--font-h3);
-  font-variant-numeric: tabular-nums;
+  font-weight: 600;
   white-space: nowrap;
 }
 
+// Cada evento é uma etiqueta curta: "2 gols +10". Lida de relance, e em lista para o
+// leitor de tela contar quantos foram.
 .eventos {
-  display: grid;
-  gap: var(--space-1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin: 0;
-  padding-left: var(--space-5);
-  color: var(--color-ink-700);
-  font-size: var(--font-small);
+  padding: 0;
+  list-style: none;
 }
 
-.eventos__pontos {
+.evento {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: baseline;
+  padding: 2px var(--space-2);
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.evento__pontos {
+  color: var(--color-ink-950);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 .vaga-linha__nota {
-  margin: 0;
   color: var(--color-ink-700);
   font-size: var(--font-small);
 }
 
 .vaga-linha__preco {
-  margin: 0;
   color: var(--color-ink-500);
   font-size: var(--font-caption);
 }

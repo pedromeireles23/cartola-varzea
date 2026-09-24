@@ -1,0 +1,101 @@
+// Painel funcional das telas autenticadas (06 §3.4 e §9): borda, sem sombra, topo com
+// título e ação local, e listas separadas por divisores em vez de um cartão por item.
+// Folha compartilhada como a `link-card.scss`: entra no `styleUrls` de quem usa.
+.painel {
+  min-width: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.painel--corpo {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--space-5);
+}
+
+.painel__topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.painel__apoio {
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+}
+
+.painel__titulo {
+  font-size: var(--font-h2);
+}
+
+.painel__link {
+  font-size: var(--font-small);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.painel__corpo {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.painel__rodape {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.linhas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linha {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.linha:first-child {
+  border-top: 0;
+}
+
+.linha__texto {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.linha__principal {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+// Metadado quebra linha: nome de organização é texto livre e pode vir sem espaço, e a
+// 320 px uma linha que não quebra empurra a página para o lado.
+.linha__meta {
+  color: var(--color-ink-500);
+  font-size: var(--font-small);
+  overflow-wrap: anywhere;
+}
+
+// Horário e placar ficam inteiros: partidos no meio, deixam de ser lidos de relance.
+.linha__meta--fixa {
+  white-space: nowrap;
+}

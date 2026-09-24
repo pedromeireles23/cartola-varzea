@@ -132,13 +132,48 @@ describe('FantasyScorePage', () => {
       'Não jogou: o reserva da posição entrou no lugar dele, e os pontos dele não contam.',
     );
     expect(texto(fixture)).toContain('Entrou no lugar de um titular que não jogou');
-    expect(texto(fixture)).toContain('Ficou no banco: os pontos não contam');
+    expect(texto(fixture)).toContain('Ficou no banco e não entrou em campo.');
+    expect(texto(fixture)).toContain('Fora do total');
+    // Uma frase por vaga: quem o reserva cobriu não repete que não entrou em campo.
+    expect(texto(fixture)).not.toContain('Não entrou em campo nesta rodada');
     expect(texto(fixture)).toContain('Sem ninguém do time dele em campo, o técnico não pontuou.');
     expect(texto(fixture)).toContain('Sem jogar, o preço não muda: C$ 7,00');
     expect(texto(fixture)).toContain(
       'O capitão não entrou em campo, então a rodada ficou sem bônus',
     );
     expect(texto(fixture)).toContain('Reserva de goleiro');
+  });
+
+  it('o titular sem reserva em campo não é confundido com o técnico', async () => {
+    const fixture = await abrir(
+      rodadaApurada({
+        slots: [
+          vagaApurada({
+            name: 'Cascão',
+            position: 'Defender',
+            played: false,
+            points: 0,
+            counts: false,
+          }),
+        ],
+      }),
+    );
+
+    expect(texto(fixture)).toContain(
+      'Não jogou, e nenhum reserva da posição entrou em campo: a vaga ficou sem pontos.',
+    );
+    expect(texto(fixture)).not.toContain('o técnico não pontuou');
+  });
+
+  it('volta para as rodadas e diz de quem é a pontuação', async () => {
+    const fixture = await abrir(rodadaApurada());
+    const voltar = (fixture.nativeElement as HTMLElement).querySelector('app-back-link a');
+
+    expect(voltar?.getAttribute('href')).toBe(`/c/${SLUG}/rodadas`);
+    expect(texto(fixture)).toContain('Sua pontuação');
+    expect((fixture.nativeElement as HTMLElement).querySelector('h1')?.textContent).toBe(
+      'Rodada 1',
+    );
   });
 
   it('diz que o resultado consolidou quando a janela de correção acabou', async () => {

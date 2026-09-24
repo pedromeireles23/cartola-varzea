@@ -11,7 +11,7 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Badge, Button, Loading, PageHeader } from '../../shared/ui';
 import {
   assetRoleLabel,
   closingText,
@@ -43,29 +43,33 @@ interface Grupo {
 @Component({
   selector: 'app-fantasy-score',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Loading, RouterLink],
+  imports: [Alert, BackLink, Badge, Button, Loading, PageHeader, RouterLink],
   template: `
+    <app-back-link [link]="['/c', campeonato(), 'rodadas']" label="Rodadas" />
+
     @switch (estado().tipo) {
       @case ('carregando') {
-        <h1>Pontuação</h1>
-        <app-card><app-loading label="Abrindo a pontuação…" /></app-card>
+        <app-page-header heading="Pontuação" />
+        <section class="painel painel--corpo"><app-loading label="Abrindo a pontuação…" /></section>
       }
       @case ('erro') {
-        <h1>Pontuação</h1>
-        <app-card>
+        <app-page-header heading="Pontuação" />
+        <section class="painel painel--corpo">
           @if (falha()!.status === 404) {
             <app-alert tone="warning">
               Esta rodada ainda não foi apurada, ou o endereço está errado.
             </app-alert>
-            <a class="acao" [routerLink]="['/c', campeonato(), 'jogar']">Voltar ao início</a>
+            <a class="acao acao--secundaria" [routerLink]="['/c', campeonato(), 'rodadas']">
+              Ver as rodadas apuradas
+            </a>
           } @else {
             <app-alert tone="danger">{{ falha()!.message }}</app-alert>
             <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
           }
-        </app-card>
+        </section>
       }
       @case ('pronto') {
-        <h1>{{ pontuacao()!.roundName }}</h1>
+        <app-page-header [heading]="pontuacao()!.roundName" kicker="Sua pontuação" />
 
         @if (pontuacao()!.correction; as correcao) {
           <app-alert tone="info">
@@ -96,10 +100,10 @@ interface Grupo {
         }
 
         @if (pontuacao()!.played) {
-          <app-card>
+          <section class="painel painel--corpo" aria-labelledby="total-titulo">
             <p class="total">
-              <span class="total__rotulo">Sua pontuação na rodada</span>
-              <strong class="total__valor">{{ pontos(pontuacao()!.total) }}</strong>
+              <span id="total-titulo" class="total__rotulo">Sua pontuação na rodada</span>
+              <strong class="total__valor num">{{ pontos(pontuacao()!.total) }}</strong>
             </p>
             @if (pontuacao()!.captainBonus !== 0) {
               <p class="apoio">
@@ -112,67 +116,73 @@ interface Grupo {
                 dele nunca herda o multiplicador.
               </p>
             }
-            <p class="apoio">
+            <p class="publicacao">
               Publicada em {{ horario(pontuacao()!.publishedAtLocal) }} · apuração
               {{ pontuacao()!.revision }}ª
             </p>
-          </app-card>
+          </section>
 
           @for (grupo of grupos(); track grupo.titulo) {
-            <app-card [heading]="grupo.titulo">
-              <ul class="vagas">
+            <section class="painel" [attr.aria-labelledby]="'grupo-' + $index">
+              <header class="painel__topo">
+                <h2 class="painel__titulo" [id]="'grupo-' + $index">{{ grupo.titulo }}</h2>
+              </header>
+              <ul class="linhas">
                 @for (vaga of grupo.vagas; track vaga.assetId) {
                   <li class="vaga-linha" [class.vaga-linha--fora]="!vaga.counts">
                     <div class="vaga-linha__topo">
-                      <div>
+                      <div class="vaga-linha__quem">
                         <p class="vaga-linha__nome">
                           {{ vaga.name }}
                           @if (vaga.isCaptain) {
                             <app-badge tone="brand">Capitão</app-badge>
                           }
+                          @if (!vaga.counts) {
+                            <app-badge tone="neutral">Fora do total</app-badge>
+                          }
                         </p>
-                        <p class="apoio">{{ papel(vaga) }} · {{ vaga.realTeamName }}</p>
+                        <p class="vaga-linha__papel">{{ papel(vaga) }} · {{ vaga.realTeamName }}</p>
                       </div>
-                      <strong class="vaga-linha__pontos">{{ pontos(vaga.points) }}</strong>
+                      <strong class="vaga-linha__pontos num">{{ pontos(vaga.points) }}</strong>
                     </div>
 
                     @if (vaga.lines.length > 0) {
                       <ul class="eventos">
                         @for (linha of vaga.lines; track linha.item) {
-                          <li>
+                          <li class="evento">
                             {{ item(linha.item, linha.quantity) }}
-                            <span class="eventos__pontos">{{ sinal(linha.points) }}</span>
+                            <span class="evento__pontos num">{{ sinal(linha.points) }}</span>
                           </li>
                         }
                       </ul>
-                    } @else if (!vaga.played) {
-                      <p class="apoio">Não entrou em campo nesta rodada.</p>
                     }
 
                     @if (nota(vaga); as texto) {
                       <p class="vaga-linha__nota">{{ texto }}</p>
                     }
                     @if (vaga.price) {
-                      <p class="vaga-linha__preco">{{ variacao(vaga) }}</p>
+                      <p class="vaga-linha__preco num">{{ variacao(vaga) }}</p>
                     }
                   </li>
                 }
               </ul>
-            </app-card>
+            </section>
           }
         } @else {
-          <app-card>
+          <section class="painel painel--corpo">
             <app-alert tone="info">
               Você não jogou esta rodada: ou entrou depois do fechamento do mercado, ou a escalação
               não estava completa quando ele fechou.
             </app-alert>
-            <a class="acao" [routerLink]="['/c', campeonato(), 'escalacao']">Ver a escalação</a>
-          </app-card>
+            <a class="acao acao--secundaria" [routerLink]="['/c', campeonato(), 'escalacao']">
+              Ver a escalação
+            </a>
+          </section>
         }
       }
     }
   `,
-  styleUrls: ['./fantasy.scss', './fantasy-score.scss'],
+  styleUrls: ['../../shared/ui/panel.scss', './fantasy.scss', './fantasy-score.scss'],
 })
 export class FantasyScorePage implements OnInit {
   private readonly service = inject(FantasyService);
@@ -255,17 +265,26 @@ export class FantasyScorePage implements OnInit {
     return closingText(local, this.pontuacao()?.timeZoneId ?? '');
   }
 
-  /** O que o banco fez com a vaga, em texto e não só por cor. */
+  /**
+   * O que aconteceu com a vaga, em texto e não só por cor: uma frase por vaga, e só
+   * quando há algo a explicar além dos eventos.
+   */
   protected nota(vaga: FantasyRoundSlot): string | null {
-    if (vaga.role === 'Starter' && vaga.replacedBy) {
-      return 'Não jogou: o reserva da posição entrou no lugar dele, e os pontos dele não contam.';
+    if (vaga.role === 'Coach') {
+      return vaga.counts ? null : 'Sem ninguém do time dele em campo, o técnico não pontuou.';
     }
     if (vaga.role === 'Bench') {
-      return vaga.replaces
-        ? 'Entrou no lugar de um titular que não jogou: os pontos dele contam.'
-        : 'Ficou no banco: os pontos não contam, porque os titulares da posição jogaram.';
+      if (vaga.replaces) {
+        return 'Entrou no lugar de um titular que não jogou: os pontos dele contam.';
+      }
+      return vaga.played
+        ? 'Ficou no banco: os pontos não contam, porque os titulares da posição jogaram.'
+        : 'Ficou no banco e não entrou em campo.';
     }
-    return vaga.counts ? null : 'Sem ninguém do time dele em campo, o técnico não pontuou.';
+    if (vaga.played) return null;
+    return vaga.replacedBy
+      ? 'Não jogou: o reserva da posição entrou no lugar dele, e os pontos dele não contam.'
+      : 'Não jogou, e nenhum reserva da posição entrou em campo: a vaga ficou sem pontos.';
   }
 
   /**

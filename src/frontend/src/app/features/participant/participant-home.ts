@@ -60,7 +60,11 @@ const LINHAS_DO_TOPO = 2;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Alert, Badge, Button, Icon, Loading, PageHeader, RouterLink],
   templateUrl: './participant-home.html',
-  styleUrls: ['./participant-home.scss', './participant-home-first.scss'],
+  styleUrls: [
+    '../../shared/ui/panel.scss',
+    './participant-home.scss',
+    './participant-home-first.scss',
+  ],
 })
 export class ParticipantHomePage {
   private readonly auth = inject(AuthService);
