@@ -180,7 +180,7 @@ export const routes: Routes = [
       },
       {
         path: 'perfil',
-        title: 'Seu perfil',
+        title: 'Conta',
         canActivate: [authGuard],
         loadComponent: () => import('./features/profile/profile').then((m) => m.ProfilePage),
       },

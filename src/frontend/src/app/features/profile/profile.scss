@@ -1,8 +1,43 @@
 @use '../../../styles/actions';
 
+// Conta (06 §4.1): painéis do padrão da aplicação (shared/ui/panel.scss), numa coluna
+// de leitura; esticada até 1440 px, a lista separava o rótulo do valor pela tela toda.
+:host {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  max-width: 720px;
+}
+
+.identidade {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.avatar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-ink-950);
+  font-size: var(--font-small);
+  font-weight: 600;
+  background-color: var(--color-brand-100);
+  border-radius: var(--radius-round);
+}
+
+.identidade__nome {
+  font-size: var(--font-h2);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 .dados {
   display: grid;
-  gap: var(--space-4);
+  justify-self: stretch;
+  gap: var(--space-3);
   margin: 0;
 }
 
@@ -10,14 +45,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1) var(--space-4);
+  align-items: center;
   justify-content: space-between;
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.dados__item:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
 dt {
@@ -28,28 +59,35 @@ dt {
 dd {
   margin: 0;
   font-weight: 500;
-}
-
-:host {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  overflow-wrap: anywhere;
 }
 
 .apoio {
-  margin: 0;
   color: var(--color-ink-700);
+  font-size: var(--font-small);
 }
 
-// Link com alvo de toque de botão secundário (02 §6): navega, não executa ação.
-.acao {
-  @include actions.secondary;
-
-  align-self: flex-start;
+.painel__corpo {
+  justify-items: start;
 }
 
 .acoes {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+
+// Link com alvo de toque de botão secundário (02 §6): navega, não executa ação.
+.acao {
+  @include actions.secondary;
+}
+
+// O segundo caminho é raro; fica como link, sem competir com o botão.
+.acao--discreta {
+  min-height: var(--touch-target);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-small);
+  font-weight: 500;
 }

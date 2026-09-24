@@ -105,6 +105,39 @@ describe('NotificationBell', () => {
     expect(botao(fixture).getAttribute('aria-label')).toBe('Avisos');
   });
 
+  it('o que chegou continua marcado como novo enquanto o painel está aberto', async () => {
+    const fixture = await abrirSino(caixa());
+
+    botao(fixture).click();
+    await fixture.whenStable();
+    http.expectOne(URL).flush(caixa());
+    // O servidor devolve tudo lido; a marca vem da foto tirada na abertura.
+    http
+      .expectOne(READ_URL)
+      .flush(caixa({ unread: 0, items: [{ ...caixa().items[0], read: true }] }));
+    await fixture.whenStable();
+
+    const aviso = (fixture.nativeElement as HTMLElement).querySelector('.aviso')!;
+    expect(aviso.classList).toContain('aviso--novo');
+    expect(aviso.textContent).toContain('Novo');
+    expect(aviso.querySelector('time')?.getAttribute('datetime')).toBe('2026-09-22T12:00:00Z');
+    expect(aviso.querySelector('time')?.textContent).toMatch(/^\S+\., \d{2}\/09 · \d{2}:\d{2}$/);
+  });
+
+  it('aviso já lido na abertura não ganha a marca de novo', async () => {
+    const lida = caixa({ unread: 0, items: [{ ...caixa().items[0], read: true }] });
+    const fixture = await abrirSino(lida);
+
+    botao(fixture).click();
+    await fixture.whenStable();
+    http.expectOne(URL).flush(lida);
+    await fixture.whenStable();
+
+    const aviso = (fixture.nativeElement as HTMLElement).querySelector('.aviso')!;
+    expect(aviso.classList).not.toContain('aviso--novo');
+    expect(aviso.textContent).not.toContain('Novo');
+  });
+
   it('o aviso da rodada leva à pontuação dela', async () => {
     const fixture = await abrirSino(caixa());
 

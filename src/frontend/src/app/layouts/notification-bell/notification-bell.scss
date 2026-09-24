@@ -44,10 +44,9 @@
   top: calc(100% + var(--space-2));
   right: 0;
   z-index: 20;
-  // Larga o bastante para uma frase inteira, sem passar da largura do celular.
-  width: min(22rem, calc(100vw - 2 * var(--gutter)));
-  max-height: 24rem;
-  padding: var(--space-4);
+  // Larga o bastante para uma frase inteira; no celular, presa às margens (abaixo).
+  width: 22rem;
+  max-height: 26rem;
   overflow-y: auto;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -55,36 +54,93 @@
   box-shadow: var(--shadow-overlay);
 }
 
+// No celular o sino fica perto da borda direita e um painel ancorado nele saía da tela
+// pela esquerda; fixo sob o topo, ele ocupa a largura útil inteira.
+@media (max-width: 639px) {
+  .painel {
+    position: fixed;
+    top: 64px;
+    right: var(--gutter);
+    left: var(--gutter);
+    width: auto;
+    max-height: calc(100vh - 64px - 80px);
+  }
+}
+
+.painel__titulo {
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+}
+
 .painel__vazio {
-  margin: 0;
-  font-size: var(--font-small);
+  padding: var(--space-4);
   color: var(--color-ink-500);
+  font-size: var(--font-small);
 }
 
 .painel__lista {
-  display: grid;
-  gap: var(--space-4);
-  padding: 0;
   margin: 0;
+  padding: 0;
   list-style: none;
 }
 
-.aviso a,
+.aviso {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.aviso:first-child {
+  border-top: 0;
+}
+
+// O que chegou desde a última vez: fundo suave e barra laranja, e a palavra "Novo"
+// escrita, porque a cor sozinha não diz nada a quem não a vê (02 §2).
+.aviso--novo {
+  background-color: var(--color-brand-50);
+  box-shadow: inset 3px 0 0 var(--color-brand-500);
+}
+
+.aviso__icone {
+  margin-top: 2px;
+  color: var(--color-ink-500);
+}
+
+.aviso--novo .aviso__icone {
+  color: var(--color-brand-700);
+}
+
+.aviso__texto {
+  display: grid;
+  gap: 2px;
+}
+
 .aviso__titulo {
-  display: block;
-  margin: 0;
   font-weight: 600;
 }
 
-.aviso__corpo {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-small);
-  color: var(--color-ink-700);
+a.aviso__titulo {
+  color: var(--color-ink-950);
 }
 
-// Lido continua legivel: o peso menor separa do que acabou de chegar.
-.aviso--lido a,
-.aviso--lido .aviso__titulo {
-  font-weight: 400;
+.aviso__corpo {
   color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.aviso__meta {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: 2px;
+  color: var(--color-ink-500);
+  font-size: var(--font-caption);
+}
+
+.aviso__novo {
+  color: var(--color-brand-700);
+  font-weight: 600;
 }
