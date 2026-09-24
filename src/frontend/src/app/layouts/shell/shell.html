@@ -8,69 +8,119 @@
         <span class="marca__nome">Cartola Várzea</span>
       </a>
 
-      <nav class="lateral__grupo" aria-label="Navegação principal">
-        <p class="lateral__rotulo" aria-hidden="true">Principal</p>
-        @for (item of globalItems; track item.section) {
-          <a
-            class="lateral__link"
-            [routerLink]="globalRoute(item.section)"
-            [attr.aria-current]="isCurrentGlobal(item.section) ? 'page' : null"
-          >
-            <svg [appIcon]="item.icon" />{{ item.label }}
-          </a>
-        }
-      </nav>
+      @if (organizing()) {
+        <p class="lateral__area"><svg [appIcon]="icons.organize" [size]="16" />Organização</p>
 
-      @if (current(); as campeonato) {
-        <div class="lateral__grupo">
-          <p class="lateral__rotulo" id="rotulo-campeonato-lateral">Campeonato atual</p>
-          @if (mine().length > 1) {
-            <select
-              class="seletor"
-              aria-labelledby="rotulo-campeonato-lateral"
-              (change)="switchCompetition($event)"
-            >
-              @for (item of mine(); track item.slug) {
-                <option [value]="item.slug" [selected]="item.slug === campeonato.slug">
-                  {{ item.competitionName }}
-                </option>
-              }
-            </select>
-          } @else {
-            <p class="lateral__campeonato">{{ campeonato.competitionName }}</p>
-          }
-          <nav aria-label="Navegação do jogo">
-            @for (item of gameItems; track item.section) {
-              <a
-                class="lateral__link"
-                [routerLink]="['/c', campeonato.slug, item.path]"
-                [attr.aria-current]="isCurrentGame(item.section) ? 'page' : null"
-              >
-                <svg [appIcon]="item.icon" />{{ item.label }}
-              </a>
-            }
-          </nav>
-        </div>
-      }
-
-      <nav class="lateral__grupo" aria-label="Apoio">
-        <a
-          class="lateral__link"
-          routerLink="/regras"
-          [attr.aria-current]="isCurrentGlobal('rules') ? 'page' : null"
-        >
-          <svg [appIcon]="icons.rules" />Regras
-        </a>
-        @if (canOrganize()) {
+        <nav class="lateral__grupo" aria-label="Organização">
           <a
             class="lateral__link"
             routerLink="/organizar"
-            [attr.aria-current]="isCurrentGlobal('organize') ? 'page' : null"
+            [attr.aria-current]="inOrganizations() ? 'page' : null"
           >
-            <svg [appIcon]="icons.organize" />Organizar
+            <svg [appIcon]="icons.organizations" />Minhas organizações
           </a>
+          @if (isAdmin()) {
+            <a
+              class="lateral__link"
+              routerLink="/admin/solicitacoes"
+              [attr.aria-current]="inApplications() ? 'page' : null"
+            >
+              <svg [appIcon]="icons.applications" />Solicitações
+            </a>
+          }
+        </nav>
+
+        @if (organizerCompetition(); as campeonato) {
+          <div class="lateral__grupo">
+            <p class="lateral__rotulo">Campeonato</p>
+            <p class="lateral__campeonato">
+              {{ campeonato.name }}
+              <span class="lateral__status">{{ organizerStatus() }}</span>
+            </p>
+            <nav aria-label="Navegação do campeonato">
+              @for (item of organizerItems(); track item.path) {
+                <a
+                  class="lateral__link"
+                  [routerLink]="organizerLink(item, campeonato.id)"
+                  [attr.aria-current]="isCurrentOrganizer(item) ? 'page' : null"
+                >
+                  <svg [appIcon]="item.icon" />{{ item.label }}
+                </a>
+              }
+            </nav>
+          </div>
         }
-      </nav>
+
+        <nav class="lateral__grupo lateral__volta" aria-label="Sair da organização">
+          <a class="lateral__link" routerLink="/inicio">
+            <svg [appIcon]="icons.back" />Voltar ao jogo
+          </a>
+        </nav>
+      } @else {
+        <nav class="lateral__grupo" aria-label="Navegação principal">
+          <p class="lateral__rotulo" aria-hidden="true">Principal</p>
+          @for (item of globalItems; track item.section) {
+            <a
+              class="lateral__link"
+              [routerLink]="globalRoute(item.section)"
+              [attr.aria-current]="isCurrentGlobal(item.section) ? 'page' : null"
+            >
+              <svg [appIcon]="item.icon" />{{ item.label }}
+            </a>
+          }
+        </nav>
+
+        @if (current(); as campeonato) {
+          <div class="lateral__grupo">
+            <p class="lateral__rotulo" id="rotulo-campeonato-lateral">Campeonato atual</p>
+            @if (mine().length > 1) {
+              <select
+                class="seletor"
+                aria-labelledby="rotulo-campeonato-lateral"
+                (change)="switchCompetition($event)"
+              >
+                @for (item of mine(); track item.slug) {
+                  <option [value]="item.slug" [selected]="item.slug === campeonato.slug">
+                    {{ item.competitionName }}
+                  </option>
+                }
+              </select>
+            } @else {
+              <p class="lateral__campeonato">{{ campeonato.competitionName }}</p>
+            }
+            <nav aria-label="Navegação do jogo">
+              @for (item of gameItems; track item.section) {
+                <a
+                  class="lateral__link"
+                  [routerLink]="['/c', campeonato.slug, item.path]"
+                  [attr.aria-current]="isCurrentGame(item.section) ? 'page' : null"
+                >
+                  <svg [appIcon]="item.icon" />{{ item.label }}
+                </a>
+              }
+            </nav>
+          </div>
+        }
+
+        <nav class="lateral__grupo" aria-label="Apoio">
+          <a
+            class="lateral__link"
+            routerLink="/regras"
+            [attr.aria-current]="isCurrentGlobal('rules') ? 'page' : null"
+          >
+            <svg [appIcon]="icons.rules" />Regras
+          </a>
+          @if (canOrganize()) {
+            <a
+              class="lateral__link"
+              routerLink="/organizar"
+              [attr.aria-current]="isCurrentGlobal('organize') ? 'page' : null"
+            >
+              <svg [appIcon]="icons.organize" />Organizar
+            </a>
+          }
+        </nav>
+      }
 
       <a
         class="lateral__conta"
@@ -86,11 +136,14 @@
     </aside>
 
     <div class="principal">
-      <header class="topo">
+      <header class="topo" [class.topo--organizacao]="organizing()">
         <a class="marca topo__marca" routerLink="/inicio">
           <span class="marca__sinal" aria-hidden="true">CV</span>
           <span class="marca__nome">Cartola Várzea</span>
         </a>
+        @if (organizing()) {
+          <span class="topo__area">Organização</span>
+        }
         <p class="topo__contexto">
           <span class="topo__titulo">{{ sectionTitle() }}</span>
           @if (contextName(); as nome) {
@@ -120,23 +173,45 @@
     </div>
 
     <nav class="inferior" aria-label="Navegação principal no celular">
-      @for (item of globalItems; track item.section) {
+      @if (organizing()) {
         <a
           class="inferior__item"
-          [routerLink]="globalRoute(item.section)"
-          [attr.aria-current]="isCurrentGlobal(item.section) ? 'page' : null"
+          routerLink="/organizar"
+          [attr.aria-current]="inOrganizations() ? 'page' : null"
         >
-          <svg [appIcon]="item.icon" [size]="20" />{{ item.label }}
+          <svg [appIcon]="icons.organizations" [size]="20" />Organizações
         </a>
-      }
-      @if (current(); as campeonato) {
-        <a
-          class="inferior__item"
-          [routerLink]="['/c', campeonato.slug, 'escalacao']"
-          [attr.aria-current]="isCurrentGame('team') ? 'page' : null"
-        >
-          <svg [appIcon]="icons.team" [size]="20" />Meu time
+        @if (isAdmin()) {
+          <a
+            class="inferior__item"
+            routerLink="/admin/solicitacoes"
+            [attr.aria-current]="inApplications() ? 'page' : null"
+          >
+            <svg [appIcon]="icons.applications" [size]="20" />Solicitações
+          </a>
+        }
+        <a class="inferior__item" routerLink="/inicio">
+          <svg [appIcon]="icons.home" [size]="20" />Início
         </a>
+      } @else {
+        @for (item of globalItems; track item.section) {
+          <a
+            class="inferior__item"
+            [routerLink]="globalRoute(item.section)"
+            [attr.aria-current]="isCurrentGlobal(item.section) ? 'page' : null"
+          >
+            <svg [appIcon]="item.icon" [size]="20" />{{ item.label }}
+          </a>
+        }
+        @if (current(); as campeonato) {
+          <a
+            class="inferior__item"
+            [routerLink]="['/c', campeonato.slug, 'escalacao']"
+            [attr.aria-current]="isCurrentGame('team') ? 'page' : null"
+          >
+            <svg [appIcon]="icons.team" [size]="20" />Meu time
+          </a>
+        }
       }
       <button
         type="button"
@@ -170,7 +245,7 @@
         </button>
       </div>
 
-      @if (current(); as campeonato) {
+      @if (!organizing() && current(); as campeonato) {
         <p class="folha__rotulo" id="rotulo-campeonato-folha">Campeonato atual</p>
         @if (mine().length > 1) {
           <select
@@ -203,6 +278,11 @@
       }
 
       <nav class="folha__grade" aria-label="Outras páginas">
+        @if (organizing()) {
+          <a class="folha__link" routerLink="/campeonatos">
+            <svg [appIcon]="icons.competitions" />Campeonatos
+          </a>
+        }
         <a
           class="folha__link"
           routerLink="/regras"
@@ -210,7 +290,7 @@
         >
           <svg [appIcon]="icons.rules" />Regras
         </a>
-        @if (canOrganize()) {
+        @if (canOrganize() && !organizing()) {
           <a
             class="folha__link"
             routerLink="/organizar"

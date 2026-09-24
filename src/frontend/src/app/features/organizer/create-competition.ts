@@ -11,11 +11,11 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
 import { CompetitionSettingsForm } from './competition-area/competition-settings-form';
 import { CompetitionCreatedState } from './competition-area/competition-layout';
 import { CompetitionService, CompetitionSettings, ModalityProfile } from './competition.service';
@@ -39,11 +39,9 @@ type Estado =
 @Component({
   selector: 'app-create-competition',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, CompetitionSettingsForm, Loading, RouterLink],
+  imports: [Alert, BackLink, Button, Card, CompetitionSettingsForm, Loading],
   template: `
-    <p class="rodape">
-      <a [routerLink]="['/organizar/o', organizacao(), 'campeonatos']">← Campeonatos</a>
-    </p>
+    <app-back-link [link]="['/organizar/o', organizacao(), 'campeonatos']" label="Campeonatos" />
     <h1>Novo campeonato</h1>
 
     @switch (estado().tipo) {

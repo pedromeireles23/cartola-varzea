@@ -14,7 +14,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { CurrentCompetition } from '../participant/current-competition';
-import { Alert, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
 import { formationText } from '../organizer/competition-area/competition-format';
 import { credits, points } from './fantasy-format';
 import { FantasyOverview, FantasyRoundSummary, FantasyService } from './fantasy.service';
@@ -35,9 +35,9 @@ type Estado =
 @Component({
   selector: 'app-fantasy-play',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, Loading, MarketClock, RouterLink],
+  imports: [Alert, BackLink, Button, Card, Loading, MarketClock, RouterLink],
   template: `
-    <p class="intro"><a [routerLink]="['/c', campeonato()]">← Página do campeonato</a></p>
+    <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
 
     @switch (estado().tipo) {
       @case ('carregando') {

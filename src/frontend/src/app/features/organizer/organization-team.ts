@@ -12,10 +12,19 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, BadgeTone, Button, Card, Dialog, FormField, Loading } from '../../shared/ui';
+import {
+  Alert,
+  BackLink,
+  Badge,
+  BadgeTone,
+  Button,
+  Card,
+  Dialog,
+  FormField,
+  Loading,
+} from '../../shared/ui';
 import {
   InvitationStatus,
   OrganizationAssistant,
@@ -50,9 +59,9 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 @Component({
   selector: 'app-organization-team',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, DatePipe, Dialog, FormField, Loading, RouterLink],
+  imports: [Alert, BackLink, Badge, Button, Card, DatePipe, Dialog, FormField, Loading],
   template: `
-    <p class="rodape"><a routerLink="/organizar">← Minhas organizações</a></p>
+    <app-back-link link="/organizar" label="Minhas organizações" />
 
     @switch (estado().tipo) {
       @case ('carregando') {

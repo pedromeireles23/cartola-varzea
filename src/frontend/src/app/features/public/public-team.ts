@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Badge, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Badge, Button, Card, Loading } from '../../shared/ui';
 import { POSITION_LABELS, PublicCatalogService, PublicTeamDetail } from './public-catalog.service';
 import { PublicNav } from './public-nav';
 
@@ -30,9 +30,9 @@ type Estado =
 @Component({
   selector: 'app-public-team',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Loading, PublicNav, RouterLink],
+  imports: [Alert, BackLink, Badge, Button, Card, Loading, PublicNav, RouterLink],
   template: `
-    <p class="intro"><a [routerLink]="['/c', campeonato()]">← Página do campeonato</a></p>
+    <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
 
     @switch (estado().tipo) {
       @case ('carregando') {

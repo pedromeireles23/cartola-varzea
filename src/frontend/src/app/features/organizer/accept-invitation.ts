@@ -14,6 +14,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiFailure, DEMO_READ_ONLY } from '../../core/api/problem-details';
 import { AuthService } from '../../core/auth/auth.service';
 import { Alert, Button, Card } from '../../shared/ui';
+import { OrganizerArea } from './organizer-area';
 import { InvitationService, PendingInvitation } from './invitation.service';
 
 type Resultado =
@@ -138,6 +139,7 @@ export class AcceptInvitationPage {
   private readonly service = inject(InvitationService);
   private readonly pendente = inject(PendingInvitation);
   private readonly injector = inject(Injector);
+  private readonly area = inject(OrganizerArea);
   private readonly resultadoRef = viewChild<ElementRef<HTMLElement>>('resultadoRef');
 
   protected readonly rota = ROTA;
@@ -174,7 +176,11 @@ export class AcceptInvitationPage {
 
     this.resultado.set({ tipo: 'aceitando' });
     this.service.accept(token).subscribe({
-      next: () => this.concluir({ tipo: 'aceito' }, true),
+      next: () => {
+        // Quem acabou de virar auxiliar passa a ver "Organizar" na navegação.
+        this.area.reload();
+        this.concluir({ tipo: 'aceito' }, true);
+      },
       error: (falha: ApiFailure) => {
         switch (falha.status) {
           case 403:

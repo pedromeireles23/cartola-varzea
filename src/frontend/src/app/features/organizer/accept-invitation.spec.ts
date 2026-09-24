@@ -9,6 +9,7 @@ import { Account, AuthService } from '../../core/auth/auth.service';
 import { API_BASE_URL } from '../../core/config/api-base-url';
 import { AcceptInvitationPage } from './accept-invitation';
 import { PendingInvitation } from './invitation.service';
+import { OrganizerArea } from './organizer-area';
 
 const ACCEPT = '/api/v1/organization-invitations/accept';
 
@@ -28,10 +29,12 @@ async function estabilizar(fixture: ComponentFixture<AcceptInvitationPage>): Pro
 describe('AcceptInvitationPage', () => {
   let http: HttpTestingController;
   let conta: ReturnType<typeof signal<Account | null>>;
+  let area: { reload: ReturnType<typeof vi.fn> };
   let queryParams: Record<string, string>;
 
   beforeEach(() => {
     conta = signal<Account | null>(CONTA);
+    area = { reload: vi.fn() };
     queryParams = { token: 'token-do-email' };
 
     TestBed.configureTestingModule({
@@ -42,6 +45,7 @@ describe('AcceptInvitationPage', () => {
         provideRouter([]),
         { provide: API_BASE_URL, useValue: '/api/v1' },
         { provide: AuthService, useValue: { current: conta, logout: vi.fn() } },
+        { provide: OrganizerArea, useValue: area },
         {
           provide: ActivatedRoute,
           useFactory: () => ({ snapshot: { queryParamMap: convertToParamMap(queryParams) } }),
@@ -114,6 +118,8 @@ describe('AcceptInvitationPage', () => {
     expect(texto()).toContain('Convite aceito');
     expect(texto()).not.toContain('Não encontramos o convite');
     expect(TestBed.inject(PendingInvitation).current()).toBeNull();
+    // Quem acabou de virar auxiliar passa a ver a área de organização na navegação.
+    expect(area.reload).toHaveBeenCalledOnce();
   });
 
   it('conta com outro e-mail recebe orientação e o token continua guardado', async () => {

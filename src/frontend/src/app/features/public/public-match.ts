@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
 import { PublicNav } from './public-nav';
 import { PublicMatch, PublicMatchAthlete, PublicFixtureService } from './public-fixture.service';
 
@@ -39,11 +39,9 @@ const POSICOES: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-public-match',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, Loading, PublicNav, RouterLink],
+  imports: [Alert, BackLink, Button, Card, Loading, PublicNav, RouterLink],
   template: `
-    <p class="intro">
-      <a [routerLink]="['/c', campeonato(), 'partidas']">← Todas as partidas</a>
-    </p>
+    <app-back-link [link]="['/c', campeonato(), 'partidas']" label="Todas as partidas" />
 
     @switch (estado().tipo) {
       @case ('carregando') {

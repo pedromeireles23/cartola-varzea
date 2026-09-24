@@ -20,8 +20,9 @@ import {
 } from '@angular/router';
 import { filter } from 'rxjs';
 
-import { Alert, Badge, Button, Card, Loading } from '../../../shared/ui';
+import { Alert, BackLink, Badge, Button, Card, Loading } from '../../../shared/ui';
 import { STATUS_LABELS } from '../competition.service';
+import { OrganizerArea } from '../organizer-area';
 import { CompetitionContext } from './competition-context';
 
 /** Estado de navegação que a criação deixa para a primeira abertura do campeonato. */
@@ -35,11 +36,26 @@ export interface CompetitionCreatedState {
  * Tem navegação própria, separada da área de jogo, e mantém o nome do campeonato
  * sempre visível. Itens que o auxiliar não pode usar ficam ocultos aqui e bloqueados
  * na API; a casca não decide permissão, só evita oferecer o que vai ser recusado.
+ *
+ * No desktop, nome e navegação moram na barra lateral da casca da aplicação, que lê o
+ * campeonato de `OrganizerArea`; aqui eles só aparecem abaixo de 1024 px, onde não há
+ * barra lateral. As duas navegações têm o mesmo nome acessível e nunca estão visíveis
+ * ao mesmo tempo.
  */
 @Component({
   selector: 'app-competition-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Loading, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [
+    Alert,
+    BackLink,
+    Badge,
+    Button,
+    Card,
+    Loading,
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+  ],
   providers: [CompetitionContext],
   template: `
     @switch (contexto.estado().tipo) {
@@ -50,7 +66,7 @@ export interface CompetitionCreatedState {
       }
 
       @case ('erro') {
-        <p class="trilha"><a routerLink="/organizar">← Minhas organizações</a></p>
+        <app-back-link link="/organizar" label="Minhas organizações" />
         <h1>Campeonato</h1>
         <app-card>
           @if (contexto.falha()!.status === 403 || contexto.falha()!.status === 404) {
@@ -186,6 +202,7 @@ export class CompetitionLayout implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly contexto = inject(CompetitionContext);
+  private readonly area = inject(OrganizerArea);
 
   /** Identificador do campeonato na rota. */
   readonly campeonato = input.required<string>();
@@ -210,6 +227,22 @@ export class CompetitionLayout implements OnInit {
     if (estado?.criado === true) {
       this.contexto.marcarCriado();
     }
+
+    // A barra lateral acompanha o campeonato aberto, inclusive depois de renomeá-lo.
+    effect(() => {
+      const dados = this.dados();
+      if (dados) {
+        this.area.enter({
+          id: dados.id,
+          name: dados.name,
+          status: dados.status,
+          organizationId: dados.organizationId,
+          organizationName: dados.organizationName,
+          owner: dados.viewerRole === 'Owner',
+        });
+      }
+    });
+    this.destroyRef.onDestroy(() => this.area.leave(this.campeonato()));
 
     // O título da aba reflete o campeonato ativo (02 §8), não só o nome da tela.
     effect(() => {

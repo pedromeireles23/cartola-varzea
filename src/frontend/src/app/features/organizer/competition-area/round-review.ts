@@ -2,7 +2,16 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Dialog, FormField, Loading } from '../../../shared/ui';
+import {
+  Alert,
+  BackLink,
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  FormField,
+  Loading,
+} from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
 import { ImportUpload } from './import-upload';
 import { ImportService } from './import.service';
@@ -35,10 +44,21 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-round-review',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Dialog, FormField, ImportUpload, Loading, RouterLink],
+  imports: [
+    Alert,
+    BackLink,
+    Badge,
+    Button,
+    Card,
+    Dialog,
+    FormField,
+    ImportUpload,
+    Loading,
+    RouterLink,
+  ],
   template: `
     <div class="pagina">
-      <a class="voltar" routerLink="../..">← Voltar para rodadas</a>
+      <app-back-link link="../.." label="Rodadas" />
 
       @switch (state().kind) {
         @case ('loading') {

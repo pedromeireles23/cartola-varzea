@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
 import { PublicFixtureService, PublicStandings, StageStandings } from './public-fixture.service';
 import { PublicNav } from './public-nav';
 
@@ -43,9 +43,9 @@ const CRITERIOS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-competition-standings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, Loading, PublicNav, RouterLink],
+  imports: [Alert, BackLink, Button, Card, Loading, PublicNav, RouterLink],
   template: `
-    <p class="intro"><a [routerLink]="['/c', campeonato()]">← Página do campeonato</a></p>
+    <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
 
     @switch (estado().tipo) {
       @case ('carregando') {

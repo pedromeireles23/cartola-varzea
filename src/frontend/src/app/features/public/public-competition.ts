@@ -12,7 +12,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Badge, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Badge, Button, Card, Loading } from '../../shared/ui';
 import { formationText, timeZoneLabel } from '../organizer/competition-area/competition-format';
 import { FORMAT_LABELS } from '../organizer/competition-area/stage.service';
 import { MODALITY_LABELS } from '../organizer/competition.service';
@@ -36,9 +36,20 @@ type Estado =
 @Component({
   selector: 'app-public-competition',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, DatePipe, DecimalPipe, Loading, PublicNav, RouterLink],
+  imports: [
+    Alert,
+    BackLink,
+    Badge,
+    Button,
+    Card,
+    DatePipe,
+    DecimalPipe,
+    Loading,
+    PublicNav,
+    RouterLink,
+  ],
   template: `
-    <p class="intro"><a routerLink="/campeonatos">← Todos os campeonatos</a></p>
+    <app-back-link link="/campeonatos" label="Todos os campeonatos" />
 
     @switch (estado().tipo) {
       @case ('carregando') {

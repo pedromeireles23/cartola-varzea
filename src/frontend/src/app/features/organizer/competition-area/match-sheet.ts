@@ -1,8 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 
 import { ApiFailure } from '../../../core/api/problem-details';
-import { Alert, Button, Card, Loading, SelectField, SelectOption } from '../../../shared/ui';
+import {
+  Alert,
+  BackLink,
+  Button,
+  Card,
+  Loading,
+  SelectField,
+  SelectOption,
+} from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
 import {
   MatchSheet,
@@ -30,10 +38,10 @@ type CampoNumerico =
 @Component({
   selector: 'app-match-sheet',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, Loading, RouterLink, SelectField],
+  imports: [Alert, BackLink, Button, Card, Loading, SelectField],
   template: `
     <div class="pagina">
-      <p><a routerLink="../rodadas">← Rodadas</a></p>
+      <app-back-link link="../rodadas" label="Rodadas" />
       <h1>Súmula da partida</h1>
 
       @switch (estado().tipo) {
