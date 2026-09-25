@@ -99,8 +99,11 @@ test('checklist bloqueia o rascunho vazio e libera a publicação com o catálog
   await publicar.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(page.getByText('Campeonato publicado.')).toBeVisible();
 
-  // A casca reflete a decisão sem recarregar a página.
-  await expect(page.getByText('Publicado', { exact: true }).first()).toBeVisible();
+  // A casca reflete a decisão sem recarregar a página: na barra lateral no desktop e no
+  // cabeçalho do campeonato no celular — só um dos dois está à vista em cada largura.
+  await expect(
+    page.getByText('Publicado', { exact: true }).filter({ visible: true }).first(),
+  ).toBeVisible();
 
   // 4. Publicado, a modalidade some do formulário de configuração.
   await navegacao.getByRole('link', { name: 'Configuração' }).click();
