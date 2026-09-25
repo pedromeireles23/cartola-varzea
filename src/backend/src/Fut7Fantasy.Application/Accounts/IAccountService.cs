@@ -19,6 +19,12 @@ public interface IAccountService
     /// <summary>Autentica e abre a sessao em cookie.</summary>
     Task<SignInOutcome> SignInAsync(string email, string password, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Abre a sessao da conta publica de demonstracao, sem senha. Falso quando a entrada
+    /// de visitante esta desligada ou a conta configurada nao e <c>DemoViewer</c>.
+    /// </summary>
+    Task<bool> SignInDemoViewerAsync(CancellationToken cancellationToken);
+
     /// <summary>Encerra a sessao.</summary>
     Task SignOutAsync(CancellationToken cancellationToken);
 

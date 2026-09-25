@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Fut7Fantasy.Application.Accounts;
+using Fut7Fantasy.Infrastructure.Options;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.Extensions.Options;
 
 namespace Fut7Fantasy.Api.Endpoints;
 
@@ -40,6 +42,15 @@ public static class AccountEndpoints
             .RequireRateLimiting(StrictRateLimitPolicy)
             .WithName("Login")
             .WithSummary("Abre a sessão em cookie.");
+
+        grupo.MapGet("/demo", DemoAvailability)
+            .WithName("DemoAvailability")
+            .WithSummary("Diz se a entrada de visitante da demonstração está ligada.");
+
+        grupo.MapPost("/demo", DemoSignInAsync)
+            .RequireRateLimiting(StrictRateLimitPolicy)
+            .WithName("DemoSignIn")
+            .WithSummary("Abre a sessão somente leitura da demonstração, sem senha.");
 
         grupo.MapPost("/logout", LogoutAsync)
             .RequireAuthorization()
@@ -172,6 +183,24 @@ public static class AccountEndpoints
         };
     }
 
+    /// <summary>
+    /// A tela de entrada pergunta antes de mostrar o botão: fora do ambiente de
+    /// demonstração ele não existe.
+    /// </summary>
+    private static IResult DemoAvailability(IOptions<DemoAccessOptions> options) =>
+        Results.Ok(new DemoAvailabilityResponse(options.Value.Enabled));
+
+    /// <summary>
+    /// Entrada de visitante (Fase 12). Desligada, ou com a conta configurada fora do papel
+    /// <c>DemoViewer</c>, responde como rota inexistente.
+    /// </summary>
+    private static async Task<IResult> DemoSignInAsync(
+        IAccountService accounts,
+        CancellationToken cancellationToken) =>
+        await accounts.SignInDemoViewerAsync(cancellationToken).ConfigureAwait(false)
+            ? Results.NoContent()
+            : Results.NotFound();
+
     private static async Task<IResult> LogoutAsync(
         IAccountService accounts,
         CancellationToken cancellationToken)
@@ -254,6 +283,8 @@ public static class AccountEndpoints
 
 /// <param name="Message">Texto pronto para exibir ao usuário.</param>
 public sealed record MessageResponse(string Message);
+
+public sealed record DemoAvailabilityResponse(bool Available);
 
 public sealed record RegisterRequest(
     [property: Required(ErrorMessage = "Informe o e-mail.")]

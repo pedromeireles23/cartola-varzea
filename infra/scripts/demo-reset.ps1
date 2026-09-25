@@ -12,8 +12,11 @@
     senhas aleatorias e guarda no .env, que fica fora do Git. Nas seguintes, reaproveita.
     Nenhuma senha e impressa; para ver, abra o .env.
 
-    Depois do reset, suba a API apontando para o banco da demo:
+    Depois do reset, suba a API apontando para o banco da demo, com a entrada de
+    visitante ligada (o botao "Entrar como visitante" na tela de entrada):
       $env:Database__ConnectionString = '<a mesma connection string com Database=Fut7Fantasy_Demo>'
+      $env:DemoAccess__Enabled = 'true'
+      $env:DemoAccess__ViewerEmail = 'visitante@demo.cartola-varzea.test'
       dotnet run --project src\backend\src\Fut7Fantasy.Api
 
 .EXAMPLE

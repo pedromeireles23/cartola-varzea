@@ -41,6 +41,27 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
         <a routerLink="/cadastro">Criar uma conta</a>
       </p>
     </app-card>
+
+    @if (demo()) {
+      <section class="visitante" aria-labelledby="visitante-titulo">
+        <h2 id="visitante-titulo" class="visitante__titulo">Só quer conhecer?</h2>
+        <p class="visitante__texto">
+          Entre como visitante: você vê um campeonato em andamento, um time montado, as ligas e a
+          área de organização. Tudo em modo de leitura, sem cadastro.
+        </p>
+        @if (erroVisitante()) {
+          <app-alert tone="danger">{{ erroVisitante() }}</app-alert>
+        }
+        <app-button
+          variant="secondary"
+          [fullWidth]="true"
+          [loading]="entrandoVisitante()"
+          (pressed)="entrarComoVisitante()"
+        >
+          Entrar como visitante
+        </app-button>
+      </section>
+    }
   `,
   styleUrl: './auth.scss',
 })
@@ -52,6 +73,29 @@ export class LoginPage {
   protected readonly senha = signal('');
   protected readonly enviando = signal(false);
   protected readonly erro = signal<string | null>(null);
+
+  /** Só a demonstração pública oferece a entrada de visitante. */
+  protected readonly demo = signal(false);
+  protected readonly entrandoVisitante = signal(false);
+  protected readonly erroVisitante = signal<string | null>(null);
+
+  constructor() {
+    void this.auth.demoAvailable().then((disponivel) => this.demo.set(disponivel));
+  }
+
+  protected async entrarComoVisitante(): Promise<void> {
+    this.entrandoVisitante.set(true);
+    this.erroVisitante.set(null);
+
+    try {
+      await this.auth.enterAsVisitor();
+      await this.router.navigateByUrl('/inicio');
+    } catch {
+      this.erroVisitante.set('A entrada de visitante não está disponível agora.');
+    } finally {
+      this.entrandoVisitante.set(false);
+    }
+  }
 
   protected async entrar(event: Event): Promise<void> {
     event.preventDefault();

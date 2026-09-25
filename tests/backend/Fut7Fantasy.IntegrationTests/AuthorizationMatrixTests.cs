@@ -38,6 +38,7 @@ public sealed class AuthorizationMatrixTests
         "DELETE /api/v1/organizations/{organizationId:guid}/team/invitations/{invitationId:guid}"
             + " -> organization-owner-write",
         "GET /api/v1/auth/antiforgery -> " + Anonymous,
+        "GET /api/v1/auth/demo -> " + Anonymous,
         "GET /api/v1/competitions/{competitionId:guid}/athletes/ -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/coaches/ -> competition-member",
         "GET /api/v1/competitions/{competitionId:guid}/imports/{kind}/template -> competition-member",
@@ -92,6 +93,7 @@ public sealed class AuthorizationMatrixTests
         "POST /api/v1/competitions/{competitionId:guid}/stages/ -> competition-owner-write",
         "POST /api/v1/competitions/{competitionId:guid}/teams/ -> competition-owner-write",
         "POST /api/v1/auth/confirm-email -> " + Anonymous,
+        "POST /api/v1/auth/demo -> " + Anonymous,
         "POST /api/v1/auth/forgot-password -> " + Anonymous,
         "POST /api/v1/auth/login -> " + Anonymous,
         "POST /api/v1/auth/logout -> " + Authenticated,

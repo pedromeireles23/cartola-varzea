@@ -70,6 +70,14 @@ public static class InfrastructureServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<DemoAccessOptions>()
+            .Bind(configuration.GetSection(DemoAccessOptions.SectionName))
+            .ValidateDataAnnotations()
+            .Validate(
+                options => !options.Enabled || !string.IsNullOrWhiteSpace(options.ViewerEmail),
+                "DemoAccess:Enabled exige DemoAccess:ViewerEmail.")
+            .ValidateOnStart();
+
         services.AddOptions<PlatformAdministrationOptions>()
             .Bind(configuration.GetSection(PlatformAdministrationOptions.SectionName))
             .ValidateDataAnnotations()

@@ -101,6 +101,30 @@ export class AuthService {
     await this.load();
   }
 
+  /** A demonstração pública liga a entrada de visitante; fora dela, não há botão. */
+  async demoAvailable(): Promise<boolean> {
+    try {
+      const resposta = await firstValueFrom(
+        this.http.get<{ available: boolean }>(`${this.baseUrl}/auth/demo`),
+      );
+      return resposta.available;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Entra na conta pública de demonstração, sem senha: o servidor só abre a conta
+   * `DemoViewer`, que lê tudo e não grava nada (Fase 12).
+   */
+  async enterAsVisitor(): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${this.baseUrl}/auth/demo`, null, { observe: 'response' }),
+    );
+
+    await this.load();
+  }
+
   async logout(): Promise<void> {
     await firstValueFrom(
       this.http.post(`${this.baseUrl}/auth/logout`, null, { observe: 'response' }),

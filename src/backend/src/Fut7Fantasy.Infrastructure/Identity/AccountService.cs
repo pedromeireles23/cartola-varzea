@@ -21,6 +21,7 @@ public sealed class AccountService(
     InitialPlatformAdmin initialAdmin,
     TimeProvider clock,
     IOptions<AuthenticationOptions> authOptions,
+    IOptions<DemoAccessOptions> demoAccess,
     ILogger<AccountService> logger) : IAccountService
 {
     /// <summary>Dono do hash de referencia; nunca e persistido.</summary>
@@ -154,6 +155,31 @@ public sealed class AccountService(
         await signIn.SignInAsync(user, isPersistent: true).ConfigureAwait(false);
         SecurityEvents.SignInSucceeded(logger, user.Id);
         return SignInOutcome.Success;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> SignInDemoViewerAsync(CancellationToken cancellationToken)
+    {
+        var options = demoAccess.Value;
+        if (!options.Enabled || string.IsNullOrWhiteSpace(options.ViewerEmail))
+        {
+            return false;
+        }
+
+        // Só a conta de demonstração: uma configuração errada apontando para outra conta
+        // não pode virar uma porta sem senha para ela.
+        var user = await users.FindByEmailAsync(options.ViewerEmail).ConfigureAwait(false);
+        if (user is null
+            || !await users.IsInRoleAsync(user, ApplicationRole.DemoViewer).ConfigureAwait(false)
+            || !await signIn.CanSignInAsync(user).ConfigureAwait(false))
+        {
+            return false;
+        }
+
+        // Sessão só do navegador aberto: em computador compartilhado ela não fica.
+        await signIn.SignInAsync(user, isPersistent: false).ConfigureAwait(false);
+        SecurityEvents.DemoSignIn(logger, user.Id);
+        return true;
     }
 
     /// <inheritdoc />

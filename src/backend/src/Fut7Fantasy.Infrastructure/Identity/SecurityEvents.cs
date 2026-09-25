@@ -55,6 +55,10 @@ public static partial class SecurityEvents
         Message = "Falha ao enviar e-mail de conta. propósito={Purpose}")]
     public static partial void EmailSendFailed(ILogger logger, string purpose, Exception exception);
 
+    [LoggerMessage(EventId = 2011, Level = LogLevel.Information,
+        Message = "Sessão de demonstração aberta sem senha. userId={UserId}")]
+    public static partial void DemoSignIn(ILogger logger, Guid userId);
+
     /// <summary>
     /// Reduz o e-mail ao minimo util para investigar abuso: primeira letra, dominio
     /// e nada mais. Registrar o endereco inteiro seria dado pessoal desnecessario.
