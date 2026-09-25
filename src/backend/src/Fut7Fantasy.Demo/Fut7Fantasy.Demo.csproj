@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- As senhas das contas demo vêm de fora do código: user-secrets no local, cofre na nuvem. -->
+    <UserSecretsId>1b7e4c2a-8f3d-4e61-9c5a-7d2f0b9e3a41</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Mesmo host genérico e o mesmo Identity da API, sem o servidor web. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fut7Fantasy.Application\Fut7Fantasy.Application.csproj" />
+    <ProjectReference Include="..\Fut7Fantasy.Infrastructure\Fut7Fantasy.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A massa fictícia versionada é uma só: a mesma que o E2E e os testes importam. -->
+    <EmbeddedResource Include="..\..\..\..\infra\dados-demo\*.csv" LogicalName="dados-demo.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Fut7Fantasy.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

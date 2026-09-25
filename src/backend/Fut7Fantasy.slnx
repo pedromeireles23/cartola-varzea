@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Fut7Fantasy.Api/Fut7Fantasy.Api.csproj" />
     <Project Path="src/Fut7Fantasy.Application/Fut7Fantasy.Application.csproj" />
+    <Project Path="src/Fut7Fantasy.Demo/Fut7Fantasy.Demo.csproj" />
     <Project Path="src/Fut7Fantasy.Domain/Fut7Fantasy.Domain.csproj" />
     <Project Path="src/Fut7Fantasy.Infrastructure/Fut7Fantasy.Infrastructure.csproj" />
   </Folder>

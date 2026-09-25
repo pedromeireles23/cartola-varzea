@@ -835,6 +835,13 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.12, )"
         }
       },
+      "fut7fantasy.demo": {
+        "type": "Project",
+        "dependencies": {
+          "Fut7Fantasy.Application": "[1.0.0, )",
+          "Fut7Fantasy.Infrastructure": "[1.0.0, )"
+        }
+      },
       "fut7fantasy.domain": {
         "type": "Project"
       },
