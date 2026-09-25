@@ -190,7 +190,9 @@ type Edicao =
                       <app-alert tone="danger">{{ erroParticipantes() }}</app-alert>
                     }
                     <div class="acoes">
-                      <app-button type="submit" [loading]="salvando()">Salvar times</app-button>
+                      <app-button escrita type="submit" [loading]="salvando()"
+                        >Salvar times</app-button
+                      >
                       <app-button
                         variant="ghost"
                         [disabled]="salvando()"
@@ -202,13 +204,14 @@ type Edicao =
                   </form>
                 } @else if (proprietario()) {
                   <div class="acoes">
-                    <app-button variant="secondary" (pressed)="abrirParticipantes(fase)">
+                    <app-button escrita variant="secondary" (pressed)="abrirParticipantes(fase)">
                       Gerenciar times<span class="sr-only"> de {{ fase.name }}</span>
                     </app-button>
-                    <app-button variant="secondary" (pressed)="abrirEdicao(fase)">
+                    <app-button escrita variant="secondary" (pressed)="abrirEdicao(fase)">
                       Editar<span class="sr-only"> {{ fase.name }}</span>
                     </app-button>
                     <app-button
+                      escrita
                       variant="ghost"
                       [disabled]="primeira || ocupado()"
                       (pressed)="mover(fase, -1)"
@@ -216,13 +219,14 @@ type Edicao =
                       Subir<span class="sr-only"> {{ fase.name }}</span>
                     </app-button>
                     <app-button
+                      escrita
                       variant="ghost"
                       [disabled]="ultima || ocupado()"
                       (pressed)="mover(fase, 1)"
                     >
                       Descer<span class="sr-only"> {{ fase.name }}</span>
                     </app-button>
-                    <app-button variant="ghost" (pressed)="pedirRemocao(fase)">
+                    <app-button escrita variant="ghost" (pressed)="pedirRemocao(fase)">
                       Remover<span class="sr-only"> {{ fase.name }}</span>
                     </app-button>
                   </div>
@@ -256,7 +260,7 @@ type Edicao =
               <p class="apoio">O campeonato chegou ao limite de {{ limite }} fases.</p>
             } @else {
               <div class="acoes">
-                <app-button [disabled]="edicao() !== null" (pressed)="abrirNova()">
+                <app-button escrita [disabled]="edicao() !== null" (pressed)="abrirNova()">
                   Adicionar fase
                 </app-button>
               </div>
@@ -283,7 +287,7 @@ type Edicao =
           <app-button variant="ghost" [disabled]="ocupado()" (pressed)="cancelarRemocao()">
             Cancelar
           </app-button>
-          <app-button variant="danger" [loading]="ocupado()" (pressed)="remover()">
+          <app-button escrita variant="danger" [loading]="ocupado()" (pressed)="remover()">
             Remover fase
           </app-button>
         </div>

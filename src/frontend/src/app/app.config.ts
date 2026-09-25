@@ -18,6 +18,7 @@ import localePt from '@angular/common/locales/pt';
 
 import { apiErrorInterceptor } from './core/api/api-error.interceptor';
 import { AuthService } from './core/auth/auth.service';
+import { READ_ONLY_MODE } from './core/demo/read-only-mode';
 import { routes } from './app.routes';
 
 registerLocaleData(localePt, 'pt-BR');
@@ -38,5 +39,7 @@ export const appConfig: ApplicationConfig = {
     // que os guards não precisem decidir com o estado ainda desconhecido.
     provideAppInitializer(() => inject(AuthService).load()),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
+    // A conta pública de demonstração só lê: os botões de escrita ficam indisponíveis.
+    { provide: READ_ONLY_MODE, useFactory: () => inject(AuthService).isDemoViewer },
   ],
 };

@@ -161,7 +161,7 @@ type Campo = 'nome' | 'temporada' | 'modalidade' | 'prazo' | 'janela' | 'anteced
       </fieldset>
 
       <div class="acoes">
-        <app-button type="submit" [loading]="saving()">{{ submitLabel() }}</app-button>
+        <app-button escrita type="submit" [loading]="saving()">{{ submitLabel() }}</app-button>
       </div>
     </form>
   `,

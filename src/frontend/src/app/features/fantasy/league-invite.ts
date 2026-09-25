@@ -65,7 +65,12 @@ type Estado =
               Este link não parece ter um código completo. Confira se ele foi copiado inteiro.
             </app-alert>
           }
-          <app-button [loading]="entrando()" [disabled]="!pareceCodigo()" (pressed)="entrar()">
+          <app-button
+            escrita
+            [loading]="entrando()"
+            [disabled]="!pareceCodigo()"
+            (pressed)="entrar()"
+          >
             Entrar na liga
           </app-button>
         </app-card>
@@ -81,7 +86,7 @@ type Estado =
             >Ver a classificação da liga</a
           >
           <p class="apoio">Não era o que você queria?</p>
-          <app-button variant="ghost" [loading]="saindo()" (pressed)="sair()">
+          <app-button escrita variant="ghost" [loading]="saindo()" (pressed)="sair()">
             Sair desta liga
           </app-button>
         </app-card>

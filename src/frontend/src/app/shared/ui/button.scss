@@ -19,7 +19,8 @@
     border-color var(--motion-feedback) var(--motion-easing);
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn[aria-disabled='true'] {
   cursor: not-allowed;
   opacity: 55%;
 }
@@ -34,7 +35,7 @@
   border-color: var(--color-brand-700);
 }
 
-.btn--primary:hover:not(:disabled) {
+.btn--primary:hover:not(:disabled, [aria-disabled='true']) {
   background-color: var(--color-brand-800);
   border-color: var(--color-brand-800);
 }
@@ -45,7 +46,7 @@
   border-color: var(--color-border-strong);
 }
 
-.btn--secondary:hover:not(:disabled) {
+.btn--secondary:hover:not(:disabled, [aria-disabled='true']) {
   background-color: var(--color-surface-alt);
 }
 
@@ -54,7 +55,7 @@
   color: var(--color-ink-700);
 }
 
-.btn--ghost:hover:not(:disabled) {
+.btn--ghost:hover:not(:disabled, [aria-disabled='true']) {
   color: var(--color-ink-950);
   background-color: var(--color-surface-alt);
 }
@@ -65,7 +66,7 @@
   border-color: var(--color-danger);
 }
 
-.btn--danger:hover:not(:disabled) {
+.btn--danger:hover:not(:disabled, [aria-disabled='true']) {
   background-color: #912018;
   border-color: #912018;
 }

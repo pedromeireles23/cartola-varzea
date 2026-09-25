@@ -74,6 +74,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
           </p>
           <div class="acoes-da-tela">
             <app-button
+              escrita
               [expanded]="painel() === 'criar'"
               controls="painel-liga"
               (pressed)="abrir('criar')"
@@ -81,6 +82,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
               Criar uma liga
             </app-button>
             <app-button
+              escrita
               variant="secondary"
               [expanded]="painel() === 'entrar'"
               controls="painel-liga"
@@ -111,7 +113,9 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
                   <app-alert tone="danger">{{ mensagem }}</app-alert>
                 }
                 <div class="acoes-da-tela">
-                  <app-button [loading]="enviando()" (pressed)="criar()">Criar liga</app-button>
+                  <app-button escrita [loading]="enviando()" (pressed)="criar()"
+                    >Criar liga</app-button
+                  >
                   <app-button variant="ghost" (pressed)="fechar()">Cancelar</app-button>
                 </div>
               </app-card>
@@ -129,7 +133,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
                   <app-alert tone="danger">{{ mensagem }}</app-alert>
                 }
                 <div class="acoes-da-tela">
-                  <app-button [loading]="enviando()" (pressed)="entrar()">
+                  <app-button escrita [loading]="enviando()" (pressed)="entrar()">
                     Entrar na liga
                   </app-button>
                   <app-button variant="ghost" (pressed)="fechar()">Cancelar</app-button>

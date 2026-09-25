@@ -134,6 +134,7 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
           } @else if (proprietario()) {
             <div class="acoes">
               <app-button
+                escrita
                 [disabled]="timesAtivos().length === 0 || inscricaoEncerrada() !== null"
                 (pressed)="abrirNovo()"
               >
@@ -183,10 +184,14 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
                       </p>
                       @if (proprietario() && athlete.status === 'Active') {
                         <div class="acoes">
-                          <app-button variant="secondary" (pressed)="abrirEdicao(athlete)">
+                          <app-button escrita variant="secondary" (pressed)="abrirEdicao(athlete)">
                             Editar<span class="sr-only"> {{ athlete.sportingName }}</span>
                           </app-button>
-                          <app-button variant="ghost" (pressed)="pedirDesligamento(athlete)">
+                          <app-button
+                            escrita
+                            variant="ghost"
+                            (pressed)="pedirDesligamento(athlete)"
+                          >
                             Desligar<span class="sr-only"> {{ athlete.sportingName }}</span>
                           </app-button>
                         </div>
@@ -266,7 +271,7 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
           />
         </div>
         <div class="acoes">
-          <app-button type="submit" [loading]="salvando()">
+          <app-button escrita type="submit" [loading]="salvando()">
             {{ editandoNovo() ? 'Adicionar atleta' : 'Salvar' }}
           </app-button>
           <app-button variant="ghost" [disabled]="salvando()" (pressed)="cancelarEdicao()">
@@ -293,7 +298,7 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
           <app-button variant="ghost" [disabled]="salvando()" (pressed)="cancelarDesligamento()">
             Cancelar
           </app-button>
-          <app-button variant="danger" [loading]="salvando()" (pressed)="desligar()">
+          <app-button escrita variant="danger" [loading]="salvando()" (pressed)="desligar()">
             Desligar atleta
           </app-button>
         </div>

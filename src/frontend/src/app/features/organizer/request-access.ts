@@ -147,7 +147,7 @@ const STATUS: Readonly<
                 [(value)]="nome"
               />
 
-              <app-button type="submit" [loading]="enviando()" [fullWidth]="true">
+              <app-button escrita type="submit" [loading]="enviando()" [fullWidth]="true">
                 Enviar solicitação
               </app-button>
             </form>

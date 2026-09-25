@@ -193,6 +193,7 @@
                     <div class="acoes">
                       @if (vaga.papel === 'Starter' && !ocupante.isCaptain) {
                         <app-button
+                          escrita
                           [fullWidth]="true"
                           [disabled]="operando()"
                           (pressed)="tornarCapitao(vaga)"
@@ -203,6 +204,7 @@
                       @if (vaga.papel === 'Starter') {
                         @if (reservaDe(vaga); as reserva) {
                           <app-button
+                            escrita
                             variant="secondary"
                             [fullWidth]="true"
                             [disabled]="operando()"
@@ -215,6 +217,7 @@
                       @if (vaga.papel === 'Bench') {
                         @for (titular of titularesDe(vaga); track titular.chave) {
                           <app-button
+                            escrita
                             variant="secondary"
                             [fullWidth]="true"
                             [disabled]="operando()"
@@ -225,6 +228,7 @@
                         }
                       }
                       <app-button
+                        escrita
                         variant="danger"
                         [fullWidth]="true"
                         [disabled]="operando()"

@@ -117,7 +117,12 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 
             @if (owner() && review()!.phase === 'InProgress') {
               <div class="actions">
-                <app-button [disabled]="!review()!.ready" [loading]="saving()" (pressed)="submit()">
+                <app-button
+                  escrita
+                  [disabled]="!review()!.ready"
+                  [loading]="saving()"
+                  (pressed)="submit()"
+                >
                   Enviar para revisão
                 </app-button>
               </div>
@@ -177,7 +182,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
               </dl>
               @if (owner() && !correcting()) {
                 <div class="actions">
-                  <app-button variant="secondary" (pressed)="openReopen()">
+                  <app-button escrita variant="secondary" (pressed)="openReopen()">
                     Reabrir para correção
                   </app-button>
                 </div>
@@ -202,7 +207,11 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
               }
               @if (owner()) {
                 <div class="actions">
-                  <app-button [disabled]="!review()!.ready" (pressed)="confirming.set(true)">
+                  <app-button
+                    escrita
+                    [disabled]="!review()!.ready"
+                    (pressed)="confirming.set(true)"
+                  >
                     {{ correcting() ? 'Republicar resultado' : 'Publicar resultado' }}
                   </app-button>
                 </div>
@@ -255,7 +264,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
             }
             <div dialogActions>
               <app-button variant="ghost" (pressed)="confirming.set(false)">Cancelar</app-button>
-              <app-button [loading]="saving()" (pressed)="publish()">
+              <app-button escrita [loading]="saving()" (pressed)="publish()">
                 {{ correcting() ? 'Republicar' : 'Publicar' }}
               </app-button>
             </div>
@@ -287,7 +296,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
             />
             <div dialogActions>
               <app-button variant="ghost" (pressed)="reopening.set(false)">Cancelar</app-button>
-              <app-button [loading]="saving()" (pressed)="reopen()">Reabrir</app-button>
+              <app-button escrita [loading]="saving()" (pressed)="reopen()">Reabrir</app-button>
             </div>
           </app-dialog>
 

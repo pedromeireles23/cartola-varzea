@@ -176,6 +176,7 @@
       <div class="item__acao">
         @if (item.isOwned) {
           <app-button
+            escrita
             variant="secondary"
             [loading]="operando() === item.id"
             [disabled]="operando() !== null"
@@ -185,6 +186,7 @@
           </app-button>
         } @else {
           <app-button
+            escrita
             variant="secondary"
             [loading]="operando() === item.id"
             [disabled]="item.blockCode !== null || operando() !== null"

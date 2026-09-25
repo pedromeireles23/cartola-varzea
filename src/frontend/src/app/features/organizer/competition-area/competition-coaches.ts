@@ -133,7 +133,9 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
                           />
                         </div>
                         <div class="acoes">
-                          <app-button type="submit" [loading]="salvando()">Salvar</app-button>
+                          <app-button escrita type="submit" [loading]="salvando()"
+                            >Salvar</app-button
+                          >
                           <app-button
                             variant="ghost"
                             [disabled]="salvando()"
@@ -166,7 +168,7 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
                       }
                       @if (proprietario() && coach.isAvailable) {
                         <div class="acoes">
-                          <app-button variant="secondary" (pressed)="abrirEdicao(coach)">
+                          <app-button escrita variant="secondary" (pressed)="abrirEdicao(coach)">
                             Editar<span class="sr-only"> {{ coach.effectiveName }}</span>
                           </app-button>
                         </div>

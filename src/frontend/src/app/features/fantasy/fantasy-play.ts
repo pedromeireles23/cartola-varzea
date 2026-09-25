@@ -170,7 +170,7 @@ type Estado =
             @if (falhaAoEntrar(); as mensagem) {
               <app-alert tone="danger">{{ mensagem }}</app-alert>
             }
-            <app-button [loading]="entrando()" (pressed)="entrar()">
+            <app-button escrita [loading]="entrando()" (pressed)="entrar()">
               Entrar no campeonato
             </app-button>
           </app-card>

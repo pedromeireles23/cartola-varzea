@@ -235,6 +235,7 @@ type CampoNumerico =
               </p>
               <p>{{ participantes().length }} atleta(s) marcado(s) como participante(s).</p>
               <app-button
+                escrita
                 [loading]="salvando()"
                 [disabled]="problemas().length > 0"
                 (pressed)="salvar()"

@@ -147,13 +147,21 @@ interface Formulario {
                       }
                       @if (proprietario()) {
                         <span class="partida__acoes">
-                          <app-button variant="ghost" (pressed)="abrirPartida(rodada, partida)">
+                          <app-button
+                            escrita
+                            variant="ghost"
+                            (pressed)="abrirPartida(rodada, partida)"
+                          >
                             Editar<span class="sr-only">
                               {{ partida.homeTeamName }} contra {{ partida.awayTeamName }}</span
                             >
                           </app-button>
                           @if (rodada.status === 'Draft') {
-                            <app-button variant="ghost" (pressed)="pedirRemocao(rodada, partida)">
+                            <app-button
+                              escrita
+                              variant="ghost"
+                              (pressed)="pedirRemocao(rodada, partida)"
+                            >
                               Remover<span class="sr-only">
                                 {{ partida.homeTeamName }} contra {{ partida.awayTeamName }}</span
                               >
@@ -217,7 +225,7 @@ interface Formulario {
                     />
                   }
                   <div class="acoes">
-                    <app-button type="submit" [loading]="salvando()">
+                    <app-button escrita type="submit" [loading]="salvando()">
                       {{ aberto.partidaId === null ? 'Adicionar partida' : 'Salvar partida' }}
                     </app-button>
                     <app-button
@@ -233,6 +241,7 @@ interface Formulario {
                 <div class="acoes">
                   @if (rodada.status === 'Draft') {
                     <app-button
+                      escrita
                       variant="secondary"
                       [disabled]="fases().length === 0"
                       (pressed)="abrirPartida(rodada, null)"
@@ -240,6 +249,7 @@ interface Formulario {
                       Adicionar partida<span class="sr-only"> em {{ rodada.name }}</span>
                     </app-button>
                     <app-button
+                      escrita
                       [disabled]="rodada.matches.length === 0"
                       (pressed)="transicao(rodada, 'OpenMarket')"
                     >
@@ -247,6 +257,7 @@ interface Formulario {
                     </app-button>
                   } @else if (rodada.phase === 'MarketOpen') {
                     <app-button
+                      escrita
                       variant="secondary"
                       (pressed)="transicao(rodada, 'ReopenForEditing')"
                     >
@@ -254,7 +265,7 @@ interface Formulario {
                     </app-button>
                   }
                   @if (rodada.status === 'Draft' || rodada.status === 'MarketOpen') {
-                    <app-button variant="ghost" (pressed)="pedirCancelamento(rodada)">
+                    <app-button escrita variant="ghost" (pressed)="pedirCancelamento(rodada)">
                       Cancelar rodada<span class="sr-only">{{ ' ' + rodada.name }}</span>
                     </app-button>
                   }
@@ -286,7 +297,9 @@ interface Formulario {
                     [(value)]="nome"
                   />
                   <div class="acoes">
-                    <app-button type="submit" [loading]="salvando()">Adicionar rodada</app-button>
+                    <app-button escrita type="submit" [loading]="salvando()"
+                      >Adicionar rodada</app-button
+                    >
                     <app-button
                       variant="ghost"
                       [disabled]="salvando()"
@@ -299,7 +312,7 @@ interface Formulario {
               </app-card>
             } @else {
               <div class="acoes">
-                <app-button (pressed)="abrirNova()">Adicionar rodada</app-button>
+                <app-button escrita (pressed)="abrirNova()">Adicionar rodada</app-button>
               </div>
             }
           }
@@ -318,7 +331,12 @@ interface Formulario {
           <app-button variant="ghost" [disabled]="salvando()" (pressed)="fecharCancelamento()">
             Voltar
           </app-button>
-          <app-button variant="danger" [loading]="salvando()" (pressed)="confirmarCancelamento()">
+          <app-button
+            escrita
+            variant="danger"
+            [loading]="salvando()"
+            (pressed)="confirmarCancelamento()"
+          >
             Cancelar rodada
           </app-button>
         </div>
@@ -337,7 +355,12 @@ interface Formulario {
           <app-button variant="ghost" [disabled]="salvando()" (pressed)="fecharRemocao()">
             Voltar
           </app-button>
-          <app-button variant="danger" [loading]="salvando()" (pressed)="confirmarRemocao()">
+          <app-button
+            escrita
+            variant="danger"
+            [loading]="salvando()"
+            (pressed)="confirmarRemocao()"
+          >
             Remover partida
           </app-button>
         </div>

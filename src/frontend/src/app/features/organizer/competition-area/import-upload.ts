@@ -61,6 +61,7 @@ type Retorno =
 
       <div class="acoes">
         <app-button
+          escrita
           variant="secondary"
           [disabled]="arquivo() === null"
           [loading]="ocupado() === 'previa'"
@@ -69,6 +70,7 @@ type Retorno =
           Conferir arquivo
         </app-button>
         <app-button
+          escrita
           [disabled]="arquivo() === null || !conferido()"
           [loading]="ocupado() === 'importacao'"
           (pressed)="enviar('importacao')"

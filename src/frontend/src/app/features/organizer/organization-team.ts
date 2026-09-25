@@ -116,7 +116,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
               [(value)]="email"
             />
 
-            <app-button type="submit" [loading]="convidando()">Enviar convite</app-button>
+            <app-button escrita type="submit" [loading]="convidando()">Enviar convite</app-button>
           </form>
         </app-card>
 
@@ -126,7 +126,9 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
               @for (pessoa of equipe()!.assistants; track pessoa.userId) {
                 <li class="lista__item">
                   <span class="lista__principal">{{ pessoa.displayName }}</span>
-                  <app-button variant="ghost" (pressed)="pedirRemocao(pessoa)">Remover</app-button>
+                  <app-button escrita variant="ghost" (pressed)="pedirRemocao(pessoa)"
+                    >Remover</app-button
+                  >
                   <span class="lista__detalhe">
                     {{ pessoa.email }} · desde {{ pessoa.joinedAt | date: formatoData }}
                   </span>
@@ -146,7 +148,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                   <span class="lista__principal">{{ convite.invitedEmail }}</span>
                   <app-badge [tone]="status(convite).tom">{{ status(convite).rotulo }}</app-badge>
                   @if (convite.status === 'Pending') {
-                    <app-button variant="ghost" (pressed)="pedirRevogacao(convite)">
+                    <app-button escrita variant="ghost" (pressed)="pedirRevogacao(convite)">
                       Revogar
                     </app-button>
                   }
@@ -179,7 +181,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         <app-button variant="ghost" [disabled]="confirmando()" (pressed)="cancelarRevogacao()">
           Cancelar
         </app-button>
-        <app-button variant="danger" [loading]="confirmando()" (pressed)="revogar()">
+        <app-button escrita variant="danger" [loading]="confirmando()" (pressed)="revogar()">
           Revogar convite
         </app-button>
       </div>
@@ -201,7 +203,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         <app-button variant="ghost" [disabled]="confirmando()" (pressed)="cancelarRemocao()">
           Cancelar
         </app-button>
-        <app-button variant="danger" [loading]="confirmando()" (pressed)="remover()">
+        <app-button escrita variant="danger" [loading]="confirmando()" (pressed)="remover()">
           Remover da equipe
         </app-button>
       </div>

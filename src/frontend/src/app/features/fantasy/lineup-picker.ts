@@ -91,6 +91,7 @@ function normalizar(texto: string): string {
             </span>
             <span class="opcao__preco num">{{ creditos(item.price) }}</span>
             <app-button
+              escrita
               variant="secondary"
               [loading]="operando() === item.id"
               [disabled]="item.blockCode !== null || operando() !== null"

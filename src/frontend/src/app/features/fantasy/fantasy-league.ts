@@ -14,6 +14,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
+import { READ_ONLY_MODE, READ_ONLY_NOTICE_ID } from '../../core/demo/read-only-mode';
 import {
   Alert,
   BackLink,
@@ -175,10 +176,10 @@ type Confirmacao =
                     <p class="apoio">Este código vale até {{ prazo }}.</p>
                   }
                   <div class="acoes-da-tela">
-                    <app-button variant="ghost" (pressed)="confirmar({ tipo: 'trocar' })">
+                    <app-button escrita variant="ghost" (pressed)="confirmar({ tipo: 'trocar' })">
                       Trocar o código
                     </app-button>
-                    <app-button variant="ghost" (pressed)="confirmar({ tipo: 'fechar' })">
+                    <app-button escrita variant="ghost" (pressed)="confirmar({ tipo: 'fechar' })">
                       Fechar para novas entradas
                     </app-button>
                   </div>
@@ -187,7 +188,12 @@ type Confirmacao =
                     A liga está fechada para novas entradas. Quem já está dentro continua
                     disputando.
                   </app-alert>
-                  <app-button variant="secondary" [loading]="agindo()" (pressed)="trocar(false)">
+                  <app-button
+                    escrita
+                    variant="secondary"
+                    [loading]="agindo()"
+                    (pressed)="trocar(false)"
+                  >
                     Gerar um código novo
                   </app-button>
                 }
@@ -198,7 +204,7 @@ type Confirmacao =
                   Quem criou a liga não sai dela: apaga. Ninguém perde pontos e a classificação do
                   campeonato continua igual — só a liga deixa de existir para todo mundo.
                 </p>
-                <app-button variant="danger" (pressed)="confirmar({ tipo: 'apagar' })">
+                <app-button escrita variant="danger" (pressed)="confirmar({ tipo: 'apagar' })">
                   Apagar esta liga
                 </app-button>
               </app-card>
@@ -208,7 +214,7 @@ type Confirmacao =
                   Você sai da classificação desta liga e continua jogando o campeonato normalmente.
                   Para voltar, vai precisar do código de convite de novo.
                 </p>
-                <app-button variant="secondary" (pressed)="confirmar({ tipo: 'sair' })">
+                <app-button escrita variant="secondary" (pressed)="confirmar({ tipo: 'sair' })">
                   Sair desta liga
                 </app-button>
               </app-card>
@@ -218,7 +224,13 @@ type Confirmacao =
 
         <ng-template #remover let-membro>
           @if (podeRemover(membro)) {
-            <button class="linha__acao" type="button" (click)="pedirRemocao(membro)">
+            <button
+              class="linha__acao"
+              type="button"
+              [attr.aria-disabled]="somenteLeitura() ? 'true' : null"
+              [attr.aria-describedby]="somenteLeitura() ? avisoDemo : null"
+              (click)="pedirRemocao(membro)"
+            >
               Remover<span class="sr-only"> {{ membro.displayName }} da liga</span>
             </button>
           }
@@ -264,6 +276,7 @@ type Confirmacao =
           <div dialogActions>
             <app-button variant="ghost" (pressed)="confirmacao.set(null)">Cancelar</app-button>
             <app-button
+              escrita
               [variant]="varianteDaConfirmacao()"
               [loading]="agindo()"
               (pressed)="executar()"
@@ -279,6 +292,10 @@ type Confirmacao =
 })
 export class FantasyLeaguePage implements OnInit {
   private readonly service = inject(LeagueService);
+
+  /** A conta de demonstração vê a ação indisponível, como nos botões de escrita. */
+  protected readonly somenteLeitura = inject(READ_ONLY_MODE);
+  protected readonly avisoDemo = READ_ONLY_NOTICE_ID;
   private readonly router = inject(Router);
   private readonly title = inject(Title);
 
@@ -340,6 +357,7 @@ export class FantasyLeaguePage implements OnInit {
   }
 
   protected pedirRemocao(membro: LeagueMember): void {
+    if (this.somenteLeitura()) return;
     if (membro.membershipId === null) {
       return;
     }

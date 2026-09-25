@@ -124,7 +124,7 @@ const ROTA = '/organizar/convite';
             Auxiliares lançam e revisam súmulas antes da publicação; não publicam rodadas nem
             gerenciam a equipe.
           </p>
-          <app-button [loading]="resultado()?.tipo === 'aceitando'" (pressed)="aceitar()">
+          <app-button escrita [loading]="resultado()?.tipo === 'aceitando'" (pressed)="aceitar()">
             Aceitar convite
           </app-button>
         </app-card>

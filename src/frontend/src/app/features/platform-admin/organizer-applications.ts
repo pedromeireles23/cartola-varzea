@@ -99,8 +99,8 @@ interface Analise {
             </dl>
 
             <div class="acoes">
-              <app-button (pressed)="abrir(item, 'approve')">Aprovar</app-button>
-              <app-button variant="secondary" (pressed)="abrir(item, 'reject')">
+              <app-button escrita (pressed)="abrir(item, 'approve')">Aprovar</app-button>
+              <app-button escrita variant="secondary" (pressed)="abrir(item, 'reject')">
                 Não aprovar
               </app-button>
             </div>
@@ -153,6 +153,7 @@ interface Analise {
           Cancelar
         </app-button>
         <app-button
+          escrita
           [variant]="analise()?.decisao === 'reject' ? 'danger' : 'primary'"
           [loading]="decidindo()"
           (pressed)="confirmar()"

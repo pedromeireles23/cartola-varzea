@@ -167,9 +167,15 @@
     border-color var(--motion-feedback) var(--motion-easing);
 }
 
-.linha__acao:hover {
+.linha__acao:hover:not([aria-disabled='true']) {
   color: var(--color-danger);
   border-color: var(--color-danger);
+}
+
+// Conta de demonstração: a ação continua no teclado, mas não faz nada (02 §9.1).
+.linha__acao[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 55%;
 }
 
 // Sem movimento: tudo aparece no lugar, sem atraso nem deslocamento (02 §11).

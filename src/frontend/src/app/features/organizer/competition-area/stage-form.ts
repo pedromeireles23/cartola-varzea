@@ -183,7 +183,7 @@ function criteriosIniciais(stage: Stage | null): CriterioEditavel[] {
       }
 
       <div class="acoes">
-        <app-button type="submit" [loading]="saving()">{{ submitLabel() }}</app-button>
+        <app-button escrita type="submit" [loading]="saving()">{{ submitLabel() }}</app-button>
         <app-button variant="ghost" [disabled]="saving()" (pressed)="cancelled.emit()">
           Cancelar
         </app-button>

@@ -100,11 +100,15 @@ type Estado =
             @if (proprietario()) {
               <div class="acoes">
                 @if (publicado()) {
-                  <app-button variant="secondary" (pressed)="pedirDespublicacao()">
+                  <app-button escrita variant="secondary" (pressed)="pedirDespublicacao()">
                     Voltar para rascunho
                   </app-button>
                 } @else {
-                  <app-button [disabled]="!checklist()!.canPublish" (pressed)="pedirPublicacao()">
+                  <app-button
+                    escrita
+                    [disabled]="!checklist()!.canPublish"
+                    (pressed)="pedirPublicacao()"
+                  >
                     Publicar campeonato
                   </app-button>
                   @if (!checklist()!.canPublish) {
@@ -176,7 +180,7 @@ type Estado =
           <app-button variant="ghost" [disabled]="salvando()" (pressed)="cancelarDecisao()">
             Cancelar
           </app-button>
-          <app-button [loading]="salvando()" (pressed)="confirmar()">Publicar</app-button>
+          <app-button escrita [loading]="salvando()" (pressed)="confirmar()">Publicar</app-button>
         </div>
       </app-dialog>
 
@@ -193,7 +197,7 @@ type Estado =
           <app-button variant="ghost" [disabled]="salvando()" (pressed)="cancelarDecisao()">
             Cancelar
           </app-button>
-          <app-button variant="danger" [loading]="salvando()" (pressed)="confirmar()">
+          <app-button escrita variant="danger" [loading]="salvando()" (pressed)="confirmar()">
             Voltar para rascunho
           </app-button>
         </div>

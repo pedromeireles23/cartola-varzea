@@ -45,7 +45,9 @@ describe('Faixa de modo demonstração', () => {
 
     const faixa = elemento.querySelector('aside[aria-label="Modo demonstração"]');
     expect(faixa).not.toBeNull();
-    expect(faixa?.textContent).toContain('nenhuma alteração é salva');
+    expect(faixa?.textContent).toContain('as ações que salvam ficam indisponíveis');
+    // O texto é a descrição dos botões de escrita indisponíveis (aria-describedby).
+    expect(faixa?.querySelector('#aviso-demo')).not.toBeNull();
   });
 
   it('não aparece para as demais contas', () => {

@@ -73,7 +73,9 @@ type Estado =
                   [(value)]="nome"
                 />
                 <div class="acoes">
-                  <app-button type="submit" [loading]="salvando()">Adicionar time</app-button>
+                  <app-button escrita type="submit" [loading]="salvando()"
+                    >Adicionar time</app-button
+                  >
                   <app-button variant="ghost" [disabled]="salvando()" (pressed)="cancelarEdicao()">
                     Cancelar
                   </app-button>
@@ -82,7 +84,7 @@ type Estado =
             </app-card>
           } @else if (proprietario()) {
             <div class="acoes">
-              <app-button (pressed)="abrirNovo()">Adicionar time</app-button>
+              <app-button escrita (pressed)="abrirNovo()">Adicionar time</app-button>
             </div>
           }
 
@@ -102,7 +104,9 @@ type Estado =
                           [(value)]="nome"
                         />
                         <div class="acoes">
-                          <app-button type="submit" [loading]="salvando()">Salvar</app-button>
+                          <app-button escrita type="submit" [loading]="salvando()"
+                            >Salvar</app-button
+                          >
                           <app-button
                             variant="ghost"
                             [disabled]="salvando()"
@@ -121,10 +125,10 @@ type Estado =
                       </div>
                       @if (proprietario() && !time.isArchived) {
                         <div class="acoes">
-                          <app-button variant="secondary" (pressed)="abrirEdicao(time)">
+                          <app-button escrita variant="secondary" (pressed)="abrirEdicao(time)">
                             Editar<span class="sr-only"> {{ time.name }}</span>
                           </app-button>
-                          <app-button variant="ghost" (pressed)="pedirArquivamento(time)">
+                          <app-button escrita variant="ghost" (pressed)="pedirArquivamento(time)">
                             Arquivar<span class="sr-only"> {{ time.name }}</span>
                           </app-button>
                         </div>
@@ -163,7 +167,7 @@ type Estado =
           <app-button variant="ghost" [disabled]="salvando()" (pressed)="cancelarArquivamento()">
             Cancelar
           </app-button>
-          <app-button variant="danger" [loading]="salvando()" (pressed)="arquivar()">
+          <app-button escrita variant="danger" [loading]="salvando()" (pressed)="arquivar()">
             Arquivar time
           </app-button>
         </div>
