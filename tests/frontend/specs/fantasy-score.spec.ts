@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+import { semViolacoes } from '../support/acessibilidade';
 import {
   ApiDaSessao,
   horarioDeBrasilia,
@@ -83,6 +84,8 @@ test('a jornada inteira: a escalação congela, a rodada sai, é corrigida e o p
   await expect(jogador.getByRole('heading', { name: 'Rodada 1', level: 1 })).toBeVisible();
   await expect(jogador.getByText('Resultado provisório: pode mudar até')).toBeVisible();
   await expect(jogador.getByText('Sua pontuação na rodada')).toBeVisible();
+  // A pontuação só existe com rodada publicada: a varredura das áreas não chega aqui.
+  await semViolacoes(jogador, 'pontuação da rodada');
   await expect(jogador.getByText(`${capitao}`).first()).toBeVisible();
   await expect(jogador.getByText('Capitão').first()).toBeVisible();
 

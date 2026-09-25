@@ -1,0 +1,13 @@
+# Cartola Várzea: as páginas públicas podem ser indexadas; as áreas com conta, não.
+User-agent: *
+Disallow: /inicio
+Disallow: /perfil
+Disallow: /organizar
+Disallow: /admin
+Disallow: /convite
+Disallow: /entrar
+Disallow: /cadastro
+Disallow: /verificar-email
+Disallow: /recuperar-senha
+Disallow: /api/
+Allow: /

@@ -1,5 +1,8 @@
 .arquivo {
   display: grid;
+  // Coluna presa à largura do cartão: medida pelo conteúdo, ela ficava com os 344 px
+  // do seletor de arquivo e empurrava a página a 320 px.
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
 }
 
@@ -9,6 +12,7 @@
 }
 
 .arquivo input {
+  max-width: 100%;
   min-height: var(--touch-target);
   font: inherit;
 }

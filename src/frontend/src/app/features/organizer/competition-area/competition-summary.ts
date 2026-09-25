@@ -69,7 +69,13 @@ import {
             </div>
           </dl>
 
-          <div class="tabela">
+          <!-- Rolável no celular: foco e nome para quem navega por teclado (axe). -->
+          <div
+            class="tabela"
+            tabindex="0"
+            role="region"
+            aria-label="Limite de atletas do mesmo time real"
+          >
             <table>
               <caption>
                 Máximo de atletas do mesmo time real numa equipe

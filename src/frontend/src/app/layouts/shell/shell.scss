@@ -286,8 +286,16 @@
   flex: 1;
   width: 100%;
   max-width: calc(var(--container-max) + 2 * var(--gutter));
+  // O rodapé nasce abaixo da dobra: com a tela ainda carregando, ele aparecia colado ao
+  // conteúdo curto e descia quando o conteúdo chegava (CLS de 0,12 no campeonato).
+  min-height: calc(100vh - 56px);
   margin-inline: auto;
   padding: var(--space-6) var(--gutter) var(--space-12);
+}
+
+// Sem sessão, o cabeçalho tem 64 px em qualquer largura.
+.conteudo--publico {
+  min-height: calc(100vh - 64px);
 }
 
 // O conteúdo recebe foco pelo atalho de pular; o anel ficaria em volta da página toda.
@@ -408,6 +416,10 @@
 
   .topo {
     min-height: 64px;
+  }
+
+  .conteudo {
+    min-height: calc(100vh - 64px);
   }
 
   .topo__marca,

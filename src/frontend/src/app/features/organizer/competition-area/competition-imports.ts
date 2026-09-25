@@ -79,7 +79,13 @@ type Estado =
             @if (modelo(); as atual) {
               <p class="apoio">Modelo {{ atual.fileName }}, versão {{ atual.version }}.</p>
 
-              <div class="tabela">
+              <!-- Rolável no celular: foco e nome para quem navega por teclado (axe). -->
+              <div
+                class="tabela"
+                tabindex="0"
+                role="region"
+                [attr.aria-label]="'Colunas de ' + atual.label"
+              >
                 <table>
                   <caption>
                     Colunas de

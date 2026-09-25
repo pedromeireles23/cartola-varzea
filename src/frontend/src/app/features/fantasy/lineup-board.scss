@@ -228,7 +228,9 @@ button.ficha--vazia:hover .ficha__disco {
 
 .reservas {
   display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
+  // O técnico nunca fica mais estreito que o próprio título: a 320 px, "TÉCNICO" pedia
+  // 76 px numa coluna de 57 e empurrava a página 6 px para o lado.
+  grid-template-columns: minmax(0, 4fr) minmax(min-content, 1fr);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-top: 0;

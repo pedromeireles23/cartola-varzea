@@ -191,6 +191,14 @@
   }
 }
 
+// Abaixo da dobra, o bloco só desliza: com opacidade, o texto ficava abaixo do contraste
+// AA enquanto entrava na tela — e parado assim para quem mede sem rolar (Lighthouse).
+@keyframes desliza {
+  from {
+    transform: translateY(16px);
+  }
+}
+
 // Abaixo da dobra, quem revela e a rolagem: o cartao entra quando entra na tela, com a
 // linha do tempo nativa do CSS. Sem suporte, o conteudo simplesmente ja esta visivel —
 // nada aqui depende da animacao para ser lido.
@@ -198,7 +206,7 @@
   @media (prefers-reduced-motion: no-preference) {
     .passo,
     .destaques__topo {
-      animation: sobe 320ms var(--motion-easing) both;
+      animation: desliza 320ms var(--motion-easing) both;
       animation-timeline: view();
       animation-range: entry 0% entry 60%;
     }
