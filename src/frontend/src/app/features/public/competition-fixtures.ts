@@ -13,6 +13,7 @@ import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
 import { Alert, BackLink, Badge, Button, Card, Loading } from '../../shared/ui';
 import { PublicNav } from './public-nav';
+import { kickoffText } from '../fantasy/fantasy-format';
 import {
   PublicFixture,
   PublicFixtureService,
@@ -97,7 +98,7 @@ type Estado =
                     </span>
                     <span class="jogo__time">{{ jogo.awayTeamName }}</span>
                     <span class="jogo__detalhe">
-                      {{ jogo.kickoffLocal }} · {{ jogo.stageName }}
+                      {{ quando(jogo.kickoffLocal) }} · {{ jogo.stageName }}
                       @if (jogo.status !== 'Scheduled') {
                         · {{ jogo.status === 'Postponed' ? 'adiada' : 'cancelada' }}
                       }
@@ -138,6 +139,11 @@ export class CompetitionFixturesPage implements OnInit {
   });
 
   protected readonly rodadas = computed(() => this.calendario()?.rounds ?? []);
+
+  /** "ter., 29/09 · 09:00": o horário já vem no fuso do campeonato. */
+  protected quando(kickoffLocal: string): string {
+    return kickoffText(kickoffLocal);
+  }
 
   ngOnInit(): void {
     this.carregar();

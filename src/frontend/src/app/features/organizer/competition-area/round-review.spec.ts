@@ -134,7 +134,7 @@ describe('RoundReviewPage', () => {
 
     expect(text(fixture)).toContain('Aurora × Estrela');
     expect(text(fixture)).toContain('2 × 1');
-    expect(text(fixture)).toContain('3 Gols');
+    expect(text(fixture)).toContain('3 gols');
     expect(button(fixture, 'Enviar para revisão')).toBeUndefined();
   });
 
@@ -179,7 +179,7 @@ describe('RoundReviewPage', () => {
     http.expectOne(URL).flush(review({ phase: 'UnderReview', version: 'AAAAAAAAB9I=' }));
     await fixture.whenStable();
 
-    expect(text(fixture)).toContain('Em apuração');
+    expect(text(fixture)).toContain('Em conferência');
     expect(button(fixture, 'Enviar para revisão')).toBeUndefined();
   });
 

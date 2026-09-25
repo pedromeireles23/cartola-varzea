@@ -30,15 +30,16 @@ type State =
   | { readonly kind: 'ready'; readonly review: RoundReview }
   | { readonly kind: 'error'; readonly failure: ApiFailure };
 
-const EVENT_LABELS: Readonly<Record<string, string>> = {
-  Goal: 'Gols',
-  Assist: 'Assistências',
-  GoalkeeperSave: 'Defesas',
-  PenaltySave: 'Pênaltis defendidos',
-  YellowCard: 'Amarelos',
-  RedCard: 'Vermelhos',
-  OwnGoal: 'Gols contra',
-  PenaltyMiss: 'Pênaltis perdidos',
+/** Singular e plural de cada evento: "1 assistência", "3 gols". */
+const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
+  Goal: ['gol', 'gols'],
+  Assist: ['assistência', 'assistências'],
+  GoalkeeperSave: ['defesa', 'defesas'],
+  PenaltySave: ['pênalti defendido', 'pênaltis defendidos'],
+  YellowCard: ['amarelo', 'amarelos'],
+  RedCard: ['vermelho', 'vermelhos'],
+  OwnGoal: ['gol contra', 'gols contra'],
+  PenaltyMiss: ['pênalti perdido', 'pênaltis perdidos'],
 };
 
 @Component({
@@ -323,7 +324,8 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
                     <ul class="events">
                       @for (event of match.events; track event.type) {
                         <li>
-                          <strong>{{ event.quantity }}</strong> {{ eventLabel(event.type) }}
+                          <strong>{{ event.quantity }}</strong>
+                          {{ eventLabel(event.type, event.quantity) }}
                         </li>
                       }
                     </ul>
@@ -526,8 +528,9 @@ export class RoundReviewPage {
     return MATCH_STATUS_LABELS[status];
   }
 
-  protected eventLabel(type: string): string {
-    return EVENT_LABELS[type] ?? type;
+  protected eventLabel(type: string, quantity: number): string {
+    const label = EVENT_LABELS[type];
+    return label ? label[quantity === 1 ? 0 : 1] : type;
   }
 
   protected when(local: string): string {

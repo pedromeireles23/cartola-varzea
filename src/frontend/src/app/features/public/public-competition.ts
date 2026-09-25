@@ -19,6 +19,7 @@ import { MODALITY_LABELS } from '../organizer/competition.service';
 import { PublicCompetition, PublicCompetitionService } from './public-competition.service';
 import { PublicFixtureService, PublicRound, ROUND_PHASE_LABELS } from './public-fixture.service';
 import { PublicNav } from './public-nav';
+import { kickoffText } from '../fantasy/fantasy-format';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -103,19 +104,21 @@ type Estado =
           </app-card>
         }
 
-        @if (rodadaAtual(); as rodada) {
+        @if (rodadasAgora().length > 0) {
           <app-card heading="Agora">
-            <p class="agora">
-              <strong>{{ rodada.name }}</strong>
-              <app-badge [tone]="rodada.underCorrection ? 'warning' : 'brand'">
-                {{ situacao(rodada) }}
-              </app-badge>
-            </p>
-            @if (rodada.underCorrection) {
-              <p class="apoio">
-                A liga está refazendo a súmula desta rodada. Os números voltam quando ela
-                republicar.
+            @for (rodada of rodadasAgora(); track rodada.id) {
+              <p class="agora">
+                <strong>{{ rodada.name }}</strong>
+                <app-badge [tone]="rodada.underCorrection ? 'warning' : 'brand'">
+                  {{ situacao(rodada) }}
+                </app-badge>
               </p>
+              @if (rodada.underCorrection) {
+                <p class="apoio">
+                  A liga está refazendo a súmula desta rodada. Os números voltam quando ela
+                  republicar.
+                </p>
+              }
             }
           </app-card>
         }
@@ -128,7 +131,9 @@ type Estado =
                   <span class="jogo__time jogo__time--casa">{{ jogo.homeTeamName }}</span>
                   <span class="jogo__placar"><span aria-hidden="true">×</span></span>
                   <span class="jogo__time">{{ jogo.awayTeamName }}</span>
-                  <span class="jogo__detalhe">{{ jogo.kickoffLocal }} · {{ jogo.stageName }}</span>
+                  <span class="jogo__detalhe"
+                    >{{ quando(jogo.kickoffLocal) }} · {{ jogo.stageName }}</span
+                  >
                 </li>
               }
             </ul>
@@ -147,7 +152,9 @@ type Estado =
                     <span class="sr-only">a</span>
                   </span>
                   <span class="jogo__time">{{ jogo.awayTeamName }}</span>
-                  <span class="jogo__detalhe">{{ jogo.kickoffLocal }} · {{ jogo.stageName }}</span>
+                  <span class="jogo__detalhe"
+                    >{{ quando(jogo.kickoffLocal) }} · {{ jogo.stageName }}</span
+                  >
                 </li>
               }
             </ul>
@@ -284,11 +291,13 @@ export class PublicCompetitionPage implements OnInit {
   );
 
   /**
-   * A rodada que está em jogo: a primeira que ainda não fechou resultado. Quando todas
+   * As rodadas em andamento: toda rodada que ainda não fechou resultado, em ordem. Pode
+   * ser mais de uma — a de ontem em conferência enquanto o mercado da próxima já abriu —,
+   * e mostrar só a primeira escondia justamente a que a pessoa pode jogar. Quando todas
    * fecharam, não há "agora" a mostrar — quem manda na tela então é o último resultado.
    */
-  protected readonly rodadaAtual = computed(() =>
-    this.rodadas().find(
+  protected readonly rodadasAgora = computed(() =>
+    this.rodadas().filter(
       (rodada) =>
         rodada.underCorrection ||
         (rodada.phase !== 'Consolidated' &&
@@ -316,6 +325,11 @@ export class PublicCompetitionPage implements OnInit {
 
   ngOnInit(): void {
     this.carregar();
+  }
+
+  /** "ter., 29/09 · 09:00": o horário já vem no fuso do campeonato. */
+  protected quando(kickoffLocal: string): string {
+    return kickoffText(kickoffLocal);
   }
 
   protected situacao(rodada: PublicRound): string {

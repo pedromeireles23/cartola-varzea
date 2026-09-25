@@ -45,7 +45,7 @@ describe('PublicMatchPage', () => {
     const fixture = await abrir(partida());
 
     expect(texto(fixture)).toContain('União da Vila × Estrela do Bairro');
-    expect(texto(fixture)).toContain('Rodada 1 · Fase única · 20/09/2026 10:00');
+    expect(texto(fixture)).toContain('Rodada 1 · Fase única · dom., 20/09 · 10:00');
     expect(texto(fixture)).toContain('Pedrinho');
     expect(texto(fixture)).toContain('Juca');
     expect(texto(fixture)).toContain('Atacante');

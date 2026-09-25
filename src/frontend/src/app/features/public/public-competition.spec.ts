@@ -26,7 +26,7 @@ function jogo(changes: Partial<PublicFixture> = {}): PublicFixture {
     homeTeamName: 'Alpha',
     awayTeamName: 'Beta',
     kickoffAt: daqui(24),
-    kickoffLocal: '24/09/2026 10:00',
+    kickoffLocal: '2026-09-24T10:00',
     status: 'Scheduled',
     homeScore: null,
     awayScore: null,
@@ -217,7 +217,20 @@ describe('PublicCompetitionPage', () => {
     expect(texto(fixture)).toContain('Mercado aberto');
     expect(texto(fixture)).toContain('Próximos jogos');
     expect(texto(fixture)).toContain('Alpha');
-    expect(texto(fixture)).toContain('24/09/2026 10:00 · Fase única');
+    expect(texto(fixture)).toContain('qui., 24/09 · 10:00 · Fase única');
+  });
+
+  it('com uma rodada em conferência e o mercado da próxima aberto, mostra as duas', async () => {
+    const fixture = await abrir([
+      rodada({ id: 'r4', name: 'Rodada 4', sequence: 4, phase: 'UnderReview', matches: [] }),
+      rodada({ id: 'r5', name: 'Rodada 5', sequence: 5, phase: 'MarketOpen' }),
+    ]);
+    http.expectOne(URL).flush(campeonato());
+    await fixture.whenStable();
+
+    // Mostrar só a primeira escondia justamente a rodada que ainda dá para jogar.
+    expect(texto(fixture)).toContain('Rodada 4 Em conferência');
+    expect(texto(fixture)).toContain('Rodada 5 Mercado aberto');
   });
 
   it('rodada em correção avisa que os números vão mudar', async () => {

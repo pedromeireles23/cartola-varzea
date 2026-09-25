@@ -19,7 +19,7 @@ export function jogo(changes: Partial<PublicFixture> = {}): PublicFixture {
     homeTeamName: 'União da Vila',
     awayTeamName: 'Estrela do Bairro',
     kickoffAt: '2026-09-20T13:00:00Z',
-    kickoffLocal: '20/09/2026 10:00',
+    kickoffLocal: '2026-09-20T10:00',
     status: 'Scheduled',
     homeScore: null,
     awayScore: null,
@@ -81,7 +81,7 @@ export function partida(changes: Partial<PublicMatch> = {}): PublicMatch {
     awayTeamName: 'Estrela do Bairro',
     homeScore: 2,
     awayScore: 0,
-    kickoffLocal: '20/09/2026 10:00',
+    kickoffLocal: '2026-09-20T10:00',
     provisional: false,
     teams: [
       { name: 'União da Vila', isHome: true, athletes: [atleta({ goals: 2 })] },

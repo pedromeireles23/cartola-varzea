@@ -48,7 +48,7 @@ describe('CompetitionFixturesPage', () => {
     expect(texto(fixture)).toContain('Mercado aberto');
     expect(texto(fixture)).toContain('União da Vila');
     expect(texto(fixture)).toContain('Estrela do Bairro');
-    expect(texto(fixture)).toContain('20/09/2026 10:00 · Fase única');
+    expect(texto(fixture)).toContain('dom., 20/09 · 10:00 · Fase única');
   });
 
   it('sem resultado publicado não há placar nem link para a súmula', async () => {

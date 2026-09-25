@@ -147,7 +147,9 @@ export const PHASE_LABELS: Readonly<Record<RoundPhase, string>> = {
   MarketOpen: 'Mercado aberto',
   MarketClosed: 'Mercado fechado',
   InProgress: 'Em andamento',
-  UnderReview: 'Em apuração',
+  // O mesmo nome que a página pública usa: aqui a organização confere as súmulas; a
+  // apuração só acontece na publicação.
+  UnderReview: 'Em conferência',
   Published: 'Publicada',
   Consolidated: 'Consolidada',
   ReopenedForCorrection: 'Em correção',

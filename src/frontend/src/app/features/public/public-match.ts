@@ -14,6 +14,7 @@ import { PageMetaService } from '../../core/seo/page-meta';
 import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
 import { PublicNav } from './public-nav';
 import { PublicMatch, PublicMatchAthlete, PublicFixtureService } from './public-fixture.service';
+import { kickoffText } from '../fantasy/fantasy-format';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -67,7 +68,8 @@ const POSICOES: Readonly<Record<string, string>> = {
         <h1>{{ partida()!.homeTeamName }} × {{ partida()!.awayTeamName }}</h1>
         <app-public-nav [campeonato]="campeonato()" atual="partidas" />
         <p class="apoio">
-          {{ partida()!.roundName }} · {{ partida()!.stageName }} · {{ partida()!.kickoffLocal }}
+          {{ partida()!.roundName }} · {{ partida()!.stageName }} ·
+          {{ quando(partida()!.kickoffLocal) }}
         </p>
 
         @if (partida()!.provisional) {
@@ -125,6 +127,11 @@ export class PublicMatchPage implements OnInit {
     const atual = this.estado();
     return atual.tipo === 'pronto' ? atual.partida : null;
   });
+
+  /** "ter., 29/09 · 09:00": o horário já vem no fuso do campeonato. */
+  protected quando(kickoffLocal: string): string {
+    return kickoffText(kickoffLocal);
+  }
 
   ngOnInit(): void {
     this.carregar();
