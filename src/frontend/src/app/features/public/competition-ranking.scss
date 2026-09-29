@@ -1,43 +1,67 @@
 @use '../../../styles/actions';
 
-// A tabela precisa de largura: a página ocupa a coluna inteira, como o início.
 :host {
   max-width: none;
+  color: var(--semantic-text-strong);
 }
 
-// A posição de quem lê, antes da tabela: três números lado a lado, divididos por fios.
 .resumo {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   overflow: hidden;
-  background-color: var(--color-border);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background-color: var(--semantic-border-subtle);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--semantic-shadow-raised);
+}
+
+.resumo::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 3px;
+  content: '';
+  background: linear-gradient(90deg, var(--semantic-brand), var(--semantic-highlight));
 }
 
 .resumo__item {
   display: grid;
-  gap: 2px;
+  gap: var(--space-1);
   min-width: 0;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-surface);
+  padding: var(--space-5);
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      color-mix(in srgb, var(--semantic-brand) 10%, transparent),
+      transparent 12rem
+    ),
+    var(--semantic-surface);
 }
 
 .resumo__rotulo {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-caption);
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .resumo__valor {
-  font-size: var(--font-h2);
-  font-weight: 700;
+  color: var(--semantic-highlight);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
   white-space: nowrap;
 }
 
 .resumo__apoio {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
+  font-family: var(--font-family-body);
   font-size: var(--font-small);
   font-weight: 400;
 }
@@ -47,11 +71,22 @@
   gap: var(--space-3);
   justify-items: start;
   padding: var(--space-5);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  color: var(--semantic-text-strong);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-xl);
 }
 
 .acao {
   @include actions.primary;
+}
+
+@media (max-width: 639px) {
+  .resumo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .resumo__item {
+    padding: var(--space-4);
+  }
 }

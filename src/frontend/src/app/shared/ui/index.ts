@@ -11,3 +11,4 @@ export { PageHeader, type PageHeaderVariant } from './page-header';
 export { Panel, type PanelVariant } from './panel';
 export { SelectField, type SelectOption } from './select-field';
 export { StandingsTable, type StandingRow } from './standings-table';
+export { StandingsPodium } from './standings-podium';

@@ -1,10 +1,13 @@
-// Classificação em tabela, compartilhada pelo ranking geral e pelo da liga (02 §8).
+// A tabela continua semântica e comparável por coluna; o tratamento visual só reforça
+// posição, liderança e a linha de quem está lendo.
 :host {
   display: block;
   overflow: hidden;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  color: var(--semantic-text-strong);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--semantic-shadow-raised);
 }
 
 .classificacao {
@@ -13,14 +16,16 @@
 }
 
 thead th {
-  padding: var(--space-2) var(--space-3);
-  color: var(--color-ink-500);
+  padding: var(--space-3);
+  color: var(--semantic-text-muted);
   font-size: var(--font-caption);
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-align: left;
+  text-transform: uppercase;
   white-space: nowrap;
-  background-color: var(--color-surface-alt);
-  border-bottom: 1px solid var(--color-border);
+  background-color: var(--semantic-surface-inset);
+  border-bottom: 1px solid var(--semantic-border-subtle);
 }
 
 .linha > td,
@@ -28,7 +33,8 @@ thead th {
   padding: var(--space-3);
   text-align: left;
   vertical-align: middle;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--semantic-border-subtle);
+  transition: background-color var(--motion-feedback) var(--motion-easing);
 }
 
 .linha:last-child > td,
@@ -38,7 +44,7 @@ thead th {
 
 .col-posicao,
 .linha__posicao {
-  width: 3.25rem;
+  width: 3.5rem;
   padding-left: var(--space-4);
 }
 
@@ -47,11 +53,21 @@ thead .col-posicao {
 }
 
 .linha__posicao {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
+  font-family: var(--font-family-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.linha:nth-child(-n + 3) .linha__posicao {
+  color: var(--semantic-highlight);
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
 .linha__nome {
-  font-weight: 500;
+  color: var(--semantic-text-strong);
+  font-weight: 700;
 }
 
 .linha__nome app-badge {
@@ -60,15 +76,15 @@ thead .col-posicao {
 
 .linha__empate {
   margin-left: var(--space-1);
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-caption);
   font-weight: 400;
 }
 
-// No celular, a linha de apoio embaixo do nome leva o que as colunas extras dizem.
 .linha__detalhe {
   display: block;
-  color: var(--color-ink-500);
+  margin-top: 2px;
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
   font-weight: 400;
 }
@@ -78,16 +94,16 @@ thead .col-posicao {
   white-space: nowrap;
 }
 
-thead .col-numero {
-  text-align: right;
-}
-
+thead .col-numero,
 .linha > td.col-numero {
   text-align: right;
 }
 
 .linha__pontos {
-  font-weight: 700;
+  color: var(--semantic-text);
+  font-family: var(--font-family-display);
+  font-size: 1.0625rem;
+  font-weight: 800;
 }
 
 .col-extra {
@@ -102,20 +118,17 @@ thead .col-numero {
   white-space: nowrap;
 }
 
-// Lista longa: a linha sob o cursor ajuda a não trocar de pessoa no meio da leitura.
 .linha:not(.linha--voce):hover > * {
-  background-color: var(--color-surface-alt);
+  background-color: var(--semantic-surface-hover);
 }
 
-// A linha de quem lê se destaca sem gritar; a barra repete o destaque sem depender da cor.
 .linha--voce > * {
-  background-color: var(--color-brand-50);
+  background-color: var(--semantic-action-surface);
 }
 
 .linha--voce > .linha__posicao {
-  color: var(--color-brand-700);
-  font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--color-brand-500);
+  color: var(--semantic-brand-strong);
+  box-shadow: inset 3px 0 0 var(--semantic-brand);
 }
 
 @media (min-width: 640px) {
@@ -129,8 +142,6 @@ thead .col-numero {
   }
 }
 
-// A lista entra de baixo para cima, em cascata curta, para que a ordem seja percebida
-// como ordem. O atraso para de crescer na oitava linha.
 .linha {
   animation: linha-entra var(--motion-panel) var(--motion-easing) backwards;
   animation-delay: calc(min(var(--indice, 0), 8) * 30ms);

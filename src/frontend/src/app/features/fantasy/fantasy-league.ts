@@ -23,6 +23,7 @@ import {
   Dialog,
   Loading,
   PageHeader,
+  StandingsPodium,
   StandingsTable,
 } from '../../shared/ui';
 import { League, LeagueMember, LeagueService } from './league.service';
@@ -32,6 +33,10 @@ type Estado =
   | { readonly tipo: 'carregando' }
   | { readonly tipo: 'pronto'; readonly liga: League }
   | { readonly tipo: 'erro'; readonly falha: ApiFailure };
+
+function numero(valor: number): string {
+  return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 /**
  * O que o diálogo está prestes a confirmar. Uma confirmação só serve as cinco ações
@@ -58,6 +63,7 @@ type Confirmacao =
 @Component({
   selector: 'app-fantasy-league',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [
     Alert,
     BackLink,
@@ -67,6 +73,7 @@ type Confirmacao =
     Loading,
     PageHeader,
     RouterLink,
+    StandingsPodium,
     StandingsTable,
     StandingsTabs,
   ],
@@ -75,11 +82,11 @@ type Confirmacao =
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <app-page-header heading="Liga" />
+        <app-page-header heading="Liga" kicker="Classificação" variant="game" />
         <section class="painel-simples"><app-loading label="Abrindo a liga…" /></section>
       }
       @case ('erro') {
-        <app-page-header heading="Liga" />
+        <app-page-header heading="Liga" kicker="Classificação" variant="game" />
         <section class="painel-simples">
           @if (falha()!.status === 404) {
             <app-alert tone="warning">
@@ -95,7 +102,9 @@ type Confirmacao =
       @case ('pronto') {
         <app-page-header
           [heading]="liga()!.name"
+          kicker="Liga privada"
           [subtitle]="participantes() + ' · ' + liga()!.competitionName"
+          variant="game"
         />
         <app-standings-tabs [campeonato]="campeonato()" atual="liga" />
 
@@ -127,6 +136,32 @@ type Confirmacao =
                 {{ liga()!.rounds === 1 ? 'rodada apurada' : 'rodadas apuradas' }}, até
                 {{ liga()!.lastRoundName }}.
               </p>
+            }
+
+            @if (minhaLinha(); as eu) {
+              @if (liga()!.rounds > 0) {
+                <section class="liga-resumo" aria-label="Sua posição na liga">
+                  <div>
+                    <span>Sua posição</span>
+                    <strong class="num">{{ eu.position }}º</strong>
+                  </div>
+                  <div>
+                    <span>Seus pontos</span>
+                    <strong class="num">{{ pontos(eu.totalPoints) }}</strong>
+                  </div>
+                  <div>
+                    <span>Para o líder</span>
+                    <strong class="num">{{ distancia() }}</strong>
+                  </div>
+                </section>
+              }
+            }
+
+            @if (liga()!.rounds > 0) {
+              <app-standings-podium
+                [linhas]="liga()!.members"
+                [legenda]="'Pódio da liga ' + liga()!.name"
+              />
             }
 
             <app-standings-table
@@ -327,6 +362,18 @@ export class FantasyLeaguePage implements OnInit {
     return atual.tipo === 'pronto' ? atual.liga : null;
   });
 
+  protected readonly minhaLinha = computed(
+    () => this.liga()?.members.find((membro) => membro.isViewer) ?? null,
+  );
+
+  protected readonly distancia = computed(() => {
+    const lider = this.liga()?.members[0];
+    const eu = this.minhaLinha();
+    if (!lider || !eu) return '';
+    const diferenca = lider.totalPoints - eu.totalPoints;
+    return eu.position === 1 || diferenca <= 0 ? 'Você lidera' : `${numero(diferenca)} pts`;
+  });
+
   protected readonly confirmacaoRemover = computed(() => {
     const atual = this.confirmacao();
     return atual?.tipo === 'remover' ? atual : null;
@@ -344,6 +391,10 @@ export class FantasyLeaguePage implements OnInit {
   protected participantes(): string {
     const total = this.liga()?.members.length ?? 0;
     return total === 1 ? '1 participante' : `${total} participantes`;
+  }
+
+  protected pontos(valor: number): string {
+    return `${numero(valor)} pts`;
   }
 
   /** Dez caracteres seguidos são difíceis de ditar; em dois blocos de cinco, não. */

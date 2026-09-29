@@ -44,9 +44,15 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
 @Component({
   selector: 'app-fantasy-leagues',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, Button, Card, FormField, Icon, Loading, PageHeader, RouterLink, StandingsTabs],
   template: `
-    <app-page-header heading="Classificação" [subtitle]="nomeDoCampeonato()" />
+    <app-page-header
+      heading="Classificação"
+      kicker="Disputa social"
+      [subtitle]="nomeDoCampeonato()"
+      variant="game"
+    />
     <app-standings-tabs [campeonato]="campeonato()" atual="ligas" />
 
     @switch (estado().tipo) {

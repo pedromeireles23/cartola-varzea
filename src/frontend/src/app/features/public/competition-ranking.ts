@@ -11,7 +11,15 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, BackLink, Button, Loading, PageHeader, StandingsTable } from '../../shared/ui';
+import {
+  Alert,
+  BackLink,
+  Button,
+  Loading,
+  PageHeader,
+  StandingsPodium,
+  StandingsTable,
+} from '../../shared/ui';
 import { StandingsTabs } from '../fantasy/standings-tabs';
 import { Ranking, PublicCompetitionService } from './public-competition.service';
 
@@ -36,6 +44,7 @@ function numero(valor: number): string {
 @Component({
   selector: 'app-competition-ranking',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [
     Alert,
     BackLink,
@@ -43,12 +52,18 @@ function numero(valor: number): string {
     Loading,
     PageHeader,
     RouterLink,
+    StandingsPodium,
     StandingsTable,
     StandingsTabs,
   ],
   template: `
     <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
-    <app-page-header heading="Classificação" [subtitle]="ranking()?.competitionName" />
+    <app-page-header
+      heading="Classificação"
+      kicker="Ranking geral"
+      [subtitle]="ranking()?.competitionName"
+      variant="game"
+    />
     <app-standings-tabs [campeonato]="campeonato()" atual="geral" />
 
     @switch (estado().tipo) {
@@ -118,6 +133,12 @@ function numero(valor: number): string {
             <a class="acao" [routerLink]="['/c', campeonato(), 'jogar']">Jogar neste campeonato</a>
           </section>
         } @else {
+          @if (tabela.rounds > 0) {
+            <app-standings-podium
+              [linhas]="tabela.entries"
+              [legenda]="'Pódio da classificação geral de ' + tabela.competitionName"
+            />
+          }
           <app-standings-table
             [linhas]="tabela.entries"
             [rodadas]="tabela.rounds"

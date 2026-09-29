@@ -81,6 +81,12 @@ describe('CompetitionRankingPage', () => {
     const tabela = (fixture.nativeElement as HTMLElement).querySelector('table');
     expect(tabela?.querySelectorAll('thead th')).toHaveLength(5);
     expect(tabela?.querySelector('tbody th[scope="row"]')?.textContent).toContain('Pessoa Um');
+    const elemento = fixture.nativeElement as HTMLElement;
+    expect(elemento.classList.contains('theme-player')).toBe(true);
+    expect(elemento.querySelector('app-page-header')?.classList.contains('page-header--game')).toBe(
+      true,
+    );
+    expect(elemento.querySelector('app-standings-podium')).not.toBeNull();
   });
 
   it('avisa que a classificação pode mudar enquanto a última rodada é provisória', async () => {
@@ -105,6 +111,9 @@ describe('CompetitionRankingPage', () => {
     expect(texto(fixture)).toContain('empatado');
     expect(texto(fixture)).toContain('3º');
     expect(texto(fixture)).toContain('não jogou a última');
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('.podio__lugar')).toHaveLength(
+      3,
+    );
   });
 
   it('quem está logado se reconhece na lista', async () => {

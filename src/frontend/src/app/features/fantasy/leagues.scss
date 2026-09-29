@@ -1,8 +1,17 @@
-// Estilos das telas de liga privada: a lista, a liga aberta e o convite.
-
+// V4 — ligas usam a mesma hierarquia da competição: posição, rivalidade e grupo.
 .ligas-topo {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      color-mix(in srgb, var(--semantic-brand) 12%, transparent),
+      transparent 18rem
+    ),
+    var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-xl);
 }
 
 @media (min-width: 768px) {
@@ -12,33 +21,49 @@
   }
 }
 
-// As ligas numa superfície só, uma linha por liga, como os campeonatos do início.
 .ligas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
-  overflow: hidden;
   list-style: none;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.ligas li + li {
-  border-top: 1px solid var(--color-border);
 }
 
 .liga {
+  position: relative;
   display: flex;
   gap: var(--space-3);
   align-items: center;
-  min-height: 64px;
-  padding: var(--space-3) var(--space-4);
-  color: var(--color-ink-950);
+  min-height: 84px;
+  padding: var(--space-4);
+  overflow: hidden;
+  color: var(--semantic-text-strong);
   text-decoration: none;
+  background: linear-gradient(145deg, var(--semantic-surface-raised), var(--semantic-surface));
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--semantic-shadow-raised);
+  transition:
+    background-color var(--motion-feedback) var(--motion-easing),
+    border-color var(--motion-feedback) var(--motion-easing),
+    transform var(--motion-feedback) var(--motion-easing);
+}
+
+.liga::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  content: '';
+  background: linear-gradient(var(--semantic-brand), var(--semantic-highlight));
 }
 
 .liga:hover {
-  background-color: var(--color-surface-alt);
+  background-color: var(--semantic-surface-hover);
+  border-color: var(--semantic-border-control);
+  transform: translateY(-1px);
 }
 
 .liga:hover .liga__nome {
@@ -47,12 +72,13 @@
 
 .liga__icone {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
   place-items: center;
-  color: var(--color-ink-500);
-  background-color: var(--color-surface-alt);
+  color: var(--semantic-brand-strong);
+  background-color: var(--semantic-action-surface);
+  border: 1px solid color-mix(in srgb, var(--semantic-brand) 40%, transparent);
   border-radius: var(--radius-round);
 }
 
@@ -63,19 +89,22 @@
 }
 
 .liga__nome {
-  font-weight: 500;
+  font-family: var(--font-family-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .liga__meta {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
 
 .liga__seta {
-  color: var(--color-ink-500);
+  flex: 0 0 auto;
+  color: var(--semantic-text-muted);
 }
 
-// A liga aberta: a classificação ocupa a coluna principal; convite e saída ficam ao lado.
 .liga-grade {
   display: grid;
   gap: var(--space-4);
@@ -85,7 +114,7 @@
 .liga-grade__principal,
 .liga-grade__lado {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
   min-width: 0;
 }
 
@@ -97,10 +126,50 @@
   .liga-grade {
     grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
   }
+
+  .liga-grade__lado {
+    position: sticky;
+    top: calc(72px + var(--space-4));
+  }
 }
 
-// O painel nasce logo abaixo dos dois botões que o abrem, então ele desce de lá.
+.liga-resumo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  background-color: var(--semantic-border-subtle);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-xl);
+}
+
+.liga-resumo div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-4);
+  background-color: var(--semantic-surface);
+}
+
+.liga-resumo span {
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.liga-resumo strong {
+  color: var(--semantic-highlight);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .painel {
+  color: var(--semantic-text-strong);
   animation: painel-entra var(--motion-panel) var(--motion-easing) backwards;
 }
 
@@ -118,49 +187,44 @@
   align-items: center;
 }
 
-// O alfabeto do código já exclui os caracteres que se confundem (sem O, 0, I, 1, L e
-// U), então a fonte da interface basta; o espaçamento é que faz a leitura caractere a
-// caractere.
 .convite__codigo {
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  color: var(--semantic-highlight);
+  font-family: var(--font-family-display);
   font-size: var(--font-h3);
-  font-weight: 700;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.12em;
   white-space: nowrap;
-  background-color: var(--color-surface-alt);
-  border: 1px dashed var(--color-border-strong);
+  background-color: var(--semantic-surface-inset);
+  border: 1px dashed var(--semantic-border-strong);
   border-radius: var(--radius-md);
   transition:
     background-color var(--motion-feedback) var(--motion-easing),
     border-color var(--motion-feedback) var(--motion-easing);
 }
 
-// `user-select: all` fica no valor, e não no parágrafo: o rótulo ao lado existe para o
-// leitor de tela, e quem seleciona o código à mão não pode levá-lo junto na cópia.
 .convite__valor {
   user-select: all;
 }
 
-// Confirmação de que a cópia saiu: a cor de seleção da marca, por um instante.
 .convite__codigo--copiado {
-  background-color: var(--color-brand-50);
+  background-color: var(--semantic-success-surface);
   border-style: solid;
-  border-color: var(--color-brand-500);
+  border-color: var(--semantic-success);
 }
 
-// Em modo de gestão a linha ganha uma ação; fora dele a classificação fica só leitura.
 .linha__acao {
   min-height: var(--touch-target);
   padding-inline: var(--space-3);
-  color: var(--color-ink-700);
+  color: var(--semantic-text);
   font-family: var(--font-body);
   font-size: var(--font-small);
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-control);
   border-radius: var(--radius-md);
   transition:
     color var(--motion-feedback) var(--motion-easing),
@@ -168,19 +232,42 @@
 }
 
 .linha__acao:hover:not([aria-disabled='true']) {
-  color: var(--color-danger);
-  border-color: var(--color-danger);
+  color: var(--semantic-danger);
+  border-color: var(--semantic-danger);
 }
 
-// Conta de demonstração: a ação continua no teclado, mas não faz nada (02 §9.1).
 .linha__acao[aria-disabled='true'] {
   cursor: not-allowed;
   opacity: 55%;
 }
 
-// Sem movimento: tudo aparece no lugar, sem atraso nem deslocamento (02 §11).
+@media (max-width: 767px) {
+  .ligas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 559px) {
+  .liga-resumo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .liga-resumo div {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .liga-resumo strong {
+    font-size: 1.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .painel {
     animation: none;
+  }
+
+  .liga:hover {
+    transform: none;
   }
 }

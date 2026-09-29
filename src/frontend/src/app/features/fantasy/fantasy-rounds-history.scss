@@ -1,0 +1,97 @@
+// Histórico individual: mantém a comparação compacta e cada linha abre o detalhamento
+// auditável da pontuação da rodada.
+.historico {
+  overflow: hidden;
+}
+
+.historico .painel__topo {
+  align-items: flex-end;
+  padding-block: var(--space-5);
+}
+
+.historico .painel__titulo {
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.total {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  text-align: right;
+}
+
+.total__valor {
+  color: var(--semantic-highlight);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.rodada {
+  color: var(--semantic-text-strong);
+  text-decoration: none;
+}
+
+.rodada-item + .rodada-item {
+  border-top: 1px solid var(--semantic-border-subtle);
+}
+
+.rodada:hover {
+  background-color: var(--semantic-surface-hover);
+}
+
+.rodada:hover .linha__principal {
+  text-decoration: underline;
+}
+
+.rodada__nome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: center;
+}
+
+.rodada__pontos {
+  color: var(--semantic-highlight);
+  font-family: var(--font-family-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rodada__pontos--fora {
+  color: var(--semantic-text-muted);
+  font-family: var(--font-family-body);
+  font-size: var(--font-small);
+  font-weight: 500;
+}
+
+.rodada__seta {
+  color: var(--semantic-text-muted);
+}
+
+.rodada-item:last-child .rodada {
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+@media (max-width: 479px) {
+  .historico .painel__topo {
+    align-items: flex-start;
+  }
+
+  .total {
+    text-align: left;
+  }
+
+  .rodada {
+    align-items: flex-start;
+    padding-inline: var(--space-4);
+  }
+}

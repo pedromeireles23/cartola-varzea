@@ -17,6 +17,7 @@ import {
   PublicFixture,
   PublicFixtureService,
   PublicRound,
+  ROUND_PHASE_LABELS,
   RoundPhase,
 } from '../public/public-fixture.service';
 import { kickoffText, points } from './fantasy-format';
@@ -42,9 +43,15 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
 @Component({
   selector: 'app-fantasy-rounds',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, Badge, Button, Icon, Loading, MarketClock, PageHeader, RouterLink],
   template: `
-    <app-page-header heading="Rodadas" [subtitle]="visao()?.competitionName" />
+    <app-page-header
+      heading="Rodadas"
+      kicker="Competição"
+      [subtitle]="visao()?.competitionName"
+      variant="game"
+    />
 
     @switch (estado().tipo) {
       @case ('carregando') {
@@ -63,14 +70,40 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
         </section>
       }
       @case ('pronto') {
-        <section class="painel" aria-labelledby="agora-titulo">
-          <header class="painel__topo">
-            <h2 id="agora-titulo" class="painel__titulo">Agora</h2>
+        @if (trilho().length > 0) {
+          <nav class="trilho-wrap" aria-label="Linha do tempo das rodadas" tabindex="0">
+            <ol class="trilho">
+              @for (item of trilho(); track item.rodada.id) {
+                <li
+                  class="trilho__item"
+                  [class.trilho__item--destaque]="item.destaque"
+                  [attr.aria-current]="item.destaque ? 'step' : null"
+                >
+                  <span class="trilho__sequencia num">{{ item.rodada.sequence }}</span>
+                  <span class="trilho__texto">
+                    <strong>{{ item.rodada.name }}</strong>
+                    <span>{{ fase(item.rodada) }}</span>
+                  </span>
+                  @if (pontosDaRodada(item.resumo); as totalDaRodada) {
+                    <span class="trilho__pontos num">{{ totalDaRodada }}</span>
+                  }
+                </li>
+              }
+            </ol>
+          </nav>
+        }
+
+        <section class="painel painel--elevado rodada-atual" aria-labelledby="agora-titulo">
+          <header class="rodada-atual__topo">
+            <div>
+              <p class="rodada-atual__apoio">Central da rodada</p>
+              <h2 id="agora-titulo" class="rodada-atual__titulo">Agora</h2>
+            </div>
             <a class="painel__link" [routerLink]="['/c', campeonato(), 'partidas']">
               Calendário completo
             </a>
           </header>
-          <div class="painel__corpo agora">
+          <div class="rodada-atual__acoes">
             <app-market-clock [market]="visao()!.market" (closed)="carregar()" />
             @if (chamada(); as cta) {
               <a
@@ -82,24 +115,55 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
             }
           </div>
 
-          @if (rodadaEmJogo(); as rodada) {
-            <h3 class="jogos__titulo">Partidas da {{ rodada.name }}</h3>
-            <ul class="linhas">
+          @if (rodadaDestaque(); as rodada) {
+            <div class="jogos__cabecalho">
+              <div>
+                <p class="jogos__fase">{{ fase(rodada) }}</p>
+                <h3 class="jogos__titulo">Partidas da {{ rodada.name }}</h3>
+              </div>
+              @if (rodada.underCorrection || rodada.phase === 'ReopenedForCorrection') {
+                <app-badge tone="warning">Em correção</app-badge>
+              } @else if (rodada.provisional) {
+                <app-badge tone="neutral">Resultado provisório</app-badge>
+              } @else if (rodada.phase === 'InProgress') {
+                <app-badge tone="live">Em andamento</app-badge>
+              }
+            </div>
+            <ul class="placares">
               @for (jogo of rodada.matches; track jogo.id) {
-                <li class="linha">
-                  <span class="linha__texto">
-                    <span class="linha__principal">
-                      {{ jogo.homeTeamName }} <span aria-hidden="true">×</span
-                      ><span class="sr-only">contra</span> {{ jogo.awayTeamName }}
+                <li class="placar-card">
+                  <div class="placar-card__meta">
+                    <span>{{ jogo.stageName }}</span>
+                    @if (jogo.status === 'Postponed') {
+                      <app-badge tone="warning">Adiada</app-badge>
+                    } @else if (jogo.status === 'Cancelled') {
+                      <app-badge tone="danger">Cancelada</app-badge>
+                    } @else {
+                      <time class="num" [attr.datetime]="jogo.kickoffAt">{{ quando(jogo) }}</time>
+                    }
+                  </div>
+                  <div class="placar-card__confronto">
+                    <strong class="placar-card__time placar-card__time--casa">
+                      {{ jogo.homeTeamName }}
+                    </strong>
+                    <span class="placar-card__marcador num">
+                      @if (temPlacar(jogo)) {
+                        <strong>{{ jogo.homeScore }}</strong>
+                        <span aria-hidden="true">×</span><span class="sr-only">a</span>
+                        <strong>{{ jogo.awayScore }}</strong>
+                      } @else {
+                        <span aria-hidden="true">VS</span><span class="sr-only">contra</span>
+                      }
                     </span>
-                    <span class="linha__meta">{{ jogo.stageName }}</span>
-                  </span>
-                  @if (jogo.status === 'Postponed') {
-                    <app-badge tone="warning">Adiada</app-badge>
-                  } @else if (jogo.status === 'Cancelled') {
-                    <app-badge tone="danger">Cancelada</app-badge>
-                  } @else {
-                    <span class="linha__meta linha__meta--fixa num">{{ quando(jogo) }}</span>
+                    <strong class="placar-card__time">{{ jogo.awayTeamName }}</strong>
+                  </div>
+                  @if (jogo.hasSheet) {
+                    <a
+                      class="placar-card__sumula"
+                      [routerLink]="['/c', campeonato(), 'partidas', jogo.id]"
+                    >
+                      Ver súmula
+                    </a>
                   }
                 </li>
               }
@@ -107,12 +171,16 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
           }
         </section>
 
-        <section class="painel" aria-labelledby="suas-titulo">
+        <section class="painel painel--elevado historico" aria-labelledby="suas-titulo">
           <header class="painel__topo">
-            <h2 id="suas-titulo" class="painel__titulo">Suas rodadas</h2>
+            <div>
+              <p class="historico__apoio">Desempenho no fantasy</p>
+              <h2 id="suas-titulo" class="painel__titulo">Suas rodadas</h2>
+            </div>
             @if (rodadas().length > 0) {
-              <p class="painel__apoio">
-                Total no campeonato <strong class="total num">{{ pontos(total()) }}</strong>
+              <p class="total">
+                <span>Total no campeonato&nbsp;</span>
+                <strong class="total__valor num">{{ pontos(total()) }}</strong>
               </p>
             }
           </header>
@@ -165,7 +233,12 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
       }
     }
   `,
-  styleUrls: ['../../shared/ui/panel.scss', './fantasy.scss', './fantasy-rounds.scss'],
+  styleUrls: [
+    '../../shared/ui/panel.scss',
+    './fantasy.scss',
+    './fantasy-rounds.scss',
+    './fantasy-rounds-history.scss',
+  ],
 })
 export class FantasyRoundsPage implements OnInit {
   private readonly service = inject(FantasyService);
@@ -197,6 +270,30 @@ export class FantasyRoundsPage implements OnInit {
       (atual, rodada) => (atual && atual.sequence > rodada.sequence ? atual : rodada),
       null,
     );
+  });
+
+  /** A rodada que ancora o placar: a ativa ou, sem uma, a última com partidas. */
+  protected readonly rodadaDestaque = computed(() => {
+    const ativa = this.rodadaEmJogo();
+    if (ativa) return ativa;
+    return this.calendario().reduce<PublicRound | null>(
+      (atual, rodada) =>
+        rodada.matches.length > 0 && (!atual || rodada.sequence > atual.sequence) ? rodada : atual,
+      null,
+    );
+  });
+
+  /** Linha do tempo completa, enriquecida apenas com a pontuação já publicada da conta. */
+  protected readonly trilho = computed(() => {
+    const resumos = new Map(this.rodadas().map((rodada) => [rodada.roundId, rodada]));
+    const destaque = this.rodadaDestaque()?.id;
+    return [...this.calendario()]
+      .sort((a, b) => a.sequence - b.sequence)
+      .map((rodada) => ({
+        rodada,
+        resumo: resumos.get(rodada.id) ?? null,
+        destaque: rodada.id === destaque,
+      }));
   });
 
   /** Soma das rodadas apuradas; é o mesmo total que a classificação usa. */
@@ -237,6 +334,19 @@ export class FantasyRoundsPage implements OnInit {
 
   protected quando(jogo: PublicFixture): string {
     return kickoffText(jogo.kickoffLocal);
+  }
+
+  protected fase(rodada: PublicRound): string {
+    if (rodada.underCorrection) return 'Em correção';
+    return ROUND_PHASE_LABELS[rodada.phase];
+  }
+
+  protected pontosDaRodada(rodada: FantasyRoundSummary | null): string | null {
+    return rodada?.total === null || rodada?.total === undefined ? null : points(rodada.total);
+  }
+
+  protected temPlacar(jogo: PublicFixture): boolean {
+    return jogo.homeScore !== null && jogo.awayScore !== null;
   }
 
   /** Quando saiu e se ainda pode mudar, em texto: o selo sozinho não diz até quando. */

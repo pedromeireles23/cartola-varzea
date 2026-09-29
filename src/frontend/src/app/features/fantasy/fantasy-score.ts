@@ -43,17 +43,18 @@ interface Grupo {
 @Component({
   selector: 'app-fantasy-score',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, BackLink, Badge, Button, Loading, PageHeader, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato(), 'rodadas']" label="Rodadas" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <app-page-header heading="Pontuação" />
+        <app-page-header heading="Pontuação" kicker="Rodada" variant="game" />
         <section class="painel painel--corpo"><app-loading label="Abrindo a pontuação…" /></section>
       }
       @case ('erro') {
-        <app-page-header heading="Pontuação" />
+        <app-page-header heading="Pontuação" kicker="Rodada" variant="game" />
         <section class="painel painel--corpo">
           @if (falha()!.status === 404) {
             <app-alert tone="warning">
@@ -69,7 +70,7 @@ interface Grupo {
         </section>
       }
       @case ('pronto') {
-        <app-page-header [heading]="pontuacao()!.roundName" kicker="Sua pontuação" />
+        <app-page-header [heading]="pontuacao()!.roundName" kicker="Sua pontuação" variant="game" />
 
         @if (pontuacao()!.correction; as correcao) {
           <app-alert tone="info">
@@ -100,30 +101,45 @@ interface Grupo {
         }
 
         @if (pontuacao()!.played) {
-          <section class="painel painel--corpo" aria-labelledby="total-titulo">
-            <p class="total">
-              <span id="total-titulo" class="total__rotulo">Sua pontuação na rodada</span>
-              <strong class="total__valor num">{{ pontos(pontuacao()!.total) }}</strong>
-            </p>
-            @if (pontuacao()!.captainBonus !== 0) {
-              <p class="apoio">
-                Inclui {{ pontos(pontuacao()!.captainBonus) }} do capitão, que dobra a própria
-                pontuação.
+          <section class="painel painel--elevado placar-total" aria-labelledby="total-titulo">
+            <div class="placar-total__principal">
+              <p class="total">
+                <span id="total-titulo" class="total__rotulo">Sua pontuação na rodada</span>
+                <strong class="total__valor num">{{ pontos(pontuacao()!.total) }}</strong>
               </p>
-            } @else if (capitaoForaDeCampo()) {
-              <p class="apoio">
-                O capitão não entrou em campo, então a rodada ficou sem bônus: quem entra no lugar
-                dele nunca herda o multiplicador.
+              @if (pontuacao()!.provisional || pontuacao()!.underCorrection) {
+                <app-badge [tone]="pontuacao()!.underCorrection ? 'warning' : 'neutral'">
+                  {{ pontuacao()!.underCorrection ? 'Em correção' : 'Provisória' }}
+                </app-badge>
+              } @else {
+                <app-badge tone="success">Consolidada</app-badge>
+              }
+            </div>
+            <div class="placar-total__detalhes">
+              @if (pontuacao()!.captainBonus !== 0) {
+                <p class="bonus">
+                  <span>Bônus do capitão</span>
+                  <strong class="num">{{ pontos(pontuacao()!.captainBonus) }}</strong>
+                  <small>Incluído no total; o capitão dobra a própria pontuação.</small>
+                </p>
+              } @else if (capitaoForaDeCampo()) {
+                <p class="apoio">
+                  O capitão não entrou em campo, então a rodada ficou sem bônus: quem entra no lugar
+                  dele nunca herda o multiplicador.
+                </p>
+              }
+              <p class="publicacao">
+                Publicada em {{ horario(pontuacao()!.publishedAtLocal) }} · apuração
+                {{ pontuacao()!.revision }}ª
               </p>
-            }
-            <p class="publicacao">
-              Publicada em {{ horario(pontuacao()!.publishedAtLocal) }} · apuração
-              {{ pontuacao()!.revision }}ª
-            </p>
+            </div>
           </section>
 
           @for (grupo of grupos(); track grupo.titulo) {
-            <section class="painel" [attr.aria-labelledby]="'grupo-' + $index">
+            <section
+              class="painel painel--elevado grupo"
+              [attr.aria-labelledby]="'grupo-' + $index"
+            >
               <header class="painel__topo">
                 <h2 class="painel__titulo" [id]="'grupo-' + $index">{{ grupo.titulo }}</h2>
               </header>
@@ -139,6 +155,11 @@ interface Grupo {
                           }
                           @if (!vaga.counts) {
                             <app-badge tone="neutral">Fora do total</app-badge>
+                          }
+                          @if (vaga.replaces) {
+                            <app-badge tone="success">Entrou do banco</app-badge>
+                          } @else if (vaga.replacedBy) {
+                            <app-badge tone="warning">Substituído</app-badge>
                           }
                         </p>
                         <p class="vaga-linha__papel">{{ papel(vaga) }} · {{ vaga.realTeamName }}</p>

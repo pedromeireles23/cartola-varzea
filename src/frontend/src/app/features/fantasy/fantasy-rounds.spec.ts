@@ -98,6 +98,41 @@ describe('FantasyRoundsPage', () => {
     expect(texto(fixture)).toContain('Real Mangueiral');
     expect(texto(fixture)).toContain('Adiada');
     expect(texto(fixture)).not.toContain('Partidas da Rodada 1');
+    const elemento = fixture.nativeElement as HTMLElement;
+    expect(elemento.classList.contains('theme-player')).toBe(true);
+    expect(elemento.querySelector('app-page-header')?.classList.contains('page-header--game')).toBe(
+      true,
+    );
+    expect(
+      elemento.querySelector('[aria-label="Linha do tempo das rodadas"]')?.getAttribute('tabindex'),
+    ).toBe('0');
+    expect(elemento.querySelector('[aria-current="step"]')?.textContent).toContain('Rodada 2');
+    expect(elemento.querySelectorAll('.placar-card')).toHaveLength(2);
+  });
+
+  it('mostra o placar publicado e mantém a súmula acessível a partir do confronto', async () => {
+    const fixture = await abrir(
+      visao(),
+      [rodadaResumo({ roundId: 'r1', roundName: 'Rodada 1', total: 18.5 })],
+      [
+        rodada({
+          id: 'r1',
+          name: 'Rodada 1',
+          phase: 'Consolidated',
+          resultPublished: true,
+          matches: [jogo({ id: 'j1', homeScore: 3, awayScore: 1, hasSheet: true })],
+        }),
+      ],
+    );
+
+    const elemento = fixture.nativeElement as HTMLElement;
+    expect(
+      [...elemento.querySelectorAll('.placar-card__marcador strong')].map(
+        (valor) => valor.textContent,
+      ),
+    ).toEqual(['3', '1']);
+    expect(elemento.querySelector('.trilho__pontos')?.textContent).toContain('18,50 pts');
+    expect(link(fixture, 'Ver súmula').getAttribute('href')).toBe(`/c/${SLUG}/partidas/j1`);
   });
 
   it('a ação acompanha a escalação: montar, continuar ou só ver', async () => {

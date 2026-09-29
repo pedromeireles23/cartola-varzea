@@ -71,6 +71,12 @@ describe('FantasyLeaguesPage', () => {
       `a.liga[href="/c/${SLUG}/ligas/${LIGA_ID}"]`,
     );
     expect(link?.textContent).toContain('Turma do sábado');
+    const elemento = fixture.nativeElement as HTMLElement;
+    expect(elemento.classList.contains('theme-player')).toBe(true);
+    expect(elemento.querySelector('app-page-header')?.classList.contains('page-header--game')).toBe(
+      true,
+    );
+    expect(elemento.querySelectorAll('a.liga')).toHaveLength(2);
   });
 
   it('explica o que é uma liga para quem não está em nenhuma', async () => {

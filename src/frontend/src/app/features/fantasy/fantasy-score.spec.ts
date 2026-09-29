@@ -67,7 +67,8 @@ describe('FantasyScorePage', () => {
     );
 
     expect(texto(fixture)).toMatch(/Sua pontuação na rodada\s*35,00 pts/);
-    expect(texto(fixture)).toContain('Inclui 8,00 pts do capitão');
+    expect(texto(fixture)).toMatch(/Bônus do capitão\s*8,00 pts/);
+    expect(texto(fixture)).toContain('Incluído no total; o capitão dobra a própria pontuação.');
     expect(texto(fixture)).toContain('Resultado provisório: pode mudar até qua., 23/09 às 10:00');
     expect(texto(fixture)).toContain('(Horário de Brasília)');
     expect(texto(fixture)).toContain('Baiano');
@@ -79,6 +80,13 @@ describe('FantasyScorePage', () => {
       '13,00 pts · 11,11 acima da média dos defensores · +2 · C$ 7,00 → C$ 9,00',
     );
     expect(texto(fixture)).not.toContain('sem bônus');
+    const elemento = fixture.nativeElement as HTMLElement;
+    expect(elemento.classList.contains('theme-player')).toBe(true);
+    expect(elemento.querySelector('app-page-header')?.classList.contains('page-header--game')).toBe(
+      true,
+    );
+    expect(elemento.querySelector('.placar-total')).not.toBeNull();
+    expect(elemento.querySelector('.grupo')).not.toBeNull();
   });
 
   it('mostra quem o banco cobriu e quem ficou de fora do total', async () => {
@@ -142,6 +150,8 @@ describe('FantasyScorePage', () => {
       'O capitão não entrou em campo, então a rodada ficou sem bônus',
     );
     expect(texto(fixture)).toContain('Reserva de goleiro');
+    expect(texto(fixture)).toContain('Substituído');
+    expect(texto(fixture)).toContain('Entrou do banco');
   });
 
   it('o titular sem reserva em campo não é confundido com o técnico', async () => {

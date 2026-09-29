@@ -104,7 +104,15 @@ describe('FantasyLeaguePage', () => {
     expect(texto(fixture)).toContain('não jogou a última');
     expect(texto(fixture)).toContain('Dono');
     expect(texto(fixture)).toContain('Você');
-    expect((fixture.nativeElement as HTMLElement).querySelector('.linha--voce')).not.toBeNull();
+    expect(texto(fixture)).toContain('Para o líder');
+    expect(texto(fixture)).toContain('16,00 pts');
+    const elemento = fixture.nativeElement as HTMLElement;
+    expect(elemento.classList.contains('theme-player')).toBe(true);
+    expect(elemento.querySelector('app-page-header')?.classList.contains('page-header--game')).toBe(
+      true,
+    );
+    expect(elemento.querySelector('.linha--voce')).not.toBeNull();
+    expect(elemento.querySelectorAll('.podio__lugar')).toHaveLength(2);
   });
 
   it('avisa que a classificação pode mudar enquanto a última rodada é provisória', async () => {

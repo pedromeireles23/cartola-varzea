@@ -37,32 +37,35 @@ export type StandingsTab = 'geral' | 'ligas' | 'liga';
   `,
   styles: `
     .abas {
-      display: flex;
-      gap: var(--space-4);
-      border-bottom: 1px solid var(--color-border);
+      display: inline-flex;
+      align-self: flex-start;
+      gap: var(--space-1);
+      padding: var(--space-1);
+      background-color: var(--semantic-surface-inset);
+      border: 1px solid var(--semantic-border-subtle);
+      border-radius: var(--radius-pill);
     }
 
     .abas__item {
       display: inline-flex;
       align-items: center;
       min-height: var(--touch-target);
-      padding-inline: var(--space-1);
-      color: var(--color-ink-700);
+      padding-inline: var(--space-4);
+      color: var(--semantic-text-muted);
       font-size: var(--font-small);
-      font-weight: 500;
+      font-weight: 700;
       text-decoration: none;
-      margin-bottom: -1px;
-      border-bottom: 2px solid transparent;
+      border-radius: var(--radius-pill);
     }
 
     .abas__item:hover {
-      color: var(--color-ink-950);
+      color: var(--semantic-text-strong);
+      background-color: var(--semantic-surface-hover);
     }
 
     .abas__item[aria-current] {
-      color: var(--color-ink-950);
-      font-weight: 600;
-      border-bottom-color: var(--color-brand-500);
+      color: var(--semantic-on-action);
+      background-color: var(--semantic-brand);
     }
   `,
 })
