@@ -4,7 +4,9 @@
 } @else if (atual(); as campeonato) {
   <app-page-header
     [heading]="saudacao()"
-    subtitle="Aqui está o que importa antes da próxima rodada."
+    kicker="Seu jogo"
+    variant="game"
+    subtitle="Rodada, escalação e classificação no mesmo lugar."
   />
 
   @switch (painel().tipo) {
@@ -23,38 +25,43 @@
       @let rodada = mercado()!;
       @let entrada = visao()!.entry;
 
-      <!-- 1. Prazo absoluto do mercado, com a ação quando ela existe (06 §9.4). -->
+      <!-- 1. A rodada como protagonista: prazo, progresso e próxima ação na mesma dobra. -->
       @if (rodada.isOpen && fechamento()) {
-        <section class="prazo" aria-labelledby="prazo-titulo">
-          <svg class="prazo__icone" [appIcon]="icons.clock" [size]="20" />
-          <div class="prazo__texto">
-            <h2 id="prazo-titulo" class="prazo__titulo">
-              Mercado da {{ rodada.roundName }} fecha {{ fechamento() }}
+        <section class="rodada-hero" aria-labelledby="prazo-titulo">
+          <div class="rodada-hero__copy">
+            <p class="rodada-hero__eyebrow">Próxima rodada</p>
+            <h2 id="prazo-titulo" class="rodada-hero__titulo">
+              Seu time entra em campo na {{ rodada.roundName }}
             </h2>
-            <p class="prazo__apoio">
-              @if (faltam(); as falta) {
-                Faltam {{ falta }}.
-              }
+            <p class="rodada-hero__prazo">
+              Mercado da {{ rodada.roundName }} fecha {{ fechamento() }}
+            </p>
+            <p class="rodada-hero__apoio">
               @if (completa()) {
                 Sua escalação está completa e já vale para a rodada.
               } @else {
-                Até lá, cada mudança no time fica salva.
+                Prepare as últimas escolhas. Até lá, cada mudança no time fica salva.
               }
             </p>
+            @if (!completa()) {
+              <a class="acao rodada-hero__acao" [routerLink]="['/c', campeonato.slug, 'escalacao']">
+                {{ chamada() }}
+                <svg [appIcon]="icons.arrow" />
+              </a>
+            }
           </div>
-          @if (!completa()) {
-            <a class="acao prazo__acao" [routerLink]="['/c', campeonato.slug, 'escalacao']">
-              {{ chamada() }}
-              <svg [appIcon]="icons.arrow" />
-            </a>
-          }
+          <div class="rodada-hero__relogio" aria-label="Tempo até o fechamento do mercado">
+            <span class="rodada-hero__relogio-label">Fecha em</span>
+            <strong class="round-clock">{{ faltam() ?? 'em breve' }}</strong>
+            <span class="rodada-hero__relogio-data">{{ fechamento() }}</span>
+          </div>
         </section>
       } @else {
-        <section class="prazo prazo--fechado" aria-labelledby="prazo-titulo">
-          <svg class="prazo__icone" [appIcon]="icons.clock" [size]="20" />
-          <div class="prazo__texto">
-            <h2 id="prazo-titulo" class="prazo__titulo">Mercado fechado</h2>
-            <p class="prazo__apoio">
+        <section class="rodada-hero rodada-hero--fechado" aria-labelledby="prazo-titulo">
+          <div class="rodada-hero__copy">
+            <p class="rodada-hero__eyebrow">{{ rodada.roundName || 'Rodada atual' }}</p>
+            <h2 id="prazo-titulo" class="rodada-hero__titulo">Mercado fechado</h2>
+            <p class="rodada-hero__apoio">
               O time não muda agora. Ele volta a mudar quando o organizador abrir o mercado da
               próxima rodada.
               @if (ultimaRodada(); as ultima) {
@@ -62,6 +69,10 @@
                 {{ ultima.total === null ? 'você não jogou' : pontos(ultima.total) }}.
               }
             </p>
+          </div>
+          <div class="rodada-hero__relogio" aria-hidden="true">
+            <svg [appIcon]="icons.clock" [size]="28" />
+            <strong class="rodada-hero__estado">Em jogo</strong>
           </div>
         </section>
       }
@@ -208,14 +219,32 @@
         } @else if (proximosJogos().length === 0) {
           <p class="painel__corpo apoio">Nenhuma partida marcada por enquanto.</p>
         } @else {
-          <ul class="linhas">
+          <ul class="confrontos">
             @for (jogo of proximosJogos(); track jogo.id) {
-              <li class="linha">
-                <span class="linha__principal">
-                  {{ jogo.homeTeamName }} <span aria-hidden="true">×</span
-                  ><span class="sr-only">contra</span> {{ jogo.awayTeamName }}
-                </span>
-                <span class="linha__meta linha__meta--fixa">{{ quando(jogo) }}</span>
+              <li class="confronto">
+                <p class="confronto__meta">
+                  <span>Próximo jogo</span>
+                  <span>{{ quando(jogo) }}</span>
+                </p>
+                <div class="confronto__times">
+                  <span class="confronto__clube">
+                    <span class="confronto__escudo" aria-hidden="true">{{
+                      iniciais(jogo.homeTeamName)
+                    }}</span>
+                    <span class="confronto__nome">{{ jogo.homeTeamName }}</span>
+                  </span>
+                  <strong class="confronto__versus">
+                    <span aria-hidden="true">×</span><span class="sr-only">contra</span>
+                  </strong>
+                  <span class="confronto__clube">
+                    <span
+                      class="confronto__escudo confronto__escudo--visitante"
+                      aria-hidden="true"
+                      >{{ iniciais(jogo.awayTeamName) }}</span
+                    >
+                    <span class="confronto__nome">{{ jogo.awayTeamName }}</span>
+                  </span>
+                </div>
               </li>
             }
           </ul>

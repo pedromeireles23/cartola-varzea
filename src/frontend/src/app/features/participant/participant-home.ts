@@ -19,6 +19,7 @@ import {
   credits,
   kickoffText,
   points,
+  teamInitials,
 } from '../fantasy/fantasy-format';
 import {
   FantasyOverview,
@@ -58,11 +59,13 @@ const LINHAS_DO_TOPO = 2;
 @Component({
   selector: 'app-participant-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.theme-player]': 'atual() !== null' },
   imports: [Alert, Badge, Button, Icon, Loading, PageHeader, RouterLink],
   templateUrl: './participant-home.html',
   styleUrls: [
     '../../shared/ui/panel.scss',
     './participant-home.scss',
+    './participant-home-matches.scss',
     './participant-home-first.scss',
   ],
 })
@@ -271,6 +274,10 @@ export class ParticipantHomePage {
 
   protected quando(jogo: PublicFixture): string {
     return kickoffText(jogo.kickoffLocal);
+  }
+
+  protected iniciais(nome: string): string {
+    return teamInitials(nome);
   }
 
   protected modalidade(valor: string): string {

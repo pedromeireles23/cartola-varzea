@@ -127,6 +127,10 @@ describe('FantasyLineupPage', () => {
   it('desenha o campo vazio com cada vaga pronta para escolher quem entra', async () => {
     const fixture = await abrir(visao());
 
+    expect(elemento(fixture).classList.contains('theme-player')).toBe(true);
+    expect(elemento(fixture).querySelector('app-page-header')?.classList).toContain(
+      'page-header--game',
+    );
     expect(texto(fixture)).toContain('Titulares 1-2-2-2');
     expect(vagas(fixture, 'button.ficha--vazia')).toEqual([
       'Escolher atacante titular',

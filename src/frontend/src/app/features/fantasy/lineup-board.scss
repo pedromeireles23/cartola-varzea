@@ -19,7 +19,11 @@
   gap: var(--space-2);
   align-items: baseline;
   margin-bottom: var(--space-3);
+  font-family: var(--font-family-display);
   font-size: var(--font-h2);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
 
 .quadro__formacao {
@@ -34,7 +38,10 @@
   aspect-ratio: 4 / 5;
   overflow: hidden;
   background-color: var(--color-pitch);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border: 1px solid color-mix(in srgb, var(--color-pitch-line) 34%, transparent);
+  border-bottom: 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: inset 0 0 5rem rgb(0 0 0 / 22%);
 }
 
 .gramado__marcas {
@@ -132,6 +139,13 @@
   transition: box-shadow var(--motion-feedback) var(--motion-easing);
 }
 
+.gramado .ficha:not(.ficha--vazia) .ficha__disco {
+  color: var(--semantic-on-action);
+  background: linear-gradient(145deg, var(--semantic-brand), var(--semantic-brand-strong));
+  border-color: color-mix(in srgb, var(--semantic-text-strong) 56%, transparent);
+  box-shadow: 0 8px 16px rgb(0 0 0 / 20%);
+}
+
 button.ficha:hover .ficha__disco {
   box-shadow: 0 0 0 3px rgb(255 255 255 / 40%);
 }
@@ -162,7 +176,7 @@ button.ficha--selecionada:hover .ficha__disco {
 
 .ficha__preco {
   padding: 0 6px;
-  color: var(--color-surface);
+  color: var(--semantic-text-strong);
   background-color: rgb(25 25 22 / 55%);
 }
 
@@ -234,7 +248,7 @@ button.ficha--vazia:hover .ficha__disco {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-top: 0;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 }
 
 .reservas__grupo {

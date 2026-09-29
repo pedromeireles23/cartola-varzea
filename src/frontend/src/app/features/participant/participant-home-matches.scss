@@ -1,0 +1,93 @@
+// Cards compactos dos próximos confrontos, separados para manter o orçamento por estilo.
+.confrontos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(12rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  list-style: none;
+}
+
+.confronto {
+  min-width: 0;
+  padding: var(--space-4);
+  background: linear-gradient(145deg, var(--semantic-surface-alt), var(--semantic-surface));
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.confronto__meta {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.confronto__meta span:first-child {
+  color: var(--semantic-highlight);
+}
+
+.confronto__times {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.confronto__clube {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.confronto__escudo {
+  display: grid;
+  width: 2.25rem;
+  height: 2.5rem;
+  place-items: center;
+  color: var(--semantic-on-action);
+  font-family: var(--font-family-display);
+  font-weight: 800;
+  background-color: var(--semantic-brand);
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
+}
+
+.confronto__escudo--visitante {
+  color: var(--semantic-text-inverse);
+  background-color: var(--semantic-info);
+}
+
+.confronto__nome {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--font-small);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.confronto__versus {
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  line-height: 1;
+}
+
+@media (max-width: 799px) {
+  .confrontos {
+    grid-template-columns: repeat(3, minmax(15rem, 1fr));
+    padding-right: var(--space-5);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  .confronto {
+    scroll-snap-align: start;
+  }
+}

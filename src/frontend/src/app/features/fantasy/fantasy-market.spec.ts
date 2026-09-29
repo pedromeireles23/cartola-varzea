@@ -163,7 +163,12 @@ describe('FantasyMarketPage', () => {
       linha.textContent?.includes('Técnico do Aurora'),
     );
     expect(tecnico?.querySelector('.item__detalhe')?.textContent?.trim()).toBe('Técnico');
+    expect(tecnico?.querySelector('.item__valor-rotulo')?.textContent?.trim()).toBe('Valor');
     expect(tecnico?.querySelector('.item__preco')?.textContent?.trim()).toBe('C$ 8,00');
+    expect(elemento(fixture).classList.contains('theme-player')).toBe(true);
+    expect(elemento(fixture).querySelector('app-page-header')?.classList).toContain(
+      'page-header--game',
+    );
     expect(botao(fixture, 'Comprar Duda').disabled).toBe(true);
     expect(botao(fixture, 'Comprar Bia').disabled).toBe(false);
     expect(botao(fixture, 'Vender Caio').disabled).toBe(false);

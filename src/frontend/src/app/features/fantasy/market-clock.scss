@@ -1,56 +1,90 @@
-// Aviso de rodada (06 §9.4): fundo laranja suave, barra lateral e horário absoluto; a
-// contagem regressiva complementa. Fechado, o aviso fica neutro: não há ação a tomar.
 .relogio {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-3);
-  align-items: flex-start;
-  padding: var(--space-3) var(--space-4);
-  color: #4d2a17;
-  background-color: var(--color-brand-50);
-  border-left: 3px solid var(--color-brand-500);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  color: var(--semantic-text-strong);
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      color-mix(in srgb, var(--semantic-brand) 16%, transparent),
+      transparent 20rem
+    ),
+    var(--semantic-action-surface);
+  border: 1px solid color-mix(in srgb, var(--semantic-brand) 52%, transparent);
+  border-radius: var(--radius-xl);
 }
 
 .relogio--fechado {
-  color: var(--color-ink-950);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-left: 3px solid var(--color-ink-500);
+  background: var(--semantic-surface);
+  border-color: var(--semantic-border-subtle);
 }
 
 .relogio__icone {
-  margin-top: 1px;
-  color: var(--color-brand-700);
+  color: var(--semantic-brand-strong);
 }
 
 .relogio--fechado .relogio__icone {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
 }
 
 .relogio__texto {
   display: grid;
-  gap: 2px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--space-4);
+  align-items: center;
   min-width: 0;
 }
 
 .relogio__estado {
-  font-size: var(--font-caption);
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  color: var(--semantic-brand-strong);
+  font-family: var(--font-family-display);
+  font-size: var(--font-small);
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .relogio__prazo {
-  font-weight: 500;
+  color: var(--semantic-text);
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.relogio--fechado .relogio__estado {
+  color: var(--semantic-text-strong);
 }
 
 .relogio--fechado .relogio__prazo {
-  color: var(--color-ink-700);
-  font-size: var(--font-small);
+  color: var(--semantic-text-muted);
   font-weight: 400;
 }
 
 .relogio__contagem {
-  font-size: var(--font-small);
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+@media (max-width: 559px) {
+  .relogio {
+    align-items: start;
+    padding: var(--space-4);
+  }
+
+  .relogio__texto {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .relogio__contagem {
+    grid-row: auto;
+    grid-column: auto;
+    margin-top: var(--space-2);
+  }
 }

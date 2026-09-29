@@ -1,13 +1,15 @@
 @use '../../../styles/actions';
 
-// Início com campeonato (06 §5.2 e §10): prazo, escalação e classificação na primeira
-// dobra; bordas e divisores organizam, sem sombra e sem cartão dentro de cartão.
+// V3 — o Início passa a ser o painel de uma rodada, não uma coleção de cartões neutros.
 :host {
   display: grid;
-  // Coluna presa à largura disponível: sem isso a grade cresce até o conteúdo mínimo
-  // do formulário de convite e a página rola para o lado a 320 px.
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+:host.theme-player {
+  color: var(--color-ink-950);
 }
 
 .acao {
@@ -23,60 +25,143 @@
   font-size: var(--font-small);
 }
 
-// Aviso de prazo (06 §9.4): fundo laranja suave, barra lateral e horário absoluto.
-.prazo {
+// ------------------------------------------------------------ rodada protagonista
+
+.rodada-hero {
+  position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-2) var(--space-3);
-  align-items: start;
-  padding: var(--space-4);
-  color: #4d2a17;
-  background-color: var(--color-brand-50);
-  border-left: 3px solid var(--color-brand-500);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  grid-template-columns: minmax(0, 1.45fr) minmax(13rem, 0.55fr);
+  gap: clamp(var(--space-5), 5vw, var(--space-10));
+  align-items: stretch;
+  overflow: hidden;
+  padding: clamp(var(--space-5), 4vw, var(--space-8));
+  background:
+    radial-gradient(
+      circle at 12% 12%,
+      color-mix(in srgb, var(--semantic-brand) 18%, transparent),
+      transparent 22rem
+    ),
+    linear-gradient(145deg, var(--semantic-surface-raised), var(--semantic-surface));
+  border: 1px solid color-mix(in srgb, var(--semantic-brand) 36%, var(--semantic-border-subtle));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--semantic-shadow-raised);
 }
 
-.prazo--fechado {
-  color: var(--color-ink-950);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-left: 3px solid var(--color-ink-500);
+.rodada-hero::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background-image:
+    linear-gradient(var(--primitive-color-white-a04) 1px, transparent 1px),
+    linear-gradient(90deg, var(--primitive-color-white-a04) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(100deg, transparent 10%, black 100%);
 }
 
-.prazo__icone {
-  margin-top: 1px;
-  color: var(--color-brand-700);
+.rodada-hero__copy,
+.rodada-hero__relogio {
+  position: relative;
+  z-index: 1;
 }
 
-.prazo--fechado .prazo__icone {
-  color: var(--color-ink-500);
+.rodada-hero__copy {
+  display: grid;
+  gap: var(--space-3);
+  align-content: center;
+  justify-items: start;
 }
 
-.prazo__titulo {
-  font-size: var(--font-body-size);
+.rodada-hero__eyebrow,
+.rodada-hero__relogio-label {
+  color: var(--semantic-brand-strong);
+  font-family: var(--font-family-display);
+  font-size: var(--font-caption);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.prazo__apoio {
-  margin-top: 2px;
+.rodada-hero__titulo {
+  max-width: 16ch;
+  font-family: var(--font-family-display);
+  font-size: clamp(2.15rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.rodada-hero__prazo {
+  color: var(--semantic-text);
+  font-weight: 600;
+}
+
+.rodada-hero__apoio {
+  max-width: 58ch;
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
 
-.prazo__acao {
-  grid-column: 1 / -1;
-  width: 100%;
+.rodada-hero__acao {
+  margin-top: var(--space-2);
 }
 
-@media (min-width: 640px) {
-  .prazo {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
+.rodada-hero__relogio {
+  display: grid;
+  gap: var(--space-2);
+  align-content: center;
+  min-width: 0;
+  padding-left: clamp(var(--space-4), 4vw, var(--space-8));
+  border-left: 1px solid var(--semantic-border-subtle);
+}
+
+.rodada-hero__relogio .round-clock {
+  overflow-wrap: anywhere;
+}
+
+.rodada-hero__relogio-data {
+  color: var(--semantic-text-muted);
+  font-size: var(--font-small);
+}
+
+.rodada-hero__estado {
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.rodada-hero--fechado {
+  border-color: var(--semantic-border-subtle);
+}
+
+.rodada-hero--fechado .rodada-hero__eyebrow {
+  color: var(--semantic-text-muted);
+}
+
+@media (max-width: 719px) {
+  .rodada-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
   }
 
-  .prazo__acao {
-    grid-column: auto;
-    width: auto;
+  .rodada-hero__relogio {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: var(--space-4) 0 0;
+    border-top: 1px solid var(--semantic-border-subtle);
+    border-left: 0;
+  }
+
+  .rodada-hero__relogio .round-clock,
+  .rodada-hero__relogio .rodada-hero__estado {
+    grid-row: span 2;
+    align-self: center;
+    justify-self: end;
   }
 }
+
+// ------------------------------------------------------------ escalação e ranking
 
 .grade {
   display: grid;
@@ -85,9 +170,23 @@
 
 @media (min-width: 960px) {
   .grade {
-    grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.85fr);
+    grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.75fr);
     align-items: start;
   }
+}
+
+.grade > .painel,
+:host > .painel {
+  overflow: hidden;
+  background: color-mix(in srgb, var(--semantic-surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.painel__titulo {
+  font-family: var(--font-family-display);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
 }
 
 .escalacao__meta {
@@ -104,21 +203,21 @@
   display: flex;
   justify-content: space-between;
   font-size: var(--font-small);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .progresso__barra {
-  height: 6px;
+  height: 8px;
   overflow: hidden;
-  background-color: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
+  background-color: var(--semantic-surface-inset);
   border-radius: var(--radius-pill);
 }
 
 .progresso__barra span {
   display: block;
   height: 100%;
-  background-color: var(--color-brand-500);
+  background: linear-gradient(90deg, var(--semantic-brand), var(--semantic-highlight));
+  border-radius: inherit;
 }
 
 .pendencias {
@@ -138,7 +237,9 @@
 .orcamento strong {
   margin-left: var(--space-1);
   color: var(--color-ink-950);
-  font-weight: 600;
+  font-family: var(--font-family-display);
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
 .posicao {
@@ -148,10 +249,12 @@
 }
 
 .posicao__numero {
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  color: var(--semantic-brand-strong);
+  font-family: var(--font-family-display);
+  font-size: var(--font-position);
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
 }
 
 .posicao__total {
@@ -160,29 +263,38 @@
 
 .placar {
   display: grid;
-  gap: var(--space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
   margin: 0;
-  padding-block: var(--space-3);
-  border-block: 1px solid var(--color-border);
+  overflow: hidden;
+  background-color: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .placar div {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+  background-color: var(--semantic-surface-alt);
 }
 
 .placar dt {
   color: var(--color-ink-500);
+  font-size: var(--font-caption);
+  text-transform: uppercase;
 }
 
 .placar dd {
   margin: 0;
-  font-weight: 600;
+  font-family: var(--font-family-display);
+  font-size: 1.35rem;
+  font-weight: 800;
 }
 
 .mini-tabela {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
   margin: 0;
   padding: 0;
   font-size: var(--font-small);
@@ -193,13 +305,13 @@
   display: flex;
   gap: var(--space-3);
   justify-content: space-between;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
 }
 
-// A linha de quem lê: cor e peso, e a barra à esquerda para não depender só da cor.
 .mini-tabela__voce {
-  margin-left: calc(-1 * var(--space-2));
-  padding-left: calc(var(--space-2) - 2px);
-  color: var(--color-brand-700);
-  font-weight: 600;
-  border-left: 2px solid var(--color-brand-500);
+  color: var(--semantic-on-action-surface);
+  font-weight: 700;
+  background-color: var(--semantic-action-surface);
+  box-shadow: inset 3px 0 0 var(--semantic-brand);
 }

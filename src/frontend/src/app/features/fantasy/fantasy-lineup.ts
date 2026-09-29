@@ -78,6 +78,7 @@ function lerModo(): LineupView {
 @Component({
   selector: 'app-fantasy-lineup',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [
     Alert,
     Button,

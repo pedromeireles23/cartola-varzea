@@ -83,6 +83,38 @@
   min-height: 100vh;
 }
 
+// V3: o canvas noturno acompanha apenas os componentes já migrados. A conta nova e as
+// demais telas continuam operacionais até os cortes seguintes do roadmap.
+.principal:has(app-participant-home.theme-player),
+.principal:has(app-fantasy-lineup.theme-player),
+.principal:has(app-fantasy-market.theme-player) {
+  background:
+    radial-gradient(
+      circle at 68% 8%,
+      color-mix(in srgb, var(--primitive-color-coral-400) 8%, transparent),
+      transparent 30rem
+    ),
+    linear-gradient(145deg, var(--primitive-color-night-950), var(--primitive-color-night-1000));
+}
+
+.app:has(app-participant-home.theme-player),
+.app:has(app-fantasy-lineup.theme-player),
+.app:has(app-fantasy-market.theme-player) {
+  background-color: var(--primitive-color-night-1000);
+}
+
+.principal:has(app-participant-home.theme-player) .rodape,
+.principal:has(app-fantasy-lineup.theme-player) .rodape,
+.principal:has(app-fantasy-market.theme-player) .rodape {
+  color: var(--primitive-color-night-200);
+}
+
+.principal:has(app-participant-home.theme-player) .rodape a,
+.principal:has(app-fantasy-lineup.theme-player) .rodape a,
+.principal:has(app-fantasy-market.theme-player) .rodape a {
+  color: var(--primitive-color-night-100);
+}
+
 .topo {
   position: sticky;
   top: 0;

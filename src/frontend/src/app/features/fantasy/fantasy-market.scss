@@ -1,5 +1,5 @@
-// Mercado (02 §8, 06 §3.4): barra de ferramentas, a lista densa numa superfície por time
-// e cada item numa linha — posição, nome, preço e a ação. Nada de cartão por atleta.
+// V3 — mercado esportivo denso: cada atleta tem uma única hierarquia legível, enquanto
+// busca, filtros, agrupamento por time e ordenações continuam intactos.
 
 .acao--secundaria {
   display: inline-flex;
@@ -12,18 +12,18 @@
 .ferramentas {
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--semantic-surface) 94%, transparent);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--semantic-shadow-raised);
+  backdrop-filter: blur(14px);
 }
 
-// No desktop a barra acompanha a rolagem, logo abaixo do topo da casca; no celular ela
-// ocuparia metade da tela e fica no lugar.
 @media (min-width: 1024px) {
   .ferramentas {
     position: sticky;
-    top: calc(64px + var(--space-2));
+    top: calc(72px + var(--space-2));
     z-index: 5;
   }
 }
@@ -42,25 +42,29 @@
   align-items: center;
   min-height: var(--touch-target);
   padding-inline: var(--space-3);
-  color: var(--color-ink-500);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
+  color: var(--semantic-text-muted);
+  background-color: var(--semantic-surface-inset);
+  border: 1px solid var(--semantic-border-control);
   border-radius: var(--radius-md);
 }
 
 .busca:focus-within {
-  outline: 2px solid var(--color-brand-500);
+  outline: 2px solid var(--semantic-focus-ring);
   outline-offset: 2px;
 }
 
 .busca__campo {
   width: 100%;
   min-width: 0;
-  color: var(--color-ink-950);
+  color: var(--semantic-text-strong);
   font-size: var(--font-body-size);
   background: none;
   border: 0;
   outline: none;
+}
+
+.busca__campo::placeholder {
+  color: var(--semantic-text-muted);
 }
 
 @media (min-width: 768px) {
@@ -75,74 +79,69 @@
 
 .escolha {
   display: grid;
-  gap: 2px;
+  gap: var(--space-1);
 }
 
 .escolha__rotulo {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-caption);
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .escolha__campo {
   min-height: var(--touch-target);
-  padding: 0 var(--space-2);
-  color: var(--color-ink-950);
+  padding: 0 var(--space-3);
+  color: var(--semantic-text-strong);
   font-size: var(--font-small);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
+  background-color: var(--semantic-surface-inset);
+  border: 1px solid var(--semantic-border-control);
   border-radius: var(--radius-md);
 }
 
-// A posição é o filtro que mais se troca: um toque em vez de abrir um menu.
 .posicoes {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--space-2);
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .posicoes__opcao {
-  min-height: 36px;
-  padding: 0 var(--space-3);
-  color: var(--color-ink-700);
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 var(--space-4);
+  color: var(--semantic-text-muted);
   font: inherit;
   font-size: var(--font-small);
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  background-color: var(--semantic-surface-alt);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-pill);
 }
 
 .posicoes__opcao:hover {
-  color: var(--color-ink-950);
-  border-color: var(--color-border-strong);
+  color: var(--semantic-text-strong);
+  border-color: var(--semantic-border-control);
 }
 
 .posicoes__opcao[aria-pressed='true'] {
-  color: var(--color-brand-700);
-  background-color: var(--color-brand-50);
-  border-color: var(--color-brand-500);
-}
-
-@media (max-width: 639px) {
-  .posicoes__opcao {
-    min-height: var(--touch-target);
-  }
+  color: var(--semantic-on-action);
+  background-color: var(--semantic-brand);
+  border-color: var(--semantic-brand);
 }
 
 .ferramentas__contagem {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
 
-// ------------------------------------------------------------ grupos e itens
+// ------------------------------------------------------------ grupos e mini-cards
 
 .grupo {
-  overflow: hidden;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  min-width: 0;
 }
 
 .grupo__topo {
@@ -150,35 +149,38 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0 var(--space-3);
   align-items: center;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-surface-alt);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-1) var(--space-3);
 }
 
 .escudo {
   display: grid;
   grid-row: span 2;
-  width: 36px;
-  height: 36px;
+  width: 2.5rem;
+  height: 2.75rem;
   place-items: center;
-  color: var(--color-ink-700);
-  font-size: var(--font-caption);
-  font-weight: 600;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-round);
+  color: var(--semantic-on-action);
+  font-family: var(--font-family-display);
+  font-weight: 800;
+  background-color: var(--semantic-brand);
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
 }
 
 .grupo__nome {
-  font-size: var(--font-h3);
+  font-family: var(--font-family-display);
+  font-size: var(--font-h2);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
 
 .grupo__limite {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
 
 .itens {
+  display: grid;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -186,39 +188,38 @@
 
 .item {
   display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
-  grid-template-areas:
-    'sigla dados preco'
-    'sigla dados acao';
-  gap: 2px var(--space-3);
+  grid-template-columns: 3rem minmax(0, 1fr) minmax(5.75rem, auto) auto;
+  grid-template-areas: 'sigla dados valor acao';
+  gap: var(--space-3);
   align-items: center;
+  min-height: 72px;
   padding: var(--space-3) var(--space-4);
-  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--semantic-surface-raised) 72%, transparent);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color var(--motion-feedback) var(--motion-easing),
+    transform var(--motion-feedback) var(--motion-easing);
 }
 
-.item:first-child {
-  border-top: 0;
-}
-
-@media (min-width: 640px) {
-  .item {
-    grid-template-columns: 2.75rem minmax(0, 1fr) 6rem auto;
-    grid-template-areas: 'sigla dados preco acao';
-  }
+.item:hover {
+  border-color: var(--semantic-border-control);
+  transform: translateY(-1px);
 }
 
 .item__sigla {
+  display: grid;
   grid-area: sigla;
-  align-self: start;
-  margin-top: 2px;
-  padding: 2px 0;
-  color: var(--color-ink-700);
-  font-size: var(--font-caption);
-  font-weight: 600;
-  text-align: center;
-  background-color: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: 1rem;
+  font-weight: 800;
+  background: linear-gradient(145deg, var(--semantic-surface-hover), var(--semantic-surface-alt));
+  border: 1px solid var(--semantic-border-control);
+  border-radius: var(--radius-round);
 }
 
 .item__dados {
@@ -233,26 +234,43 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   align-items: center;
-  font-weight: 500;
+  min-width: 0;
+  font-weight: 700;
 }
 
 .item__detalhe {
   overflow: hidden;
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .item__motivo {
-  color: var(--color-warning);
+  color: var(--semantic-warning);
   font-size: var(--font-small);
 }
 
+.item__valor {
+  display: grid;
+  grid-area: valor;
+  gap: 2px;
+  justify-items: end;
+}
+
+.item__valor-rotulo {
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .item__preco {
-  grid-area: preco;
-  justify-self: end;
-  font-weight: 600;
+  font-family: var(--font-family-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .item__acao {
@@ -261,11 +279,60 @@
 }
 
 .item--meu {
-  background-color: var(--color-brand-50);
-  box-shadow: inset 3px 0 0 var(--color-brand-500);
+  background:
+    linear-gradient(var(--semantic-action-surface), var(--semantic-action-surface)),
+    var(--semantic-surface-raised);
+  border-color: color-mix(in srgb, var(--semantic-brand) 55%, transparent);
+  box-shadow: inset 3px 0 0 var(--semantic-brand);
+}
+
+.item--meu .item__sigla {
+  color: var(--semantic-on-action);
+  background: var(--semantic-brand);
+  border-color: var(--semantic-brand);
+}
+
+.item--indisponivel {
+  background-color: var(--semantic-surface-inset);
 }
 
 .item--indisponivel .item__nome,
 .item--indisponivel .item__preco {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
+}
+
+@media (max-width: 639px) {
+  .ferramentas {
+    padding: var(--space-3);
+  }
+
+  .posicoes__opcao {
+    min-height: var(--touch-target);
+  }
+
+  .item {
+    grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      'sigla dados valor'
+      'sigla dados acao';
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .item__sigla {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+@media (max-width: 379px) {
+  .item {
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    column-gap: var(--space-2);
+  }
+
+  .item__sigla {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
 }

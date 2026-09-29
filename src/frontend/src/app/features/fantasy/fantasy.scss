@@ -8,6 +8,10 @@
   max-width: 1040px;
 }
 
+:host.theme-player {
+  color: var(--color-ink-950);
+}
+
 h1 {
   margin: 0;
 }

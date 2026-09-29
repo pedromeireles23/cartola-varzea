@@ -18,7 +18,12 @@
     </section>
   }
   @case ('pronto') {
-    <app-page-header heading="Mercado" [subtitle]="subtitulo()">
+    <app-page-header
+      heading="Mercado de atletas"
+      kicker="Monte seu elenco"
+      variant="game"
+      [subtitle]="subtitulo()"
+    >
       @if (visao()!.entry) {
         <a class="acao acao--secundaria" [routerLink]="['/c', campeonato(), 'escalacao']">
           <svg [appIcon]="icons.time" />Meu time
@@ -171,13 +176,17 @@
         <p class="item__motivo">{{ texto }}</p>
       }
     </div>
-    <p class="item__preco num">{{ creditos(item.price) }}</p>
+    <div class="item__valor">
+      <span class="item__valor-rotulo">Valor</span>
+      <p class="item__preco num">{{ creditos(item.price) }}</p>
+    </div>
     @if (podeOperar()) {
       <div class="item__acao">
         @if (item.isOwned) {
           <app-button
             escrita
             variant="secondary"
+            size="compact"
             [loading]="operando() === item.id"
             [disabled]="operando() !== null"
             (pressed)="vender(item)"
@@ -188,6 +197,7 @@
           <app-button
             escrita
             variant="secondary"
+            size="compact"
             [loading]="operando() === item.id"
             [disabled]="item.blockCode !== null || operando() !== null"
             (pressed)="comprar(item)"

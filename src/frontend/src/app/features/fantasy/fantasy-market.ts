@@ -90,6 +90,7 @@ const BLOQUEIOS_GERAIS = new Set(['not_joined', 'market_closed']);
 @Component({
   selector: 'app-fantasy-market',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [
     Alert,
     Badge,

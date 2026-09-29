@@ -170,7 +170,13 @@ describe('ParticipantHomePage', () => {
     expect(texto(fixture)).toContain('Falta 1 goleiro entre os titulares.');
     expect(texto(fixture)).toContain('Orçamento disponível C$ 100,00');
     expect(texto(fixture)).toContain('A classificação começa depois da primeira rodada apurada');
-    expect(texto(fixture)).toContain('Estrela do Bairro qui., 24/09 · 20:00');
+    const confronto = (fixture.nativeElement as HTMLElement).querySelector('.confronto');
+    expect(confronto?.textContent).toContain('União da Vila');
+    expect(confronto?.textContent).toContain('Estrela do Bairro');
+    expect(confronto?.querySelector('.confronto__meta')?.textContent).toContain(
+      'qui., 24/09 · 20:00',
+    );
+    expect((fixture.nativeElement as HTMLElement).classList.contains('theme-player')).toBe(true);
   });
 
   it('com o elenco pela metade, o convite vira continuar a escalação', async () => {

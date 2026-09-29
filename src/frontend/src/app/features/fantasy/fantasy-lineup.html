@@ -19,7 +19,12 @@
   }
   @case ('pronto') {
     @let campoAtual = campo()!;
-    <app-page-header heading="Meu time" [subtitle]="subtitulo()">
+    <app-page-header
+      heading="Meu time"
+      [kicker]="'Formação ' + formacao()"
+      variant="game"
+      [subtitle]="subtitulo()"
+    >
       @if (visao()!.entry) {
         <div class="alternar" role="group" aria-label="Como ver o time">
           <button
