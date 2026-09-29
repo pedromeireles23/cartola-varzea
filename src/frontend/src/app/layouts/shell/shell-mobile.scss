@@ -1,6 +1,4 @@
-// Navegação do celular (06 §4.4): quatro destinos na barra inferior e o resto numa
-// folha que sobe de baixo. A folha tem botão Fechar visível e fecha no Esc e no toque
-// fora, porque arrastar para baixo não é gesto que todo mundo consegue fazer.
+// Barra inferior e folha mantem o mesmo contexto visual da area ativa.
 
 .inferior {
   position: fixed;
@@ -11,50 +9,88 @@
   display: grid;
   grid-auto-columns: minmax(0, 1fr);
   grid-auto-flow: column;
-  padding-bottom: env(safe-area-inset-bottom);
-  background-color: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  padding: 4px 5px calc(4px + env(safe-area-inset-bottom));
+  color: var(--semantic-text);
+  background-color: color-mix(in srgb, var(--semantic-surface) 96%, transparent);
+  border-top: 1px solid var(--semantic-border-subtle);
+  box-shadow: 0 -10px 30px rgb(0 0 0 / 12%);
+  backdrop-filter: blur(16px);
+}
+
+.inferior--admin {
+  box-shadow:
+    inset 0 2px 0 var(--semantic-info),
+    0 -10px 30px rgb(23 32 51 / 10%);
 }
 
 .inferior__item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   align-items: center;
   justify-content: center;
   min-height: 58px;
-  padding: var(--space-1);
-  color: var(--color-ink-500);
+  padding: 5px 3px;
+  color: var(--semantic-text-muted);
   font-size: var(--font-caption);
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
   background: none;
   border: 0;
+  border-radius: var(--radius-lg);
 }
 
 .inferior__item[aria-current='page'] {
-  color: var(--color-brand-700);
-  font-weight: 600;
-  box-shadow: inset 0 2px 0 var(--color-brand-500);
+  color: var(--semantic-brand-strong);
+  background-color: var(--semantic-action-surface);
 }
 
-// A barra fixa cobre o fim da página; o conteúdo ganha o espaço dela.
+.theme-player.inferior .inferior__item[aria-current='page'] {
+  color: var(--semantic-brand);
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--semantic-brand) 75%, transparent);
+}
+
+.inferior--admin .inferior__item[aria-current='page'] {
+  color: var(--semantic-info);
+  background-color: var(--semantic-info-surface);
+  box-shadow: inset 0 2px 0 var(--semantic-info);
+}
+
 .app .principal {
-  padding-bottom: calc(58px + env(safe-area-inset-bottom));
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
 }
 
 .folha {
   width: 100%;
   max-width: 100%;
-  max-height: 85vh;
+  max-height: 86vh;
   margin: auto 0 0;
-  padding: var(--space-4) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
-  color: var(--color-ink-950);
-  background-color: var(--color-surface);
-  border: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  box-shadow: var(--shadow-overlay);
+  padding: var(--space-5) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
+  color: var(--semantic-text-strong);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-bottom: 0;
+  border-radius: var(--primitive-radius-2xl) var(--primitive-radius-2xl) 0 0;
+  box-shadow: var(--semantic-shadow-overlay);
+}
+
+.folha::before {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 44px;
+  height: 4px;
+  background-color: var(--semantic-border-control);
+  border-radius: var(--radius-pill);
+  transform: translateX(-50%);
+  content: '';
+}
+
+.folha--admin {
+  border-top-color: var(--semantic-info);
 }
 
 .folha[open] {
@@ -62,13 +98,13 @@
 }
 
 .folha::backdrop {
-  background-color: rgb(25 25 22 / 45%);
+  background-color: var(--semantic-backdrop);
 }
 
 @keyframes folha-sobe {
   from {
-    transform: translateY(24px);
     opacity: 0;
+    transform: translateY(24px);
   }
 }
 
@@ -81,30 +117,49 @@
 }
 
 .folha__titulo {
+  font-family: var(--font-heading);
   font-size: var(--font-h2);
+}
+
+.theme-player.folha .folha__titulo {
+  font-size: var(--font-h1);
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .folha__rotulo {
   margin-bottom: var(--space-2);
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-caption);
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
 .folha__campeonato {
-  font-weight: 600;
+  margin-bottom: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.folha__rodada {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  margin: var(--space-1) 0 0;
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
 }
 
 .seletor--claro {
   min-height: var(--touch-target);
   margin-bottom: 0;
+  color: var(--semantic-text-strong);
   font-size: var(--font-body-size);
-  color: var(--color-ink-950);
-  color-scheme: light;
-  background-color: var(--color-surface);
-  border-color: var(--color-border-strong);
+  color-scheme: inherit;
+  background-color: var(--semantic-surface-alt);
+  border-color: var(--semantic-border-control);
 }
 
 .folha__grade {
@@ -116,26 +171,27 @@
 
 .folha__grade + .folha__grade {
   padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--semantic-border-subtle);
 }
 
 .folha__link {
   display: flex;
   gap: 10px;
   align-items: center;
-  min-height: 48px;
+  min-height: 50px;
   padding: var(--space-2) var(--space-3);
-  color: var(--color-ink-950);
-  font-weight: 500;
+  color: var(--semantic-text-strong);
+  font-weight: 600;
   text-decoration: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  background-color: var(--semantic-surface-alt);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 .folha__link[aria-current='page'] {
-  color: var(--color-brand-700);
-  background-color: var(--color-brand-50);
-  border-color: var(--color-brand-500);
+  color: var(--semantic-on-action-surface);
+  background-color: var(--semantic-action-surface);
+  border-color: var(--semantic-brand);
 }
 
 @media (min-width: 1024px) {

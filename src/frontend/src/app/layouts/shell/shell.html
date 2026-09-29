@@ -1,15 +1,30 @@
 <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 
 @if (account(); as conta) {
-  <div class="app">
-    <aside class="lateral">
-      <a class="marca marca--clara" routerLink="/inicio">
+  <div
+    class="app"
+    [class.app--game]="areaKind() === 'player'"
+    [class.app--organizer]="areaKind() === 'organizer'"
+    [class.app--admin]="areaKind() === 'admin'"
+  >
+    <aside
+      class="lateral"
+      [class.theme-player]="areaKind() === 'player'"
+      [class.theme-organizer]="areaKind() !== 'player'"
+      [class.lateral--admin]="areaKind() === 'admin'"
+    >
+      <a class="marca marca--clara" routerLink="/inicio" aria-label="Cartola Várzea, início">
         <span class="marca__sinal" aria-hidden="true">CV</span>
-        <span class="marca__nome">Cartola Várzea</span>
+        <span class="marca__copy">
+          <span class="marca__nome">Cartola Várzea</span>
+          <span class="marca__tagline">Fantasy de futebol</span>
+        </span>
       </a>
 
       @if (organizing()) {
-        <p class="lateral__area"><svg [appIcon]="icons.organize" [size]="16" />Organização</p>
+        <p class="lateral__area">
+          <svg [appIcon]="icons.organize" [size]="16" />{{ workspaceLabel() }}
+        </p>
 
         <nav class="lateral__grupo" aria-label="Organização">
           <a
@@ -31,7 +46,7 @@
         </nav>
 
         @if (organizerCompetition(); as campeonato) {
-          <div class="lateral__grupo">
+          <div class="lateral__grupo lateral__contexto">
             <p class="lateral__rotulo">Campeonato</p>
             <p class="lateral__campeonato">
               {{ campeonato.name }}
@@ -71,7 +86,7 @@
         </nav>
 
         @if (current(); as campeonato) {
-          <div class="lateral__grupo">
+          <div class="lateral__grupo lateral__contexto">
             <p class="lateral__rotulo" id="rotulo-campeonato-lateral">Campeonato atual</p>
             @if (mine().length > 1) {
               <select
@@ -88,6 +103,16 @@
             } @else {
               <p class="lateral__campeonato">{{ campeonato.competitionName }}</p>
             }
+            <p class="lateral__rodada">
+              @if (roundName(); as rodada) {
+                <span>{{ rodada }}</span>
+              }
+              @if (marketLabel(); as mercado) {
+                <span class="lateral__mercado" [class.lateral__mercado--aberto]="marketIsOpen()">
+                  <span class="status-dot" aria-hidden="true"></span>{{ mercado }}
+                </span>
+              }
+            </p>
             <nav aria-label="Navegação do jogo">
               @for (item of gameItems; track item.section) {
                 <a
@@ -136,20 +161,63 @@
     </aside>
 
     <div class="principal">
-      <header class="topo" [class.topo--organizacao]="organizing()">
-        <a class="marca topo__marca" routerLink="/inicio">
+      <header
+        class="topo"
+        [class.theme-player]="areaKind() === 'player'"
+        [class.theme-organizer]="areaKind() !== 'player'"
+        [class.topo--organizacao]="areaKind() === 'organizer'"
+        [class.topo--admin]="areaKind() === 'admin'"
+      >
+        <a class="marca topo__marca" routerLink="/inicio" aria-label="Cartola Várzea, início">
           <span class="marca__sinal" aria-hidden="true">CV</span>
-          <span class="marca__nome">Cartola Várzea</span>
+          <span class="marca__copy">
+            <span class="marca__nome">Cartola Várzea</span>
+            <span class="marca__tagline">Fantasy de futebol</span>
+          </span>
         </a>
         @if (organizing()) {
-          <span class="topo__area">Organização</span>
+          <span class="topo__area">{{ workspaceLabel() }}</span>
         }
-        <p class="topo__contexto">
+        <div class="topo__contexto">
           <span class="topo__titulo">{{ sectionTitle() }}</span>
           @if (contextName(); as nome) {
             <span class="topo__campeonato">{{ nome }}</span>
           }
-        </p>
+          @if (!organizing() && playerCompetition()) {
+            <span class="topo__jogo-mobile">
+              @if (roundName(); as rodada) {
+                <span>{{ rodada }}</span>
+              }
+              @if (marketLabel(); as mercado) {
+                <span
+                  class="topo__mercado-mobile"
+                  [class.topo__mercado-mobile--aberto]="marketIsOpen()"
+                  [attr.aria-label]="'Status do mercado: ' + mercado"
+                >
+                  <span class="status-dot" aria-hidden="true"></span>{{ mercado }}
+                </span>
+              }
+            </span>
+          }
+        </div>
+        @if (!organizing() && playerCompetition()) {
+          <div class="topo__jogo">
+            @if (roundName(); as rodada) {
+              <span class="topo__rodada">{{ rodada }}</span>
+            }
+            @if (marketLabel(); as mercado) {
+              <span
+                class="topo__status"
+                [class.topo__status--aberto]="marketIsOpen()"
+                [attr.aria-label]="'Status do mercado: ' + mercado"
+              >
+                <span class="status-dot" aria-hidden="true"></span>{{ mercado }}
+              </span>
+            }
+          </div>
+        } @else if (organizerCompetition()) {
+          <span class="topo__status topo__status--operacao">{{ organizerStatus() }}</span>
+        }
         <div class="topo__acoes">
           <app-notification-bell />
           <a class="botao-icone topo__conta" routerLink="/perfil" aria-label="Conta">
@@ -172,7 +240,13 @@
       </footer>
     </div>
 
-    <nav class="inferior" aria-label="Navegação principal no celular">
+    <nav
+      class="inferior"
+      aria-label="Navegação principal no celular"
+      [class.theme-player]="areaKind() === 'player'"
+      [class.theme-organizer]="areaKind() !== 'player'"
+      [class.inferior--admin]="areaKind() === 'admin'"
+    >
       @if (organizing()) {
         <a
           class="inferior__item"
@@ -234,6 +308,9 @@
       #mais
       id="folha-mais"
       class="folha"
+      [class.theme-player]="areaKind() === 'player'"
+      [class.theme-organizer]="areaKind() !== 'player'"
+      [class.folha--admin]="areaKind() === 'admin'"
       aria-labelledby="folha-mais-titulo"
       (close)="moreOpen.set(false)"
       (click)="closeOnBackdrop($event)"
@@ -262,6 +339,16 @@
         } @else {
           <p class="folha__campeonato">{{ campeonato.competitionName }}</p>
         }
+        <p class="folha__rodada">
+          @if (roundName(); as rodada) {
+            <span>{{ rodada }}</span>
+          }
+          @if (marketLabel(); as mercado) {
+            <span class="folha__mercado" [class.folha__mercado--aberto]="marketIsOpen()">
+              <span class="status-dot" aria-hidden="true"></span>{{ mercado }}
+            </span>
+          }
+        </p>
         <nav class="folha__grade" aria-label="Navegação do jogo">
           @for (item of gameItems; track item.section) {
             @if (item.section !== 'team') {
@@ -314,7 +401,10 @@
     <div class="publico__interno">
       <a class="marca" routerLink="/" aria-label="Cartola Várzea, página inicial">
         <span class="marca__sinal" aria-hidden="true">CV</span>
-        <span class="marca__nome" aria-hidden="true">Cartola Várzea</span>
+        <span class="marca__copy" aria-hidden="true">
+          <span class="marca__nome">Cartola Várzea</span>
+          <span class="marca__tagline">Fantasy de futebol</span>
+        </span>
       </a>
       <nav class="publico__nav" aria-label="Navegação principal">
         <a routerLink="/campeonatos" routerLinkActive="ativo" ariaCurrentWhenActive="page">

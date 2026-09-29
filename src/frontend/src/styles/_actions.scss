@@ -15,31 +15,39 @@
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   transition:
+    color var(--motion-feedback) var(--motion-easing),
     background-color var(--motion-feedback) var(--motion-easing),
-    border-color var(--motion-feedback) var(--motion-easing);
+    border-color var(--motion-feedback) var(--motion-easing),
+    transform var(--motion-feedback) var(--motion-easing);
 }
 
 @mixin primary {
   @include base;
 
-  color: var(--color-surface);
-  background-color: var(--color-brand-700);
-  border-color: var(--color-brand-700);
+  color: var(--button-primary-foreground);
+  background-color: var(--button-primary-background);
+  border-color: var(--button-primary-border);
 
   &:hover {
-    background-color: var(--color-brand-800);
-    border-color: var(--color-brand-800);
+    background-color: var(--button-primary-hover);
+    border-color: var(--button-primary-hover);
+  }
+
+  &:active {
+    background-color: var(--button-primary-active);
+    border-color: var(--button-primary-active);
+    transform: translateY(var(--motion-press-distance));
   }
 }
 
 @mixin secondary {
   @include base;
 
-  color: var(--color-ink-950);
-  background-color: var(--color-surface);
-  border-color: var(--color-border-strong);
+  color: var(--button-secondary-foreground);
+  background-color: var(--button-secondary-background);
+  border-color: var(--button-secondary-border);
 
   &:hover {
-    background-color: var(--color-surface-alt);
+    background-color: var(--button-secondary-hover);
   }
 }

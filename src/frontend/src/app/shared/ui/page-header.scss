@@ -1,0 +1,58 @@
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.cabecalho__texto {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.cabecalho__apoio {
+  color: var(--page-header-kicker);
+  font-family: var(--page-header-kicker-family);
+  font-size: var(--page-header-kicker-size);
+  font-weight: var(--page-header-kicker-weight);
+  letter-spacing: var(--page-header-kicker-letter-spacing);
+  text-transform: uppercase;
+}
+
+.cabecalho__titulo {
+  color: var(--page-header-title);
+  font-family: var(--page-header-title-family);
+  font-size: var(--page-header-title-size);
+  font-weight: var(--page-header-title-weight);
+  line-height: var(--page-header-title-line-height);
+}
+
+.cabecalho__subtitulo {
+  color: var(--page-header-subtitle);
+  font-size: var(--page-header-subtitle-size);
+}
+
+.cabecalho__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cabecalho__acoes:empty {
+  display: none;
+}
+
+:host(.page-header--game) .cabecalho__titulo {
+  font-family: var(--page-header-game-title-family);
+  font-size: var(--page-header-game-title-size);
+  font-weight: var(--page-header-game-title-weight);
+  line-height: var(--page-header-game-title-line-height);
+  letter-spacing: var(--page-header-game-title-letter-spacing);
+  text-transform: uppercase;
+}
+
+:host(.page-header--operational) .cabecalho__titulo {
+  font-family: var(--semantic-font-family-body);
+}

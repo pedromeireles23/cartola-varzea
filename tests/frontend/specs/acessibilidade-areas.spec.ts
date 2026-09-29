@@ -56,6 +56,17 @@ test('as telas do jogo e da organização passam no axe e cabem em 320 px', asyn
     name: 'Liga da Varredura',
   });
 
+  // A casca mobile mantém rodada e mercado visíveis sem exigir a abertura de "Mais".
+  const viewportDoProjeto = jogador.viewportSize()!;
+  await jogador.setViewportSize({ width: 320, height: 720 });
+  await jogador.goto(`/c/${slug}/mercado`);
+  await expect(jogador.locator('.topo__jogo-mobile')).toBeVisible();
+  await expect(jogador.locator('.topo__jogo-mobile')).toContainText(/Rodada/);
+  await expect(
+    jogador.locator('.topo__jogo-mobile [aria-label^="Status do mercado:"]'),
+  ).toBeVisible();
+  await jogador.setViewportSize(viewportDoProjeto);
+
   const doJogo: readonly (readonly [string, string])[] = [
     ['/inicio', 'início com campeonato'],
     [`/c/${slug}/escalacao`, 'meu time'],

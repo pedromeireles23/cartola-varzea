@@ -1,39 +1,55 @@
 // Etiqueta curta de status ou posição. Status é o único caso de pill (06 §9.1).
 .badge {
   display: inline-flex;
-  gap: var(--space-1);
+  gap: var(--badge-gap);
   align-items: center;
-  padding: 2px var(--space-2);
-  font-size: var(--font-caption);
-  font-weight: 500;
-  line-height: 1.5;
+  padding: var(--badge-padding-block) var(--badge-padding-inline);
+  font-family: var(--badge-font-family);
+  font-size: var(--badge-font-size);
+  font-weight: var(--badge-font-weight);
+  line-height: var(--badge-line-height);
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--badge-radius);
 }
 
 .badge--neutral {
-  color: var(--color-ink-700);
-  background-color: var(--color-surface-alt);
-  border-color: var(--color-border);
+  color: var(--badge-neutral-foreground);
+  background-color: var(--badge-neutral-background);
+  border-color: var(--badge-neutral-border);
 }
 
 .badge--brand {
-  color: var(--color-brand-700);
-  background-color: var(--color-brand-50);
-  border-color: var(--color-brand-100);
+  color: var(--badge-brand-foreground);
+  background-color: var(--badge-brand-background);
+  border-color: var(--badge-brand-border);
 }
 
 .badge--success {
-  color: var(--color-success);
-  background-color: var(--color-success-50);
+  color: var(--badge-success-foreground);
+  background-color: var(--badge-success-background);
+  border-color: var(--badge-success-border);
 }
 
 .badge--warning {
-  color: var(--color-warning);
-  background-color: var(--color-warning-50);
+  color: var(--badge-warning-foreground);
+  background-color: var(--badge-warning-background);
+  border-color: var(--badge-warning-border);
 }
 
 .badge--danger {
-  color: var(--color-danger);
-  background-color: var(--color-danger-50);
+  color: var(--badge-danger-foreground);
+  background-color: var(--badge-danger-background);
+  border-color: var(--badge-danger-border);
+}
+
+.badge--info {
+  color: var(--badge-info-foreground);
+  background-color: var(--badge-info-background);
+  border-color: var(--badge-info-border);
+}
+
+.badge--live {
+  color: var(--badge-live-foreground);
+  background-color: var(--badge-live-background);
+  border-color: var(--badge-live-border);
 }

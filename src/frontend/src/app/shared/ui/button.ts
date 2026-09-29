@@ -11,6 +11,7 @@ import {
 import { READ_ONLY_MODE, READ_ONLY_NOTICE_ID } from '../../core/demo/read-only-mode';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonSize = 'regular' | 'compact';
 
 /**
  * Botao do design system (02 §8).
@@ -49,6 +50,7 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 })
 export class Button {
   readonly variant = input<ButtonVariant>('primary');
+  readonly size = input<ButtonSize>('regular');
   readonly type = input<'button' | 'submit'>('button');
   readonly disabled = input(false);
   readonly loading = input(false);
@@ -81,7 +83,7 @@ export class Button {
   }
 
   protected readonly classes = computed(() =>
-    ['btn', `btn--${this.variant()}`, this.fullWidth() ? 'btn--block' : '']
+    ['btn', `btn--${this.variant()}`, `btn--${this.size()}`, this.fullWidth() ? 'btn--block' : '']
       .filter(Boolean)
       .join(' '),
   );

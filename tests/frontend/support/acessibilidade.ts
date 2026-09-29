@@ -19,7 +19,7 @@ export async function semViolacoes(pagina: Page, contexto: string): Promise<void
   await assentar(pagina);
 
   const resultado = await new AxeBuilder({ page: pagina })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
 
   // A falha precisa dizer o que corrigir, não só que falhou.

@@ -1,5 +1,5 @@
-// Casca da aplicação (06 §4). A barra lateral só existe a partir de 1024 px; abaixo
-// disso o celular usa o cabeçalho compacto e a barra inferior de shell-mobile.scss.
+// A casca muda de atmosfera sem contaminar as telas internas: jogo escuro, operacao
+// clara e administracao identificada em azul. O conteudo segue no tema padrao ate V3.
 
 .skip {
   position: absolute;
@@ -11,186 +11,71 @@
   top: var(--space-2);
   left: var(--space-2);
   padding: var(--space-2) var(--space-4);
-  color: var(--color-surface);
-  background-color: var(--color-ink-950);
+  color: var(--semantic-text-inverse);
+  background-color: var(--semantic-text-strong);
   border-radius: var(--radius-md);
 }
 
-// Marca: o sinal é tipográfico, sem ilustração (06 §6.3).
 .marca {
   display: inline-flex;
-  gap: var(--space-2);
+  gap: 10px;
   align-items: center;
   min-height: var(--touch-target);
-  color: var(--color-ink-950);
-  font-weight: 600;
-  letter-spacing: -0.015em;
+  color: var(--semantic-text-strong);
   text-decoration: none;
 }
 
 .marca--clara {
-  color: #f8f7f2;
+  color: var(--semantic-shell-text);
 }
 
 .marca__sinal {
   display: grid;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  color: var(--color-surface);
-  font-size: var(--font-caption);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  background-color: var(--color-brand-500);
-  border-radius: var(--radius-sm);
-}
-
-// Barra lateral escura, persistente no desktop.
-.lateral {
-  display: none;
-}
-
-.lateral__grupo {
-  display: grid;
-  gap: 2px;
-}
-
-.lateral__rotulo {
-  margin: var(--space-4) 10px 6px;
-  color: var(--color-sidebar-muted);
-  font-size: var(--font-caption);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.lateral__link {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  min-height: 40px;
-  padding: var(--space-2) 10px;
-  color: var(--color-sidebar-text);
-  font-size: var(--font-small);
-  font-weight: 500;
-  text-decoration: none;
-  border-radius: var(--radius-md);
-  transition: background-color var(--motion-feedback) var(--motion-easing);
-}
-
-.lateral__link:hover {
-  background-color: var(--color-sidebar-hover);
-}
-
-.lateral__link[aria-current='page'] {
-  color: var(--color-surface);
-  background-color: var(--color-brand-500);
-}
-
-.lateral__campeonato {
-  padding: 6px 10px var(--space-2);
-  color: #f8f7f2;
-  font-size: var(--font-small);
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-// Área de organização (06 §4.1): o selo sob a marca diz em que área a pessoa está antes
-// de qualquer item, e a barra laranja repete o sinal sem depender só da cor do texto.
-.lateral__area {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  margin: var(--space-3) 10px var(--space-2);
-  padding-left: var(--space-2);
-  color: var(--color-brand-100);
-  font-size: var(--font-caption);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-left: 2px solid var(--color-brand-500);
-}
-
-.lateral__status {
-  display: block;
-  margin-top: 2px;
-  color: var(--color-sidebar-muted);
-  font-size: var(--font-caption);
-  font-weight: 500;
-}
-
-.lateral__volta {
-  margin-top: var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-sidebar-border);
-}
-
-.seletor {
-  width: 100%;
-  min-height: 42px;
-  margin-bottom: 6px;
-  padding: 0 10px;
-  color: #f7f6f0;
-  font-size: var(--font-small);
-  font-weight: 500;
-  color-scheme: dark;
-  background-color: #242420;
-  border: 1px solid #4a4a43;
-  border-radius: var(--radius-md);
-}
-
-.lateral__conta {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-top: auto;
-  padding: var(--space-3) var(--space-2) 2px;
-  color: #f8f7f2;
-  text-decoration: none;
-  border-top: 1px solid var(--color-sidebar-border);
-}
-
-.lateral__conta:hover .lateral__conta-nome,
-.lateral__conta[aria-current='page'] .lateral__conta-nome {
-  text-decoration: underline;
-}
-
-.avatar {
-  display: grid;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 42px;
   flex: 0 0 auto;
   place-items: center;
-  color: var(--color-ink-950);
-  font-size: var(--font-caption);
-  font-weight: 600;
-  background-color: var(--color-brand-100);
-  border-radius: var(--radius-round);
+  color: var(--semantic-on-action);
+  font-family: var(--font-family-display);
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  background:
+    linear-gradient(155deg, transparent 0 68%, rgb(255 255 255 / 18%) 68% 72%, transparent 72%),
+    var(--semantic-brand);
+  filter: drop-shadow(0 5px 10px rgb(0 0 0 / 18%));
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
 }
 
-.lateral__conta-texto {
+.marca__copy {
   display: grid;
+  gap: 1px;
   min-width: 0;
 }
 
-.lateral__conta-nome,
-.lateral__conta-apoio {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.marca__nome {
+  font-family: var(--font-family-display);
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
 
-.lateral__conta-nome {
-  font-size: var(--font-small);
-  font-weight: 500;
+.marca__tagline {
+  color: var(--semantic-text-muted);
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.lateral__conta-apoio {
-  color: var(--color-sidebar-muted);
-  font-size: var(--font-caption);
+.marca--clara .marca__tagline {
+  color: var(--semantic-shell-text-muted);
 }
 
-// Coluna do conteúdo: topo com o contexto, a página e o rodapé.
 .principal {
   display: flex;
   flex-direction: column;
@@ -203,59 +88,162 @@
   top: 0;
   z-index: 10;
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-3);
   align-items: center;
-  min-height: 56px;
+  min-height: 64px;
   padding-inline: var(--gutter);
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  color: var(--semantic-text-strong);
+  background-color: var(--semantic-surface);
+  border-bottom: 1px solid var(--semantic-border-subtle);
+  --shell-accent: var(--semantic-brand);
+}
+
+.topo.theme-player {
+  background:
+    radial-gradient(
+      circle at 42% -80%,
+      color-mix(in srgb, var(--semantic-brand) 18%, transparent),
+      transparent 52%
+    ),
+    color-mix(in srgb, var(--semantic-shell-background) 94%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.topo.theme-organizer {
+  --shell-accent: var(--semantic-brand-strong);
+
+  box-shadow: 0 4px 16px rgb(23 32 51 / 5%);
+}
+
+.topo--admin {
+  --shell-accent: var(--semantic-info);
+  box-shadow:
+    inset 0 3px 0 var(--shell-accent),
+    0 4px 16px rgb(23 32 51 / 6%);
+}
+
+.topo__marca .marca__copy {
+  display: none;
 }
 
 .topo__contexto {
-  display: none;
-  gap: var(--space-2);
-  align-items: baseline;
+  display: grid;
+  gap: 1px;
   min-width: 0;
+  line-height: 1.1;
 }
 
 .topo__titulo {
-  font-weight: 600;
+  overflow: hidden;
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .topo__campeonato {
   overflow: hidden;
-  color: var(--color-ink-500);
+  color: var(--semantic-text-strong);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.topo__campeonato::before {
-  margin-right: var(--space-2);
-  content: '·' / '';
-}
-
-// No celular não há barra lateral: o selo no topo mantém a área identificável.
 .topo__area {
-  padding: 2px var(--space-2);
-  color: var(--color-brand-700);
+  display: none;
+  max-width: 9rem;
+  padding: 4px var(--space-2);
+  overflow: hidden;
+  color: var(--shell-accent);
   font-size: var(--font-caption);
-  font-weight: 600;
-  background-color: var(--color-brand-50);
-  border-left: 2px solid var(--color-brand-500);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background-color: color-mix(in srgb, var(--shell-accent) 10%, transparent);
+  border-left: 2px solid var(--shell-accent);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
-// Com o selo, a marca e as ações não cabem juntas num celular estreito: o nome sai da
-// vista, mas continua sendo o nome acessível do link.
-@media (max-width: 479px) {
-  .topo--organizacao .marca__nome {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
+.topo__jogo {
+  display: none;
+  gap: var(--space-2);
+  align-items: center;
+  margin-left: auto;
+}
+
+.topo__jogo-mobile {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--semantic-text-muted);
+  font-size: var(--primitive-font-size-50);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.topo__jogo-mobile > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topo__jogo-mobile > span:first-child {
+  flex: 0 0 auto;
+}
+
+.topo__mercado-mobile {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--semantic-danger);
+}
+
+.topo__mercado-mobile--aberto {
+  color: var(--semantic-success);
+}
+
+.topo__mercado-mobile .status-dot {
+  width: 5px;
+  height: 5px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.topo__rodada {
+  color: var(--semantic-text-muted);
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.topo__status {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 30px;
+  padding-inline: var(--space-3);
+  color: var(--semantic-danger);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  white-space: nowrap;
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 32%, transparent);
+  border-radius: var(--radius-pill);
+}
+
+.topo__status--aberto {
+  color: var(--semantic-success);
+}
+
+.topo__status--operacao {
+  display: none;
+  color: var(--shell-accent);
 }
 
 .topo__acoes {
@@ -265,40 +253,40 @@
   margin-left: auto;
 }
 
+.topo__jogo + .topo__acoes {
+  margin-left: 0;
+}
+
 .botao-icone {
   display: grid;
   width: var(--touch-target);
   height: var(--touch-target);
   place-items: center;
-  color: var(--color-ink-700);
+  color: var(--semantic-text);
   cursor: pointer;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--radius-md);
 }
 
 .botao-icone:hover {
-  color: var(--color-ink-950);
-  background-color: var(--color-surface-alt);
+  color: var(--semantic-text-strong);
+  background-color: var(--semantic-surface-alt);
 }
 
 .conteudo {
   flex: 1;
   width: 100%;
   max-width: calc(var(--container-max) + 2 * var(--gutter));
-  // O rodapé nasce abaixo da dobra: com a tela ainda carregando, ele aparecia colado ao
-  // conteúdo curto e descia quando o conteúdo chegava (CLS de 0,12 no campeonato).
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 64px);
   margin-inline: auto;
   padding: var(--space-6) var(--gutter) var(--space-12);
 }
 
-// Sem sessão, o cabeçalho tem 64 px em qualquer largura.
 .conteudo--publico {
   min-height: calc(100vh - 64px);
 }
 
-// O conteúdo recebe foco pelo atalho de pular; o anel ficaria em volta da página toda.
 .conteudo:focus {
   outline: none;
 }
@@ -312,18 +300,18 @@
   max-width: calc(var(--container-max) + 2 * var(--gutter));
   margin-inline: auto;
   padding: var(--space-4) var(--gutter) var(--space-6);
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-caption);
 }
 
 .rodape a {
-  color: var(--color-ink-700);
+  color: var(--semantic-text);
 }
 
-// Cabeçalho de quem ainda não entrou.
+// A casca publica permanece clara nesta etapa; V5 cuida da landing.
 .publico {
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background-color: var(--semantic-surface);
+  border-bottom: 1px solid var(--semantic-border-subtle);
 }
 
 .publico__interno {
@@ -348,7 +336,7 @@
   align-items: center;
   min-height: var(--touch-target);
   padding-inline: var(--space-2);
-  color: var(--color-ink-700);
+  color: var(--semantic-text);
   font-size: var(--font-small);
   font-weight: 500;
   text-decoration: none;
@@ -356,31 +344,46 @@
 }
 
 .publico__nav a:hover {
-  color: var(--color-ink-950);
-  background-color: var(--color-surface-alt);
+  color: var(--semantic-text-strong);
+  background-color: var(--semantic-surface-alt);
 }
 
 .publico__nav a.ativo {
-  color: var(--color-ink-950);
-  box-shadow: inset 0 -2px 0 var(--color-brand-500);
+  color: var(--semantic-text-strong);
+  box-shadow: inset 0 -2px 0 var(--semantic-brand);
   border-radius: 0;
 }
 
 .publico__nav a.publico__cta {
   margin-left: var(--space-2);
   padding-inline: var(--space-4);
-  color: var(--color-surface);
-  background-color: var(--color-brand-700);
+  color: var(--semantic-on-action);
+  background-color: var(--semantic-action);
 }
 
 .publico__nav a.publico__cta:hover {
-  background-color: var(--color-brand-800);
+  background-color: var(--semantic-action-hover);
 }
 
-// A 320 px cabem o sinal e três links; o nome da marca e o cadastro saem primeiro, e o
-// cadastro continua a um toque na própria entrada.
+@media (min-width: 480px) and (max-width: 1023px) {
+  .topo__area {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 720px) {
+  .topo__jogo,
+  .topo__status--operacao {
+    display: inline-flex;
+  }
+
+  .topo__jogo-mobile {
+    display: none;
+  }
+}
+
 @media (max-width: 639px) {
-  .publico .marca__nome,
+  .publico .marca__copy,
   .publico__nav a.publico__cta {
     display: none;
   }
@@ -390,36 +393,19 @@
   .publico__nav a[href='/regras'] {
     display: none;
   }
+
+  .topo {
+    gap: var(--space-2);
+  }
 }
 
 @media (min-width: 1024px) {
-  .app {
-    display: grid;
-    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-    min-height: 100vh;
-  }
-
-  .lateral {
-    position: sticky;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    padding: var(--space-5) 14px var(--space-4);
-    overflow-y: auto;
-    background-color: var(--color-sidebar);
-  }
-
-  .lateral > .marca {
-    padding: 0 var(--space-2) var(--space-2);
-  }
-
   .topo {
-    min-height: 64px;
+    min-height: 72px;
   }
 
   .conteudo {
-    min-height: calc(100vh - 64px);
+    min-height: calc(100vh - 72px);
   }
 
   .topo__marca,
@@ -429,6 +415,6 @@
   }
 
   .topo__contexto {
-    display: flex;
+    min-width: min(28vw, 20rem);
   }
 }

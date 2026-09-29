@@ -1,0 +1,381 @@
+@use 'primitives';
+
+// Compatibilidade temporaria: permite migrar tela a tela sem quebrar consumidores de
+// _tokens.scss. O mixin e emitido em cada tema para que os aliases sejam resolvidos no
+// mesmo escopo das variaveis semanticas sobrescritas.
+@mixin legacy-token-aliases {
+  // Marca
+  --color-brand-50: var(--semantic-brand-subtle);
+  --color-brand-100: var(--semantic-brand-soft);
+  --color-brand-500: var(--semantic-brand);
+  --color-brand-700: var(--semantic-brand-strong);
+  --color-brand-800: var(--semantic-brand-emphasis);
+
+  // Texto, superficies e controles
+  --color-ink-950: var(--semantic-text-strong);
+  --color-ink-700: var(--semantic-text);
+  --color-ink-500: var(--semantic-text-muted);
+  --color-surface: var(--semantic-surface);
+  --color-surface-alt: var(--semantic-surface-alt);
+  --color-surface-hover: var(--semantic-surface-hover);
+  --color-canvas: var(--semantic-canvas);
+  --color-border: var(--semantic-border-subtle);
+  --color-border-strong: var(--semantic-border-control);
+  --color-on-action: var(--semantic-on-action);
+  --color-focus: var(--semantic-focus-ring);
+  --color-focus-ring: var(--semantic-focus-ring);
+  --color-live: var(--semantic-live);
+  --color-live-50: var(--semantic-live-surface);
+
+  // Casca
+  --color-sidebar: var(--semantic-shell-background);
+  --color-sidebar-hover: var(--semantic-shell-hover);
+  --color-sidebar-border: var(--semantic-shell-border);
+  --color-sidebar-text: var(--semantic-shell-text);
+  --color-sidebar-muted: var(--semantic-shell-text-muted);
+
+  // Estados
+  --color-success: var(--semantic-success);
+  --color-success-50: var(--semantic-success-surface);
+  --color-warning: var(--semantic-warning);
+  --color-warning-50: var(--semantic-warning-surface);
+  --color-danger: var(--semantic-danger);
+  --color-danger-50: var(--semantic-danger-surface);
+  --color-info: var(--semantic-info);
+  --color-info-50: var(--semantic-info-surface);
+
+  // Campo
+  --color-pitch: var(--semantic-pitch);
+  --color-pitch-stripe: var(--semantic-pitch-stripe);
+  --color-pitch-line: var(--semantic-pitch-line);
+
+  // Tipografia legada e escala esportiva
+  --font-body: var(--semantic-font-family-body);
+  --font-heading: var(--semantic-font-family-heading);
+  --font-family-display: var(--semantic-font-family-display);
+  --font-display-family: var(--semantic-font-family-display);
+  --font-display: var(--semantic-font-size-display);
+  --font-h1: var(--semantic-font-size-h1);
+  --font-h2: var(--semantic-font-size-h2);
+  --font-h3: var(--semantic-font-size-h3);
+  --font-body-size: var(--semantic-font-size-body);
+  --font-small: var(--semantic-font-size-small);
+  --font-caption: var(--semantic-font-size-caption);
+  --font-score-sm: var(--semantic-font-size-score-sm);
+  --font-score-md: var(--semantic-font-size-score-md);
+  --font-score-lg: var(--semantic-font-size-score-lg);
+  --font-position: var(--semantic-font-size-position);
+  --font-round-clock: var(--semantic-font-size-clock);
+  --font-page-title-game: var(--semantic-font-size-page-title-game);
+
+  // Espacamento
+  --space-0: var(--primitive-space-0);
+  --space-1: var(--primitive-space-1);
+  --space-2: var(--primitive-space-2);
+  --space-3: var(--primitive-space-3);
+  --space-4: var(--primitive-space-4);
+  --space-5: var(--primitive-space-5);
+  --space-6: var(--primitive-space-6);
+  --space-8: var(--primitive-space-8);
+  --space-10: var(--primitive-space-10);
+  --space-12: var(--primitive-space-12);
+  --space-16: var(--primitive-space-16);
+  --space-20: var(--primitive-space-20);
+
+  // Forma, elevacao e layout
+  --radius-sm: var(--primitive-radius-sm);
+  --radius-md: var(--primitive-radius-md);
+  --radius-lg: var(--primitive-radius-lg);
+  --radius-round: var(--primitive-radius-round);
+  --radius-pill: var(--primitive-radius-pill);
+  --shadow-overlay: var(--semantic-shadow-overlay);
+  --container-max: var(--primitive-container-max);
+  --sidebar-width: var(--primitive-sidebar-width);
+  --gutter: var(--semantic-gutter);
+  --touch-target: var(--primitive-touch-target);
+
+  // Movimento
+  --motion-feedback: var(--semantic-motion-feedback);
+  --motion-panel: var(--semantic-motion-panel);
+  --motion-live: var(--semantic-motion-live);
+  --motion-easing: var(--semantic-motion-easing);
+  --motion-press-distance: var(--semantic-motion-distance);
+}
+
+:root {
+  color-scheme: light;
+
+  // Superficies operacionais claras (tema padrao)
+  --semantic-canvas: var(--primitive-color-neutral-100);
+  --semantic-surface: var(--primitive-color-neutral-0);
+  --semantic-surface-alt: var(--primitive-color-neutral-50);
+  --semantic-surface-raised: var(--primitive-color-neutral-0);
+  --semantic-surface-inset: var(--primitive-color-neutral-25);
+  --semantic-surface-hover: var(--primitive-color-neutral-200);
+  --semantic-text-strong: var(--primitive-color-neutral-900);
+  --semantic-text: var(--primitive-color-neutral-700);
+  --semantic-text-muted: var(--primitive-color-neutral-600);
+  --semantic-text-inverse: var(--primitive-color-neutral-0);
+
+  // Marca e acao. O tom 700 e usado em botoes para manter texto branco em AA.
+  --semantic-brand-subtle: var(--primitive-color-orange-50);
+  --semantic-brand-soft: var(--primitive-color-orange-100);
+  --semantic-brand: var(--primitive-color-orange-500);
+  --semantic-brand-strong: var(--primitive-color-orange-700);
+  --semantic-brand-emphasis: var(--primitive-color-orange-800);
+  --semantic-action: var(--primitive-color-orange-700);
+  --semantic-action-hover: var(--primitive-color-orange-800);
+  --semantic-action-active: var(--primitive-color-orange-900);
+  --semantic-on-action: var(--primitive-color-neutral-0);
+  --semantic-action-surface: var(--primitive-color-orange-50);
+  --semantic-on-action-surface: var(--primitive-color-orange-800);
+
+  // Bordas decorativas e limites interativos nao compartilham o mesmo contraste.
+  --semantic-border-subtle: var(--primitive-color-neutral-300);
+  --semantic-border-control: var(--primitive-color-neutral-500);
+  --semantic-border-strong: var(--primitive-color-neutral-600);
+  --semantic-focus-ring: var(--primitive-color-blue-700);
+  --semantic-focus-ring-offset: var(--primitive-color-neutral-0);
+
+  // Acoes secundarias, estados indisponiveis e sobreposicoes
+  --semantic-secondary-background: var(--primitive-color-neutral-50);
+  --semantic-secondary-hover: var(--primitive-color-neutral-200);
+  --semantic-secondary-foreground: var(--primitive-color-neutral-900);
+  --semantic-ghost-hover: var(--primitive-color-neutral-200);
+  --semantic-disabled-background: var(--primitive-color-neutral-200);
+  --semantic-disabled-foreground: var(--primitive-color-neutral-700);
+  --semantic-disabled-border: var(--primitive-color-neutral-500);
+  --semantic-backdrop: rgb(25 25 22 / 56%);
+
+  // Estados semanticos
+  --semantic-success: var(--primitive-color-green-700);
+  --semantic-success-surface: var(--primitive-color-green-50);
+  --semantic-on-success: var(--primitive-color-neutral-0);
+  --semantic-warning: var(--primitive-color-warning-700);
+  --semantic-warning-surface: var(--primitive-color-warning-50);
+  --semantic-on-warning: var(--primitive-color-neutral-0);
+  --semantic-danger: var(--primitive-color-red-700);
+  --semantic-danger-hover: var(--primitive-color-red-800);
+  --semantic-danger-surface: var(--primitive-color-red-50);
+  --semantic-on-danger: var(--primitive-color-neutral-0);
+  --semantic-info: var(--primitive-color-blue-700);
+  --semantic-info-surface: var(--primitive-color-blue-50);
+  --semantic-on-info: var(--primitive-color-neutral-0);
+  --semantic-live: var(--primitive-color-red-700);
+  --semantic-live-surface: var(--primitive-color-red-50);
+  --semantic-on-live: var(--primitive-color-neutral-0);
+  --semantic-highlight: var(--primitive-color-warning-700);
+  --semantic-highlight-surface: var(--primitive-color-warning-50);
+
+  // Casca operacional atual
+  --semantic-shell-background: var(--primitive-color-neutral-900);
+  --semantic-shell-hover: var(--primitive-color-neutral-850);
+  --semantic-shell-border: var(--primitive-color-neutral-800);
+  --semantic-shell-text: var(--primitive-color-neutral-300);
+  --semantic-shell-text-muted: #aaa99f;
+
+  // Campo
+  --semantic-pitch: var(--primitive-color-pitch-700);
+  --semantic-pitch-stripe: var(--primitive-color-pitch-800);
+  --semantic-pitch-line: var(--primitive-color-pitch-line);
+
+  // Elevacao
+  --semantic-shadow-overlay: var(--primitive-shadow-overlay);
+  --semantic-shadow-raised: var(--primitive-shadow-raised-light);
+  --semantic-shadow-highlight: var(--primitive-shadow-raised-light);
+
+  // Tipografia funcional e escala esportiva
+  --semantic-font-family-body: var(--primitive-font-family-body);
+  --semantic-font-family-heading: var(--primitive-font-family-body);
+  --semantic-font-family-display: var(--primitive-font-family-display);
+  --semantic-font-size-display: var(--primitive-font-size-display-fluid);
+  --semantic-font-size-h1: var(--primitive-font-size-heading-fluid);
+  --semantic-font-size-h2: var(--primitive-font-size-400);
+  --semantic-font-size-h3: var(--primitive-font-size-300);
+  --semantic-font-size-body: var(--primitive-font-size-300);
+  --semantic-font-size-small: var(--primitive-font-size-200);
+  --semantic-font-size-caption: var(--primitive-font-size-100);
+  --semantic-font-size-score-sm: var(--primitive-font-size-600);
+  --semantic-font-size-score-md: var(--primitive-font-size-800);
+  --semantic-font-size-score-lg: var(--primitive-font-size-score-fluid);
+  --semantic-font-size-position: var(--primitive-font-size-position-fluid);
+  --semantic-font-size-clock: var(--primitive-font-size-clock-fluid);
+  --semantic-font-size-page-title-game: var(--primitive-font-size-700);
+  --semantic-font-weight-display: var(--primitive-font-weight-extrabold);
+  --semantic-font-weight-bold: var(--primitive-font-weight-bold);
+  --semantic-font-weight-heading: var(--primitive-font-weight-bold);
+  --semantic-font-weight-body: var(--primitive-font-weight-regular);
+  --semantic-font-weight-control: var(--primitive-font-weight-semibold);
+  --semantic-line-height-display: var(--primitive-line-height-solid);
+  --semantic-line-height-heading: var(--primitive-line-height-heading);
+  --semantic-line-height-body: var(--primitive-line-height-body);
+  --semantic-letter-spacing-display: var(--primitive-letter-spacing-tight);
+  --semantic-letter-spacing-label: var(--primitive-letter-spacing-label);
+  --semantic-numeric-variant: tabular-nums;
+
+  // Layout e movimento
+  --semantic-gutter: var(--primitive-space-4);
+  --semantic-motion-feedback: var(--primitive-motion-feedback);
+  --semantic-motion-panel: var(--primitive-motion-panel);
+  --semantic-motion-live: var(--primitive-motion-live);
+  --semantic-motion-easing: var(--primitive-motion-easing-standard);
+  --semantic-motion-easing-emphasized: var(--primitive-motion-easing-emphasized);
+  --semantic-motion-distance: var(--primitive-motion-distance-sm);
+  --semantic-motion-live-iterations: var(--primitive-motion-live-iterations);
+}
+
+// Tema principal do participante: alto contraste e profundidade de uma partida noturna.
+.theme-player {
+  color-scheme: dark;
+
+  --semantic-canvas: var(--primitive-color-night-950);
+  --semantic-surface: var(--primitive-color-night-900);
+  --semantic-surface-alt: var(--primitive-color-night-800);
+  --semantic-surface-raised: var(--primitive-color-night-700);
+  --semantic-surface-inset: var(--primitive-color-night-1000);
+  --semantic-surface-hover: var(--primitive-color-night-700);
+  --semantic-text-strong: var(--primitive-color-night-50);
+  --semantic-text: var(--primitive-color-night-100);
+  --semantic-text-muted: var(--primitive-color-night-200);
+  --semantic-text-inverse: var(--primitive-color-night-1000);
+
+  --semantic-brand-subtle: var(--primitive-color-coral-950);
+  --semantic-brand-soft: var(--primitive-color-coral-900);
+  --semantic-brand: var(--primitive-color-coral-400);
+  --semantic-brand-strong: var(--primitive-color-coral-500);
+  --semantic-brand-emphasis: var(--primitive-color-coral-600);
+  --semantic-action: var(--primitive-color-coral-500);
+  --semantic-action-hover: var(--primitive-color-coral-400);
+  --semantic-action-active: var(--primitive-color-coral-600);
+  --semantic-on-action: #101722;
+  --semantic-action-surface: var(--primitive-color-coral-950);
+  --semantic-on-action-surface: var(--primitive-color-coral-400);
+
+  --semantic-border-subtle: var(--primitive-color-white-a12);
+  --semantic-border-control: var(--primitive-color-night-300);
+  --semantic-border-strong: var(--primitive-color-night-200);
+  --semantic-focus-ring: var(--primitive-color-amber-500);
+  --semantic-focus-ring-offset: var(--primitive-color-night-1000);
+
+  --semantic-secondary-background: var(--primitive-color-night-700);
+  --semantic-secondary-hover: var(--primitive-color-night-600);
+  --semantic-secondary-foreground: var(--primitive-color-night-50);
+  --semantic-ghost-hover: var(--primitive-color-white-a08);
+  --semantic-disabled-background: var(--primitive-color-night-800);
+  --semantic-disabled-foreground: var(--primitive-color-night-200);
+  --semantic-disabled-border: var(--primitive-color-night-600);
+  --semantic-backdrop: var(--primitive-color-night-a72);
+
+  --semantic-success: var(--primitive-color-green-300);
+  --semantic-success-surface: var(--primitive-color-green-950);
+  --semantic-on-success: #101722;
+  --semantic-warning: var(--primitive-color-amber-500);
+  --semantic-warning-surface: var(--primitive-color-amber-950);
+  --semantic-on-warning: #101722;
+  --semantic-danger: var(--primitive-color-red-500);
+  --semantic-danger-hover: var(--primitive-color-red-600);
+  --semantic-danger-surface: var(--primitive-color-red-950);
+  --semantic-on-danger: #101722;
+  --semantic-info: var(--primitive-color-cyan-300);
+  --semantic-info-surface: var(--primitive-color-cyan-950);
+  --semantic-on-info: #101722;
+  --semantic-live: var(--primitive-color-red-500);
+  --semantic-live-surface: var(--primitive-color-red-950);
+  --semantic-on-live: #101722;
+  --semantic-highlight: var(--primitive-color-amber-500);
+  --semantic-highlight-surface: var(--primitive-color-amber-950);
+
+  --semantic-shell-background: var(--primitive-color-night-1000);
+  --semantic-shell-hover: var(--primitive-color-night-800);
+  --semantic-shell-border: var(--primitive-color-white-a12);
+  --semantic-shell-text: var(--primitive-color-night-100);
+  --semantic-shell-text-muted: var(--primitive-color-night-200);
+
+  --semantic-pitch: var(--primitive-color-pitch-night-700);
+  --semantic-pitch-stripe: var(--primitive-color-pitch-night-800);
+  --semantic-pitch-line: var(--primitive-color-pitch-line);
+
+  --semantic-shadow-overlay: var(--primitive-shadow-raised-dark);
+  --semantic-shadow-raised: var(--primitive-shadow-raised-dark);
+  --semantic-shadow-highlight: var(--primitive-shadow-highlight-dark);
+
+  --semantic-font-family-heading: var(--primitive-font-family-display);
+  --semantic-font-family-display: var(--primitive-font-family-display);
+  --semantic-line-height-heading: var(--primitive-line-height-tight);
+}
+
+// Central da competicao: mesma marca, mas com superficies claras, frias e calmas.
+.theme-organizer {
+  color-scheme: light;
+
+  --semantic-canvas: var(--primitive-color-cool-100);
+  --semantic-surface: var(--primitive-color-neutral-0);
+  --semantic-surface-alt: var(--primitive-color-cool-50);
+  --semantic-surface-raised: var(--primitive-color-neutral-0);
+  --semantic-surface-inset: var(--primitive-color-cool-25);
+  --semantic-surface-hover: var(--primitive-color-cool-200);
+  --semantic-text-strong: var(--primitive-color-cool-900);
+  --semantic-text: var(--primitive-color-cool-700);
+  --semantic-text-muted: var(--primitive-color-cool-600);
+  --semantic-text-inverse: var(--primitive-color-neutral-0);
+
+  --semantic-brand-subtle: var(--primitive-color-orange-50);
+  --semantic-brand-soft: var(--primitive-color-orange-100);
+  --semantic-brand: var(--primitive-color-orange-500);
+  --semantic-brand-strong: var(--primitive-color-orange-700);
+  --semantic-brand-emphasis: var(--primitive-color-orange-800);
+  --semantic-action: var(--primitive-color-orange-700);
+  --semantic-action-hover: var(--primitive-color-orange-800);
+  --semantic-action-active: var(--primitive-color-orange-900);
+  --semantic-on-action: var(--primitive-color-neutral-0);
+  --semantic-action-surface: var(--primitive-color-orange-50);
+  --semantic-on-action-surface: var(--primitive-color-orange-800);
+
+  --semantic-border-subtle: var(--primitive-color-cool-300);
+  --semantic-border-control: var(--primitive-color-cool-500);
+  --semantic-border-strong: var(--primitive-color-cool-600);
+  --semantic-focus-ring: var(--primitive-color-blue-700);
+  --semantic-focus-ring-offset: var(--primitive-color-neutral-0);
+
+  --semantic-secondary-background: var(--primitive-color-cool-50);
+  --semantic-secondary-hover: var(--primitive-color-cool-200);
+  --semantic-secondary-foreground: var(--primitive-color-cool-900);
+  --semantic-ghost-hover: var(--primitive-color-cool-200);
+  --semantic-disabled-background: var(--primitive-color-cool-200);
+  --semantic-disabled-foreground: var(--primitive-color-cool-700);
+  --semantic-disabled-border: var(--primitive-color-cool-500);
+  --semantic-backdrop: rgb(23 32 51 / 52%);
+
+  --semantic-shell-background: var(--primitive-color-cool-900);
+  --semantic-shell-hover: var(--primitive-color-cool-700);
+  --semantic-shell-border: var(--primitive-color-cool-600);
+  --semantic-shell-text: var(--primitive-color-cool-100);
+  --semantic-shell-text-muted: var(--primitive-color-cool-300);
+
+  --semantic-shadow-overlay: var(--primitive-shadow-raised-light);
+  --semantic-shadow-raised: var(--primitive-shadow-raised-light);
+  --semantic-shadow-highlight: var(--primitive-shadow-raised-light);
+
+  --semantic-font-family-heading: var(--primitive-font-family-body);
+  --semantic-font-family-display: var(--primitive-font-family-display);
+}
+
+// Os aliases legados dependem das variaveis semanticas do escopo atual. Agrupar os
+// seletores preserva essa resolucao e evita emitir o mesmo bloco tres vezes.
+:root,
+.theme-player,
+.theme-organizer {
+  @include legacy-token-aliases;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --semantic-gutter: var(--primitive-space-6);
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --semantic-gutter: var(--primitive-space-8);
+  }
+}

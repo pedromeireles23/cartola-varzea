@@ -44,6 +44,7 @@ import {
 import { filter } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { MyFantasyCompetition } from '../../features/fantasy/fantasy.service';
 import { CompetitionStatus } from '../../features/organizer/competition.service';
 import { OrganizerArea } from '../../features/organizer/organizer-area';
 import { CurrentCompetition, Section } from '../../features/participant/current-competition';
@@ -56,6 +57,8 @@ interface NavItem {
   readonly label: string;
   readonly icon: IconNode;
 }
+
+type ShellArea = 'player' | 'organizer' | 'admin';
 
 interface GameItem extends NavItem {
   /** Trecho depois de `/c/:campeonato/`. */
@@ -151,7 +154,7 @@ function segmentsOf(url: string): string[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DemoBanner, Icon, NotificationBell, RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './shell.html',
-  styleUrls: ['./shell.scss', './shell-mobile.scss'],
+  styleUrls: ['./shell.scss', './shell-navigation.scss', './shell-mobile.scss'],
 })
 export class Shell {
   private readonly auth = inject(AuthService);
@@ -189,10 +192,19 @@ export class Shell {
   private readonly routeTitle = signal<string | null>(null);
   private readonly segments = signal(segmentsOf(this.router.url));
 
+  /** A mesma casca diferencia explicitamente jogo, operação e administração. */
+  protected readonly areaKind = computed<ShellArea>(() => {
+    if (this.section() !== 'organize' || !this.canOrganize()) return 'player';
+    return this.segments()[0] === 'admin' ? 'admin' : 'organizer';
+  });
+
   /** A área de organização, com casca própria; só para quem organiza. */
-  protected readonly organizing = computed(
-    () => this.section() === 'organize' && this.canOrganize(),
-  );
+  protected readonly organizing = computed(() => this.areaKind() !== 'player');
+
+  protected readonly workspaceLabel = computed(() => {
+    if (this.areaKind() === 'admin') return 'Admin da plataforma';
+    return this.organizerCompetition() ? 'Central da competição' : 'Organizações';
+  });
 
   protected readonly organizerItems = computed(() =>
     ORGANIZER_ITEMS.filter((item) => !item.ownerOnly || this.organizerCompetition()?.owner),
@@ -222,9 +234,9 @@ export class Shell {
   );
 
   protected readonly sectionTitle = computed(() => {
-    // Na organização, o título é o da tela: "Rodadas", "Minhas organizações".
+    // Na operação, o título é o da tela: "Rodadas", "Minhas organizações".
     if (this.organizing()) {
-      return this.routeTitle() ?? 'Organização';
+      return this.routeTitle() ?? this.workspaceLabel();
     }
     const section = this.section();
     return section ? SECTION_LABELS[section] : (this.routeTitle() ?? 'Cartola Várzea');
@@ -234,16 +246,33 @@ export class Shell {
    * O campeonato ao lado do título. Numa rota de campeonato, só quando a conta joga nele:
    * a página pública de outro campeonato não pode parecer parte do jogo atual.
    */
+  protected readonly playerCompetition = computed<MyFantasyCompetition | null>(() => {
+    if (this.areaKind() !== 'player') return null;
+    const routeSlug = this.competitions.routeSlug();
+    if (routeSlug) {
+      return this.mine().find((item) => item.slug === routeSlug) ?? null;
+    }
+    return this.section() === 'home' ? this.current() : null;
+  });
+
   protected readonly contextName = computed(() => {
     if (this.organizing()) {
       return this.organizerCompetition()?.name ?? null;
     }
-    const routeSlug = this.competitions.routeSlug();
-    if (routeSlug) {
-      return this.mine().find((item) => item.slug === routeSlug)?.competitionName ?? null;
-    }
-    return this.section() === 'home' ? (this.current()?.competitionName ?? null) : null;
+    return this.playerCompetition()?.competitionName ?? null;
   });
+
+  protected readonly roundName = computed(() => this.playerCompetition()?.market.roundName ?? null);
+
+  protected readonly marketLabel = computed(() => {
+    const competition = this.playerCompetition();
+    if (!competition) return null;
+    return competition.market.isOpen ? 'Mercado aberto' : 'Mercado fechado';
+  });
+
+  protected readonly marketIsOpen = computed(
+    () => this.playerCompetition()?.market.isOpen ?? false,
+  );
 
   /** A seção do jogo só acende quando a tela é do campeonato atual. */
   protected readonly inCurrentCompetition = computed(

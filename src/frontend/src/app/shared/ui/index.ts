@@ -1,12 +1,13 @@
 export { Alert, type AlertTone } from './alert';
 export { BackLink } from './back-link';
 export { Badge, type BadgeTone } from './badge';
-export { Button, type ButtonVariant } from './button';
-export { Card } from './card';
+export { Button, type ButtonSize, type ButtonVariant } from './button';
+export { Card, type CardVariant } from './card';
 export { Dialog } from './dialog';
 export { FormField } from './form-field';
 export { Icon } from './icon';
 export { Loading } from './loading';
-export { PageHeader } from './page-header';
+export { PageHeader, type PageHeaderVariant } from './page-header';
+export { Panel, type PanelVariant } from './panel';
 export { SelectField, type SelectOption } from './select-field';
 export { StandingsTable, type StandingRow } from './standings-table';

@@ -1,0 +1,186 @@
+// Valores brutos da fundacao visual. Nenhum componente deve consumir esta camada
+// diretamente: temas e componentes usam os tokens semanticos definidos nas camadas
+// seguintes.
+:root {
+  // Neutros operacionais (quentes)
+  --primitive-color-neutral-0: #ffffff;
+  --primitive-color-neutral-25: #fcfcfa;
+  --primitive-color-neutral-50: #f8f7f4;
+  --primitive-color-neutral-100: #f3f2ee;
+  --primitive-color-neutral-200: #e9e7e1;
+  --primitive-color-neutral-300: #dddbd3;
+  --primitive-color-neutral-500: #8d8b82;
+  --primitive-color-neutral-600: #696861;
+  --primitive-color-neutral-700: #45443f;
+  --primitive-color-neutral-800: #33332e;
+  --primitive-color-neutral-850: #292925;
+  --primitive-color-neutral-900: #191916;
+
+  // Neutros operacionais (frios)
+  --primitive-color-cool-25: #fbfcfe;
+  --primitive-color-cool-50: #f5f7fa;
+  --primitive-color-cool-100: #edf2f7;
+  --primitive-color-cool-200: #e2e8f0;
+  --primitive-color-cool-300: #cbd5e1;
+  --primitive-color-cool-500: #718096;
+  --primitive-color-cool-600: #58677c;
+  --primitive-color-cool-700: #3b4a60;
+  --primitive-color-cool-900: #172033;
+
+  // Noite de jogo
+  --primitive-color-night-1000: #050b14;
+  --primitive-color-night-950: #08111f;
+  --primitive-color-night-900: #101c2f;
+  --primitive-color-night-800: #17263e;
+  --primitive-color-night-700: #1d3150;
+  --primitive-color-night-600: #2b4268;
+  --primitive-color-night-300: #7789a3;
+  --primitive-color-night-200: #9eabc0;
+  --primitive-color-night-100: #dce3ed;
+  --primitive-color-night-50: #f7f8fb;
+
+  // Marca operacional legada
+  --primitive-color-orange-50: #fff0e7;
+  --primitive-color-orange-100: #fad9c5;
+  --primitive-color-orange-500: #c94f0a;
+  --primitive-color-orange-700: #a83c04;
+  --primitive-color-orange-800: #8a3103;
+  --primitive-color-orange-900: #6d2501;
+
+  // Marca do jogo e destaque esportivo
+  --primitive-color-coral-950: #3a2521;
+  --primitive-color-coral-900: #573023;
+  --primitive-color-coral-600: #e95727;
+  --primitive-color-coral-500: #ff6b35;
+  --primitive-color-coral-400: #ff865f;
+  --primitive-color-amber-950: #3c321b;
+  --primitive-color-amber-500: #ffc857;
+  --primitive-color-amber-300: #ffe09a;
+
+  // Estados
+  --primitive-color-green-950: #183427;
+  --primitive-color-green-900: #1d382a;
+  --primitive-color-green-700: #176a44;
+  --primitive-color-green-500: #4ea66f;
+  --primitive-color-green-300: #89d84f;
+  --primitive-color-green-50: #ebf5ef;
+  --primitive-color-warning-700: #9a5a00;
+  --primitive-color-warning-50: #fdf4e3;
+  --primitive-color-red-950: #42202b;
+  --primitive-color-red-800: #8f1d18;
+  --primitive-color-red-700: #b42318;
+  --primitive-color-red-600: #dd4f5b;
+  --primitive-color-red-500: #ff6f78;
+  --primitive-color-red-50: #fdf0ee;
+  --primitive-color-blue-700: #175cd3;
+  --primitive-color-blue-50: #eef4fd;
+  --primitive-color-cyan-950: #163542;
+  --primitive-color-cyan-500: #49afd3;
+  --primitive-color-cyan-300: #76d2ed;
+
+  // Campo: verde de dominio, separado do estado de sucesso
+  --primitive-color-pitch-700: #2f5e45;
+  --primitive-color-pitch-800: #2a5740;
+  --primitive-color-pitch-night-700: #276146;
+  --primitive-color-pitch-night-800: #22573f;
+  --primitive-color-pitch-line: rgb(255 255 255 / 38%);
+
+  // Transparencias e sobreposicoes
+  --primitive-color-white-a08: rgb(255 255 255 / 8%);
+  --primitive-color-white-a12: rgb(224 234 248 / 12%);
+  --primitive-color-white-a18: rgb(224 234 248 / 18%);
+  --primitive-color-night-a72: rgb(5 11 20 / 72%);
+  --primitive-color-neutral-a08: rgb(25 25 22 / 8%);
+  --primitive-color-neutral-a16: rgb(25 25 22 / 16%);
+
+  // Familias e pesos
+  --primitive-font-family-body:
+    'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --primitive-font-family-display:
+    'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --primitive-font-weight-regular: 400;
+  --primitive-font-weight-medium: 500;
+  --primitive-font-weight-semibold: 600;
+  --primitive-font-weight-bold: 700;
+  --primitive-font-weight-extrabold: 800;
+
+  // Escala tipografica base e esportiva
+  --primitive-font-size-50: 0.6875rem;
+  --primitive-font-size-100: 0.75rem;
+  --primitive-font-size-200: 0.875rem;
+  --primitive-font-size-300: 1rem;
+  --primitive-font-size-400: 1.125rem;
+  --primitive-font-size-500: 1.25rem;
+  --primitive-font-size-600: 1.5rem;
+  --primitive-font-size-700: 2rem;
+  --primitive-font-size-800: 3rem;
+  --primitive-font-size-900: 4.5rem;
+  --primitive-font-size-heading-fluid: clamp(1.375rem, 2.4vw, 1.625rem);
+  --primitive-font-size-display-fluid: clamp(2rem, 5vw, 3.25rem);
+  --primitive-font-size-score-fluid: clamp(2.25rem, 6vw, 4.5rem);
+  --primitive-font-size-position-fluid: clamp(2rem, 5vw, 3.75rem);
+  --primitive-font-size-clock-fluid: clamp(1.5rem, 3vw, 2.25rem);
+  --primitive-line-height-solid: 0.9;
+  --primitive-line-height-tight: 1.1;
+  --primitive-line-height-heading: 1.2;
+  --primitive-line-height-body: 1.5;
+  --primitive-letter-spacing-tight: -0.02em;
+  --primitive-letter-spacing-normal: 0;
+  --primitive-letter-spacing-label: 0.08em;
+
+  // Espacamento em base de 4px
+  --primitive-space-0: 0;
+  --primitive-space-1: 4px;
+  --primitive-space-2: 8px;
+  --primitive-space-3: 12px;
+  --primitive-space-4: 16px;
+  --primitive-space-5: 20px;
+  --primitive-space-6: 24px;
+  --primitive-space-8: 32px;
+  --primitive-space-10: 40px;
+  --primitive-space-12: 48px;
+  --primitive-space-16: 64px;
+  --primitive-space-20: 80px;
+
+  // Forma e contorno
+  --primitive-border-width-thin: 1px;
+  --primitive-border-width-strong: 2px;
+  --primitive-radius-sm: 6px;
+  --primitive-radius-md: 8px;
+  --primitive-radius-lg: 10px;
+  --primitive-radius-xl: 16px;
+  --primitive-radius-2xl: 20px;
+  --primitive-radius-round: 50%;
+  --primitive-radius-pill: 999px;
+
+  // Elevacao
+  --primitive-shadow-overlay:
+    0 12px 32px var(--primitive-color-neutral-a16), 0 2px 6px var(--primitive-color-neutral-a08);
+  --primitive-shadow-raised-light: 0 12px 28px rgb(23 32 51 / 10%), 0 2px 8px rgb(23 32 51 / 6%);
+  --primitive-shadow-raised-dark: 0 16px 36px rgb(0 0 0 / 34%), 0 3px 10px rgb(0 0 0 / 22%);
+  --primitive-shadow-highlight-dark: 0 0 0 1px rgb(255 107 53 / 22%), 0 18px 42px rgb(0 0 0 / 36%);
+
+  // Layout
+  --primitive-container-max: 1120px;
+  --primitive-sidebar-width: 236px;
+  --primitive-touch-target: 44px;
+
+  // Movimento
+  --primitive-motion-feedback: 160ms;
+  --primitive-motion-panel: 240ms;
+  --primitive-motion-live: 1200ms;
+  --primitive-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --primitive-motion-easing-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --primitive-motion-distance-sm: 4px;
+  --primitive-motion-live-iterations: infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --primitive-motion-feedback: 0ms;
+    --primitive-motion-panel: 0ms;
+    --primitive-motion-live: 0ms;
+    --primitive-motion-distance-sm: 0px;
+    --primitive-motion-live-iterations: 1;
+  }
+}

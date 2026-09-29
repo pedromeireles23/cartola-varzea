@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-export type BadgeTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger';
+export type BadgeTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info' | 'live';
 
 /** Etiqueta curta de status ou posicao (02 §8). */
 @Component({

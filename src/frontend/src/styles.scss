@@ -1,4 +1,6 @@
-@use 'styles/tokens';
+@use 'styles/primitives';
+@use 'styles/semantic-tokens';
+@use 'styles/component-tokens';
 
 *,
 *::before,
@@ -68,7 +70,7 @@ textarea {
 // Foco sempre visivel, nunca removido sem substituto (02 §12). O laranja da marca dá
 // 4,5:1 sobre a superficie e 4:1 sobre o fundo, acima dos 3:1 que o indicador pede.
 :focus-visible {
-  outline: 2px solid var(--color-brand-500);
+  outline: 3px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -82,6 +84,36 @@ svg.lucide {
   flex: 0 0 auto;
 }
 
+// Escala esportiva compartilhada: placar, pontos, posição e prazo usam a fonte display
+// e algarismos tabulares, sem cada tela inventar sua própria medida.
+.score,
+.position-number,
+.round-clock {
+  font-family: var(--font-family-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.score {
+  font-size: var(--font-score-lg);
+  line-height: 0.9;
+}
+
+.score--sm {
+  font-size: var(--font-score-sm);
+}
+
+.position-number {
+  font-size: var(--font-position);
+  line-height: 1;
+}
+
+.round-clock {
+  font-size: var(--font-round-clock);
+  line-height: 1;
+}
+
 // Conteudo apenas para leitor de tela.
 .sr-only {
   position: absolute;
@@ -92,4 +124,15 @@ svg.lucide {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

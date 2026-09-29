@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { anonymousGuard, authGuard } from './core/auth/auth.guard';
+import { developmentRoutes } from './development.routes';
 import { Shell } from './layouts/shell/shell';
 
 /**
@@ -19,6 +20,7 @@ export const routes: Routes = [
         pathMatch: 'full',
         loadComponent: () => import('./features/public/landing').then((m) => m.LandingPage),
       },
+      ...developmentRoutes,
       {
         path: 'sistema',
         title: 'Estado do sistema',

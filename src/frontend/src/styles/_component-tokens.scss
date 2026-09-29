@@ -1,0 +1,163 @@
+@use 'semantic-tokens';
+
+// Tokens de contrato dos componentes fundamentais. Eles sao redeclarados em cada
+// tema para que aliases baseados em tokens semanticos acompanhem o escopo do tema.
+@mixin component-token-aliases {
+  // Card: padrao, elevado e destaque esportivo.
+  --card-background: var(--semantic-surface);
+  --card-foreground: var(--semantic-text-strong);
+  --card-heading: var(--semantic-text-strong);
+  --card-muted: var(--semantic-text-muted);
+  --card-border: var(--semantic-border-subtle);
+  --card-radius: var(--primitive-radius-lg);
+  --card-shadow: none;
+  --card-padding: var(--primitive-space-5);
+  --card-gap: var(--primitive-space-4);
+  --card-elevated-background: var(--semantic-surface-raised);
+  --card-elevated-border: var(--semantic-border-subtle);
+  --card-elevated-shadow: var(--semantic-shadow-raised);
+  --card-highlight-background: var(--semantic-action-surface);
+  --card-highlight-foreground: var(--semantic-on-action-surface);
+  --card-highlight-border: var(--semantic-brand);
+  --card-highlight-shadow: var(--semantic-shadow-highlight);
+
+  // Panel: conteudo agrupado e variante operacional para formularios/tabelas.
+  --panel-background: var(--semantic-surface);
+  --panel-foreground: var(--semantic-text-strong);
+  --panel-heading: var(--semantic-text-strong);
+  --panel-muted: var(--semantic-text-muted);
+  --panel-border: var(--semantic-border-subtle);
+  --panel-radius: var(--primitive-radius-lg);
+  --panel-shadow: none;
+  --panel-padding: var(--primitive-space-5);
+  --panel-gap: var(--primitive-space-4);
+  --panel-divider: var(--semantic-border-subtle);
+  --panel-elevated-background: var(--semantic-surface-raised);
+  --panel-elevated-border: var(--semantic-border-subtle);
+  --panel-elevated-shadow: var(--semantic-shadow-raised);
+  --panel-highlight-background: var(--semantic-action-surface);
+  --panel-highlight-foreground: var(--semantic-on-action-surface);
+  --panel-highlight-border: var(--semantic-brand);
+  --panel-highlight-shadow: var(--semantic-shadow-highlight);
+  --panel-operational-background: var(--semantic-surface-inset);
+  --panel-operational-border: var(--semantic-border-control);
+
+  // Button: pares de cor completos por variante e estados sem opacidade global.
+  --button-min-height: var(--primitive-touch-target);
+  --button-padding-block: var(--primitive-space-2);
+  --button-padding-inline: var(--primitive-space-4);
+  --button-gap: var(--primitive-space-2);
+  --button-radius: var(--primitive-radius-md);
+  --button-font-family: var(--semantic-font-family-body);
+  --button-font-size: var(--primitive-font-size-200);
+  --button-font-weight: var(--primitive-font-weight-medium);
+  --button-primary-background: var(--semantic-action);
+  --button-primary-foreground: var(--semantic-on-action);
+  --button-primary-border: var(--semantic-action);
+  --button-primary-hover: var(--semantic-action-hover);
+  --button-primary-active: var(--semantic-action-active);
+  --button-secondary-background: var(--semantic-surface);
+  --button-secondary-foreground: var(--semantic-secondary-foreground);
+  --button-secondary-border: var(--semantic-border-control);
+  --button-secondary-hover: var(--semantic-surface-alt);
+  --button-secondary-active: var(--semantic-surface-hover);
+  --button-ghost-background: transparent;
+  --button-ghost-foreground: var(--semantic-text);
+  --button-ghost-border: transparent;
+  --button-ghost-hover: var(--semantic-surface-alt);
+  --button-danger-background: var(--semantic-danger);
+  --button-danger-foreground: var(--semantic-on-danger);
+  --button-danger-border: var(--semantic-danger);
+  --button-danger-hover: var(--semantic-danger-hover);
+  --button-disabled-background: var(--semantic-disabled-background);
+  --button-disabled-foreground: var(--semantic-disabled-foreground);
+  --button-disabled-border: var(--semantic-disabled-border);
+  --button-focus-color: var(--semantic-focus-ring);
+  --button-focus-offset-color: var(--semantic-focus-ring-offset);
+  --button-focus-ring:
+    0 0 0 2px var(--button-focus-offset-color), 0 0 0 4px var(--button-focus-color);
+  --button-transition:
+    color var(--semantic-motion-feedback) var(--semantic-motion-easing),
+    background-color var(--semantic-motion-feedback) var(--semantic-motion-easing),
+    border-color var(--semantic-motion-feedback) var(--semantic-motion-easing),
+    transform var(--semantic-motion-feedback) var(--semantic-motion-easing);
+
+  // Badge: cada estado oferece fundo, texto e borda sem depender apenas da cor.
+  --badge-font-family: var(--semantic-font-family-body);
+  --badge-font-size: var(--primitive-font-size-100);
+  --badge-font-weight: var(--primitive-font-weight-medium);
+  --badge-line-height: var(--primitive-line-height-body);
+  --badge-gap: var(--primitive-space-1);
+  --badge-padding-block: 2px;
+  --badge-padding-inline: var(--primitive-space-2);
+  --badge-radius: var(--primitive-radius-pill);
+  --badge-neutral-background: var(--semantic-surface-alt);
+  --badge-neutral-foreground: var(--semantic-text);
+  --badge-neutral-border: var(--semantic-border-subtle);
+  --badge-brand-background: var(--semantic-action-surface);
+  --badge-brand-foreground: var(--semantic-brand-strong);
+  --badge-brand-border: var(--semantic-brand-soft);
+  --badge-success-background: var(--semantic-success-surface);
+  --badge-success-foreground: var(--semantic-success);
+  --badge-success-border: transparent;
+  --badge-warning-background: var(--semantic-warning-surface);
+  --badge-warning-foreground: var(--semantic-warning);
+  --badge-warning-border: transparent;
+  --badge-danger-background: var(--semantic-danger-surface);
+  --badge-danger-foreground: var(--semantic-danger);
+  --badge-danger-border: transparent;
+  --badge-info-background: var(--semantic-info-surface);
+  --badge-info-foreground: var(--semantic-info);
+  --badge-info-border: var(--semantic-info);
+  --badge-live-background: var(--semantic-live);
+  --badge-live-foreground: var(--semantic-on-live);
+  --badge-live-border: var(--semantic-live);
+
+  // PageHeader: hierarquia comum, com escala de jogo disponivel sem afetar operacao.
+  --page-header-title: var(--semantic-text-strong);
+  --page-header-title-family: var(--semantic-font-family-body);
+  --page-header-title-size: var(--semantic-font-size-h1);
+  --page-header-title-weight: var(--primitive-font-weight-semibold);
+  --page-header-title-line-height: var(--semantic-line-height-heading);
+  --page-header-game-title-family: var(--semantic-font-family-display);
+  --page-header-game-title-size: var(--semantic-font-size-page-title-game);
+  --page-header-game-title-weight: var(--semantic-font-weight-display);
+  --page-header-game-title-line-height: var(--semantic-line-height-display);
+  --page-header-game-title-letter-spacing: var(--semantic-letter-spacing-display);
+  --page-header-kicker: var(--semantic-text-muted);
+  --page-header-kicker-family: var(--semantic-font-family-body);
+  --page-header-kicker-size: var(--primitive-font-size-100);
+  --page-header-kicker-weight: var(--primitive-font-weight-medium);
+  --page-header-kicker-letter-spacing: 0.06em;
+  --page-header-subtitle: var(--semantic-text-muted);
+  --page-header-subtitle-size: var(--semantic-font-size-body);
+  --page-header-gap: var(--primitive-space-2);
+}
+
+:root,
+.theme-player,
+.theme-organizer {
+  @include component-token-aliases;
+}
+
+.theme-player {
+  --card-radius: var(--primitive-radius-xl);
+  --panel-radius: var(--primitive-radius-xl);
+  --panel-padding: var(--primitive-space-6);
+  --button-font-weight: var(--semantic-font-weight-control);
+  --button-secondary-background: var(--semantic-secondary-background);
+  --button-secondary-hover: var(--semantic-secondary-hover);
+  --button-ghost-hover: var(--semantic-ghost-hover);
+  --badge-font-weight: var(--semantic-font-weight-control);
+  --badge-line-height: var(--primitive-line-height-tight);
+  --badge-padding-block: var(--primitive-space-1);
+  --badge-brand-foreground: var(--semantic-on-action-surface);
+  --badge-brand-border: var(--semantic-brand);
+  --badge-success-border: var(--semantic-success);
+  --badge-warning-border: var(--semantic-warning);
+  --badge-danger-border: var(--semantic-danger);
+  --page-header-kicker: var(--semantic-brand-strong);
+  --page-header-kicker-family: var(--semantic-font-family-display);
+  --page-header-kicker-weight: var(--semantic-font-weight-bold);
+  --page-header-kicker-letter-spacing: var(--semantic-letter-spacing-label);
+}
