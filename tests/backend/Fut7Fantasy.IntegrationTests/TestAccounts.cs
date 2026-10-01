@@ -97,7 +97,10 @@ internal static partial class TestAccounts
         string email,
         CancellationToken cancellationToken)
     {
-        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        // O pote de cookies segue o relógio da aplicação, não o da máquina: com o relógio
+        // parado em FixedNow, o CookieContainer padrão já dava a sessão como vencida.
+        var client = factory.CreateDefaultClient(
+            new ClockCookieHandler(factory.Services.GetRequiredService<TimeProvider>()));
         await RefreshAntiforgeryAsync(client, cancellationToken);
         using var login = await client.PostAsJsonAsync(
             new Uri("/api/v1/auth/login", UriKind.Relative),
