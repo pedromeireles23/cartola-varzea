@@ -133,7 +133,8 @@ describe('RoundReviewPage', () => {
     const fixture = await open(review(), 'Assistant');
 
     expect(text(fixture)).toContain('Aurora × Estrela');
-    expect(text(fixture)).toContain('2 × 1');
+    // O × é só visual; o leitor de tela ouve "2 a 1", como no placar público.
+    expect(text(fixture)).toContain('2× a 1');
     expect(text(fixture)).toContain('3 gols');
     expect(button(fixture, 'Enviar para revisão')).toBeUndefined();
   });

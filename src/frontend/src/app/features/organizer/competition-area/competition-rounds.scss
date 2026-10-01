@@ -54,3 +54,84 @@
   padding-top: var(--space-3);
   border-top: 1px solid var(--color-border);
 }
+
+// ---------------------------------------------------------------- central da rodada
+
+// O que está em jogo agora (V6): a mesma marca do jogo no nome e na barra de acento,
+// com o resto em Inter, na calma da central.
+.central {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: linear-gradient(160deg, var(--semantic-surface), var(--semantic-surface-alt));
+  border: 1px solid var(--semantic-border-subtle);
+  border-left: 4px solid var(--semantic-brand-strong);
+  border-radius: var(--card-radius);
+}
+
+.central__titulo,
+.central__nome {
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.central__titulo {
+  font-size: 1.375rem;
+  line-height: 1;
+}
+
+.central__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.central__rodada {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-4);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+// A rodada que espera uma ação de quem organiza ganha a borda da marca.
+.central__rodada--acao {
+  border-color: color-mix(in srgb, var(--semantic-brand-strong) 50%, var(--semantic-border-subtle));
+}
+
+.central__cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.central__nome {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.central__passo {
+  margin: 0;
+  color: var(--semantic-text);
+}
+
+.central__detalhe {
+  margin: 0;
+  color: var(--semantic-text-muted);
+  font-size: var(--font-small);
+}
+
+.central__rodada .acao {
+  justify-self: start;
+}

@@ -279,6 +279,53 @@ describe('CompetitionRoundsPage', () => {
     expect(botao(fixture, 'Abrir mercado')).toBeUndefined();
   });
 
+  it('a central da rodada mostra só o que está em jogo, com o próximo passo', async () => {
+    const fixture = await abrir([
+      rodada({ id: 'r1', name: 'Rodada 1', status: 'Published', phase: 'Consolidated' }),
+      rodada({
+        id: 'r2',
+        name: 'Rodada 2',
+        sequence: 2,
+        status: 'UnderReview',
+        phase: 'UnderReview',
+        matches: [
+          partida({ id: 'm2', kickoffLocal: '2026-09-27T10:30' }),
+          partida({ id: 'm3', kickoffLocal: '2026-09-27T09:00' }),
+        ],
+      }),
+      rodada({
+        id: 'r3',
+        name: 'Rodada 3',
+        sequence: 3,
+        status: 'MarketOpen',
+        phase: 'MarketOpen',
+        matches: [partida({ id: 'm4' })],
+      }),
+      rodada({ id: 'r4', name: 'Rodada 4', sequence: 4 }),
+    ]);
+    const central = (fixture.nativeElement as HTMLElement).querySelector('.central')!;
+    const rodadas = [...central.querySelectorAll('.central__rodada')];
+
+    expect(central.querySelector('h2')?.textContent).toContain('Central da rodada');
+    // Consolidada e rascunho não estão em jogo.
+    expect(rodadas.map((item) => item.querySelector('.central__nome')?.textContent)).toEqual([
+      'Rodada 2',
+      'Rodada 3',
+    ]);
+    expect(rodadas[0].textContent).toContain('confira as súmulas e publique o resultado');
+    // O primeiro jogo é o mais cedo, não o primeiro da lista.
+    expect(rodadas[0].textContent).toContain('2 partidas · primeira em 27/09/2026 09:00');
+    expect(rodadas[0].querySelector('a')?.getAttribute('href')).toBe('/r2/revisao');
+    // Com o mercado aberto não há o que revisar ainda.
+    expect(rodadas[1].querySelector('a')).toBeNull();
+  });
+
+  it('sem rodada em jogo, a central não aparece', async () => {
+    const fixture = await abrir([rodada()]);
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.central')).toBeNull();
+  });
+
   it('sem fase, explica que não dá para marcar jogo ainda', async () => {
     const fixture = await abrir([], 'Owner', []);
 

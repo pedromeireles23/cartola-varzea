@@ -263,7 +263,7 @@ export const routes: Routes = [
           },
           {
             path: 'rodadas/:rodada/revisao',
-            title: 'Revisão da rodada',
+            title: 'Central da rodada',
             loadComponent: () =>
               import('./features/organizer/competition-area/round-review').then(
                 (m) => m.RoundReviewPage,

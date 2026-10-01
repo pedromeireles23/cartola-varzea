@@ -63,6 +63,26 @@ interface Formulario {
   readonly status: MatchStatus;
 }
 
+/** As fases em que a rodada está em jogo: do mercado aberto até a publicação. */
+const EM_JOGO: readonly RoundPhase[] = [
+  'MarketOpen',
+  'MarketClosed',
+  'InProgress',
+  'UnderReview',
+  'ReopenedForCorrection',
+];
+
+const PEDEM_REVISAO: readonly RoundPhase[] = ['InProgress', 'UnderReview', 'ReopenedForCorrection'];
+
+/** O próximo passo de cada fase, em linguagem de quem organiza. */
+const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
+  MarketOpen: 'Mercado aberto: quem joga ainda mexe na escalação até o fechamento.',
+  MarketClosed: 'Mercado fechado e escalações congeladas. A súmula abre quando os jogos começam.',
+  InProgress: 'Jogos em andamento: lance as súmulas e envie a rodada para revisão.',
+  UnderReview: 'Em conferência: confira as súmulas e publique o resultado.',
+  ReopenedForCorrection: 'Em correção: ajuste a súmula e republique o resultado.',
+};
+
 /**
  * Rodadas e partidas (02 §9.1, `/organizar/c/:campeonato/rodadas`).
  *
@@ -110,6 +130,42 @@ interface Formulario {
                 Crie uma fase e confirme os times dela antes de marcar partidas.
               </app-alert>
             </app-card>
+          }
+
+          <!--
+            Central da rodada (V6): o que está em jogo agora, antes do histórico inteiro. Só
+            aparece com rodada entre o mercado aberto e a publicação, e cada uma diz o próximo
+            passo; a ação de revisão repete a do cartão, mais perto de quem chega.
+          -->
+          @if (emJogo().length > 0) {
+            <section class="central" aria-labelledby="central-titulo">
+              <h2 id="central-titulo" class="central__titulo">Central da rodada</h2>
+              <ul class="central__lista">
+                @for (rodada of emJogo(); track rodada.id) {
+                  <li class="central__rodada" [class.central__rodada--acao]="pedeRevisao(rodada)">
+                    <p class="central__cabecalho">
+                      <strong class="central__nome">{{ rodada.name }}</strong>
+                      <app-badge [tone]="tomDaFase(rodada.phase)">{{
+                        fase(rodada.phase)
+                      }}</app-badge>
+                    </p>
+                    <p class="central__passo">{{ proximoPasso(rodada) }}</p>
+                    @if (primeiroJogo(rodada); as inicio) {
+                      <p class="central__detalhe">
+                        {{ rodada.matches.length }}
+                        {{ rodada.matches.length === 1 ? 'partida' : 'partidas' }} · primeira em
+                        {{ quando(inicio) }}
+                      </p>
+                    }
+                    @if (pedeRevisao(rodada)) {
+                      <a class="acao" [routerLink]="[rodada.id, 'revisao']">
+                        Revisar rodada<span class="sr-only"> {{ rodada.name }}</span>
+                      </a>
+                    }
+                  </li>
+                }
+              </ul>
+            </section>
           }
 
           @for (rodada of rodadas(); track rodada.id) {
@@ -407,6 +463,11 @@ export class CompetitionRoundsPage {
     return atual.tipo === 'pronto' ? atual.fases : [];
   });
 
+  /** As rodadas entre o mercado aberto e a publicação: o que a central acompanha agora. */
+  protected readonly emJogo = computed(() =>
+    this.rodadas().filter((rodada) => EM_JOGO.includes(rodada.phase)),
+  );
+
   protected readonly opcoesDeFase = computed<readonly SelectOption[]>(() =>
     this.fases().map((fase) => ({ value: fase.id, label: `${fase.sequence}. ${fase.name}` })),
   );
@@ -430,6 +491,24 @@ export class CompetitionRoundsPage {
 
   protected situacao(status: MatchStatus): string {
     return MATCH_STATUS_LABELS[status];
+  }
+
+  /** Depois que o mercado fecha, a próxima ação da rodada mora na revisão. */
+  protected pedeRevisao(rodada: Round): boolean {
+    return PEDEM_REVISAO.includes(rodada.phase);
+  }
+
+  protected proximoPasso(rodada: Round): string {
+    return PROXIMO_PASSO[rodada.phase] ?? '';
+  }
+
+  /** O primeiro jogo marcado da rodada, no fuso do campeonato. */
+  protected primeiroJogo(rodada: Round): string | null {
+    const marcados = rodada.matches
+      .filter((partida) => partida.status === 'Scheduled')
+      .map((partida) => partida.kickoffLocal)
+      .sort();
+    return marcados[0] ?? null;
   }
 
   protected tomDaFase(phase: RoundPhase): BadgeTone {

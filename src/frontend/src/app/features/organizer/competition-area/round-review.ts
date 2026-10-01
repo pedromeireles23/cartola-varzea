@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CircleAlert } from 'lucide';
 
 import { ApiFailure } from '../../../core/api/problem-details';
 import {
@@ -10,6 +11,7 @@ import {
   Card,
   Dialog,
   FormField,
+  Icon,
   Loading,
 } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
@@ -53,6 +55,7 @@ const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
     Card,
     Dialog,
     FormField,
+    Icon,
     ImportUpload,
     Loading,
     RouterLink,
@@ -74,7 +77,7 @@ const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
         @case ('ready') {
           <div class="cabecalho">
             <div>
-              <p class="eyebrow">Revisão consolidada</p>
+              <p class="eyebrow">Central da rodada</p>
               <h1>{{ review()!.roundName }}</h1>
             </div>
             <app-badge [tone]="phaseTone(review()!.phase)">
@@ -88,9 +91,14 @@ const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
 
           <app-card heading="Prontidão da rodada">
             <p class="summary">
-              <strong>{{ review()!.completedSheets }} de {{ review()!.scheduledMatches }}</strong>
+              <strong class="summary__number num"
+                >{{ review()!.completedSheets }} de {{ review()!.scheduledMatches }}</strong
+              >
               súmulas obrigatórias preenchidas
             </p>
+            <div class="bar" aria-hidden="true">
+              <span class="bar__fill" [style.width.%]="sheetsPercent()"></span>
+            </div>
             @if (review()!.ready) {
               <app-alert tone="success">
                 Todos os jogos marcados começaram e suas súmulas estão consistentes.
@@ -104,8 +112,9 @@ const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
                   item of review()!.pending;
                   track item.code + '-' + item.matchId + '-' + item.message
                 ) {
-                  <li>
-                    {{ item.message }}
+                  <li class="pending__item">
+                    <svg class="pending__icon" [appIcon]="pendingIcon" [size]="18" />
+                    <span>{{ item.message }}</span>
                     @if (item.matchId) {
                       <a [routerLink]="['../../../partidas', item.matchId, 'sumula']"
                         >Abrir súmula</a
@@ -318,7 +327,10 @@ const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
                   </app-badge>
                 </div>
                 @if (match.hasSheet) {
-                  <p class="score">{{ match.homeScore }} × {{ match.awayScore }}</p>
+                  <p class="score num">
+                    {{ match.homeScore }}<span aria-hidden="true">×</span
+                    ><span class="sr-only"> a </span>{{ match.awayScore }}
+                  </p>
                   <p class="participants">{{ match.participants }} participante(s)</p>
                   @if (match.events.length > 0) {
                     <ul class="events">
@@ -365,6 +377,16 @@ export class RoundReviewPage {
     readonly tone: 'success' | 'warning' | 'danger';
     readonly text: string;
   } | null>(null);
+  protected readonly pendingIcon = CircleAlert;
+
+  /** Quanto das súmulas obrigatórias já foi lançado, para a barra da central. */
+  protected readonly sheetsPercent = computed(() => {
+    const current = this.review();
+    return current && current.scheduledMatches > 0
+      ? (current.completedSheets / current.scheduledMatches) * 100
+      : 0;
+  });
+
   protected readonly review = computed(() => {
     const current = this.state();
     return current.kind === 'ready' ? current.review : null;
