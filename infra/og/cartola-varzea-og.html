@@ -1,0 +1,311 @@
+<!doctype html>
+<!--
+  Fonte da imagem de compartilhamento (Open Graph, 1200 x 630) da V5.
+
+  Só ativos próprios: as fontes são as mesmas auto-hospedadas do frontend, embutidas pelo
+  gerador no lugar dos marcadores, e o estádio é o mesmo desenho em CSS e SVG da landing.
+  Para gerar de novo: node infra/og/gerar-og.mjs (veja o comentário do script).
+-->
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: 'Barlow Condensed';
+        font-weight: 700;
+        src: url('{{BARLOW_700}}') format('woff2');
+      }
+
+      @font-face {
+        font-family: 'Barlow Condensed';
+        font-weight: 800;
+        src: url('{{BARLOW_800}}') format('woff2');
+      }
+
+      @font-face {
+        font-family: 'Inter';
+        font-weight: 100 900;
+        src: url('{{INTER}}') format('woff2');
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+      }
+
+      .cartao {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 40px;
+        align-items: center;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        padding: 56px 64px;
+        color: #f7f8fb;
+        font-family: 'Inter', sans-serif;
+        background:
+          radial-gradient(circle at 78% 10%, rgb(255 134 95 / 22%), transparent 420px),
+          radial-gradient(circle at 8% 100%, rgb(255 200 87 / 10%), transparent 380px),
+          linear-gradient(150deg, #08111f, #050b14);
+      }
+
+      /* Linhas de prancheta, só textura. */
+      .cartao::before {
+        position: absolute;
+        inset: 0;
+        content: '';
+        background-image:
+          linear-gradient(rgb(255 255 255 / 4%) 1px, transparent 1px),
+          linear-gradient(90deg, rgb(255 255 255 / 4%) 1px, transparent 1px);
+        background-size: 40px 40px;
+        mask-image: linear-gradient(110deg, transparent 20%, black 100%);
+      }
+
+      .texto,
+      .estadio {
+        position: relative;
+      }
+
+      .texto {
+        display: grid;
+        gap: 26px;
+        align-content: center;
+      }
+
+      .marca {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .marca__sinal {
+        display: grid;
+        width: 52px;
+        height: 58px;
+        place-items: center;
+        color: #101722;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 24px;
+        font-weight: 800;
+        background: #ff865f;
+        clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
+      }
+
+      .marca__nome {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        text-transform: uppercase;
+      }
+
+      .titulo {
+        margin: 0;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 104px;
+        font-weight: 800;
+        line-height: 0.86;
+        letter-spacing: -0.035em;
+        text-transform: uppercase;
+      }
+
+      .titulo span {
+        display: block;
+      }
+
+      .titulo span:last-child {
+        color: #ff865f;
+      }
+
+      .selo {
+        display: flex;
+        gap: 6px;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .selo span {
+        padding: 9px 14px;
+        border-radius: 8px;
+      }
+
+      .selo__marca {
+        color: #dce3ed;
+        background: #17263e;
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 12%);
+      }
+
+      .selo__aviso {
+        color: #101722;
+        background: #ffc857;
+      }
+
+      .rodape {
+        color: #9eabc0;
+        font-size: 19px;
+      }
+
+      /* Estádio: o mesmo desenho da capa da landing, em escala fixa. */
+      .estadio {
+        position: relative;
+        height: 460px;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 55% 40% at 12% -4%, rgb(255 244 214 / 26%), transparent 70%),
+          radial-gradient(ellipse 55% 40% at 88% -4%, rgb(255 244 214 / 26%), transparent 70%),
+          linear-gradient(180deg, #050b14 0 34%, #101c2f 100%);
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 18px;
+        box-shadow: 0 24px 48px rgb(0 0 0 / 45%);
+      }
+
+      .estadio::before {
+        position: absolute;
+        inset: 0 0 auto;
+        height: 36%;
+        content: '';
+        background-image: radial-gradient(circle, rgb(255 255 255 / 18%) 1.2px, transparent 1.7px);
+        background-size: 9px 9px;
+        mask-image: linear-gradient(180deg, black 15%, transparent 100%);
+      }
+
+      .placa {
+        position: absolute;
+        top: 41%;
+        left: 50%;
+        z-index: 2;
+        display: flex;
+        gap: 10px;
+        padding: 7px 12px;
+        color: #ffe09a;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        white-space: nowrap;
+        text-transform: uppercase;
+        background: #050b14;
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 3px;
+        box-shadow: 0 0 28px rgb(255 200 87 / 18%);
+        transform: translateX(-50%);
+      }
+
+      .placa__destaque {
+        color: #ff865f;
+      }
+
+      .gramado {
+        position: absolute;
+        bottom: -6%;
+        left: 50%;
+        width: 96%;
+        aspect-ratio: 3 / 4;
+        background: repeating-linear-gradient(180deg, #276146 0 12.5%, #22573f 12.5% 25%);
+        border-radius: 4px;
+        box-shadow: 0 0 80px rgb(39 97 70 / 45%);
+        transform: translateX(-50%) perspective(800px) rotateX(50deg);
+        transform-origin: 50% 100%;
+        transform-style: preserve-3d;
+      }
+
+      .linhas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke: rgb(255 255 255 / 38%);
+        stroke-width: 2;
+      }
+
+      .ficha {
+        position: absolute;
+        display: grid;
+        width: 50px;
+        aspect-ratio: 1;
+        place-items: center;
+        color: #101722;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 15px;
+        font-weight: 800;
+        background: linear-gradient(145deg, #ff865f, #ff6b35);
+        border: 2px solid rgb(255 255 255 / 72%);
+        border-radius: 50%;
+        box-shadow: 0 8px 16px rgb(0 0 0 / 40%);
+        transform: translate(-50%, -100%) rotateX(-50deg);
+        transform-origin: 50% 100%;
+      }
+
+      .ficha--capitao::after {
+        position: absolute;
+        top: -7px;
+        right: -7px;
+        display: grid;
+        width: 20px;
+        aspect-ratio: 1;
+        place-items: center;
+        color: #101722;
+        font-size: 11px;
+        content: 'C';
+        background: #ffc857;
+        border: 2px solid #050b14;
+        border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="cartao">
+      <section class="texto">
+        <div class="marca">
+          <span class="marca__sinal">CV</span>
+          <span class="marca__nome">Cartola Várzea</span>
+        </div>
+        <h1 class="titulo">
+          <span>Monte,</span>
+          <span>dispute,</span>
+          <span>acompanhe.</span>
+        </h1>
+        <p class="selo">
+          <span class="selo__marca">Fantasy de futebol amador</span>
+          <span class="selo__aviso">Sem apostas em dinheiro</span>
+        </p>
+        <p class="rodape">Créditos virtuais e dados fictícios · demonstração de portfólio</p>
+      </section>
+
+      <div class="estadio">
+        <p class="placa">
+          <span>Fantasy esportivo</span>
+          <span class="placa__destaque">Sem apostas em dinheiro</span>
+        </p>
+        <div class="gramado">
+          <svg class="linhas" viewBox="0 0 300 400">
+            <rect x="6" y="6" width="288" height="388" />
+            <path d="M6 200H294" />
+            <circle cx="150" cy="200" r="38" />
+            <path d="M82 6V62H218V6" />
+            <path d="M118 6V26H182V6" />
+            <path d="M82 394V338H218V394" />
+            <path d="M118 394V374H182V394" />
+          </svg>
+          <span class="ficha" style="left: 50%; top: 88%">GOL</span>
+          <span class="ficha" style="left: 30%; top: 70%">DEF</span>
+          <span class="ficha" style="left: 70%; top: 70%">DEF</span>
+          <span class="ficha" style="left: 24%; top: 47%">MEI</span>
+          <span class="ficha" style="left: 76%; top: 47%">MEI</span>
+          <span class="ficha" style="left: 38%; top: 24%">ATA</span>
+          <span class="ficha ficha--capitao" style="left: 62%; top: 24%">ATA</span>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

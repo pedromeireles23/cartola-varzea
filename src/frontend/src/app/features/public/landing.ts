@@ -257,7 +257,7 @@ export class LandingPage implements OnInit {
     this.meta.set({
       title: 'Fantasy para campeonatos de várzea',
       description:
-        'Monte seu elenco com atletas do campeonato amador, acompanhe a pontuação de cada rodada e dispute o ranking com quem joga junto. Demonstração de portfólio com dados fictícios.',
+        'Monte seu elenco com atletas do campeonato amador, acompanhe a pontuação de cada rodada e dispute o ranking com quem joga junto. Créditos virtuais, sem apostas em dinheiro. Demonstração de portfólio com dados fictícios.',
     });
     this.carregar();
 
