@@ -3,6 +3,17 @@
   gap: var(--space-3);
 }
 
+// Densidade (V6): os times dividem a linha no desktop; o time em edição ocupa a linha.
+@media (min-width: 900px) {
+  .times {
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  }
+
+  .times > app-card:has(form) {
+    grid-column: 1 / -1;
+  }
+}
+
 .time {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -32,14 +43,20 @@
   font-size: var(--font-body);
 }
 
+// O escudo da marca, o mesmo da súmula e das telas públicas: iniciais, sem imagem.
 .escudo {
   display: grid;
-  width: 3rem;
-  aspect-ratio: 1;
+  width: 2.75rem;
+  height: 3rem;
   place-items: center;
-  color: var(--color-ink-700);
-  font-weight: 600;
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: 50% 50% 45% 45%;
+  color: var(--semantic-on-action);
+  font-family: var(--font-family-display);
+  font-size: 1rem;
+  font-weight: 800;
+  background-color: var(--semantic-brand-strong);
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
+}
+
+.time--arquivado .escudo {
+  background-color: var(--semantic-text-muted);
 }

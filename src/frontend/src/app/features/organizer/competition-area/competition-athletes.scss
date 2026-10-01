@@ -3,6 +3,18 @@
   gap: var(--space-3);
 }
 
+// Densidade (V6): no desktop os atletas dividem a linha, em vez de um cartão de largura
+// inteira por atleta. Quem está em edição abre o formulário e ocupa a linha toda.
+@media (min-width: 900px) {
+  .athletes {
+    grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+  }
+
+  .athletes > app-card:has(form) {
+    grid-column: 1 / -1;
+  }
+}
+
 .athlete {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
