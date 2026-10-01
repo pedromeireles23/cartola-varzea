@@ -141,7 +141,7 @@ interface Ficha {
 
       @switch (estado().tipo) {
         @case ('carregando') {
-          <app-loading label="Buscando campeonatos…" />
+          <app-loading label="Buscando campeonatos…" skeleton="cards" />
         }
         @case ('erro') {
           <p class="apoio">
@@ -169,7 +169,7 @@ interface Ficha {
               </ul>
             }
           } @else {
-            <app-empty-state ilustracao="campo">
+            <app-empty-state illustration="pitch">
               Nenhum campeonato publicado ainda. Quando a primeira liga publicar o dela, ele aparece
               aqui.
             </app-empty-state>

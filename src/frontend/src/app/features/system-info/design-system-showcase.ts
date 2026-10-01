@@ -1,7 +1,18 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CircleCheck, Clock, Save, ShieldCheck, Trophy, TriangleAlert } from 'lucide';
 
-import { Badge, Button, Card, EmptyState, Icon, PageHeader, Panel } from '../../shared/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  FailureState,
+  Icon,
+  Loading,
+  PageHeader,
+  Panel,
+} from '../../shared/ui';
+import { ApiFailure } from '../../core/api/problem-details';
 
 /**
  * Laboratório isolado da direção visual V1.
@@ -12,7 +23,7 @@ import { Badge, Button, Card, EmptyState, Icon, PageHeader, Panel } from '../../
 @Component({
   selector: 'app-design-system-showcase',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Badge, Button, Card, EmptyState, Icon, PageHeader, Panel],
+  imports: [Badge, Button, Card, EmptyState, FailureState, Icon, Loading, PageHeader, Panel],
   template: `
     <main class="showcase" data-testid="design-system-showcase">
       <section class="theme-player" data-testid="theme-player" aria-label="Tema do jogador">
@@ -126,12 +137,16 @@ import { Badge, Button, Card, EmptyState, Icon, PageHeader, Panel } from '../../
           </app-card>
 
           <app-card variant="compact" heading="Estados vazios" [headingLevel]="3">
-            <app-empty-state ilustracao="arquibancada" titulo="Você ainda não está em nenhuma liga">
+            <app-empty-state illustration="stands" heading="Você ainda não está em nenhuma liga">
               Crie a sua ou entre com o código que recebeu.
             </app-empty-state>
-            <app-empty-state ilustracao="tatica" [compacto]="true">
+            <app-empty-state illustration="tactics" [compact]="true">
               Nenhum atleta corresponde a esses filtros.
             </app-empty-state>
+          </app-card>
+
+          <app-card variant="compact" heading="Carregando" [headingLevel]="3">
+            <app-loading label="Abrindo o mercado…" skeleton="cards" />
           </app-card>
         </div>
       </section>
@@ -210,12 +225,17 @@ import { Badge, Button, Card, EmptyState, Icon, PageHeader, Panel } from '../../
           </app-card>
 
           <app-card variant="compact" heading="Estados vazios" [headingLevel]="3">
-            <app-empty-state ilustracao="campo" titulo="Nenhuma rodada ainda">
+            <app-empty-state illustration="pitch" heading="Nenhuma rodada ainda">
               Crie a primeira para marcar os jogos.
             </app-empty-state>
-            <app-empty-state ilustracao="placar" [compacto]="true">
+            <app-empty-state illustration="scoreboard" [compact]="true">
               Esta súmula ainda não está disponível.
             </app-empty-state>
+          </app-card>
+
+          <app-card variant="compact" heading="Falha ao carregar" [headingLevel]="3">
+            <app-loading label="Buscando as rodadas…" skeleton="lines" />
+            <app-failure-state [failure]="falhaDeExemplo" />
           </app-card>
         </div>
       </section>
@@ -224,6 +244,12 @@ import { Badge, Button, Card, EmptyState, Icon, PageHeader, Panel } from '../../
   styleUrl: './design-system-showcase.scss',
 })
 export class DesignSystemShowcasePage {
+  protected readonly falhaDeExemplo: ApiFailure = {
+    status: 503,
+    message: 'Não foi possível buscar as rodadas agora.',
+    traceId: '00-vitrine-01',
+  };
+
   protected readonly icons = {
     alert: TriangleAlert,
     check: CircleCheck,

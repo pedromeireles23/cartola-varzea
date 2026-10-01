@@ -1,6 +1,8 @@
 @if (!competitions.loaded()) {
   <app-page-header [heading]="saudacao()" />
-  <section class="painel painel--corpo"><app-loading label="Abrindo o seu jogo…" /></section>
+  <section class="painel painel--corpo">
+    <app-loading label="Abrindo o seu jogo…" skeleton="cards" />
+  </section>
 } @else if (atual(); as campeonato) {
   <app-page-header
     [heading]="saudacao()"
@@ -11,7 +13,9 @@
 
   @switch (painel().tipo) {
     @case ('carregando') {
-      <section class="painel painel--corpo"><app-loading label="Abrindo a rodada…" /></section>
+      <section class="painel painel--corpo">
+        <app-loading label="Abrindo a rodada…" skeleton="cards" />
+      </section>
     }
     @case ('erro') {
       <section class="painel painel--corpo">

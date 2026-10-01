@@ -20,7 +20,7 @@ import {
 } from '@angular/router';
 import { filter } from 'rxjs';
 
-import { Alert, BackLink, Badge, Button, Card, Loading } from '../../../shared/ui';
+import { Alert, BackLink, Badge, Card, FailureState, Loading } from '../../../shared/ui';
 import { STATUS_LABELS } from '../competition.service';
 import { OrganizerArea } from '../organizer-area';
 import { CompetitionContext } from './competition-context';
@@ -50,8 +50,8 @@ export interface CompetitionCreatedState {
     Alert,
     BackLink,
     Badge,
-    Button,
     Card,
+    FailureState,
     Loading,
     RouterLink,
     RouterLinkActive,
@@ -75,15 +75,10 @@ export interface CompetitionCreatedState {
               Este campeonato não existe ou não pertence a uma organização sua.
             </app-alert>
           } @else {
-            <app-alert tone="danger">
-              <p>{{ contexto.falha()!.message }}</p>
-              @if (contexto.falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ contexto.falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="contexto.load(campeonato())">
-              Tentar de novo
-            </app-button>
+            <app-failure-state
+              [failure]="contexto.falha()!"
+              (retry)="contexto.load(campeonato())"
+            />
           }
         </app-card>
       }

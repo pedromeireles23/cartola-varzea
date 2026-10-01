@@ -21,6 +21,7 @@ import {
   Button,
   Card,
   Dialog,
+  FailureState,
   Loading,
   PageHeader,
   StandingsPodium,
@@ -70,6 +71,7 @@ type Confirmacao =
     Button,
     Card,
     Dialog,
+    FailureState,
     Loading,
     PageHeader,
     RouterLink,
@@ -83,7 +85,9 @@ type Confirmacao =
     @switch (estado().tipo) {
       @case ('carregando') {
         <app-page-header heading="Liga" kicker="Classificação" variant="game" />
-        <section class="painel-simples"><app-loading label="Abrindo a liga…" /></section>
+        <section class="painel-simples">
+          <app-loading label="Abrindo a liga…" skeleton="table" />
+        </section>
       }
       @case ('erro') {
         <app-page-header heading="Liga" kicker="Classificação" variant="game" />
@@ -94,8 +98,7 @@ type Confirmacao =
             </app-alert>
             <a class="acao" [routerLink]="['/c', campeonato(), 'ligas']">Ver minhas ligas</a>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </section>
       }

@@ -9,7 +9,7 @@ import {
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Button, Card, Loading } from '../../shared/ui';
+import { Card, FailureState, Loading } from '../../shared/ui';
 import { formationText } from '../organizer/competition-area/competition-format';
 import { MODALITY_LABELS } from '../organizer/competition.service';
 import { ModalityRules, ScoringRules, ScoringRulesService } from './scoring-rules.service';
@@ -38,7 +38,7 @@ const POSICOES: Readonly<Record<string, string>> = {
   selector: 'app-scoring-rules',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, Button, Card, Loading],
+  imports: [Card, FailureState, Loading],
   template: `
     <h1>Como a pontuação funciona</h1>
     <p class="intro">
@@ -48,12 +48,11 @@ const POSICOES: Readonly<Record<string, string>> = {
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <app-card><app-loading label="Buscando as regras…" /></app-card>
+        <app-card><app-loading label="Buscando as regras…" skeleton="lines" /></app-card>
       }
       @case ('erro') {
         <app-card>
-          <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-          <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+          <app-failure-state [failure]="falha()!" (retry)="carregar()" />
         </app-card>
       }
       @case ('pronto') {

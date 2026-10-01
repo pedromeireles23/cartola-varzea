@@ -2,12 +2,12 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 /**
  * Qual desenho acompanha o vazio. Cada um fala de uma situação do futebol de várzea:
- * - `campo`: nada aqui ainda — o campo está marcado, falta o jogo;
- * - `tatica`: a busca ou o filtro não achou ninguém — volta para a prancheta;
- * - `arquibancada`: ninguém entrou ainda — a torcida está vazia;
- * - `placar`: o resultado ainda não saiu ou não está disponível.
+ * - `pitch`: nada aqui ainda — o campo está marcado, falta o jogo;
+ * - `tactics`: a busca ou o filtro não achou ninguém — volta para a prancheta;
+ * - `stands`: ninguém entrou ainda — a arquibancada está vazia;
+ * - `scoreboard`: o resultado ainda não saiu ou não está disponível.
  */
-export type EmptyIllustration = 'campo' | 'tatica' | 'arquibancada' | 'placar';
+export type EmptyIllustration = 'pitch' | 'tactics' | 'stands' | 'scoreboard';
 
 /**
  * Estado vazio do design system (V7): um desenho próprio, um título curto e o texto que
@@ -15,15 +15,15 @@ export type EmptyIllustration = 'campo' | 'tatica' | 'arquibancada' | 'placar';
  * terceiros, e fica fora da árvore de acessibilidade — o texto já diz tudo.
  *
  * O título não é um heading: o vazio mora dentro de uma seção que já tem o seu, e um
- * heading a mais quebraria a hierarquia. Ações vão no slot `[acoes]`.
+ * heading a mais quebraria a hierarquia. Ações vão no slot `[emptyActions]`.
  */
 @Component({
   selector: 'app-empty-state',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="vazio" [class.vazio--compacto]="compacto()">
-      @switch (ilustracao()) {
-        @case ('tatica') {
+    <div class="vazio" [class.vazio--compacto]="compact()">
+      @switch (illustration()) {
+        @case ('tactics') {
           <svg class="vazio__desenho" viewBox="0 0 160 96" aria-hidden="true" focusable="false">
             <rect class="traco" x="6" y="6" width="148" height="84" rx="6" />
             <path class="traco traco--fino" d="M80 6V90" />
@@ -36,7 +36,7 @@ export type EmptyIllustration = 'campo' | 'tatica' | 'arquibancada' | 'placar';
             <path class="seta-ponta" d="M102 28l7 6-9 3" />
           </svg>
         }
-        @case ('arquibancada') {
+        @case ('stands') {
           <svg class="vazio__desenho" viewBox="0 0 160 96" aria-hidden="true" focusable="false">
             <path class="traco" d="M10 30H150M10 50H150M10 70H150" />
             <path class="traco traco--fino" d="M10 30V86M150 30V86" />
@@ -47,7 +47,7 @@ export type EmptyIllustration = 'campo' | 'tatica' | 'arquibancada' | 'placar';
             <path class="traco traco--fino" d="M10 86H150" />
           </svg>
         }
-        @case ('placar') {
+        @case ('scoreboard') {
           <svg class="vazio__desenho" viewBox="0 0 160 96" aria-hidden="true" focusable="false">
             <rect class="traco" x="14" y="16" width="132" height="62" rx="8" />
             <rect class="placa" x="30" y="30" width="36" height="34" rx="4" />
@@ -68,19 +68,19 @@ export type EmptyIllustration = 'campo' | 'tatica' | 'arquibancada' | 'placar';
         }
       }
       <div class="vazio__texto">
-        @if (titulo()) {
-          <p class="vazio__titulo">{{ titulo() }}</p>
+        @if (heading()) {
+          <p class="vazio__titulo">{{ heading() }}</p>
         }
         <div class="vazio__corpo"><ng-content /></div>
-        <div class="vazio__acoes"><ng-content select="[acoes]" /></div>
+        <div class="vazio__acoes"><ng-content select="[emptyActions]" /></div>
       </div>
     </div>
   `,
   styleUrl: './empty-state.scss',
 })
 export class EmptyState {
-  readonly titulo = input<string>();
-  readonly ilustracao = input<EmptyIllustration>('campo');
+  readonly heading = input<string>();
+  readonly illustration = input<EmptyIllustration>('pitch');
   /** Vazio dentro de uma lista ou filtro: desenho menor, mesma mensagem. */
-  readonly compacto = input(false);
+  readonly compact = input(false);
 }

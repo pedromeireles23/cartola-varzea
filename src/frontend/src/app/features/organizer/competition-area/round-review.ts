@@ -10,6 +10,7 @@ import {
   Button,
   Card,
   Dialog,
+  FailureState,
   FormField,
   Icon,
   Loading,
@@ -54,6 +55,7 @@ const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
     Button,
     Card,
     Dialog,
+    FailureState,
     FormField,
     Icon,
     ImportUpload,
@@ -66,12 +68,11 @@ const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
 
       @switch (state().kind) {
         @case ('loading') {
-          <app-card><app-loading label="Consolidando as súmulas…" /></app-card>
+          <app-card><app-loading label="Consolidando as súmulas…" skeleton="lines" /></app-card>
         }
         @case ('error') {
           <app-card>
-            <app-alert tone="danger">{{ failure()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="load()">Tentar de novo</app-button>
+            <app-failure-state [failure]="failure()!" (retry)="load()" />
           </app-card>
         }
         @case ('ready') {

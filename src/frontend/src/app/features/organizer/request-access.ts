@@ -13,7 +13,16 @@ import {
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, BadgeTone, Button, Card, FormField, Loading } from '../../shared/ui';
+import {
+  Alert,
+  Badge,
+  BadgeTone,
+  Button,
+  Card,
+  FailureState,
+  FormField,
+  Loading,
+} from '../../shared/ui';
 import {
   ORGANIZATION_NAME_MAX,
   ORGANIZATION_NAME_MIN,
@@ -47,7 +56,7 @@ const STATUS: Readonly<
   selector: 'app-request-access',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-organizer' },
-  imports: [Alert, Badge, Button, Card, DatePipe, FormField, Loading, RouterLink],
+  imports: [Alert, Badge, Button, Card, DatePipe, FailureState, FormField, Loading, RouterLink],
   template: `
     <h1>Organizar campeonatos</h1>
     <p class="intro">
@@ -64,13 +73,7 @@ const STATUS: Readonly<
 
       @case ('erro') {
         <app-card>
-          <app-alert tone="danger">
-            <p>{{ falhaAoCarregar()!.message }}</p>
-            @if (falhaAoCarregar()!.traceId) {
-              <p class="trace">Código de rastreio: {{ falhaAoCarregar()!.traceId }}</p>
-            }
-          </app-alert>
-          <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+          <app-failure-state [failure]="falhaAoCarregar()!" (retry)="carregar()" />
         </app-card>
       }
 

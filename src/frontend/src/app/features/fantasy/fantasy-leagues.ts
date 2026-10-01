@@ -19,6 +19,7 @@ import {
   Button,
   Card,
   EmptyState,
+  FailureState,
   FormField,
   Icon,
   Loading,
@@ -59,6 +60,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
     Button,
     Card,
     EmptyState,
+    FailureState,
     FormField,
     Icon,
     Loading,
@@ -77,7 +79,9 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <section class="painel-simples"><app-loading label="Abrindo as suas ligas…" /></section>
+        <section class="painel-simples">
+          <app-loading label="Abrindo as suas ligas…" skeleton="lines" />
+        </section>
       }
       @case ('erro') {
         <section class="painel-simples">
@@ -87,8 +91,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
             </app-alert>
             <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </section>
       }
@@ -170,7 +173,7 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
         }
 
         @if (ligas().length === 0) {
-          <app-empty-state ilustracao="arquibancada" titulo="Você ainda não está em nenhuma liga">
+          <app-empty-state illustration="stands" heading="Você ainda não está em nenhuma liga">
             Crie a sua e compartilhe o código com o grupo, ou entre na liga de alguém com o código
             que você recebeu.
           </app-empty-state>

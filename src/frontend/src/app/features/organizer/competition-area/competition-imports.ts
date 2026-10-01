@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { ApiFailure } from '../../../core/api/problem-details';
-import { Alert, Button, Card, Loading } from '../../../shared/ui';
+import { Alert, Card, FailureState, Loading } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
 import {
   ImportKind,
@@ -26,7 +26,7 @@ type Estado =
 @Component({
   selector: 'app-competition-imports',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, ImportUpload, Loading],
+  imports: [Alert, Card, FailureState, ImportUpload, Loading],
   template: `
     <div class="pagina">
       <h1>Importações</h1>
@@ -50,13 +50,7 @@ type Estado =
         }
         @case ('erro') {
           <app-card>
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           </app-card>
         }
         @case ('pronto') {

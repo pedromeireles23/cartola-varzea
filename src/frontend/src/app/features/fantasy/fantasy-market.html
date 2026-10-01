@@ -1,7 +1,9 @@
 @switch (estado().tipo) {
   @case ('carregando') {
     <app-page-header heading="Mercado" />
-    <section class="painel-simples"><app-loading label="Abrindo o mercado…" /></section>
+    <section class="painel-simples">
+      <app-loading label="Abrindo o mercado…" skeleton="cards" />
+    </section>
   }
   @case ('erro') {
     <app-page-header heading="Mercado" />
@@ -12,8 +14,7 @@
         </app-alert>
         <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
       } @else {
-        <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-        <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+        <app-failure-state [failure]="falha()!" (retry)="carregar()" />
       }
     </section>
   }
@@ -125,7 +126,7 @@
           </ul>
         </section>
       } @empty {
-        <app-empty-state ilustracao="tatica" [compacto]="true">
+        <app-empty-state illustration="tactics" [compact]="true">
           Nenhum atleta ou técnico corresponde a esses filtros.
         </app-empty-state>
       }
@@ -141,7 +142,7 @@
           </ul>
         </section>
       } @else {
-        <app-empty-state ilustracao="tatica" [compacto]="true">
+        <app-empty-state illustration="tactics" [compact]="true">
           Nenhum atleta ou técnico corresponde a esses filtros.
         </app-empty-state>
       }

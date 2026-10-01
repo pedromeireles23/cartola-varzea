@@ -16,6 +16,7 @@ import {
   Badge,
   Button,
   Card,
+  FailureState,
   FormField,
   Loading,
   SelectField,
@@ -55,7 +56,7 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
 @Component({
   selector: 'app-competition-coaches',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, FormField, Loading, SelectField],
+  imports: [Alert, Badge, Button, Card, FailureState, FormField, Loading, SelectField],
   template: `
     <div class="pagina">
       <h1>Técnicos</h1>
@@ -76,13 +77,7 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
         }
         @case ('erro') {
           <app-card>
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           </app-card>
         }
         @case ('pronto') {

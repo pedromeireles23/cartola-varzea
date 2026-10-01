@@ -12,7 +12,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, BackLink, Badge, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Badge, Card, FailureState, Loading } from '../../shared/ui';
 import {
   CompetitionService,
   CompetitionSummary,
@@ -40,7 +40,7 @@ type Estado =
   selector: 'app-organization-competitions',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-organizer' },
-  imports: [Alert, BackLink, Badge, Button, Card, DatePipe, Loading, RouterLink],
+  imports: [Alert, BackLink, Badge, Card, DatePipe, FailureState, Loading, RouterLink],
   template: `
     <app-back-link link="/organizar" label="Minhas organizações" />
 
@@ -60,13 +60,7 @@ type Estado =
               Só quem faz parte da organização vê os campeonatos dela.
             </app-alert>
           } @else {
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </app-card>
       }

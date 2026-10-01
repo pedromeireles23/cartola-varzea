@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Loading } from '../../shared/ui';
+import { Badge, Card, FailureState, Loading } from '../../shared/ui';
 import { MyOrganization, OrganizationService } from './organization.service';
 
 type Estado =
@@ -21,7 +21,7 @@ type Estado =
   selector: 'app-my-organizations',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-organizer' },
-  imports: [Alert, Badge, Button, Card, DatePipe, Loading, RouterLink],
+  imports: [Badge, Card, DatePipe, FailureState, Loading, RouterLink],
   template: `
     <h1>Minhas organizações</h1>
 
@@ -34,13 +34,7 @@ type Estado =
 
       @case ('erro') {
         <app-card>
-          <app-alert tone="danger">
-            <p>{{ falha()!.message }}</p>
-            @if (falha()!.traceId) {
-              <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-            }
-          </app-alert>
-          <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+          <app-failure-state [failure]="falha()!" (retry)="carregar()" />
         </app-card>
       }
 

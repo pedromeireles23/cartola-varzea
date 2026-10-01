@@ -11,7 +11,15 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, BackLink, Badge, Button, EmptyState, Loading, PageHeader } from '../../shared/ui';
+import {
+  Alert,
+  BackLink,
+  Badge,
+  EmptyState,
+  FailureState,
+  Loading,
+  PageHeader,
+} from '../../shared/ui';
 import {
   assetRoleLabel,
   closingText,
@@ -44,28 +52,29 @@ interface Grupo {
   selector: 'app-fantasy-score',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, BackLink, Badge, Button, EmptyState, Loading, PageHeader, RouterLink],
+  imports: [Alert, BackLink, Badge, EmptyState, FailureState, Loading, PageHeader, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato(), 'rodadas']" label="Rodadas" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
         <app-page-header heading="Pontuação" kicker="Rodada" variant="game" />
-        <section class="painel painel--corpo"><app-loading label="Abrindo a pontuação…" /></section>
+        <section class="painel painel--corpo">
+          <app-loading label="Abrindo a pontuação…" skeleton="lines" />
+        </section>
       }
       @case ('erro') {
         <app-page-header heading="Pontuação" kicker="Rodada" variant="game" />
         <section class="painel painel--corpo">
           @if (falha()!.status === 404) {
-            <app-empty-state ilustracao="placar" titulo="Pontuação indisponível">
+            <app-empty-state illustration="scoreboard" heading="Pontuação indisponível">
               Esta rodada ainda não foi apurada, ou o endereço está errado.
             </app-empty-state>
             <a class="acao acao--secundaria" [routerLink]="['/c', campeonato(), 'rodadas']">
               Ver as rodadas apuradas
             </a>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </section>
       }

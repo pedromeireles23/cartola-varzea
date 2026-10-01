@@ -13,7 +13,7 @@ import {
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Dialog, Loading } from '../../../shared/ui';
+import { Alert, Badge, Button, Card, Dialog, FailureState, Loading } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
 import { PublicationProgress } from './publication-progress';
 import {
@@ -39,7 +39,18 @@ type Estado =
 @Component({
   selector: 'app-competition-publication',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, DatePipe, Dialog, Loading, PublicationProgress, RouterLink],
+  imports: [
+    Alert,
+    Badge,
+    Button,
+    Card,
+    DatePipe,
+    Dialog,
+    FailureState,
+    Loading,
+    PublicationProgress,
+    RouterLink,
+  ],
   template: `
     <div class="pagina">
       <h1>Publicação</h1>
@@ -60,13 +71,7 @@ type Estado =
         }
         @case ('erro') {
           <app-card>
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           </app-card>
         }
         @case ('pronto') {

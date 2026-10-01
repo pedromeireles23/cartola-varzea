@@ -12,7 +12,7 @@ import { ChevronRight } from 'lucide';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Button, Card, EmptyState, FormField, Icon, Loading } from '../../shared/ui';
+import { Button, Card, EmptyState, FailureState, FormField, Icon, Loading } from '../../shared/ui';
 import { MODALITY_LABELS } from '../organizer/competition.service';
 import { PublicCompetitionService, PublicCompetitionSummary } from './public-competition.service';
 
@@ -32,7 +32,7 @@ type Estado =
   selector: 'app-competition-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, Button, Card, DatePipe, EmptyState, FormField, Icon, Loading, RouterLink],
+  imports: [Button, Card, DatePipe, EmptyState, FailureState, FormField, Icon, Loading, RouterLink],
   template: `
     <h1>Campeonatos</h1>
     <p class="intro">
@@ -54,17 +54,11 @@ type Estado =
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <app-card><app-loading label="Procurando campeonatos…" /></app-card>
+        <app-card><app-loading label="Procurando campeonatos…" skeleton="cards" /></app-card>
       }
       @case ('erro') {
         <app-card>
-          <app-alert tone="danger">
-            <p>{{ falha()!.message }}</p>
-            @if (falha()!.traceId) {
-              <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-            }
-          </app-alert>
-          <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+          <app-failure-state [failure]="falha()!" (retry)="carregar()" />
         </app-card>
       }
       @case ('pronto') {
@@ -85,7 +79,7 @@ type Estado =
             </li>
           } @empty {
             <li>
-              <app-empty-state [ilustracao]="termoAplicado() ? 'tatica' : 'campo'">
+              <app-empty-state [illustration]="termoAplicado() ? 'tactics' : 'pitch'">
                 {{
                   termoAplicado()
                     ? 'Nenhum campeonato publicado corresponde a essa busca.'

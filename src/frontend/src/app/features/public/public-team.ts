@@ -39,7 +39,7 @@ type Estado =
     @switch (estado().tipo) {
       @case ('carregando') {
         <h1>Time</h1>
-        <app-card><app-loading label="Abrindo o elenco…" /></app-card>
+        <app-card><app-loading label="Abrindo o elenco…" skeleton="lines" /></app-card>
       }
       @case ('erro') {
         <h1>Time</h1>

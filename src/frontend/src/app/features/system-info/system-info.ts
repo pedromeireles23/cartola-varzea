@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Loading } from '../../shared/ui';
+import { Badge, Card, FailureState, Loading } from '../../shared/ui';
 import { SystemInfo, SystemInfoService } from './system-info.service';
 
 type Estado =
@@ -19,7 +19,7 @@ type Estado =
 @Component({
   selector: 'app-system-info',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, DatePipe, Loading],
+  imports: [Badge, Card, DatePipe, FailureState, Loading],
   template: `
     <h1>Estado do sistema</h1>
     <p class="intro">
@@ -33,13 +33,7 @@ type Estado =
         }
 
         @case ('erro') {
-          <app-alert tone="danger">
-            <p>{{ erro()!.message }}</p>
-            @if (erro()!.traceId) {
-              <p class="trace">Código de rastreio: {{ erro()!.traceId }}</p>
-            }
-          </app-alert>
-          <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+          <app-failure-state [failure]="erro()!" (retry)="carregar()" />
         }
 
         @case ('sucesso') {

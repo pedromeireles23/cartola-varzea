@@ -12,7 +12,7 @@ import { RouterLink } from '@angular/router';
 import { ChevronRight } from 'lucide';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, Button, EmptyState, Icon, Loading, PageHeader } from '../../shared/ui';
+import { Alert, Badge, EmptyState, FailureState, Icon, Loading, PageHeader } from '../../shared/ui';
 import {
   PublicFixture,
   PublicFixtureService,
@@ -44,7 +44,17 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
   selector: 'app-fantasy-rounds',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, Badge, Button, EmptyState, Icon, Loading, MarketClock, PageHeader, RouterLink],
+  imports: [
+    Alert,
+    Badge,
+    EmptyState,
+    FailureState,
+    Icon,
+    Loading,
+    MarketClock,
+    PageHeader,
+    RouterLink,
+  ],
   template: `
     <app-page-header
       heading="Rodadas"
@@ -55,7 +65,9 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <section class="painel painel--corpo"><app-loading label="Abrindo as rodadas…" /></section>
+        <section class="painel painel--corpo">
+          <app-loading label="Abrindo as rodadas…" skeleton="lines" />
+        </section>
       }
       @case ('erro') {
         <section class="painel painel--corpo">
@@ -64,8 +76,7 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
               Não encontramos este campeonato. Ele pode ter saído do ar ou o endereço estar errado.
             </app-alert>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </section>
       }
@@ -195,7 +206,7 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
             </div>
           } @else if (rodadas().length === 0) {
             <div class="painel__corpo">
-              <app-empty-state ilustracao="placar" titulo="Nenhuma rodada apurada ainda">
+              <app-empty-state illustration="scoreboard" heading="Nenhuma rodada apurada ainda">
                 Quando o organizador publicar o resultado, sua pontuação aparece aqui.
               </app-empty-state>
             </div>

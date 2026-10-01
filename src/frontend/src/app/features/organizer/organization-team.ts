@@ -22,6 +22,7 @@ import {
   Button,
   Card,
   Dialog,
+  FailureState,
   FormField,
   Loading,
 } from '../../shared/ui';
@@ -60,7 +61,18 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   selector: 'app-organization-team',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-organizer' },
-  imports: [Alert, BackLink, Badge, Button, Card, DatePipe, Dialog, FormField, Loading],
+  imports: [
+    Alert,
+    BackLink,
+    Badge,
+    Button,
+    Card,
+    DatePipe,
+    Dialog,
+    FailureState,
+    FormField,
+    Loading,
+  ],
   template: `
     <app-back-link link="/organizar" label="Minhas organizações" />
 
@@ -80,13 +92,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
               Só quem é proprietário da organização gerencia a equipe.
             </app-alert>
           } @else {
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </app-card>
       }

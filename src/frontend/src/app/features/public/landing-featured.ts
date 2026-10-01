@@ -75,7 +75,7 @@ type Carga<T> =
           @switch (calendario().tipo) {
             @case ('carregando') {
               <h4 id="cartaz-jogos" class="cartaz__subtitulo">Partidas</h4>
-              <app-loading label="Buscando as partidas…" />
+              <app-loading label="Buscando as partidas…" skeleton="lines" />
             }
             @case ('erro') {
               <h4 id="cartaz-jogos" class="cartaz__subtitulo">Partidas</h4>
@@ -128,7 +128,7 @@ type Carga<T> =
           <h4 id="cartaz-ranking" class="cartaz__subtitulo">Ranking do fantasy</h4>
           @switch (ranking().tipo) {
             @case ('carregando') {
-              <app-loading label="Buscando o ranking…" />
+              <app-loading label="Buscando o ranking…" skeleton="lines" />
             }
             @case ('erro') {
               <p class="cartaz__apoio">O ranking não carregou agora; ele está no campeonato.</p>

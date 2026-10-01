@@ -12,7 +12,7 @@ import {
 import { forkJoin } from 'rxjs';
 
 import { ApiFailure } from '../../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Dialog, Loading } from '../../../shared/ui';
+import { Alert, Badge, Button, Card, Dialog, FailureState, Loading } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
 import { RealTeam, RealTeamService } from './real-team.service';
 import { StageForm } from './stage-form';
@@ -54,7 +54,7 @@ type Edicao =
 @Component({
   selector: 'app-competition-stages',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Dialog, Loading, StageForm],
+  imports: [Alert, Badge, Button, Card, Dialog, FailureState, Loading, StageForm],
   template: `
     <div class="pagina">
       <h1>Fases</h1>
@@ -78,13 +78,7 @@ type Edicao =
 
         @case ('erro') {
           <app-card>
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           </app-card>
         }
 

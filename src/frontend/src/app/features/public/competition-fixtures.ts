@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, BackLink, Badge, Button, Card, EmptyState, Loading } from '../../shared/ui';
+import { Alert, BackLink, Badge, Card, EmptyState, FailureState, Loading } from '../../shared/ui';
 import { PublicNav } from './public-nav';
 import { kickoffText } from '../fantasy/fantasy-format';
 import {
@@ -39,14 +39,14 @@ type Estado =
   selector: 'app-competition-fixtures',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, BackLink, Badge, Button, Card, EmptyState, Loading, PublicNav, RouterLink],
+  imports: [Alert, BackLink, Badge, Card, EmptyState, FailureState, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
         <h1>Partidas</h1>
-        <app-card><app-loading label="Montando o calendário…" /></app-card>
+        <app-card><app-loading label="Montando o calendário…" skeleton="lines" /></app-card>
       }
       @case ('erro') {
         <h1>Partidas</h1>
@@ -57,8 +57,7 @@ type Estado =
             </app-alert>
             <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </app-card>
       }
@@ -67,7 +66,7 @@ type Estado =
         <app-public-nav [campeonato]="campeonato()" atual="partidas" />
 
         @if (rodadas().length === 0) {
-          <app-empty-state ilustracao="campo" titulo="Nenhuma rodada foi criada ainda">
+          <app-empty-state illustration="pitch" heading="Nenhuma rodada foi criada ainda">
             O calendário aparece assim que a liga marcar os primeiros jogos.
           </app-empty-state>
         } @else {

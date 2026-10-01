@@ -14,8 +14,8 @@ import { PageMetaService } from '../../core/seo/page-meta';
 import {
   Alert,
   BackLink,
-  Button,
   EmptyState,
+  FailureState,
   Loading,
   PageHeader,
   StandingsPodium,
@@ -49,8 +49,8 @@ function numero(valor: number): string {
   imports: [
     Alert,
     BackLink,
-    Button,
     EmptyState,
+    FailureState,
     Loading,
     PageHeader,
     RouterLink,
@@ -70,7 +70,9 @@ function numero(valor: number): string {
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <section class="painel"><app-loading label="Montando a classificação…" /></section>
+        <section class="painel">
+          <app-loading label="Montando a classificação…" skeleton="table" />
+        </section>
       }
       @case ('erro') {
         <section class="painel">
@@ -80,8 +82,7 @@ function numero(valor: number): string {
             </app-alert>
             <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </section>
       }
@@ -128,9 +129,9 @@ function numero(valor: number): string {
         }
 
         @if (tabela.entries.length === 0) {
-          <app-empty-state ilustracao="arquibancada" titulo="Ninguém entrou neste campeonato ainda">
+          <app-empty-state illustration="stands" heading="Ninguém entrou neste campeonato ainda">
             Quem escalar primeiro abre a classificação.
-            <a acoes class="acao" [routerLink]="['/c', campeonato(), 'jogar']"
+            <a emptyActions class="acao" [routerLink]="['/c', campeonato(), 'jogar']"
               >Jogar neste campeonato</a
             >
           </app-empty-state>

@@ -14,7 +14,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { CurrentCompetition } from '../participant/current-competition';
-import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Button, Card, FailureState, Loading } from '../../shared/ui';
 import { formationText } from '../organizer/competition-area/competition-format';
 import { credits, points } from './fantasy-format';
 import { FantasyOverview, FantasyRoundSummary, FantasyService } from './fantasy.service';
@@ -35,7 +35,7 @@ type Estado =
 @Component({
   selector: 'app-fantasy-play',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, BackLink, Button, Card, Loading, MarketClock, RouterLink],
+  imports: [Alert, BackLink, Button, Card, FailureState, Loading, MarketClock, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
 
@@ -52,8 +52,7 @@ type Estado =
             </app-alert>
             <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </app-card>
       }

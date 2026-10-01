@@ -12,7 +12,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, BackLink, Badge, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Badge, Card, FailureState, Loading } from '../../shared/ui';
 import { formationText, timeZoneLabel } from '../organizer/competition-area/competition-format';
 import { FORMAT_LABELS } from '../organizer/competition-area/stage.service';
 import { MODALITY_LABELS } from '../organizer/competition.service';
@@ -43,10 +43,10 @@ type Estado =
     Alert,
     BackLink,
     Badge,
-    Button,
     Card,
     DatePipe,
     DecimalPipe,
+    FailureState,
     Loading,
     PublicNav,
     RouterLink,
@@ -56,7 +56,7 @@ type Estado =
 
     @switch (estado().tipo) {
       @case ('carregando') {
-        <app-card><app-loading label="Abrindo o campeonato…" /></app-card>
+        <app-card><app-loading label="Abrindo o campeonato…" skeleton="cards" /></app-card>
       }
       @case ('erro') {
         <h1>Campeonato</h1>
@@ -67,13 +67,7 @@ type Estado =
             </app-alert>
             <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
           } @else {
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </app-card>
       }

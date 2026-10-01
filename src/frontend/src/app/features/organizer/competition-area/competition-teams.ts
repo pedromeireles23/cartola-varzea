@@ -11,7 +11,16 @@ import {
 } from '@angular/core';
 
 import { ApiFailure } from '../../../core/api/problem-details';
-import { Alert, Badge, Button, Card, Dialog, FormField, Loading } from '../../../shared/ui';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  FailureState,
+  FormField,
+  Loading,
+} from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
 import {
   REAL_TEAM_DUPLICATE_CODE,
@@ -30,7 +39,7 @@ type Estado =
 @Component({
   selector: 'app-competition-teams',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Dialog, FormField, Loading],
+  imports: [Alert, Badge, Button, Card, Dialog, FailureState, FormField, Loading],
   template: `
     <div class="pagina">
       <h1>Times</h1>
@@ -47,17 +56,11 @@ type Estado =
 
       @switch (estado().tipo) {
         @case ('carregando') {
-          <app-card><app-loading label="Buscando os times…" /></app-card>
+          <app-card><app-loading label="Buscando os times…" skeleton="cards" /></app-card>
         }
         @case ('erro') {
           <app-card>
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           </app-card>
         }
         @case ('pronto') {

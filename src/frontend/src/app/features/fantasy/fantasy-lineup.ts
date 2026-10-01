@@ -16,7 +16,7 @@ import { CircleAlert, CircleCheck, LayoutGrid, List, X } from 'lucide';
 import { Observable } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Button, Icon, Loading, PageHeader } from '../../shared/ui';
+import { Alert, Button, FailureState, Icon, Loading, PageHeader } from '../../shared/ui';
 import { closingText, credits, fantasyRefusalText } from './fantasy-format';
 import { FantasyNotice } from './fantasy-notice';
 import {
@@ -82,6 +82,7 @@ function lerModo(): LineupView {
   imports: [
     Alert,
     Button,
+    FailureState,
     Icon,
     LineupBoard,
     LineupPicker,

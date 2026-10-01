@@ -20,6 +20,7 @@ import {
   Card,
   Dialog,
   EmptyState,
+  FailureState,
   FormField,
   Loading,
   SelectField,
@@ -101,6 +102,7 @@ const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
     Card,
     Dialog,
     EmptyState,
+    FailureState,
     FormField,
     Loading,
     RouterLink,
@@ -122,17 +124,11 @@ const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
 
       @switch (estado().tipo) {
         @case ('carregando') {
-          <app-card><app-loading label="Buscando as rodadas…" /></app-card>
+          <app-card><app-loading label="Buscando as rodadas…" skeleton="lines" /></app-card>
         }
         @case ('erro') {
           <app-card>
-            <app-alert tone="danger">
-              <p>{{ falha()!.message }}</p>
-              @if (falha()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falha()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           </app-card>
         }
         @case ('pronto') {
@@ -341,7 +337,7 @@ const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
               }
             </app-card>
           } @empty {
-            <app-empty-state ilustracao="campo" titulo="Nenhuma rodada ainda">
+            <app-empty-state illustration="pitch" heading="Nenhuma rodada ainda">
               {{
                 proprietario()
                   ? 'Crie a primeira para marcar os jogos.'

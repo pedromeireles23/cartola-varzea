@@ -1,3 +1,10 @@
+// Largura total: dentro de grade com justify-items: start, o esqueleto, que não tem largura
+// própria, sumiria.
+:host {
+  display: block;
+  width: 100%;
+}
+
 .loading {
   display: flex;
   gap: var(--space-2);
@@ -20,8 +27,61 @@
   }
 }
 
+// ---------------------------------------------------------------- esqueleto (V7)
+
+// A forma do que vem, nas superfícies do tema: no jogo, o noturno; na central, o frio.
+.esqueleto {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.esqueleto--cards {
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.esqueleto__linha,
+.esqueleto__cartao,
+.esqueleto__fileira {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--semantic-surface-alt) 0%,
+    var(--semantic-surface-hover) 50%,
+    var(--semantic-surface-alt) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+  animation: brilho 1.4s ease-in-out infinite;
+}
+
+.esqueleto__linha {
+  height: 1rem;
+}
+
+.esqueleto__cartao {
+  height: 7rem;
+  border-radius: var(--radius-lg);
+}
+
+.esqueleto__fileira {
+  height: 2.5rem;
+}
+
+@keyframes brilho {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .loading__dot {
+  .loading__dot,
+  .esqueleto__linha,
+  .esqueleto__cartao,
+  .esqueleto__fileira {
     animation: none;
   }
 }

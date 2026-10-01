@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, BackLink, Button, Card, EmptyState, Loading } from '../../shared/ui';
+import { Alert, BackLink, Card, EmptyState, FailureState, Loading } from '../../shared/ui';
 import { PublicNav } from './public-nav';
 import { PublicMatch, PublicMatchAthlete, PublicFixtureService } from './public-fixture.service';
 import { kickoffText, teamInitials } from '../fantasy/fantasy-format';
@@ -41,27 +41,26 @@ const POSICOES: Readonly<Record<string, string>> = {
   selector: 'app-public-match',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, BackLink, Button, Card, EmptyState, Loading, PublicNav, RouterLink],
+  imports: [Alert, BackLink, Card, EmptyState, FailureState, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato(), 'partidas']" label="Todas as partidas" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
         <h1>Súmula</h1>
-        <app-card><app-loading label="Abrindo a súmula…" /></app-card>
+        <app-card><app-loading label="Abrindo a súmula…" skeleton="lines" /></app-card>
       }
       @case ('erro') {
         <h1>Súmula</h1>
         <app-card>
           @if (falha()!.status === 404) {
-            <app-empty-state ilustracao="placar" titulo="Súmula indisponível">
+            <app-empty-state illustration="scoreboard" heading="Súmula indisponível">
               Esta súmula ainda não está disponível. Ela é publicada junto com o resultado da
               rodada.
             </app-empty-state>
             <a class="acao" [routerLink]="['/c', campeonato(), 'partidas']">Ver o calendário</a>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </app-card>
       }

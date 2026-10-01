@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Card, FailureState, Loading } from '../../shared/ui';
 import { PublicFixtureService, PublicStandings, StageStandings } from './public-fixture.service';
 import { PublicNav } from './public-nav';
 
@@ -44,14 +44,14 @@ const CRITERIOS: Readonly<Record<string, string>> = {
   selector: 'app-competition-standings',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, BackLink, Button, Card, Loading, PublicNav, RouterLink],
+  imports: [Alert, BackLink, Card, FailureState, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
 
     @switch (estado().tipo) {
       @case ('carregando') {
         <h1>Tabela</h1>
-        <app-card><app-loading label="Montando a classificação…" /></app-card>
+        <app-card><app-loading label="Montando a classificação…" skeleton="table" /></app-card>
       }
       @case ('erro') {
         <h1>Tabela</h1>
@@ -62,8 +62,7 @@ const CRITERIOS: Readonly<Record<string, string>> = {
             </app-alert>
             <a class="acao" routerLink="/campeonatos">Ver campeonatos publicados</a>
           } @else {
-            <app-alert tone="danger">{{ falha()!.message }}</app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falha()!" (retry)="carregar()" />
           }
         </app-card>
       }

@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Button, Card, Dialog, FormField, Loading } from '../../shared/ui';
+import { Alert, Button, Card, Dialog, FailureState, FormField, Loading } from '../../shared/ui';
 import {
   OrganizerReviewService,
   PendingOrganizerApplication,
@@ -41,7 +41,7 @@ interface Analise {
 @Component({
   selector: 'app-organizer-applications',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, DatePipe, Dialog, FormField, Loading],
+  imports: [Alert, Button, Card, DatePipe, Dialog, FailureState, FormField, Loading],
   template: `
     <h1>Solicitações de organizador</h1>
     <p class="intro">
@@ -69,13 +69,7 @@ interface Analise {
               Esta área é exclusiva da administração da plataforma.
             </app-alert>
           } @else {
-            <app-alert tone="danger">
-              <p>{{ falhaAoCarregar()!.message }}</p>
-              @if (falhaAoCarregar()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falhaAoCarregar()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falhaAoCarregar()!" (retry)="carregar()" />
           }
         </app-card>
       }

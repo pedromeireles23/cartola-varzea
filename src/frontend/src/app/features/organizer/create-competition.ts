@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Card, FailureState, Loading } from '../../shared/ui';
 import { CompetitionSettingsForm } from './competition-area/competition-settings-form';
 import { CompetitionCreatedState } from './competition-area/competition-layout';
 import { CompetitionService, CompetitionSettings, ModalityProfile } from './competition.service';
@@ -40,7 +40,7 @@ type Estado =
   selector: 'app-create-competition',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-organizer' },
-  imports: [Alert, BackLink, Button, Card, CompetitionSettingsForm, Loading],
+  imports: [Alert, BackLink, Card, CompetitionSettingsForm, FailureState, Loading],
   template: `
     <app-back-link [link]="['/organizar/o', organizacao(), 'campeonatos']" label="Campeonatos" />
     <h1>Novo campeonato</h1>
@@ -59,13 +59,7 @@ type Estado =
               Só quem faz parte da organização cria campeonatos nela.
             </app-alert>
           } @else {
-            <app-alert tone="danger">
-              <p>{{ falhaAoCarregar()!.message }}</p>
-              @if (falhaAoCarregar()!.traceId) {
-                <p class="trace">Código de rastreio: {{ falhaAoCarregar()!.traceId }}</p>
-              }
-            </app-alert>
-            <app-button variant="secondary" (pressed)="carregar()">Tentar de novo</app-button>
+            <app-failure-state [failure]="falhaAoCarregar()!" (retry)="carregar()" />
           }
         </app-card>
       }
