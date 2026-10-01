@@ -31,6 +31,7 @@ type Estado =
 @Component({
   selector: 'app-competition-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, Button, Card, DatePipe, FormField, Icon, Loading, RouterLink],
   template: `
     <h1>Campeonatos</h1>

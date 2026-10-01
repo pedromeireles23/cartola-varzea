@@ -51,6 +51,21 @@ describe('PublicMatchPage', () => {
     expect(texto(fixture)).toContain('Atacante');
   });
 
+  it('o placar traz o escudo de cada time sem mudar o título que o leitor de tela ouve', async () => {
+    const fixture = await abrir(partida());
+
+    const titulos = [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.sumula__time'),
+    ];
+    expect(
+      titulos.map((titulo) => titulo.querySelector('.sumula__escudo')?.textContent?.trim()),
+    ).toEqual(['UV', 'EB']);
+    for (const titulo of titulos) {
+      expect(titulo.querySelector('.sumula__escudo')?.getAttribute('aria-hidden')).toBe('true');
+    }
+    expect(titulos[1].classList).toContain('sumula__time--visitante');
+  });
+
   it('conta o que a pessoa fez, e só o que aconteceu', async () => {
     const fixture = await abrir(
       partida({

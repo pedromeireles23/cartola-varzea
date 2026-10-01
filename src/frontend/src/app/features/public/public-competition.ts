@@ -20,7 +20,7 @@ import { PublicCompetition, PublicCompetitionService } from './public-competitio
 import { PublicFixtureService, PublicRound, ROUND_PHASE_LABELS } from './public-fixture.service';
 import { PublicNav } from './public-nav';
 import { lastPublishedRound, roundsInProgress, upcomingMatches } from './public-rounds';
-import { kickoffText } from '../fantasy/fantasy-format';
+import { kickoffText, teamInitials } from '../fantasy/fantasy-format';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -38,6 +38,7 @@ type Estado =
 @Component({
   selector: 'app-public-competition',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [
     Alert,
     BackLink,
@@ -77,20 +78,44 @@ type Estado =
         </app-card>
       }
       @case ('pronto') {
-        <h1>{{ dados()!.name }}</h1>
-        <p class="intro">
-          {{ modalidade() }} · Temporada {{ dados()!.season }} · {{ dados()!.organizationName }}
-        </p>
-        <app-public-nav [campeonato]="dados()!.slug" atual="visao" />
+        <header class="capa-campeonato">
+          <p class="capa-campeonato__kicker">
+            {{ modalidade() }} · Temporada {{ dados()!.season }}
+          </p>
+          <h1>{{ dados()!.name }}</h1>
+          <p class="intro">{{ dados()!.organizationName }}</p>
 
-        <p class="acoes-publicas">
-          @if (!semCatalogo()) {
-            <a class="jogar" [routerLink]="['/c', dados()!.slug, 'jogar']"
-              >Jogar neste campeonato</a
-            >
+          <!-- O que está em jogo agora fica na capa, junto das ações que ele permite. -->
+          @if (rodadasAgora().length > 0) {
+            <section class="capa-campeonato__agora" aria-labelledby="agora-titulo">
+              <h2 id="agora-titulo" class="agora__rotulo">Agora</h2>
+              @for (rodada of rodadasAgora(); track rodada.id) {
+                <p class="agora">
+                  <strong>{{ rodada.name }}</strong>
+                  <app-badge [tone]="rodada.underCorrection ? 'warning' : 'brand'">
+                    {{ situacao(rodada) }}
+                  </app-badge>
+                </p>
+                @if (rodada.underCorrection) {
+                  <p class="apoio">
+                    A liga está refazendo a súmula desta rodada. Os números voltam quando ela
+                    republicar.
+                  </p>
+                }
+              }
+            </section>
           }
-          <a class="acao" [routerLink]="['/c', dados()!.slug, 'ranking']">Ver o ranking</a>
-        </p>
+
+          <p class="acoes-publicas">
+            @if (!semCatalogo()) {
+              <a class="jogar" [routerLink]="['/c', dados()!.slug, 'jogar']"
+                >Jogar neste campeonato</a
+              >
+            }
+            <a class="acao" [routerLink]="['/c', dados()!.slug, 'ranking']">Ver o ranking</a>
+          </p>
+        </header>
+        <app-public-nav [campeonato]="dados()!.slug" atual="visao" />
 
         @if (emMontagem()) {
           <app-card heading="Campeonato ainda em montagem">
@@ -102,25 +127,6 @@ type Estado =
               o campeonato abre para quem quiser montar uma equipe.
             </p>
             <a class="acao acao--secundaria" routerLink="/campeonatos">Ver outros campeonatos</a>
-          </app-card>
-        }
-
-        @if (rodadasAgora().length > 0) {
-          <app-card heading="Agora">
-            @for (rodada of rodadasAgora(); track rodada.id) {
-              <p class="agora">
-                <strong>{{ rodada.name }}</strong>
-                <app-badge [tone]="rodada.underCorrection ? 'warning' : 'brand'">
-                  {{ situacao(rodada) }}
-                </app-badge>
-              </p>
-              @if (rodada.underCorrection) {
-                <p class="apoio">
-                  A liga está refazendo a súmula desta rodada. Os números voltam quando ela
-                  republicar.
-                </p>
-              }
-            }
           </app-card>
         }
 
@@ -227,6 +233,7 @@ type Estado =
             <ul class="times">
               @for (time of dados()!.teams; track time.id) {
                 <li class="time">
+                  <span class="time__escudo" aria-hidden="true">{{ iniciais(time.name) }}</span>
                   <a [routerLink]="['/c', dados()!.slug, 'times', time.id]">{{ time.name }}</a>
                   <span class="time__elenco">{{ elenco(time.athletes) }}</span>
                 </li>
@@ -307,6 +314,11 @@ export class PublicCompetitionPage implements OnInit {
   /** "ter., 29/09 · 09:00": o horário já vem no fuso do campeonato. */
   protected quando(kickoffLocal: string): string {
     return kickoffText(kickoffLocal);
+  }
+
+  /** "BN" para Bar do Nico FC: o escudo do time, sem imagem (07 V7). */
+  protected iniciais(nome: string): string {
+    return teamInitials(nome);
   }
 
   protected situacao(rodada: PublicRound): string {

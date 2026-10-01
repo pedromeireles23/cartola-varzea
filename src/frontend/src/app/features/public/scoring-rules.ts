@@ -37,6 +37,7 @@ const POSICOES: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-scoring-rules',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, Button, Card, Loading],
   template: `
     <h1>Como a pontuação funciona</h1>

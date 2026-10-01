@@ -14,7 +14,7 @@ import { PageMetaService } from '../../core/seo/page-meta';
 import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
 import { PublicNav } from './public-nav';
 import { PublicMatch, PublicMatchAthlete, PublicFixtureService } from './public-fixture.service';
-import { kickoffText } from '../fantasy/fantasy-format';
+import { kickoffText, teamInitials } from '../fantasy/fantasy-format';
 
 type Estado =
   | { readonly tipo: 'carregando' }
@@ -40,6 +40,7 @@ const POSICOES: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-public-match',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, BackLink, Button, Card, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato(), 'partidas']" label="Todas as partidas" />
@@ -80,12 +81,22 @@ const POSICOES: Readonly<Record<string, string>> = {
 
         <app-card>
           <div class="sumula__placar">
-            <h2 class="sumula__time">{{ partida()!.homeTeamName }}</h2>
+            <h2 class="sumula__time">
+              <span class="sumula__escudo" aria-hidden="true">{{
+                iniciais(partida()!.homeTeamName)
+              }}</span>
+              {{ partida()!.homeTeamName }}
+            </h2>
             <strong class="sumula__numeros">
               {{ partida()!.homeScore }}<span aria-hidden="true">×</span>{{ partida()!.awayScore }}
               <span class="sr-only">a</span>
             </strong>
-            <h2 class="sumula__time">{{ partida()!.awayTeamName }}</h2>
+            <h2 class="sumula__time sumula__time--visitante">
+              <span class="sumula__escudo" aria-hidden="true">{{
+                iniciais(partida()!.awayTeamName)
+              }}</span>
+              {{ partida()!.awayTeamName }}
+            </h2>
           </div>
         </app-card>
 
@@ -127,6 +138,11 @@ export class PublicMatchPage implements OnInit {
     const atual = this.estado();
     return atual.tipo === 'pronto' ? atual.partida : null;
   });
+
+  /** O escudo do time no placar: as iniciais, sem imagem. */
+  protected iniciais(nome: string): string {
+    return teamInitials(nome);
+  }
 
   /** "ter., 29/09 · 09:00": o horário já vem no fuso do campeonato. */
   protected quando(kickoffLocal: string): string {

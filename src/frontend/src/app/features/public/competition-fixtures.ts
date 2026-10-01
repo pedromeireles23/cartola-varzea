@@ -38,6 +38,7 @@ type Estado =
 @Component({
   selector: 'app-competition-fixtures',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, BackLink, Badge, Button, Card, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />

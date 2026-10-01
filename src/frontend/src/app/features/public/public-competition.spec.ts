@@ -137,6 +137,20 @@ describe('PublicCompetitionPage', () => {
     expect(texto(fixture)).toContain('6 atletas inscritos');
   });
 
+  it('cada time é uma ficha com escudo de iniciais, fora do nome do link', async () => {
+    const fixture = await abrir();
+    http.expectOne(URL).flush(campeonato());
+    await fixture.whenStable();
+
+    const fichas = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.time')];
+    expect(fichas).toHaveLength(2);
+    const escudo = fichas[0].querySelector('.time__escudo');
+    expect(escudo?.textContent?.trim()).toBe('A');
+    expect(escudo?.getAttribute('aria-hidden')).toBe('true');
+    // O nome acessível do link continua sendo só o nome do time.
+    expect(fichas[0].querySelector('a')?.textContent?.trim()).toBe('Alpha');
+  });
+
   it('mata-mata lista os times sem inventar grupo', async () => {
     const fixture = await abrir();
     http.expectOne(URL).flush(

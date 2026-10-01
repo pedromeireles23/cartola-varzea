@@ -12,6 +12,7 @@ import { RouterLink } from '@angular/router';
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
 import { Alert, BackLink, Badge, Button, Card, Loading } from '../../shared/ui';
+import { teamInitials } from '../fantasy/fantasy-format';
 import { POSITION_LABELS, PublicCatalogService, PublicTeamDetail } from './public-catalog.service';
 import { PublicNav } from './public-nav';
 
@@ -30,6 +31,7 @@ type Estado =
 @Component({
   selector: 'app-public-team',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, BackLink, Badge, Button, Card, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
@@ -50,14 +52,17 @@ type Estado =
         </app-card>
       }
       @case ('pronto') {
-        <h1>{{ time()!.name }}</h1>
+        <header class="clube">
+          <span class="escudo clube__escudo" aria-hidden="true">{{ iniciais(time()!.name) }}</span>
+          <div class="clube__texto">
+            <p class="capa-campeonato__kicker">{{ time()!.competitionName }}</p>
+            <h1>{{ time()!.name }}</h1>
+            @if (time()!.coachName; as tecnico) {
+              <p class="apoio">Técnico: {{ tecnico }}</p>
+            }
+          </div>
+        </header>
         <app-public-nav [campeonato]="campeonato()" atual="visao" />
-        <p class="apoio">
-          {{ time()!.competitionName }}
-          @if (time()!.coachName; as tecnico) {
-            · Técnico: {{ tecnico }}
-          }
-        </p>
 
         <app-card heading="Elenco">
           <ul class="elenco">
@@ -106,6 +111,11 @@ export class PublicTeamPage implements OnInit {
 
   ngOnInit(): void {
     this.carregar();
+  }
+
+  /** O escudo do time: as iniciais, sem imagem. */
+  protected iniciais(nome: string): string {
+    return teamInitials(nome);
   }
 
   protected posicao(codigo: string): string {

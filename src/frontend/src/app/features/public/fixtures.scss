@@ -1,4 +1,4 @@
-// Calendario e sumula publica.
+// Calendário e súmula pública, na linguagem de placar da Noite de jogo (V5).
 
 .rodada__estado {
   display: flex;
@@ -10,20 +10,21 @@
 
 .jogos {
   display: grid;
-  gap: var(--space-1);
+  gap: 0;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 
-// Placar no meio, times dos dois lados: le-se como um placar, nao como uma tabela.
+// Placar no meio, times dos dois lados: lê-se como um placar de transmissão, não como
+// uma tabela.
 .jogo {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: var(--space-2) var(--space-3);
   align-items: center;
   padding: var(--space-3) var(--space-2);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--semantic-border-subtle);
   border-radius: var(--radius-md);
   transition: background-color var(--motion-feedback) var(--motion-easing);
 }
@@ -33,18 +34,23 @@
 }
 
 .jogo:hover {
-  background-color: var(--color-canvas);
+  background-color: var(--semantic-surface-alt);
 }
 
 // Adiada ou cancelada: o jogo continua na lista, mais apagado, porque saber que ele
-// nao aconteceu faz parte do calendario.
+// não aconteceu faz parte do calendário.
 .jogo--fora {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
 }
 
 .jogo__time {
-  font-weight: 600;
+  color: var(--semantic-text-strong);
+  font-weight: 700;
   overflow-wrap: anywhere;
+}
+
+.jogo--fora .jogo__time {
+  color: var(--semantic-text-muted);
 }
 
 .jogo__time--casa {
@@ -54,55 +60,102 @@
 .jogo__placar {
   display: inline-flex;
   gap: var(--space-2);
-  align-items: baseline;
-  padding-inline: var(--space-3);
-  color: var(--color-ink-950);
-  font-family: var(--font-heading);
-  font-size: var(--font-h3);
-  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  padding: var(--space-1) var(--space-3);
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  background-color: var(--semantic-surface-inset);
+  border-radius: var(--radius-md);
+}
+
+.jogo__placar span[aria-hidden] {
+  color: var(--semantic-text-muted);
+  font-size: 0.7em;
 }
 
 .jogo--fora .jogo__placar {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
 }
 
 .jogo__detalhe {
   grid-column: 1 / -1;
-  color: var(--color-ink-700);
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
   text-align: center;
 }
 
-// ---------------------------------------------------------------- sumula
+// ---------------------------------------------------------------- súmula
 
+// O placar da súmula é o momento da página: escudos, nomes em display e o número grande.
 .sumula__placar {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: var(--space-3);
   align-items: center;
   padding-block: var(--space-4);
 }
 
 .sumula__time {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
   margin: 0;
-  font-size: var(--font-h3);
+  font-family: var(--font-family-display);
+  font-size: clamp(1.125rem, 3vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
   text-align: center;
+  text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 
+.sumula__escudo {
+  display: grid;
+  width: clamp(2.75rem, 7vw, 3.75rem);
+  aspect-ratio: 11 / 12;
+  place-items: center;
+  color: var(--semantic-on-action);
+  font-size: 0.8em;
+  background-color: var(--semantic-brand);
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
+}
+
+.sumula__time--visitante .sumula__escudo {
+  color: var(--semantic-on-info);
+  background-color: var(--semantic-info);
+}
+
 .sumula__numeros {
-  color: var(--color-ink-950);
-  font-family: var(--font-heading);
-  font-size: var(--font-h1);
-  font-weight: 700;
+  display: inline-flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-lg);
+  font-weight: 800;
+  line-height: 0.9;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  background-color: var(--semantic-surface-inset);
+  border-radius: var(--radius-lg);
+}
+
+.sumula__numeros span[aria-hidden] {
+  color: var(--semantic-text-muted);
+  font-size: 0.5em;
 }
 
 .elenco {
   display: grid;
-  gap: var(--space-2);
+  gap: 0;
   padding: 0;
   margin: 0;
   list-style: none;
@@ -113,8 +166,12 @@
   flex-wrap: wrap;
   gap: var(--space-1) var(--space-3);
   justify-content: space-between;
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--semantic-border-subtle);
+}
+
+.elenco__atleta:first-child {
+  padding-top: 0;
 }
 
 .elenco__atleta:last-child {
@@ -123,22 +180,30 @@
 }
 
 .elenco__nome {
-  font-weight: 500;
+  color: var(--semantic-text-strong);
+  font-weight: 600;
+}
+
+.elenco__nome a {
+  color: inherit;
+  text-decoration-color: var(--semantic-brand);
 }
 
 .elenco__posicao {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
 
-// O que a pessoa fez em campo; sem evento nenhum, a linha fica so com nome e posicao.
+// O que a pessoa fez em campo, em âmbar, a cor de resultado; sem evento nenhum, a linha
+// fica só com nome e posição.
 .elenco__feitos {
   flex-basis: 100%;
-  color: var(--color-ink-700);
+  color: var(--semantic-highlight);
   font-size: var(--font-small);
+  font-weight: 600;
 }
 
-// Regua de "agora" na pagina do campeonato: o nome da rodada e o estado dela.
+// Régua de "agora" na página do campeonato: o nome da rodada e o estado dela.
 .agora {
   display: flex;
   flex-wrap: wrap;

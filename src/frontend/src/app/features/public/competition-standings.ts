@@ -43,6 +43,7 @@ const CRITERIOS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-competition-standings',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, BackLink, Button, Card, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
@@ -101,7 +102,7 @@ const CRITERIOS: Readonly<Record<string, string>> = {
                     <thead>
                       <tr>
                         <th scope="col" class="tabela__posicao">#</th>
-                        <th scope="col">Time</th>
+                        <th scope="col" class="tabela__time">Time</th>
                         <th scope="col" title="Pontos">P</th>
                         <th scope="col" title="Jogos">J</th>
                         <th scope="col" title="Vitórias">V</th>

@@ -1,30 +1,42 @@
 @use '../../../styles/actions';
 
-// Estilos compartilhados pelas telas públicas de campeonato.
+// Estilos compartilhados pelas telas públicas de campeonato, na direção Noite de jogo
+// (V5): título em display, superfícies noturnas e a escala esportiva para números. Cada
+// tela declara `theme-player` no host, e as cores daqui saem dos tokens semânticos.
 :host {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  max-width: 900px;
+  max-width: 960px;
+  color: var(--semantic-text-strong);
 }
 
 h1 {
   margin: 0;
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
-.intro,
+.intro {
+  margin: 0;
+  color: var(--semantic-text);
+}
+
 .apoio {
   margin: 0;
-  color: var(--color-ink-700);
-}
-
-.apoio {
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
 
 .trace {
   margin: 0;
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
 
@@ -39,36 +51,100 @@ h1 {
   flex: 1 1 16rem;
 }
 
+// ---------------------------------------------------------------- cabeçalho do campeonato
+
+// A capa do campeonato: modalidade e temporada acima do nome, a organização embaixo,
+// o que está em jogo agora e as duas ações da página.
+.capa-campeonato {
+  position: relative;
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  overflow: hidden;
+  padding: clamp(var(--space-5), 4vw, var(--space-8));
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--semantic-brand) 16%, transparent),
+      transparent 24rem
+    ),
+    linear-gradient(160deg, var(--semantic-surface-raised), var(--semantic-surface) 64%);
+  border: 1px solid color-mix(in srgb, var(--semantic-brand) 30%, var(--semantic-border-subtle));
+  border-radius: var(--card-radius);
+  box-shadow: var(--semantic-shadow-raised);
+}
+
+// Linhas de campo no canto: textura, atrás do texto e fora da árvore de acessibilidade.
+.capa-campeonato::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background-image:
+    linear-gradient(var(--primitive-color-white-a04) 1px, transparent 1px),
+    linear-gradient(90deg, var(--primitive-color-white-a04) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(100deg, transparent 35%, black 100%);
+}
+
+.capa-campeonato > * {
+  position: relative;
+  z-index: 1;
+}
+
+.capa-campeonato__kicker,
+.agora__rotulo {
+  color: var(--semantic-brand-strong);
+  font-family: var(--font-family-display);
+  font-size: var(--font-caption);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.capa-campeonato__agora {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+// ---------------------------------------------------------------- blocos de dado
+
+// "Como se joga" e "O elenco" das regras: cada número num bloco, como a ficha técnica
+// de uma transmissão, em vez de uma lista de rótulo e valor.
 .dados {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: var(--space-3);
   margin: 0;
 }
 
 .dados__item {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
-  justify-content: space-between;
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.dados__item:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  padding: var(--space-4);
+  background: var(--semantic-surface-inset);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 dt {
-  color: var(--color-ink-500);
-  font-size: var(--font-small);
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 dd {
   margin: 0;
-  font-weight: 500;
+  color: var(--semantic-text-strong);
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
+
+// ---------------------------------------------------------------- fases e times
 
 .fase {
   display: grid;
@@ -77,7 +153,11 @@ dd {
 
 .fase__titulo {
   margin: 0;
-  font-size: var(--font-body);
+  font-family: var(--font-family-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
 }
 
 .grupos {
@@ -91,42 +171,111 @@ dd {
 .grupo {
   display: grid;
   gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-canvas);
-  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  background: var(--semantic-surface-inset);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 .grupo__nome {
-  color: var(--color-ink-500);
-  font-size: var(--font-small);
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
+// Times como fichas de clube: escudo com as iniciais, nome e tamanho do elenco. A
+// ficha inteira é o alvo do link, pelo ::after.
 .times {
   display: grid;
-  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .time {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
-  justify-content: space-between;
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--semantic-surface-alt);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--motion-feedback) var(--motion-easing);
 }
 
-.time:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+.time:hover,
+.time:focus-within {
+  border-color: var(--semantic-border-control);
+}
+
+.time a {
+  color: var(--semantic-text-strong);
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.time a::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border-radius: var(--radius-lg);
+}
+
+.time a:hover {
+  text-decoration: underline;
+}
+
+.time__escudo,
+.escudo {
+  display: grid;
+  width: 2.5rem;
+  height: 2.75rem;
+  place-items: center;
+  color: var(--semantic-on-action);
+  font-family: var(--font-family-display);
+  font-weight: 800;
+  background-color: var(--semantic-brand);
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
+}
+
+.time__escudo {
+  grid-row: span 2;
 }
 
 .time__elenco {
-  color: var(--color-ink-500);
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
+
+// Cabeçalho da página do time: o escudo grande ao lado do nome.
+.clube {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.clube__escudo {
+  width: clamp(3.5rem, 9vw, 5rem);
+  height: auto;
+  flex: 0 0 auto;
+  aspect-ratio: 11 / 12;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.clube__texto {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+// ---------------------------------------------------------------- ações
 
 // O convite para jogar tem o peso do botão primário: é a próxima ação da página.
 .jogar {
@@ -135,10 +284,18 @@ dd {
   align-self: flex-start;
 }
 
+.acao,
+.acao--secundaria {
+  @include actions.secondary;
+
+  // Dentro de um cartão, que é coluna flex, o link não estica até a borda.
+  align-self: flex-start;
+}
+
 .acoes-publicas {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
   align-items: center;
-  margin: 0 0 var(--space-6);
+  margin: var(--space-2) 0 0;
 }
