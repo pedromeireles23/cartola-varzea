@@ -1,37 +1,144 @@
-.etapas {
+// Súmula como operação esportiva (V6): placar ao vivo no topo, etapas em passo a passo
+// e o placar digitado em dígitos grandes. Formulário e tabela seguem densos e em Inter,
+// na calma da central.
+
+// ---------------------------------------------------------------- escudo
+
+.escudo {
+  display: inline-grid;
+  width: 2rem;
+  height: 2.2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--semantic-on-action);
+  font-family: var(--font-family-display);
+  font-size: 0.875rem;
+  font-weight: 800;
+  background-color: var(--semantic-brand-strong);
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
+}
+
+.escudo--visitante,
+.ao-vivo__time--visitante .escudo {
+  color: var(--semantic-on-info);
+  background-color: var(--semantic-info);
+}
+
+// ---------------------------------------------------------------- placar ao vivo
+
+.ao-vivo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--semantic-surface-alt);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.ao-vivo__time {
   display: flex;
-  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+  color: var(--semantic-text-strong);
+  font-weight: 700;
+  overflow-wrap: break-word;
+}
+
+.ao-vivo__time--visitante {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.ao-vivo__numeros {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
+  background-color: var(--semantic-surface);
+  border-radius: var(--radius-md);
+}
+
+.ao-vivo__numeros span[aria-hidden],
+.resumo__numeros span[aria-hidden] {
+  color: var(--semantic-text-muted);
+  font-size: 0.7em;
+}
+
+// ---------------------------------------------------------------- etapas
+
+// Passo a passo: número em display, a etapa atual na cor da marca e as anteriores
+// marcadas como percorridas. A atual também vem em aria-current, não só pela cor.
+.etapas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: var(--space-2);
   margin: var(--space-3) 0 0;
   padding: 0;
   list-style: none;
 }
 
-// Etapas da súmula: botões com o raio dos controles (06 §9.1), não pílulas, e contorno
-// de 3:1 como todo controle (WCAG 1.4.11).
 .etapas button {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
   min-height: var(--touch-target);
   padding: var(--space-2) var(--space-3);
-  color: var(--color-ink-700);
-  font-weight: 500;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
+  color: var(--semantic-text);
+  font-weight: 600;
+  text-align: left;
   cursor: pointer;
+  background: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-control);
+  border-radius: var(--radius-md);
+}
+
+.etapas__numero {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  font-family: var(--font-family-display);
+  font-size: 1rem;
+  font-weight: 800;
+  background-color: var(--semantic-surface-hover);
+  border-radius: var(--radius-round);
+}
+
+.etapas__item--feita .etapas__numero {
+  color: var(--semantic-on-success);
+  background-color: var(--semantic-success);
 }
 
 .etapas button.ativa {
-  color: var(--color-surface);
-  background: var(--color-brand-700);
-  border-color: var(--color-brand-700);
+  color: var(--semantic-on-action);
+  background: var(--semantic-action);
+  border-color: var(--semantic-action);
 }
+
+.etapas button.ativa .etapas__numero {
+  color: var(--semantic-action);
+  background-color: var(--semantic-on-action);
+}
+
+// ---------------------------------------------------------------- placar digitado
 
 .placar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: var(--space-4);
   align-items: end;
-  max-width: 34rem;
+  max-width: 36rem;
 }
 
 .placar label {
@@ -40,20 +147,46 @@
   font-weight: 600;
 }
 
+.placar__time {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.placar__x {
+  padding-bottom: var(--space-4);
+  color: var(--semantic-text-muted);
+  font-family: var(--font-family-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
 .placar input,
 .numero {
   width: 5rem;
   padding: var(--space-2);
-  border: 1px solid var(--color-border-strong);
+  color: var(--semantic-text-strong);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-control);
   border-radius: var(--radius-sm);
   font: inherit;
 }
 
+// O número digitado é o placar: dígito grande em display, como no telão.
 .placar input {
   width: 100%;
-  font-size: 1.5rem;
+  min-height: 4.5rem;
+  font-family: var(--font-family-display);
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
   text-align: center;
+  border-radius: var(--radius-md);
 }
+
+// ---------------------------------------------------------------- participação
 
 .elenco {
   display: grid;
@@ -68,16 +201,61 @@
   grid-template-columns: minmax(10rem, 1fr) minmax(6rem, auto) auto auto;
   gap: var(--space-3);
   align-items: center;
-  padding-block: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--semantic-surface-alt);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-md);
 }
 
+.elenco li span {
+  color: var(--semantic-text-muted);
+  font-size: var(--font-small);
+}
+
+.elenco label {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--touch-target);
+  cursor: pointer;
+}
+
+// ---------------------------------------------------------------- revisão
+
 .resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
   font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.resumo__numeros {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
+  background-color: var(--semantic-surface-alt);
+  border-radius: var(--radius-md);
 }
 
 @media (max-width: 44rem) {
   .elenco li {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+// No celular o escudo sobe para cima do nome: lado a lado, o nome do time quebrava no
+// meio da palavra.
+@media (max-width: 30rem) {
+  .ao-vivo__time,
+  .ao-vivo__time--visitante {
+    flex-direction: column;
+    text-align: center;
   }
 }

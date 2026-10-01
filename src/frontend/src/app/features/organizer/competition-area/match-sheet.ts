@@ -11,6 +11,7 @@ import {
   SelectField,
   SelectOption,
 } from '../../../shared/ui';
+import { teamInitials } from '../../fantasy/fantasy-format';
 import { CompetitionContext } from './competition-context';
 import {
   MatchSheet,
@@ -34,6 +35,23 @@ type CampoNumerico =
   | 'redCards'
   | 'ownGoals'
   | 'penaltyMisses';
+
+/**
+ * O nome de cada número por extenso, para o leitor de tela: o cabeçalho da coluna abrevia
+ * ("Assist.", "Pênaltis def.") e um campo dentro de célula não herda o cabeçalho como
+ * nome. Sem isto, cada um dos campos da tabela era anunciado só como "editar texto".
+ */
+const ROTULOS_DE_EVENTO: Readonly<Record<CampoNumerico, string>> = {
+  goals: 'Gols',
+  assists: 'Assistências',
+  goalkeeperSaves: 'Defesas',
+  penaltySaves: 'Pênaltis defendidos',
+  yellowCards: 'Amarelos',
+  redCards: 'Vermelho',
+  ownGoals: 'Gols contra',
+  penaltyMisses: 'Pênaltis perdidos',
+  goalsConceded: 'Gols sofridos',
+};
 
 @Component({
   selector: 'app-match-sheet',
@@ -59,15 +77,45 @@ type CampoNumerico =
             <p class="apoio">
               {{ sumula()!.roundName }} · informe somente o que aconteceu em campo.
             </p>
+
+            <!--
+              Placar ao vivo (V6): acompanha o que é digitado na etapa 1, como o placar de
+              uma transmissão. O × é só visual; o leitor de tela ouve "2 a 1".
+            -->
+            <div class="ao-vivo">
+              <span class="ao-vivo__time">
+                <span class="escudo" aria-hidden="true">{{
+                  iniciais(sumula()!.homeTeamName)
+                }}</span>
+                {{ sumula()!.homeTeamName }}
+              </span>
+              <strong class="ao-vivo__numeros num">
+                {{ mandante() }}<span aria-hidden="true">×</span><span class="sr-only"> a </span
+                >{{ visitante() }}
+              </strong>
+              <span class="ao-vivo__time ao-vivo__time--visitante">
+                <span class="escudo" aria-hidden="true">{{
+                  iniciais(sumula()!.awayTeamName)
+                }}</span>
+                {{ sumula()!.awayTeamName }}
+              </span>
+            </div>
+
             <ol class="etapas" aria-label="Etapas da súmula">
               @for (nome of nomesDasEtapas; track $index) {
-                <li>
+                <li
+                  class="etapas__item"
+                  [class.etapas__item--feita]="$index < etapa()"
+                  [class.etapas__item--atual]="etapa() === $index"
+                >
                   <button
                     type="button"
                     [class.ativa]="etapa() === $index"
+                    [attr.aria-current]="etapa() === $index ? 'step' : null"
                     (click)="etapa.set($index)"
                   >
-                    {{ $index + 1 }}. {{ nome }}
+                    <span class="etapas__numero" aria-hidden="true">{{ $index + 1 }}</span>
+                    <span class="sr-only">{{ $index + 1 }}. </span>{{ nome }}
                   </button>
                 </li>
               }
@@ -82,18 +130,26 @@ type CampoNumerico =
             <app-card heading="Placar final">
               <div class="placar">
                 <label
-                  >{{ sumula()!.homeTeamName
-                  }}<input
+                  ><span class="placar__time"
+                    ><span class="escudo" aria-hidden="true">{{
+                      iniciais(sumula()!.homeTeamName)
+                    }}</span
+                    >{{ sumula()!.homeTeamName }}</span
+                  ><input
                     type="number"
                     min="0"
                     max="99"
                     [value]="mandante()"
                     (input)="alterarPlacar(true, $event)"
                 /></label>
-                <span>×</span>
+                <span class="placar__x" aria-hidden="true">×</span>
                 <label
-                  >{{ sumula()!.awayTeamName
-                  }}<input
+                  ><span class="placar__time"
+                    ><span class="escudo escudo--visitante" aria-hidden="true">{{
+                      iniciais(sumula()!.awayTeamName)
+                    }}</span
+                    >{{ sumula()!.awayTeamName }}</span
+                  ><input
                     type="number"
                     min="0"
                     max="99"
@@ -172,6 +228,7 @@ type CampoNumerico =
                               type="number"
                               min="0"
                               [max]="maximo(campo)"
+                              [attr.aria-label]="rotulo(campo, atleta.sportingName)"
                               [value]="atleta[campo]"
                               (input)="alterarNumero(atleta, campo, $event)"
                             />
@@ -184,6 +241,7 @@ type CampoNumerico =
                               type="number"
                               min="0"
                               max="99"
+                              [attr.aria-label]="rotulo('goalsConceded', atleta.sportingName)"
                               [value]="atleta.goalsConceded"
                               (input)="alterarNumero(atleta, 'goalsConceded', $event)"
                             />
@@ -230,7 +288,11 @@ type CampoNumerico =
           @if (etapa() === 4) {
             <app-card heading="Revisão">
               <p class="resumo">
-                {{ sumula()!.homeTeamName }} <strong>{{ mandante() }} × {{ visitante() }}</strong>
+                {{ sumula()!.homeTeamName }}
+                <strong class="resumo__numeros num"
+                  >{{ mandante() }}<span aria-hidden="true">×</span><span class="sr-only"> a </span
+                  >{{ visitante() }}</strong
+                >
                 {{ sumula()!.awayTeamName }}
               </p>
               <p>{{ participantes().length }} atleta(s) marcado(s) como participante(s).</p>
@@ -290,6 +352,16 @@ export class MatchSheetPage {
     readonly tom: 'success' | 'warning' | 'danger';
     readonly texto: string;
   } | null>(null);
+
+  /** "Gols de Pinga": o nome do campo para quem navega a tabela pelo teclado. */
+  protected rotulo(campo: CampoNumerico, atleta: string): string {
+    return `${ROTULOS_DE_EVENTO[campo]} de ${atleta}`;
+  }
+
+  /** O escudo do time no placar: as iniciais, sem imagem. */
+  protected iniciais(nome: string): string {
+    return teamInitials(nome);
+  }
 
   protected readonly titulo = computed(() => {
     const atual = this.sumula();

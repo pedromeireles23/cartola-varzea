@@ -121,6 +121,48 @@ describe('MatchSheetPage', () => {
     ).toEqual(['2', '1']);
   });
 
+  it('o placar ao vivo acompanha o que é digitado, com o × só visual', async () => {
+    const fixture = await open();
+    const elemento = fixture.nativeElement as HTMLElement;
+    const [mandante] = [...elemento.querySelectorAll<HTMLInputElement>('.placar input')];
+
+    mandante.value = '3';
+    mandante.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+
+    const aoVivo = elemento.querySelector('.ao-vivo__numeros')!;
+    expect(aoVivo.textContent?.replace(/\s+/g, ' ').trim()).toBe('3× a 1');
+    expect(aoVivo.querySelector('[aria-hidden="true"]')?.textContent).toBe('×');
+  });
+
+  it('o passo atual é dito por aria-current, e os anteriores ficam marcados', async () => {
+    const fixture = await open();
+    button(fixture, 'Continuar').click();
+    await fixture.whenStable();
+
+    const atual = (fixture.nativeElement as HTMLElement).querySelector('[aria-current="step"]');
+    expect(atual?.textContent).toContain('2. Participação');
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.etapas__item--feita'),
+    ).toHaveLength(1);
+  });
+
+  it('cada número da tabela de eventos tem nome: o campo e o atleta', async () => {
+    const fixture = await open();
+    for (let step = 0; step < 2; step += 1) {
+      button(fixture, 'Continuar').click();
+      await fixture.whenStable();
+    }
+
+    const nomes = [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>('table input'),
+    ].map((campo) => campo.getAttribute('aria-label'));
+    expect(nomes).toContain('Gols de Bia');
+    expect(nomes).toContain('Assistências de Bia');
+    expect(nomes).toContain('Gols sofridos de Ana');
+    expect(nomes.every((nome) => nome !== null && nome.length > 0)).toBe(true);
+  });
+
   it('envia a versão lida com participações e eventos depois da revisão', async () => {
     const fixture = await open();
     for (let step = 0; step < 4; step += 1) {
