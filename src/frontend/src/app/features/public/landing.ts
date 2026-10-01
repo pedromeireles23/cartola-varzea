@@ -11,7 +11,7 @@ import { ChevronRight, ClipboardList, Shirt, Trophy } from 'lucide';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Button, Icon, Loading } from '../../shared/ui';
+import { Alert, Button, EmptyState, Icon, Loading } from '../../shared/ui';
 import { MODALITY_LABELS } from '../organizer/competition.service';
 import { LandingFeatured } from './landing-featured';
 import { PublicCompetitionService, PublicCompetitionSummary } from './public-competition.service';
@@ -49,7 +49,7 @@ interface Ficha {
   selector: 'app-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, Button, Icon, LandingFeatured, Loading, RouterLink],
+  imports: [Alert, Button, EmptyState, Icon, LandingFeatured, Loading, RouterLink],
   template: `
     <section class="capa">
       <div class="capa__copy">
@@ -169,10 +169,10 @@ interface Ficha {
               </ul>
             }
           } @else {
-            <p class="apoio">
+            <app-empty-state ilustracao="campo">
               Nenhum campeonato publicado ainda. Quando a primeira liga publicar o dela, ele aparece
               aqui.
-            </p>
+            </app-empty-state>
           }
         }
       }

@@ -125,9 +125,9 @@
           </ul>
         </section>
       } @empty {
-        <section class="painel-simples">
-          <p class="apoio">Nenhum atleta ou técnico corresponde a esses filtros.</p>
-        </section>
+        <app-empty-state ilustracao="tatica" [compacto]="true">
+          Nenhum atleta ou técnico corresponde a esses filtros.
+        </app-empty-state>
       }
     } @else {
       @if (itensVisiveis().length > 0) {
@@ -141,9 +141,9 @@
           </ul>
         </section>
       } @else {
-        <section class="painel-simples">
-          <p class="apoio">Nenhum atleta ou técnico corresponde a esses filtros.</p>
-        </section>
+        <app-empty-state ilustracao="tatica" [compacto]="true">
+          Nenhum atleta ou técnico corresponde a esses filtros.
+        </app-empty-state>
       }
     }
 

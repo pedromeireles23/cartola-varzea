@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, BackLink, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Button, Card, EmptyState, Loading } from '../../shared/ui';
 import { PublicNav } from './public-nav';
 import { PublicMatch, PublicMatchAthlete, PublicFixtureService } from './public-fixture.service';
 import { kickoffText, teamInitials } from '../fantasy/fantasy-format';
@@ -41,7 +41,7 @@ const POSICOES: Readonly<Record<string, string>> = {
   selector: 'app-public-match',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, BackLink, Button, Card, Loading, PublicNav, RouterLink],
+  imports: [Alert, BackLink, Button, Card, EmptyState, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato(), 'partidas']" label="Todas as partidas" />
 
@@ -54,10 +54,10 @@ const POSICOES: Readonly<Record<string, string>> = {
         <h1>Súmula</h1>
         <app-card>
           @if (falha()!.status === 404) {
-            <app-alert tone="warning">
+            <app-empty-state ilustracao="placar" titulo="Súmula indisponível">
               Esta súmula ainda não está disponível. Ela é publicada junto com o resultado da
               rodada.
-            </app-alert>
+            </app-empty-state>
             <a class="acao" [routerLink]="['/c', campeonato(), 'partidas']">Ver o calendário</a>
           } @else {
             <app-alert tone="danger">{{ falha()!.message }}</app-alert>

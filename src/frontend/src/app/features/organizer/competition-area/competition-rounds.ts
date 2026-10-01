@@ -19,6 +19,7 @@ import {
   Button,
   Card,
   Dialog,
+  EmptyState,
   FormField,
   Loading,
   SelectField,
@@ -93,7 +94,18 @@ const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
 @Component({
   selector: 'app-competition-rounds',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, Dialog, FormField, Loading, RouterLink, SelectField],
+  imports: [
+    Alert,
+    Badge,
+    Button,
+    Card,
+    Dialog,
+    EmptyState,
+    FormField,
+    Loading,
+    RouterLink,
+    SelectField,
+  ],
   template: `
     <div class="pagina">
       <h1>Rodadas</h1>
@@ -329,15 +341,13 @@ const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
               }
             </app-card>
           } @empty {
-            <app-card>
-              <p class="apoio">
-                {{
-                  proprietario()
-                    ? 'Nenhuma rodada ainda. Crie a primeira para marcar os jogos.'
-                    : 'Nenhuma rodada ainda.'
-                }}
-              </p>
-            </app-card>
+            <app-empty-state ilustracao="campo" titulo="Nenhuma rodada ainda">
+              {{
+                proprietario()
+                  ? 'Crie a primeira para marcar os jogos.'
+                  : 'Quando a organização criar a primeira, ela aparece aqui.'
+              }}
+            </app-empty-state>
           }
 
           @if (proprietario()) {

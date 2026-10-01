@@ -12,7 +12,7 @@ import { RouterLink } from '@angular/router';
 import { ChevronRight } from 'lucide';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, Button, Icon, Loading, PageHeader } from '../../shared/ui';
+import { Alert, Badge, Button, EmptyState, Icon, Loading, PageHeader } from '../../shared/ui';
 import {
   PublicFixture,
   PublicFixtureService,
@@ -44,7 +44,7 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
   selector: 'app-fantasy-rounds',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, Badge, Button, Icon, Loading, MarketClock, PageHeader, RouterLink],
+  imports: [Alert, Badge, Button, EmptyState, Icon, Loading, MarketClock, PageHeader, RouterLink],
   template: `
     <app-page-header
       heading="Rodadas"
@@ -194,10 +194,11 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
               </a>
             </div>
           } @else if (rodadas().length === 0) {
-            <p class="painel__corpo apoio">
-              Nenhuma rodada apurada ainda. Quando o organizador publicar o resultado, sua pontuação
-              aparece aqui.
-            </p>
+            <div class="painel__corpo">
+              <app-empty-state ilustracao="placar" titulo="Nenhuma rodada apurada ainda">
+                Quando o organizador publicar o resultado, sua pontuação aparece aqui.
+              </app-empty-state>
+            </div>
           } @else {
             <ul class="linhas">
               @for (rodada of rodadas(); track rodada.roundId) {

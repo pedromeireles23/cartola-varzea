@@ -1,0 +1,108 @@
+// Estado vazio (V7): o desenho de traço ao lado do texto. O título usa os tokens do
+// título de cartão, então sai em display maiúscula no jogo e em Inter na central.
+:host {
+  display: block;
+}
+
+.vazio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-5);
+  align-items: center;
+  padding: var(--space-5);
+  background-color: var(--semantic-surface-alt);
+  border: 1px dashed var(--semantic-border-control);
+  border-radius: var(--radius-lg);
+}
+
+.vazio__desenho {
+  width: 8rem;
+  height: auto;
+  flex: 0 0 auto;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.vazio__texto {
+  display: grid;
+  flex: 1 1 16rem;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.vazio__titulo {
+  margin: 0;
+  color: var(--semantic-text-strong);
+  font-family: var(--font-heading);
+  font-size: var(--card-heading-size);
+  font-weight: var(--card-heading-weight);
+  line-height: 1.15;
+  letter-spacing: var(--card-heading-letter-spacing);
+  text-transform: var(--card-heading-transform);
+}
+
+.vazio__corpo {
+  color: var(--semantic-text);
+  font-size: var(--font-small);
+}
+
+.vazio__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.vazio__acoes:empty {
+  display: none;
+}
+
+.vazio--compacto {
+  padding: var(--space-4);
+}
+
+.vazio--compacto .vazio__desenho {
+  width: 5rem;
+}
+
+// ---------------------------------------------------------------- desenho
+
+.traco {
+  stroke: var(--semantic-border-control);
+  stroke-width: 2.5;
+}
+
+.traco--fino {
+  stroke-width: 1.5;
+}
+
+.marca {
+  stroke: var(--semantic-text-muted);
+  stroke-width: 3;
+}
+
+.seta {
+  stroke: var(--semantic-brand);
+  stroke-width: 2.5;
+  stroke-dasharray: 5 5;
+}
+
+.seta-ponta {
+  stroke: var(--semantic-brand);
+  stroke-width: 2.5;
+}
+
+.ponto {
+  fill: var(--semantic-border-control);
+}
+
+.destaque {
+  fill: var(--semantic-brand);
+}
+
+.placa {
+  fill: var(--semantic-surface);
+  stroke: var(--semantic-border-control);
+  stroke-width: 1.5;
+}

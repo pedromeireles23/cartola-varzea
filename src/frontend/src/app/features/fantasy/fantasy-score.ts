@@ -11,7 +11,7 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, BackLink, Badge, Button, Loading, PageHeader } from '../../shared/ui';
+import { Alert, BackLink, Badge, Button, EmptyState, Loading, PageHeader } from '../../shared/ui';
 import {
   assetRoleLabel,
   closingText,
@@ -44,7 +44,7 @@ interface Grupo {
   selector: 'app-fantasy-score',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, BackLink, Badge, Button, Loading, PageHeader, RouterLink],
+  imports: [Alert, BackLink, Badge, Button, EmptyState, Loading, PageHeader, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato(), 'rodadas']" label="Rodadas" />
 
@@ -57,9 +57,9 @@ interface Grupo {
         <app-page-header heading="Pontuação" kicker="Rodada" variant="game" />
         <section class="painel painel--corpo">
           @if (falha()!.status === 404) {
-            <app-alert tone="warning">
+            <app-empty-state ilustracao="placar" titulo="Pontuação indisponível">
               Esta rodada ainda não foi apurada, ou o endereço está errado.
-            </app-alert>
+            </app-empty-state>
             <a class="acao acao--secundaria" [routerLink]="['/c', campeonato(), 'rodadas']">
               Ver as rodadas apuradas
             </a>

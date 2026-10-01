@@ -15,7 +15,7 @@ import { Search, Shirt } from 'lucide';
 import { forkJoin } from 'rxjs';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Badge, Button, Icon, Loading, PageHeader } from '../../shared/ui';
+import { Alert, Badge, Button, EmptyState, Icon, Loading, PageHeader } from '../../shared/ui';
 import { AthletePosition } from '../organizer/competition-area/athlete.service';
 import {
   POSITION_LABELS,
@@ -95,6 +95,7 @@ const BLOQUEIOS_GERAIS = new Set(['not_joined', 'market_closed']);
     Alert,
     Badge,
     Button,
+    EmptyState,
     Icon,
     Loading,
     MarketClock,

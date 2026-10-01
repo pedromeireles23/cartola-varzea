@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CircleCheck, Clock, Save, ShieldCheck, Trophy, TriangleAlert } from 'lucide';
 
-import { Badge, Button, Card, Icon, PageHeader, Panel } from '../../shared/ui';
+import { Badge, Button, Card, EmptyState, Icon, PageHeader, Panel } from '../../shared/ui';
 
 /**
  * Laboratório isolado da direção visual V1.
@@ -12,7 +12,7 @@ import { Badge, Button, Card, Icon, PageHeader, Panel } from '../../shared/ui';
 @Component({
   selector: 'app-design-system-showcase',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Badge, Button, Card, Icon, PageHeader, Panel],
+  imports: [Badge, Button, Card, EmptyState, Icon, PageHeader, Panel],
   template: `
     <main class="showcase" data-testid="design-system-showcase">
       <section class="theme-player" data-testid="theme-player" aria-label="Tema do jogador">
@@ -124,6 +124,15 @@ import { Badge, Button, Card, Icon, PageHeader, Panel } from '../../shared/ui';
               <span class="athlete__points"><strong>15,8</strong><small>pts</small></span>
             </div>
           </app-card>
+
+          <app-card variant="compact" heading="Estados vazios" [headingLevel]="3">
+            <app-empty-state ilustracao="arquibancada" titulo="Você ainda não está em nenhuma liga">
+              Crie a sua ou entre com o código que recebeu.
+            </app-empty-state>
+            <app-empty-state ilustracao="tatica" [compacto]="true">
+              Nenhum atleta corresponde a esses filtros.
+            </app-empty-state>
+          </app-card>
         </div>
       </section>
 
@@ -198,6 +207,15 @@ import { Badge, Button, Card, Icon, PageHeader, Panel } from '../../shared/ui';
               <app-button variant="destructive" size="compact">Cancelar rodada</app-button>
               <app-button variant="danger" size="compact">Reabrir rodada</app-button>
             </div>
+          </app-card>
+
+          <app-card variant="compact" heading="Estados vazios" [headingLevel]="3">
+            <app-empty-state ilustracao="campo" titulo="Nenhuma rodada ainda">
+              Crie a primeira para marcar os jogos.
+            </app-empty-state>
+            <app-empty-state ilustracao="placar" [compacto]="true">
+              Esta súmula ainda não está disponível.
+            </app-empty-state>
           </app-card>
         </div>
       </section>

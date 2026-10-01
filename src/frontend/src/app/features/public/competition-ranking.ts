@@ -15,6 +15,7 @@ import {
   Alert,
   BackLink,
   Button,
+  EmptyState,
   Loading,
   PageHeader,
   StandingsPodium,
@@ -49,6 +50,7 @@ function numero(valor: number): string {
     Alert,
     BackLink,
     Button,
+    EmptyState,
     Loading,
     PageHeader,
     RouterLink,
@@ -126,12 +128,12 @@ function numero(valor: number): string {
         }
 
         @if (tabela.entries.length === 0) {
-          <section class="painel">
-            <p class="apoio">
-              Ninguém entrou neste campeonato ainda. Quem escalar primeiro abre a classificação.
-            </p>
-            <a class="acao" [routerLink]="['/c', campeonato(), 'jogar']">Jogar neste campeonato</a>
-          </section>
+          <app-empty-state ilustracao="arquibancada" titulo="Ninguém entrou neste campeonato ainda">
+            Quem escalar primeiro abre a classificação.
+            <a acoes class="acao" [routerLink]="['/c', campeonato(), 'jogar']"
+              >Jogar neste campeonato</a
+            >
+          </app-empty-state>
         } @else {
           @if (tabela.rounds > 0) {
             <app-standings-podium

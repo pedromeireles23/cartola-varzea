@@ -14,7 +14,16 @@ import { Router, RouterLink } from '@angular/router';
 import { ChevronRight, Users } from 'lucide';
 
 import { ApiFailure } from '../../core/api/problem-details';
-import { Alert, Button, Card, FormField, Icon, Loading, PageHeader } from '../../shared/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  EmptyState,
+  FormField,
+  Icon,
+  Loading,
+  PageHeader,
+} from '../../shared/ui';
 import { CurrentCompetition } from '../participant/current-competition';
 import {
   LEAGUE_CODE_LENGTH,
@@ -45,7 +54,18 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
   selector: 'app-fantasy-leagues',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, Button, Card, FormField, Icon, Loading, PageHeader, RouterLink, StandingsTabs],
+  imports: [
+    Alert,
+    Button,
+    Card,
+    EmptyState,
+    FormField,
+    Icon,
+    Loading,
+    PageHeader,
+    RouterLink,
+    StandingsTabs,
+  ],
   template: `
     <app-page-header
       heading="Classificação"
@@ -150,15 +170,10 @@ type Painel = 'nenhum' | 'criar' | 'entrar';
         }
 
         @if (ligas().length === 0) {
-          <section class="painel-simples" aria-labelledby="sem-ligas">
-            <h2 id="sem-ligas" class="painel-simples__titulo">
-              Você ainda não está em nenhuma liga
-            </h2>
-            <p class="apoio">
-              Crie a sua e compartilhe o código com o grupo, ou entre na liga de alguém com o código
-              que você recebeu.
-            </p>
-          </section>
+          <app-empty-state ilustracao="arquibancada" titulo="Você ainda não está em nenhuma liga">
+            Crie a sua e compartilhe o código com o grupo, ou entre na liga de alguém com o código
+            que você recebeu.
+          </app-empty-state>
         } @else {
           <ul class="ligas" aria-label="Suas ligas">
             @for (liga of ligas(); track liga.id) {

@@ -4,6 +4,7 @@ export { Badge, type BadgeTone } from './badge';
 export { Button, type ButtonSize, type ButtonVariant } from './button';
 export { Card, type CardVariant } from './card';
 export { Dialog } from './dialog';
+export { EmptyState, type EmptyIllustration } from './empty-state';
 export { FormField } from './form-field';
 export { Icon } from './icon';
 export { Loading } from './loading';

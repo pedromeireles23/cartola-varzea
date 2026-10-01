@@ -12,7 +12,7 @@ import { ChevronRight } from 'lucide';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, Button, Card, FormField, Icon, Loading } from '../../shared/ui';
+import { Alert, Button, Card, EmptyState, FormField, Icon, Loading } from '../../shared/ui';
 import { MODALITY_LABELS } from '../organizer/competition.service';
 import { PublicCompetitionService, PublicCompetitionSummary } from './public-competition.service';
 
@@ -32,7 +32,7 @@ type Estado =
   selector: 'app-competition-search',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, Button, Card, DatePipe, FormField, Icon, Loading, RouterLink],
+  imports: [Alert, Button, Card, DatePipe, EmptyState, FormField, Icon, Loading, RouterLink],
   template: `
     <h1>Campeonatos</h1>
     <p class="intro">
@@ -85,15 +85,13 @@ type Estado =
             </li>
           } @empty {
             <li>
-              <app-card>
-                <p class="apoio">
-                  {{
-                    termoAplicado()
-                      ? 'Nenhum campeonato publicado corresponde a essa busca.'
-                      : 'Nenhum campeonato publicado ainda. Volte em breve.'
-                  }}
-                </p>
-              </app-card>
+              <app-empty-state [ilustracao]="termoAplicado() ? 'tatica' : 'campo'">
+                {{
+                  termoAplicado()
+                    ? 'Nenhum campeonato publicado corresponde a essa busca.'
+                    : 'Nenhum campeonato publicado ainda. Volte em breve.'
+                }}
+              </app-empty-state>
             </li>
           }
         </ul>

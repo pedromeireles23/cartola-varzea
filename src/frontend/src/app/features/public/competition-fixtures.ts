@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
 import { PageMetaService } from '../../core/seo/page-meta';
-import { Alert, BackLink, Badge, Button, Card, Loading } from '../../shared/ui';
+import { Alert, BackLink, Badge, Button, Card, EmptyState, Loading } from '../../shared/ui';
 import { PublicNav } from './public-nav';
 import { kickoffText } from '../fantasy/fantasy-format';
 import {
@@ -39,7 +39,7 @@ type Estado =
   selector: 'app-competition-fixtures',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'theme-player' },
-  imports: [Alert, BackLink, Badge, Button, Card, Loading, PublicNav, RouterLink],
+  imports: [Alert, BackLink, Badge, Button, Card, EmptyState, Loading, PublicNav, RouterLink],
   template: `
     <app-back-link [link]="['/c', campeonato()]" label="Página do campeonato" />
 
@@ -67,12 +67,9 @@ type Estado =
         <app-public-nav [campeonato]="campeonato()" atual="partidas" />
 
         @if (rodadas().length === 0) {
-          <app-card>
-            <app-alert tone="info">
-              Nenhuma rodada foi criada ainda. O calendário aparece assim que a liga marcar os
-              primeiros jogos.
-            </app-alert>
-          </app-card>
+          <app-empty-state ilustracao="campo" titulo="Nenhuma rodada foi criada ainda">
+            O calendário aparece assim que a liga marcar os primeiros jogos.
+          </app-empty-state>
         } @else {
           @for (rodada of rodadas(); track rodada.id; let i = $index) {
             <app-card [heading]="rodada.name">
