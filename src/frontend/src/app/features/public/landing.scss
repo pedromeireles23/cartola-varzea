@@ -1,102 +1,56 @@
 @use '../../../styles/actions';
 
-// Porta de entrada do produto. Superficie plana, tipografia grande e uma linha de campo
-// ao fundo: nada de degrade nem de brilho, como manda o 02 §1.
+// Porta de entrada do produto na direção Noite de jogo (V5). A capa e o estádio ficam em
+// landing-hero.scss; aqui moram a vitrine, o passo a passo e o movimento comum.
 :host {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
+  gap: clamp(var(--space-12), 8vw, var(--space-20));
   max-width: var(--container-max);
   margin-inline: auto;
+  color: var(--semantic-text);
 }
 
-// ---------------------------------------------------------------- capa
-
-.capa {
-  position: relative;
-  display: grid;
-  gap: var(--space-5);
-  justify-items: start;
-  padding-block: var(--space-8) var(--space-4);
-}
-
-// O campo e so tracado, na cor da borda: da profundidade sem disputar a leitura. Ele
-// encosta na margem do texto e para antes do conteudo seguinte.
-.capa__campo {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: -1;
-  width: min(100%, 26rem);
-  height: auto;
-  fill: none;
-  stroke: var(--color-border);
-  stroke-width: 2;
-  opacity: 70%;
-  pointer-events: none;
-}
-
-@media (min-width: 900px) {
-  .capa__campo {
-    width: 32rem;
-    opacity: 100%;
-  }
-}
-
-.capa__titulo {
-  display: grid;
-  max-width: 12ch;
-  margin: 0;
-  font-size: var(--font-display);
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
-
-// As tres palavras sao a promessa do produto; elas chegam em sequencia, uma linha de
-// cada vez, e param. Nada se repete depois disso.
-.capa__titulo span {
-  animation: sobe var(--motion-panel) var(--motion-easing) backwards;
-}
-
-.capa__titulo span:nth-child(2) {
-  animation-delay: 70ms;
-}
-
-.capa__titulo span:nth-child(3) {
-  animation-delay: 140ms;
-  color: var(--color-brand-700);
-}
-
-.capa__texto {
-  max-width: 46ch;
-  margin: 0;
-  color: var(--color-ink-700);
-  font-size: var(--font-h3);
-  animation: sobe var(--motion-panel) var(--motion-easing) 210ms backwards;
-}
-
-.capa__acoes {
+.secao__topo {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
-  animation: sobe var(--motion-panel) var(--motion-easing) 280ms backwards;
+  gap: var(--space-2) var(--space-4);
+  align-items: baseline;
+  justify-content: space-between;
 }
 
-.capa__nota {
-  max-width: 46ch;
-  margin: 0;
-  color: var(--color-ink-500);
+.secao__topo a {
+  color: var(--semantic-text-strong);
+  font-weight: 600;
+  text-decoration-color: var(--semantic-brand);
+}
+
+.secao__titulo {
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.vitrine,
+.passos {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.apoio {
+  color: var(--semantic-text-muted);
   font-size: var(--font-small);
 }
 
-// ---------------------------------------------------------------- como funciona
-
-.passos,
-.destaques {
-  display: grid;
-  gap: var(--space-5);
+.apoio a {
+  color: var(--semantic-text-strong);
 }
+
+// ---------------------------------------------------------------- como funciona
 
 .passos__lista {
   display: grid;
@@ -104,7 +58,6 @@
   padding: 0;
   margin: 0;
   list-style: none;
-  counter-reset: passo;
 }
 
 @media (min-width: 720px) {
@@ -114,65 +67,56 @@
 }
 
 .passo {
+  position: relative;
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-content: start;
-  padding: var(--space-5);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  overflow: hidden;
+  padding: var(--space-6);
+  background: linear-gradient(160deg, var(--semantic-surface-alt), var(--semantic-surface) 70%);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--card-radius);
   transition: border-color var(--motion-feedback) var(--motion-easing);
 }
 
 .passo:hover {
-  border-color: var(--color-border-strong);
+  border-color: var(--semantic-border-control);
 }
 
-// O numero e o unico ornamento da secao: grande, chapado e sem circulo em volta.
-//
-// Ele nasceu em brand-300, que da 1,24:1 sobre a superficie — quase invisivel, e so
-// legivel ao passar o cursor, o que o dedo nunca alcanca. Agora e brand-700, 5,06:1,
-// que passa em AA e nao depende de hover para existir. O cursor muda so a borda do
-// cartao, que e enfeite de verdade.
-.passo__numero {
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--color-brand-700);
-}
-
-.passo__titulo {
-  margin: 0;
-  font-size: var(--font-h3);
-}
-
-.passo__texto {
-  margin: 0;
-  color: var(--color-ink-700);
-}
-
-// ---------------------------------------------------------------- destaques
-
-.destaques__topo {
+.passo__topo {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
 }
 
-.destaques__topo h2 {
-  margin: 0;
+// O número é o ornamento da seção: grande e chapado, como a camisa de um jogador.
+.passo__numero {
+  color: var(--semantic-brand);
+  font-family: var(--font-family-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 0.8;
 }
 
-.apoio {
-  margin: 0;
-  color: var(--color-ink-700);
-  font-size: var(--font-small);
+.passo__icone {
+  color: var(--semantic-highlight);
 }
 
-// ---------------------------------------------------------------- acoes
+.passo__titulo {
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.passo__texto {
+  color: var(--semantic-text);
+}
+
+// ---------------------------------------------------------------- ações
 
 .acao {
   @include actions.primary;
@@ -184,13 +128,6 @@
 
 // ---------------------------------------------------------------- movimento
 
-@keyframes sobe {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
 // Abaixo da dobra, o bloco só desliza: com opacidade, o texto ficava abaixo do contraste
 // AA enquanto entrava na tela — e parado assim para quem mede sem rolar (Lighthouse).
 @keyframes desliza {
@@ -199,24 +136,16 @@
   }
 }
 
-// Abaixo da dobra, quem revela e a rolagem: o cartao entra quando entra na tela, com a
-// linha do tempo nativa do CSS. Sem suporte, o conteudo simplesmente ja esta visivel —
-// nada aqui depende da animacao para ser lido.
+// Abaixo da dobra, quem revela é a rolagem: o cartão entra quando entra na tela, com a
+// linha do tempo nativa do CSS. Sem suporte, o conteúdo simplesmente já está visível —
+// nada aqui depende da animação para ser lido.
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .passo,
-    .destaques__topo {
+    .secao__topo {
       animation: desliza 320ms var(--motion-easing) both;
       animation-timeline: view();
       animation-range: entry 0% entry 60%;
     }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .capa__titulo span,
-  .capa__texto,
-  .capa__acoes {
-    animation: none;
   }
 }

@@ -83,20 +83,11 @@
   min-height: 100vh;
 }
 
-// O canvas noturno acompanha apenas os componentes já migrados. A conta nova e as
-// demais telas continuam operacionais até os cortes seguintes do roadmap.
-.principal:has(
-  :is(
-    app-participant-home,
-    app-fantasy-lineup,
-    app-fantasy-market,
-    app-fantasy-rounds,
-    app-fantasy-score,
-    app-competition-ranking,
-    app-fantasy-leagues,
-    app-fantasy-league
-  ).theme-player
-) {
+// O canvas noturno acompanha a tela aberta: toda tela migrada declara `theme-player` no
+// próprio host, e a casca só reage a isso. A conta nova e as telas ainda não migradas
+// continuam operacionais. Com uma lista de seletores, a tela migrada que ficasse de fora
+// dela teria texto claro sobre fundo claro.
+.principal:has(.conteudo > .theme-player) {
   --shell-footer-text: var(--primitive-color-night-200);
   --shell-footer-link: var(--primitive-color-night-100);
 
@@ -109,18 +100,7 @@
     linear-gradient(145deg, var(--primitive-color-night-950), var(--primitive-color-night-1000));
 }
 
-.app:has(
-  :is(
-    app-participant-home,
-    app-fantasy-lineup,
-    app-fantasy-market,
-    app-fantasy-rounds,
-    app-fantasy-score,
-    app-competition-ranking,
-    app-fantasy-leagues,
-    app-fantasy-league
-  ).theme-player
-) {
+.app:has(.conteudo > .theme-player) {
   background-color: var(--primitive-color-night-1000);
 }
 
@@ -349,63 +329,6 @@
   color: var(--shell-footer-link, var(--semantic-text));
 }
 
-// A casca publica permanece clara nesta etapa; V5 cuida da landing.
-.publico {
-  background-color: var(--semantic-surface);
-  border-bottom: 1px solid var(--semantic-border-subtle);
-}
-
-.publico__interno {
-  display: flex;
-  gap: var(--space-4);
-  align-items: center;
-  justify-content: space-between;
-  max-width: calc(var(--container-max) + 2 * var(--gutter));
-  min-height: 64px;
-  margin-inline: auto;
-  padding-inline: var(--gutter);
-}
-
-.publico__nav {
-  display: flex;
-  gap: var(--space-1);
-  align-items: center;
-}
-
-.publico__nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--touch-target);
-  padding-inline: var(--space-2);
-  color: var(--semantic-text);
-  font-size: var(--font-small);
-  font-weight: 500;
-  text-decoration: none;
-  border-radius: var(--radius-md);
-}
-
-.publico__nav a:hover {
-  color: var(--semantic-text-strong);
-  background-color: var(--semantic-surface-alt);
-}
-
-.publico__nav a.ativo {
-  color: var(--semantic-text-strong);
-  box-shadow: inset 0 -2px 0 var(--semantic-brand);
-  border-radius: 0;
-}
-
-.publico__nav a.publico__cta {
-  margin-left: var(--space-2);
-  padding-inline: var(--space-4);
-  color: var(--semantic-on-action);
-  background-color: var(--semantic-action);
-}
-
-.publico__nav a.publico__cta:hover {
-  background-color: var(--semantic-action-hover);
-}
-
 @media (min-width: 480px) and (max-width: 1023px) {
   .topo__area {
     display: inline-flex;
@@ -423,18 +346,7 @@
   }
 }
 
-@media (max-width: 639px) {
-  .publico .marca__copy,
-  .publico__nav a.publico__cta {
-    display: none;
-  }
-}
-
 @media (max-width: 379px) {
-  .publico__nav a[href='/regras'] {
-    display: none;
-  }
-
   .topo {
     gap: var(--space-2);
   }

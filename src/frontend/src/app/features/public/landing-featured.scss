@@ -1,0 +1,292 @@
+@use '../../../styles/actions';
+
+// O cartaz do campeonato em destaque: placar e ranking com a escala esportiva, numa
+// superfície elevada da noite de jogo. O âmbar marca o que é resultado; o coral fica
+// para a ação, como no resto do jogo.
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.cartaz {
+  position: relative;
+  display: grid;
+  gap: var(--space-6);
+  overflow: hidden;
+  padding: clamp(var(--space-5), 4vw, var(--space-8));
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--semantic-highlight) 12%, transparent),
+      transparent 26rem
+    ),
+    linear-gradient(160deg, var(--semantic-surface-raised), var(--semantic-surface) 62%);
+  border: 1px solid color-mix(in srgb, var(--semantic-highlight) 28%, var(--semantic-border-subtle));
+  border-radius: var(--card-radius);
+  box-shadow: var(--semantic-shadow-raised);
+}
+
+// Recorte diagonal de faixa de torcida no canto: só textura, atrás do conteúdo.
+.cartaz::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(60%, 22rem);
+  height: 9rem;
+  pointer-events: none;
+  content: '';
+  background: repeating-linear-gradient(
+    135deg,
+    var(--primitive-color-white-a04) 0 2px,
+    transparent 2px 12px
+  );
+  mask-image: linear-gradient(225deg, black, transparent 70%);
+}
+
+.cartaz > * {
+  position: relative;
+}
+
+// ------------------------------------------------------------ topo
+
+.cartaz__topo {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.cartaz__eyebrow,
+.cartaz__subtitulo {
+  font-family: var(--font-family-display);
+  font-size: var(--font-caption);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cartaz__eyebrow {
+  color: var(--semantic-highlight);
+}
+
+.cartaz__titulo {
+  font-family: var(--font-family-display);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.cartaz__titulo a {
+  color: var(--semantic-text-strong);
+  text-decoration: none;
+}
+
+.cartaz__titulo a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--semantic-brand);
+  text-decoration-thickness: 3px;
+}
+
+.cartaz__meta,
+.cartaz__apoio {
+  color: var(--semantic-text-muted);
+  font-size: var(--font-small);
+}
+
+.cartaz__agora {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fase {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-3);
+  color: var(--semantic-text);
+  font-size: var(--font-small);
+  background-color: var(--semantic-surface-alt);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-pill);
+}
+
+.fase strong {
+  color: var(--semantic-text-strong);
+}
+
+.fase__ponto {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  background-color: var(--semantic-text-muted);
+  border-radius: var(--radius-round);
+}
+
+.fase--aberta {
+  border-color: color-mix(in srgb, var(--semantic-success) 48%, transparent);
+}
+
+.fase--aberta .fase__ponto {
+  background-color: var(--semantic-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--semantic-success) 24%, transparent);
+}
+
+.fase--correcao .fase__ponto {
+  background-color: var(--semantic-warning);
+}
+
+// ------------------------------------------------------------ corpo
+
+.cartaz__corpo {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (min-width: 760px) {
+  .cartaz__corpo {
+    grid-template-columns: minmax(0, 1.4fr) minmax(15rem, 1fr);
+    gap: var(--space-8);
+  }
+
+  .painel-lideres {
+    padding-left: var(--space-8);
+    border-left: 1px solid var(--semantic-border-subtle);
+  }
+}
+
+.painel-jogos,
+.painel-lideres {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+}
+
+.cartaz__subtitulo {
+  color: var(--semantic-text-muted);
+}
+
+// Placar de transmissão: casa à direita, visitante à esquerda e o número no meio.
+.placares,
+.lideres {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.placar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 3.25rem;
+  border-bottom: 1px solid var(--semantic-border-subtle);
+}
+
+.placar:last-child {
+  border-bottom: 0;
+}
+
+.placar__time {
+  min-width: 0;
+  padding-block: var(--space-2);
+  color: var(--semantic-text-strong);
+  font-size: var(--font-small);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.placar__time--casa {
+  text-align: right;
+}
+
+.placar__numeros {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
+  background-color: var(--semantic-surface-inset);
+  border-radius: var(--radius-md);
+}
+
+.placar__numeros span[aria-hidden] {
+  color: var(--semantic-text-muted);
+  font-size: 0.7em;
+}
+
+.placar__numeros--hora {
+  font-family: var(--font-body);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  color: var(--semantic-text);
+}
+
+.lider {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 3.25rem;
+  border-bottom: 1px solid var(--semantic-border-subtle);
+}
+
+.lider:last-child {
+  border-bottom: 0;
+}
+
+.lider__posicao {
+  font-family: var(--font-family-display);
+  font-size: var(--font-score-sm);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--semantic-text-muted);
+}
+
+.lider--primeiro .lider__posicao {
+  color: var(--semantic-highlight);
+}
+
+.lider__nome {
+  overflow: hidden;
+  color: var(--semantic-text-strong);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lider__pontos {
+  color: var(--semantic-text);
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+// ------------------------------------------------------------ ações
+
+.cartaz__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.acao {
+  @include actions.primary;
+}
+
+.acao--secundaria {
+  @include actions.secondary;
+}

@@ -19,6 +19,7 @@ import { MODALITY_LABELS } from '../organizer/competition.service';
 import { PublicCompetition, PublicCompetitionService } from './public-competition.service';
 import { PublicFixtureService, PublicRound, ROUND_PHASE_LABELS } from './public-fixture.service';
 import { PublicNav } from './public-nav';
+import { lastPublishedRound, roundsInProgress, upcomingMatches } from './public-rounds';
 import { kickoffText } from '../fantasy/fantasy-format';
 
 type Estado =
@@ -290,38 +291,14 @@ export class PublicCompetitionPage implements OnInit {
     () => this.semCatalogo() && (this.dados()?.stages.length ?? 0) === 0,
   );
 
-  /**
-   * As rodadas em andamento: toda rodada que ainda não fechou resultado, em ordem. Pode
-   * ser mais de uma — a de ontem em conferência enquanto o mercado da próxima já abriu —,
-   * e mostrar só a primeira escondia justamente a que a pessoa pode jogar. Quando todas
-   * fecharam, não há "agora" a mostrar — quem manda na tela então é o último resultado.
-   */
-  protected readonly rodadasAgora = computed(() =>
-    this.rodadas().filter(
-      (rodada) =>
-        rodada.underCorrection ||
-        (rodada.phase !== 'Consolidated' &&
-          rodada.phase !== 'Published' &&
-          rodada.phase !== 'Cancelled' &&
-          rodada.phase !== 'Draft'),
-    ),
-  );
+  /** As rodadas que ainda não fecharam resultado; ver `roundsInProgress`. */
+  protected readonly rodadasAgora = computed(() => roundsInProgress(this.rodadas()));
 
   /** O que vem por aí, no relógio de quem está lendo, no máximo três. */
-  protected readonly proximosJogos = computed(() => {
-    const agora = Date.now();
-    return this.rodadas()
-      .flatMap((rodada) => rodada.matches)
-      .filter((jogo) => jogo.status === 'Scheduled' && Date.parse(jogo.kickoffAt) > agora)
-      .sort((um, outro) => Date.parse(um.kickoffAt) - Date.parse(outro.kickoffAt))
-      .slice(0, 3);
-  });
+  protected readonly proximosJogos = computed(() => upcomingMatches(this.rodadas(), Date.now(), 3));
 
   /** A última rodada com resultado no ar; some enquanto ela está em correção. */
-  protected readonly ultimoResultado = computed(() => {
-    const publicadas = this.rodadas().filter((rodada) => rodada.resultPublished);
-    return publicadas.length > 0 ? publicadas[publicadas.length - 1] : undefined;
-  });
+  protected readonly ultimoResultado = computed(() => lastPublishedRound(this.rodadas()));
 
   ngOnInit(): void {
     this.carregar();

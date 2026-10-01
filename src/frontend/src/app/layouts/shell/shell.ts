@@ -154,7 +154,12 @@ function segmentsOf(url: string): string[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DemoBanner, Icon, NotificationBell, RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './shell.html',
-  styleUrls: ['./shell.scss', './shell-navigation.scss', './shell-mobile.scss'],
+  styleUrls: [
+    './shell.scss',
+    './shell-navigation.scss',
+    './shell-mobile.scss',
+    './shell-public.scss',
+  ],
 })
 export class Shell {
   private readonly auth = inject(AuthService);

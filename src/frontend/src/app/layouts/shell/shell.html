@@ -397,32 +397,34 @@
     </dialog>
   </div>
 } @else {
-  <header class="publico">
-    <div class="publico__interno">
-      <a class="marca" routerLink="/" aria-label="Cartola Várzea, página inicial">
-        <span class="marca__sinal" aria-hidden="true">CV</span>
-        <span class="marca__copy" aria-hidden="true">
-          <span class="marca__nome">Cartola Várzea</span>
-          <span class="marca__tagline">Fantasy de futebol</span>
-        </span>
-      </a>
-      <nav class="publico__nav" aria-label="Navegação principal">
-        <a routerLink="/campeonatos" routerLinkActive="ativo" ariaCurrentWhenActive="page">
-          Campeonatos
+  <div class="publico-pagina">
+    <header class="publico theme-player">
+      <div class="publico__interno">
+        <a class="marca" routerLink="/" aria-label="Cartola Várzea, página inicial">
+          <span class="marca__sinal" aria-hidden="true">CV</span>
+          <span class="marca__copy" aria-hidden="true">
+            <span class="marca__nome">Cartola Várzea</span>
+            <span class="marca__tagline">Fantasy de futebol</span>
+          </span>
         </a>
-        <a routerLink="/regras" routerLinkActive="ativo" ariaCurrentWhenActive="page">Regras</a>
-        <a routerLink="/entrar" routerLinkActive="ativo" ariaCurrentWhenActive="page">Entrar</a>
-        <a class="publico__cta" routerLink="/cadastro">Criar conta</a>
-      </nav>
-    </div>
-  </header>
+        <nav class="publico__nav" aria-label="Navegação principal">
+          <a routerLink="/campeonatos" routerLinkActive="ativo" ariaCurrentWhenActive="page">
+            Campeonatos
+          </a>
+          <a routerLink="/regras" routerLinkActive="ativo" ariaCurrentWhenActive="page">Regras</a>
+          <a routerLink="/entrar" routerLinkActive="ativo" ariaCurrentWhenActive="page">Entrar</a>
+          <a class="publico__cta" routerLink="/cadastro">Criar conta</a>
+        </nav>
+      </div>
+    </header>
 
-  <main id="conteudo" class="conteudo conteudo--publico" tabindex="-1">
-    <router-outlet />
-  </main>
+    <main id="conteudo" class="conteudo conteudo--publico" tabindex="-1">
+      <router-outlet />
+    </main>
 
-  <footer class="rodape rodape--publico">
-    <p>Demonstração de portfólio, com dados fictícios. Sem pagamentos, apostas ou premiações.</p>
-    <p><a routerLink="/sistema">Estado do sistema</a></p>
-  </footer>
+    <footer class="rodape rodape--publico">
+      <p>Demonstração de portfólio, com dados fictícios. Sem pagamentos, apostas ou premiações.</p>
+      <p><a routerLink="/sistema">Estado do sistema</a></p>
+    </footer>
+  </div>
 }
