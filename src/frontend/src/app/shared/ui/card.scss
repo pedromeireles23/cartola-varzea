@@ -13,7 +13,10 @@
 
 .card__heading {
   color: var(--card-heading);
-  font-size: var(--font-h2);
+  font-size: var(--card-heading-size);
+  font-weight: var(--card-heading-weight);
+  letter-spacing: var(--card-heading-letter-spacing);
+  text-transform: var(--card-heading-transform);
 }
 
 .card--elevated {

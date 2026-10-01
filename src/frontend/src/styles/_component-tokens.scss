@@ -7,6 +7,10 @@
   --card-background: var(--semantic-surface);
   --card-foreground: var(--semantic-text-strong);
   --card-heading: var(--semantic-text-strong);
+  --card-heading-size: var(--semantic-font-size-h2);
+  --card-heading-weight: 600;
+  --card-heading-letter-spacing: -0.015em;
+  --card-heading-transform: none;
   --card-muted: var(--semantic-text-muted);
   --card-border: var(--semantic-border-subtle);
   --card-radius: var(--primitive-radius-lg);
@@ -142,6 +146,11 @@
 
 .theme-player {
   --card-radius: var(--primitive-radius-xl);
+  // O título do cartão fala a língua do jogo, como o `.painel__titulo` da V3/V4.
+  --card-heading-size: 1.375rem;
+  --card-heading-weight: var(--primitive-font-weight-extrabold);
+  --card-heading-letter-spacing: -0.01em;
+  --card-heading-transform: uppercase;
   --panel-radius: var(--primitive-radius-xl);
   --panel-padding: var(--primitive-space-6);
   --button-font-weight: var(--semantic-font-weight-control);
