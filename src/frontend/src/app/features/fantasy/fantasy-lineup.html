@@ -102,10 +102,12 @@
             <section class="resumo-time" aria-labelledby="resumo-titulo">
               <h2 id="resumo-titulo" class="resumo-time__titulo">Resumo da escalação</h2>
               @if (entrada.issues.length === 0) {
-                <app-alert tone="success">
-                  Escalação completa. Ela vale para a {{ visao()!.market.roundName }} e congela
-                  {{ horario(visao()!.market.closesAtLocal) }}.
-                </app-alert>
+                <div class="conquista" [class.conquista--agora]="acabouDeCompletar()">
+                  <app-alert tone="success">
+                    Escalação completa. Ela vale para a {{ visao()!.market.roundName }} e congela
+                    {{ horario(visao()!.market.closesAtLocal) }}.
+                  </app-alert>
+                </div>
                 <dl class="dados">
                   <div class="dados__item">
                     <dt>Capitão</dt>

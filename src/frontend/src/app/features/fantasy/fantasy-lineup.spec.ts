@@ -255,6 +255,16 @@ describe('FantasyLineupPage', () => {
     expect(texto(fixture)).toContain('Zeca é o capitão.');
     expect(texto(fixture)).toContain('Escalação completa. Ela vale para a Rodada 1 e congela');
     expect(texto(fixture)).toContain('(Horário de Brasília)');
+    // A escalação acabou de ficar completa por uma ação daqui: é a hora de comemorar.
+    expect(elemento(fixture).querySelector('.conquista--agora')).not.toBeNull();
+  });
+
+  it('abrir a tela com a escalação já completa não comemora nada', async () => {
+    const fixture = await abrir(visao({ entry: entrada({ issues: [], slots: ELENCO }) }));
+
+    expect(texto(fixture)).toContain('Escalação completa.');
+    expect(elemento(fixture).querySelector('.conquista')).not.toBeNull();
+    expect(elemento(fixture).querySelector('.conquista--agora')).toBeNull();
   });
 
   it('o reserva entra no lugar de um titular da mesma posição', async () => {

@@ -5,6 +5,7 @@ import {
   ElementRef,
   OnInit,
   computed,
+  effect,
   inject,
   input,
   signal,
@@ -135,6 +136,20 @@ export class FantasyLineupPage implements OnInit {
     return atual.tipo === 'pronto' ? atual.visao : null;
   });
 
+  /** A escalação está completa? `null` enquanto não há elenco para dizer. */
+  private readonly completa = computed(() => {
+    const entrada = this.visao()?.entry;
+    return entrada ? entrada.issues.length === 0 : null;
+  });
+
+  /**
+   * A escalação acabou de ficar completa, por uma ação feita nesta tela (V7). É a única
+   * celebração do Meu time: uma conclusão real, e só na passagem de incompleta para
+   * completa — abrir a tela com o time já pronto não comemora nada.
+   */
+  protected readonly acabouDeCompletar = signal(false);
+  private completaAntes: boolean | null = null;
+
   /** Com o mercado aberto e a conta dentro, o campo é o elenco corrente e aceita ações. */
   protected readonly editavel = computed(
     () => this.visao()?.market.isOpen === true && this.visao()?.entry != null,
@@ -194,6 +209,18 @@ export class FantasyLineupPage implements OnInit {
   });
 
   constructor() {
+    effect(() => {
+      const agora = this.completa();
+      if (this.completaAntes === false && agora === true) {
+        this.acabouDeCompletar.set(true);
+      } else if (agora === false) {
+        this.acabouDeCompletar.set(false);
+      }
+      if (agora !== null) {
+        this.completaAntes = agora;
+      }
+    });
+
     const consulta = globalThis.matchMedia?.(DESKTOP);
     if (consulta) {
       this.desktop.set(consulta.matches);

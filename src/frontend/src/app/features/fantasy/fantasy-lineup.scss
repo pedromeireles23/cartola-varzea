@@ -296,3 +296,33 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+// A única celebração do Meu time (V7): quando a escalação acaba de ficar completa, o aviso
+// cresce de leve e acende a borda uma vez. Não se repete e some com o movimento reduzido.
+.conquista--agora {
+  border-radius: var(--radius-md);
+  animation: conquista 700ms var(--semantic-motion-easing-emphasized) both;
+}
+
+@keyframes conquista {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--semantic-success) 55%, transparent);
+    transform: scale(0.97);
+  }
+
+  55% {
+    box-shadow: 0 0 0 10px transparent;
+    transform: scale(1.01);
+  }
+
+  100% {
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conquista--agora {
+    animation: none;
+  }
+}
