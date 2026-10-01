@@ -1,4 +1,5 @@
 @use '../../../styles/actions';
+@use '../../../styles/patterns';
 
 // V3 — o Início passa a ser o painel de uma rodada, não uma coleção de cartões neutros.
 :host {
@@ -52,10 +53,8 @@
   inset: 0;
   pointer-events: none;
   content: '';
-  background-image:
-    linear-gradient(var(--primitive-color-white-a04) 1px, transparent 1px),
-    linear-gradient(90deg, var(--primitive-color-white-a04) 1px, transparent 1px);
-  background-size: 34px 34px;
+  @include patterns.prancheta;
+
   mask-image: linear-gradient(100deg, transparent 10%, black 100%);
 }
 

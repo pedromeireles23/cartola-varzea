@@ -1,0 +1,31 @@
+@use 'sass:math';
+
+// Padrões gráficos próprios (V7): campo, tática e arquibancada, desenhados só com CSS.
+// São textura — ficam atrás do conteúdo, não carregam informação e não dependem de
+// fotografia nem de ativo de terceiros. Como mixins, só geram CSS onde são usados.
+
+/// Prancheta tática: a grade onde o técnico desenha a jogada.
+@mixin prancheta($cor: var(--primitive-color-white-a04), $passo: 34px) {
+  background-image:
+    linear-gradient(#{$cor} 1px, transparent 1px),
+    linear-gradient(90deg, #{$cor} 1px, transparent 1px);
+  background-size: $passo $passo;
+}
+
+/// Arquibancada: a torcida em pontos.
+@mixin arquibancada($cor: rgb(255 255 255 / 18%), $passo: 9px) {
+  background-image: radial-gradient(circle, #{$cor} 1.2px, transparent 1.7px);
+  background-size: $passo $passo;
+}
+
+/// Faixa de torcida: o recorte diagonal das bandeiras.
+@mixin faixa($cor: var(--primitive-color-white-a04)) {
+  background: repeating-linear-gradient(135deg, #{$cor} 0 2px, transparent 2px 12px);
+}
+
+/// Gramado: as listras do corte da grama, do fundo do campo para perto.
+@mixin gramado($claro: var(--semantic-pitch), $escuro: var(--semantic-pitch-stripe), $listras: 8) {
+  $faixa: math.div(100%, $listras);
+
+  background: repeating-linear-gradient(180deg, #{$claro} 0 $faixa, #{$escuro} $faixa $faixa * 2);
+}

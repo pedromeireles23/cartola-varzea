@@ -1,4 +1,5 @@
 @use '../../../styles/actions';
+@use '../../../styles/patterns';
 
 // O cartaz do campeonato em destaque: placar e ranking com a escala esportiva, numa
 // superfície elevada da noite de jogo. O âmbar marca o que é resultado; o coral fica
@@ -35,11 +36,9 @@
   height: 9rem;
   pointer-events: none;
   content: '';
-  background: repeating-linear-gradient(
-    135deg,
-    var(--primitive-color-white-a04) 0 2px,
-    transparent 2px 12px
-  );
+
+  @include patterns.faixa;
+
   mask-image: linear-gradient(225deg, black, transparent 70%);
 }
 

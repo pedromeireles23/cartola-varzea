@@ -1,3 +1,5 @@
+@use '../../../styles/patterns';
+
 // Capa da landing (V5): o título como placar e um estádio noturno desenhado em CSS e
 // SVG, sem fotografia nem ativo de terceiros (07 §4.1 e V7). O estádio é ilustração e
 // fica fora da árvore de acessibilidade; nada nele é dado do produto.
@@ -145,8 +147,9 @@
   z-index: -1;
   height: 38%;
   content: '';
-  background-image: radial-gradient(circle, rgb(255 255 255 / 18%) 1.2px, transparent 1.7px);
-  background-size: 9px 9px;
+
+  @include patterns.arquibancada;
+
   mask-image: linear-gradient(180deg, black 15%, transparent 100%);
 }
 
@@ -187,11 +190,9 @@
   left: 50%;
   width: 80%;
   aspect-ratio: 3 / 4;
-  background: repeating-linear-gradient(
-    180deg,
-    var(--semantic-pitch) 0 12.5%,
-    var(--semantic-pitch-stripe) 12.5% 25%
-  );
+
+  @include patterns.gramado;
+
   border-radius: 4px;
   box-shadow: 0 0 6em rgb(39 97 70 / 45%);
   transform: translateX(-50%) perspective(800px) rotateX(50deg);
