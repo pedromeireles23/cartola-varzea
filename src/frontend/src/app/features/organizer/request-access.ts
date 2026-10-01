@@ -46,6 +46,7 @@ const STATUS: Readonly<
 @Component({
   selector: 'app-request-access',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-organizer' },
   imports: [Alert, Badge, Button, Card, DatePipe, FormField, Loading, RouterLink],
   template: `
     <h1>Organizar campeonatos</h1>

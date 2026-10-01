@@ -104,6 +104,18 @@
   background-color: var(--primitive-color-night-1000);
 }
 
+// A central da competição (V6) também declara o tema no host: o canvas frio da
+// organização acompanha a tela, e a área de jogo continua noturna.
+.principal:has(.conteudo > .theme-organizer) {
+  background-color: var(--primitive-color-cool-100);
+}
+
+// Sob a lateral clara da organização, a casca repete a cor dela (surface-alt): sem isso,
+// a captura de página inteira mostrava uma faixa do canvas antigo abaixo da lateral.
+.app:has(.conteudo > .theme-organizer) {
+  background-color: var(--primitive-color-cool-50);
+}
+
 .topo {
   position: sticky;
   top: 0;

@@ -15,6 +15,7 @@ import { RouterLink } from '@angular/router';
 import { ApiFailure } from '../../../core/api/problem-details';
 import { Alert, Badge, Button, Card, Dialog, Loading } from '../../../shared/ui';
 import { CompetitionContext } from './competition-context';
+import { PublicationProgress } from './publication-progress';
 import {
   CompetitionReadiness,
   NOT_READY_CODE,
@@ -38,7 +39,7 @@ type Estado =
 @Component({
   selector: 'app-competition-publication',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, Card, DatePipe, Dialog, Loading, RouterLink],
+  imports: [Alert, Badge, Button, Card, DatePipe, Dialog, Loading, PublicationProgress, RouterLink],
   template: `
     <div class="pagina">
       <h1>Publicação</h1>
@@ -122,6 +123,7 @@ type Estado =
           </app-card>
 
           <app-card heading="Checklist">
+            <app-publication-progress [prontidao]="checklist()!" />
             @if (impedimentos().length === 0 && alertas().length === 0) {
               <app-alert tone="success">
                 Nada pendente: o catálogo comporta um elenco completo da modalidade.

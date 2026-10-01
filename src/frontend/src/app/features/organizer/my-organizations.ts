@@ -20,6 +20,7 @@ type Estado =
 @Component({
   selector: 'app-my-organizations',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-organizer' },
   imports: [Alert, Badge, Button, Card, DatePipe, Loading, RouterLink],
   template: `
     <h1>Minhas organizações</h1>

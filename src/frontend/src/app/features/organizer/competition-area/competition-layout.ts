@@ -45,6 +45,7 @@ export interface CompetitionCreatedState {
 @Component({
   selector: 'app-competition-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-organizer' },
   imports: [
     Alert,
     BackLink,

@@ -39,6 +39,7 @@ const ROTA = '/organizar/convite';
 @Component({
   selector: 'app-accept-invitation',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-organizer' },
   imports: [Alert, Button, Card, RouterLink],
   template: `
     <h1>Convite para auxiliar</h1>

@@ -59,6 +59,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 @Component({
   selector: 'app-organization-team',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-organizer' },
   imports: [Alert, BackLink, Badge, Button, Card, DatePipe, Dialog, FormField, Loading],
   template: `
     <app-back-link link="/organizar" label="Minhas organizações" />

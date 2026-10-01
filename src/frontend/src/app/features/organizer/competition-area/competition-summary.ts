@@ -1,10 +1,12 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { Alert, Card } from '../../../shared/ui';
+import { Alert, Card, Loading } from '../../../shared/ui';
 import { MODALITY_LABELS, registrationWindowText } from '../competition.service';
 import { CompetitionContext } from './competition-context';
+import { PublicationProgress } from './publication-progress';
+import { CompetitionReadiness, PublicationService } from './publication.service';
 import {
   businessDaysText,
   formationText,
@@ -16,13 +18,13 @@ import {
  * Resumo do campeonato (02 §9.1, `/organizar/c/:campeonato`).
  *
  * Mostra o que a modalidade impõe e os prazos escolhidos, em linguagem de quem
- * organiza. As pendências de publicação ficam na tela própria, para onde a situação
- * aponta.
+ * organiza. A situação abre com o progresso da publicação (V6): as etapas do checklist
+ * e o atalho para cada pendência; o detalhe de cada impedimento fica na tela própria.
  */
 @Component({
   selector: 'app-competition-summary',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Card, DecimalPipe, RouterLink],
+  imports: [Alert, Card, DecimalPipe, Loading, PublicationProgress, RouterLink],
   template: `
     @if (campeonato(); as dados) {
       <div class="pagina">
@@ -41,6 +43,17 @@ import {
             </p>
           } @else {
             <p class="apoio">Publicado: o campeonato aparece para o público.</p>
+          }
+          @switch (prontidao().tipo) {
+            @case ('carregando') {
+              <app-loading label="Conferindo o checklist…" />
+            }
+            @case ('erro') {
+              <p class="apoio">O checklist não carregou agora; ele está na tela de publicação.</p>
+            }
+            @case ('pronto') {
+              <app-publication-progress [prontidao]="checklist()!" />
+            }
           }
           <a class="acao" routerLink="publicacao">Ver checklist de publicação</a>
         </app-card>
@@ -144,7 +157,32 @@ export class CompetitionSummaryPage {
   protected readonly contexto = inject(CompetitionContext);
   protected readonly campeonato = this.contexto.campeonato;
 
+  private readonly publicacao = inject(PublicationService);
+
   protected readonly acabouDeCriar = this.contexto.consumirCriado();
+
+  /** O checklist é acessório: se falhar, o resumo continua de pé. */
+  protected readonly prontidao = signal<
+    | { readonly tipo: 'carregando' }
+    | { readonly tipo: 'pronto'; readonly checklist: CompetitionReadiness }
+    | { readonly tipo: 'erro' }
+  >({ tipo: 'carregando' });
+
+  protected readonly checklist = computed(() => {
+    const atual = this.prontidao();
+    return atual.tipo === 'pronto' ? atual.checklist : null;
+  });
+
+  constructor() {
+    // A casca só abre as telas filhas com o campeonato carregado.
+    const id = this.campeonato()?.id;
+    if (id) {
+      this.publicacao.readiness(id).subscribe({
+        next: (checklist) => this.prontidao.set({ tipo: 'pronto', checklist }),
+        error: () => this.prontidao.set({ tipo: 'erro' }),
+      });
+    }
+  }
 
   protected readonly modalidade = computed(() => {
     const dados = this.campeonato();

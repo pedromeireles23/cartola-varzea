@@ -1,0 +1,106 @@
+// Progresso da publicação (V6): a barra resume, a lista explica. O estado de cada etapa
+// vem em ícone e em texto; a cor só reforça.
+:host {
+  display: block;
+}
+
+.progresso {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.progresso__resumo {
+  margin: 0;
+  color: var(--semantic-text);
+  font-size: var(--font-small);
+}
+
+.progresso__numero {
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.progresso__barra {
+  height: 8px;
+  overflow: hidden;
+  background-color: var(--semantic-surface-hover);
+  border-radius: var(--radius-pill);
+}
+
+.progresso__preenchido {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--semantic-brand-strong), var(--semantic-brand));
+  border-radius: inherit;
+  transition: width var(--motion-panel) var(--motion-easing);
+}
+
+.etapas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.etapa {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 var(--space-2);
+  align-items: center;
+  padding: var(--space-3);
+  background-color: var(--semantic-surface-alt);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.etapa__icone {
+  grid-row: span 2;
+}
+
+.etapa__rotulo {
+  color: var(--semantic-text-strong);
+  font-weight: 600;
+}
+
+.etapa__estado {
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+}
+
+.etapa__link {
+  grid-column: 2;
+  justify-self: start;
+  font-size: var(--font-small);
+}
+
+.etapa--pronta .etapa__icone {
+  color: var(--semantic-success);
+}
+
+.etapa--alerta {
+  border-color: color-mix(in srgb, var(--semantic-warning) 45%, var(--semantic-border-subtle));
+}
+
+.etapa--alerta .etapa__icone {
+  color: var(--semantic-warning);
+}
+
+.etapa--pendente {
+  border-style: dashed;
+  border-color: var(--semantic-border-control);
+}
+
+.etapa--pendente .etapa__icone {
+  color: var(--semantic-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progresso__preenchido {
+    transition: none;
+  }
+}

@@ -39,6 +39,7 @@ type Estado =
 @Component({
   selector: 'app-create-competition',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-organizer' },
   imports: [Alert, BackLink, Button, Card, CompetitionSettingsForm, Loading],
   template: `
     <app-back-link [link]="['/organizar/o', organizacao(), 'campeonatos']" label="Campeonatos" />
