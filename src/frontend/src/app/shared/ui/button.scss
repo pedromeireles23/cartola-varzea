@@ -69,6 +69,18 @@
   background-color: var(--button-ghost-hover);
 }
 
+// Gatilho de ação destrutiva: a cor diz o que vai acontecer; o vermelho cheio fica para
+// a confirmação no diálogo.
+.btn--destructive {
+  color: var(--button-destructive-foreground);
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.btn--destructive:hover:not(:disabled, [aria-disabled='true']) {
+  background-color: var(--button-destructive-hover);
+}
+
 .btn--danger {
   color: var(--button-danger-foreground);
   background-color: var(--button-danger-background);

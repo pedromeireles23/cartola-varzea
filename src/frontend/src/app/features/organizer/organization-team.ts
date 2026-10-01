@@ -127,7 +127,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
               @for (pessoa of equipe()!.assistants; track pessoa.userId) {
                 <li class="lista__item">
                   <span class="lista__principal">{{ pessoa.displayName }}</span>
-                  <app-button escrita variant="ghost" (pressed)="pedirRemocao(pessoa)"
+                  <app-button escrita variant="destructive" (pressed)="pedirRemocao(pessoa)"
                     >Remover</app-button
                   >
                   <span class="lista__detalhe">
@@ -149,7 +149,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                   <span class="lista__principal">{{ convite.invitedEmail }}</span>
                   <app-badge [tone]="status(convite).tom">{{ status(convite).rotulo }}</app-badge>
                   @if (convite.status === 'Pending') {
-                    <app-button escrita variant="ghost" (pressed)="pedirRevogacao(convite)">
+                    <app-button escrita variant="destructive" (pressed)="pedirRevogacao(convite)">
                       Revogar
                     </app-button>
                   }

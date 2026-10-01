@@ -215,7 +215,7 @@ const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
                           @if (rodada.status === 'Draft') {
                             <app-button
                               escrita
-                              variant="ghost"
+                              variant="destructive"
                               (pressed)="pedirRemocao(rodada, partida)"
                             >
                               Remover<span class="sr-only">
@@ -321,7 +321,7 @@ const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
                     </app-button>
                   }
                   @if (rodada.status === 'Draft' || rodada.status === 'MarketOpen') {
-                    <app-button escrita variant="ghost" (pressed)="pedirCancelamento(rodada)">
+                    <app-button escrita variant="destructive" (pressed)="pedirCancelamento(rodada)">
                       Cancelar rodada<span class="sr-only">{{ ' ' + rodada.name }}</span>
                     </app-button>
                   }

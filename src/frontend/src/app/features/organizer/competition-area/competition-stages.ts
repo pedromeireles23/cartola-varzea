@@ -226,7 +226,7 @@ type Edicao =
                     >
                       Descer<span class="sr-only"> {{ fase.name }}</span>
                     </app-button>
-                    <app-button escrita variant="ghost" (pressed)="pedirRemocao(fase)">
+                    <app-button escrita variant="destructive" (pressed)="pedirRemocao(fase)">
                       Remover<span class="sr-only"> {{ fase.name }}</span>
                     </app-button>
                   </div>

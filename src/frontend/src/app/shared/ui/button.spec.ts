@@ -44,6 +44,16 @@ describe('Button', () => {
     expect(cliques).toBe(1);
   });
 
+  it('o gatilho destrutivo tem classe própria, distinta da confirmação em vermelho', async () => {
+    const fixture = TestBed.createComponent(Button);
+    fixture.componentRef.setInput('variant', 'destructive');
+    await fixture.whenStable();
+
+    const classes = (fixture.nativeElement.querySelector('button') as HTMLButtonElement).classList;
+    expect(classes).toContain('btn--destructive');
+    expect(classes).not.toContain('btn--danger');
+  });
+
   describe('na conta de demonstração', () => {
     const somenteLeitura = signal(true);
 

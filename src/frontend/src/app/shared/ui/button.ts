@@ -10,7 +10,12 @@ import {
 
 import { READ_ONLY_MODE, READ_ONLY_NOTICE_ID } from '../../core/demo/read-only-mode';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+/**
+ * `danger` é o vermelho cheio da confirmação, dentro do diálogo; `destructive` é o
+ * gatilho que abre essa confirmação — texto vermelho, sem fundo —, para que a ação
+ * destrutiva se distinga de "Editar" sem gritar numa lista longa (V6).
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive';
 export type ButtonSize = 'regular' | 'compact';
 
 /**

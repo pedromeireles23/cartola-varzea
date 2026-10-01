@@ -189,7 +189,7 @@ const PRICE_TIER_LABELS: Readonly<Record<PriceTier, string>> = {
                           </app-button>
                           <app-button
                             escrita
-                            variant="ghost"
+                            variant="destructive"
                             (pressed)="pedirDesligamento(athlete)"
                           >
                             Desligar<span class="sr-only"> {{ athlete.sportingName }}</span>

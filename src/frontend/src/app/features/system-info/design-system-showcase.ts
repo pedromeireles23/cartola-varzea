@@ -195,6 +195,7 @@ import { Badge, Button, Card, Icon, PageHeader, Panel } from '../../shared/ui';
             </div>
             <div class="showcase__actions">
               <app-button variant="secondary" size="compact">Exportar resumo</app-button>
+              <app-button variant="destructive" size="compact">Cancelar rodada</app-button>
               <app-button variant="danger" size="compact">Reabrir rodada</app-button>
             </div>
           </app-card>

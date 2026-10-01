@@ -128,7 +128,11 @@ type Estado =
                           <app-button escrita variant="secondary" (pressed)="abrirEdicao(time)">
                             Editar<span class="sr-only"> {{ time.name }}</span>
                           </app-button>
-                          <app-button escrita variant="ghost" (pressed)="pedirArquivamento(time)">
+                          <app-button
+                            escrita
+                            variant="destructive"
+                            (pressed)="pedirArquivamento(time)"
+                          >
                             Arquivar<span class="sr-only"> {{ time.name }}</span>
                           </app-button>
                         </div>
