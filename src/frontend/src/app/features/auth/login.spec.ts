@@ -35,6 +35,19 @@ describe('LoginPage', () => {
     return fixture;
   }
 
+  it('diz antes do formulário que é fantasy e que não há aposta em dinheiro', async () => {
+    const fixture = await abrir();
+    const elemento = fixture.nativeElement as HTMLElement;
+
+    const selo = elemento.querySelector('.selo');
+    expect(selo?.textContent).toContain('Fantasy de futebol amador');
+    expect(selo?.textContent).toContain('Sem apostas em dinheiro');
+    expect(
+      selo!.compareDocumentPosition(elemento.querySelector('form')!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('marca os campos para gerenciadores de senha', async () => {
     const fixture = await abrir();
 

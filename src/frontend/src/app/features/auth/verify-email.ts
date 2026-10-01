@@ -9,6 +9,7 @@ import { Alert, Card, Loading } from '../../shared/ui';
 @Component({
   selector: 'app-verify-email',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, Card, Loading, RouterLink],
   template: `
     <app-card heading="Confirmação de e-mail" [headingLevel]="1">

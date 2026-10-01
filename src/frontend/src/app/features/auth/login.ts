@@ -8,8 +8,14 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
 @Component({
   selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, Button, Card, FormField, RouterLink],
   template: `
+    <p class="selo">
+      <span class="selo__marca">Fantasy de futebol amador</span>
+      <span class="selo__aviso">Sem apostas em dinheiro</span>
+    </p>
+
     <app-card heading="Entrar" [headingLevel]="1">
       <form (submit)="entrar($event)">
         @if (erro()) {
@@ -44,6 +50,7 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
 
     @if (demo()) {
       <section class="visitante" aria-labelledby="visitante-titulo">
+        <p class="visitante__eyebrow">Demonstração</p>
         <h2 id="visitante-titulo" class="visitante__titulo">Só quer conhecer?</h2>
         <p class="visitante__texto">
           Entre como visitante: você vê um campeonato em andamento, um time montado, as ligas e a

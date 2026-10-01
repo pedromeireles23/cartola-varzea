@@ -14,6 +14,7 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
 @Component({
   selector: 'app-password-recovery',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, Button, Card, FormField, RouterLink],
   template: `
     <app-card [heading]="temToken() ? 'Criar senha nova' : 'Recuperar senha'" [headingLevel]="1">

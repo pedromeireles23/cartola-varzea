@@ -8,8 +8,14 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
 @Component({
   selector: 'app-register',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'theme-player' },
   imports: [Alert, Button, Card, FormField, RouterLink],
   template: `
+    <p class="selo">
+      <span class="selo__marca">Fantasy de futebol amador</span>
+      <span class="selo__aviso">Sem apostas em dinheiro</span>
+    </p>
+
     <app-card heading="Criar conta" [headingLevel]="1">
       @if (enviado()) {
         <app-alert tone="success">{{ enviado() }}</app-alert>
