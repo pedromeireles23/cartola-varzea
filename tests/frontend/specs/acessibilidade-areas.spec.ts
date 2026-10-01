@@ -109,10 +109,18 @@ async function varrer(pagina: Page, endereco: string, nome: string): Promise<voi
 
   const original = pagina.viewportSize()!;
   await pagina.setViewportSize({ width: 320, height: 720 });
-  await pagina.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
-  const sobra = await pagina.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
+  // A medida espera o layout assentar. Logo depois da troca de largura, uma transição da
+  // casca ainda pode estar no meio do caminho e somar uma sobra que some sozinha — no
+  // desktop isso reprovava uma tela diferente a cada execução. Sobra de verdade não some,
+  // e continua reprovando.
+  await expect
+    .poll(
+      () =>
+        pagina.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        ),
+      { message: `${nome} rola na horizontal a 320 px`, timeout: 2_000 },
+    )
+    .toBeLessThanOrEqual(0);
   await pagina.setViewportSize(original);
-  expect(sobra, `${nome} rola na horizontal a 320 px`).toBeLessThanOrEqual(0);
 }
