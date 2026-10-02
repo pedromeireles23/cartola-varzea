@@ -180,6 +180,8 @@ node demo/video.mjs           # o roteiro em vídeo, com cartelas entre os atos 
 
 As capturas só leem. O vídeo publica a Rodada 4 de verdade, no ato da apuração: recrie a demo depois de gravar. Com o `ffmpeg` no PATH, o vídeo sai também em MP4.
 
+O protocolo de leitor de tela do encerramento do redesign também tem script, com o TalkBack de verdade num emulador Android: `node demo/leitor-de-tela.mjs` imprime, passo a passo, o que o TalkBack falou. O cabeçalho do script traz a preparação do emulador (TalkBack e Chrome em português, registro do TalkBack em VERBOSE, `adb reverse` e `adb forward`) e pede o frontend escutando em IPv4 (`npx ng serve --host 127.0.0.1`). Toque e tecla injetados pelo `adb` não passam pelo TalkBack, então a navegação de leitura (deslizar, títulos, tabela) é simulada com foco e conferida na árvore de acessibilidade do Android. Ele só lê.
+
 ### Migrations
 
 A aplicação **não** aplica migration ao iniciar. O schema é aplicado explicitamente.
