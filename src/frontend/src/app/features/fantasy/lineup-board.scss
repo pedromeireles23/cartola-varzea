@@ -118,9 +118,11 @@
   cursor: default;
 }
 
-// No gramado o anel laranja some no verde; o foco é branco, 7:1 sobre ele.
+// No gramado o anel laranja some no verde; o foco é branco, 7:1 sobre ele. Branco fixo,
+// e não a superfície do tema: no tema noturno a superfície é escura, e o anel caía para
+// 2,35:1 sobre o gramado (auditoria da V8).
 .gramado .ficha:focus-visible {
-  outline-color: var(--color-surface);
+  outline-color: var(--primitive-color-neutral-0);
 }
 
 .ficha__disco {
