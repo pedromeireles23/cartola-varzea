@@ -168,6 +168,18 @@ docker run --rm --ipc=host -v "${PWD}:/work" -w /work/tests/frontend mcr.microso
 
 Quando a API mudar o formato de uma resposta usada por essas telas, regrave os dados: recrie a demo (`demo-reset.ps1`), suba a API apontando para ela, defina `DEMO_VIEWER_PASSWORD` e `DEMO_ORGANIZER_PASSWORD` com os valores do `.env` e rode `npx playwright test -c visual/playwright.config.ts` com `GRAVAR=1` em `tests/frontend`; depois, regere as referências.
 
+### Demonstração: capturas e vídeo
+
+O roteiro da demonstração — visitante, quem joga, quem organiza, apuração e ranking — é reproduzível por script, em `tests/frontend/demo`. Recrie a demo (`infra/scripts/demo-reset.ps1`), suba a API apontando para ela com a entrada de visitante ligada (o cabeçalho do script mostra como) e o frontend (`npm start` em `src/frontend`). Depois, em `tests/frontend`, com `DEMO_ORGANIZER_PASSWORD` definido com o valor do `.env`:
+
+```powershell
+node demo/capturas.mjs 1440   # cada passo do roteiro, página inteira, em demo/saida/capturas/1440
+node demo/capturas.mjs 412    # o mesmo no celular
+node demo/video.mjs           # o roteiro em vídeo, com cartelas entre os atos (demo/saida)
+```
+
+As capturas só leem. O vídeo publica a Rodada 4 de verdade, no ato da apuração: recrie a demo depois de gravar. Com o `ffmpeg` no PATH, o vídeo sai também em MP4.
+
 ### Migrations
 
 A aplicação **não** aplica migration ao iniciar. O schema é aplicado explicitamente.
