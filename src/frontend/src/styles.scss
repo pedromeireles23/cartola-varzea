@@ -13,6 +13,19 @@ html {
   text-size-adjust: 100%;
 }
 
+// O foco nunca fica atrás das barras fixas da casca (WCAG 2.2, 2.4.11): a rolagem que leva
+// o elemento focado para a tela desconta a barra do topo e, abaixo de 1024 px, a navegação
+// inferior. Sem isso, o Tab no celular deixava botões inteiros sob a barra (auditoria V8).
+html:has(.app .topo) {
+  scroll-padding-top: 5rem;
+}
+
+@media (max-width: 1023.98px) {
+  html:has(.app .inferior) {
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
 body {
   margin: 0;
   background-color: var(--color-canvas);

@@ -53,3 +53,49 @@ async function assentar(pagina: Page): Promise<void> {
       }),
   );
 }
+
+/**
+ * Percorre a página pelo Tab e confere que o elemento focado nunca fica atrás das barras
+ * fixas da casca — a do topo e, no celular, a navegação inferior (WCAG 2.2, 2.4.11). A
+ * auditoria da V8 achou botões inteiros sob a barra inferior; o `scroll-padding` global
+ * corrigiu, e esta conferência impede que volte.
+ */
+export async function focoSempreVisivel(
+  pagina: Page,
+  endereco: string,
+  contexto: string,
+  paradas = 40,
+): Promise<void> {
+  await pagina.emulateMedia({ reducedMotion: 'reduce' });
+  await pagina.goto(endereco);
+  await expect(pagina.getByRole('heading', { level: 1 }).first()).toBeVisible();
+  await expect(pagina.locator('app-loading')).toHaveCount(0);
+
+  for (let parada = 1; parada <= paradas; parada++) {
+    await pagina.keyboard.press('Tab');
+    // Sob movimento reduzido, a regra global deixa toda mudança de estilo para o quadro
+    // seguinte: a conferência espera o foco assentar em vez de medir o estado anterior.
+    await expect
+      .poll(() => pagina.evaluate(focoEscondido), {
+        message: `Foco escondido em ${contexto}, parada ${parada}`,
+        timeout: 1_000,
+      })
+      .toBeNull();
+  }
+}
+
+/** Roda no navegador: descreve o foco quando ele está fora da tela ou sob uma barra. */
+function focoEscondido(): string | null {
+  const foco = document.activeElement as HTMLElement | null;
+  if (!foco || foco === document.body) return null;
+  const caixa = foco.getBoundingClientRect();
+  const x = caixa.left + caixa.width / 2;
+  const y = caixa.top + caixa.height / 2;
+  const nome = `${foco.tagName.toLowerCase()} "${(foco.innerText || foco.getAttribute('aria-label') || '').trim().slice(0, 40)}"`;
+  if (y < 0 || y > innerHeight) return `${nome} fora da tela`;
+  const alvo = document.elementFromPoint(x, y);
+  if (alvo && !foco.contains(alvo) && !alvo.contains(foco) && alvo.closest('.topo, .inferior')) {
+    return `${nome} sob a barra`;
+  }
+  return null;
+}

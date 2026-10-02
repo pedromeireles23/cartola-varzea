@@ -1,6 +1,6 @@
 import { Page, expect, test } from '@playwright/test';
 
-import { semViolacoes } from '../support/acessibilidade';
+import { focoSempreVisivel, semViolacoes } from '../support/acessibilidade';
 import {
   ApiDaSessao,
   horarioDeBrasilia,
@@ -79,6 +79,8 @@ test('as telas do jogo e da organização passam no axe e cabem em 320 px', asyn
   for (const [endereco, nome] of doJogo) {
     await varrer(jogador, endereco, nome);
   }
+  // A lista longa do mercado é onde o Tab levava o foco para baixo da barra inferior.
+  await focoSempreVisivel(jogador, `/c/${slug}/mercado`, 'mercado');
 
   const area = `/organizar/c/${competitionId}`;
   const daOrganizacao: readonly (readonly [string, string])[] = [
@@ -96,6 +98,7 @@ test('as telas do jogo e da organização passam no axe e cabem em 320 px', asyn
   for (const [endereco, nome] of daOrganizacao) {
     await varrer(page, endereco, nome);
   }
+  await focoSempreVisivel(page, `${area}/rodadas`, 'rodadas da organização');
 
   await varrer(admin, '/admin/solicitacoes', 'solicitações de organizador');
 });
