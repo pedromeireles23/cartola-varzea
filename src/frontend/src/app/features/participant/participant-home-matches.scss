@@ -64,13 +64,13 @@
   background-color: var(--semantic-info);
 }
 
+// O nome quebra em vez de cortar: no celular, "Grêmio da…" escondia de quem era o jogo.
 .confronto__nome {
   max-width: 100%;
-  overflow: hidden;
   font-size: var(--font-small);
   font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  overflow-wrap: break-word;
 }
 
 .confronto__versus {
