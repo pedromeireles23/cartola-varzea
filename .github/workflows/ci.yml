@@ -228,3 +228,54 @@ jobs:
           name: playwright-report
           path: tests/frontend/playwright-report
           retention-days: 7
+
+  visual:
+    name: Regressão visual
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    needs: [frontend]
+    # A mesma imagem em que as referências foram geradas: fora dela, o antisserrilhado
+    # da fonte muda e toda tela acusaria diferença.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar Node do .nvmrc
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: src/frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: |
+            src/frontend/package-lock.json
+            tests/frontend/package-lock.json
+
+      - name: Instalar dependências do frontend e do E2E
+        run: |
+          npm ci --ignore-scripts --prefix src/frontend
+          npm ci --prefix tests/frontend
+
+      - name: Build de produção
+        run: npm run build --prefix src/frontend
+
+      # Sem API: as respostas vêm de tests/frontend/visual/dados, e o relógio para no
+      # instante em que elas foram gravadas.
+      - name: Comparar as oito telas-chave
+        working-directory: tests/frontend
+        env:
+          CI: "true"
+        run: npx playwright test -c visual/playwright.config.ts
+
+      - name: Guardar as diferenças quando falhar
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: regressao-visual
+          path: |
+            tests/frontend/playwright-report
+            tests/frontend/visual/test-results
+          retention-days: 7

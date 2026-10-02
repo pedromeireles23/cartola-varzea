@@ -152,6 +152,22 @@ O Playwright sobe backend e frontend sozinho, mas o backend precisa do SQL Serve
 
 - Para limpar tudo, inclusive o banco de desenvolvimento: `docker compose down -v` e o `bootstrap.ps1` de novo.
 
+### Regressão visual
+
+Oito telas-chave — landing, Início, Meu time, Mercado, Pontuação, Classificação, Central da rodada e Súmula — são comparadas com imagens de referência em desktop e celular (`tests/frontend/visual`). Não precisam de API nem de banco: o build de produção é servido como estático, a API é respondida pelos dados gravados da demonstração em `visual/dados`, e o relógio para no instante da gravação.
+
+As referências são geradas na imagem oficial do Playwright, a mesma do job `Regressão visual` do CI, porque a fonte renderiza diferente em cada sistema. Com o Docker no ar e o build feito (`npm run build` em `src/frontend`):
+
+```powershell
+# Conferir contra as referências
+docker run --rm --ipc=host -v "${PWD}:/work" -w /work/tests/frontend mcr.microsoft.com/playwright:v1.63.0-noble npx playwright test -c visual/playwright.config.ts
+
+# Mudança visual intencional: regerar as referências e revisar as imagens no diff
+docker run --rm --ipc=host -v "${PWD}:/work" -w /work/tests/frontend mcr.microsoft.com/playwright:v1.63.0-noble npx playwright test -c visual/playwright.config.ts --update-snapshots
+```
+
+Quando a API mudar o formato de uma resposta usada por essas telas, regrave os dados: recrie a demo (`demo-reset.ps1`), suba a API apontando para ela, defina `DEMO_VIEWER_PASSWORD` e `DEMO_ORGANIZER_PASSWORD` com os valores do `.env` e rode `npx playwright test -c visual/playwright.config.ts` com `GRAVAR=1` em `tests/frontend`; depois, regere as referências.
+
 ### Migrations
 
 A aplicação **não** aplica migration ao iniciar. O schema é aplicado explicitamente.

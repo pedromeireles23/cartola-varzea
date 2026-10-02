@@ -1,0 +1,452 @@
+{
+  "relogio": "2026-10-01T23:04:51.415Z",
+  "respostas": {
+    "GET /api/v1/auth/antiforgery": {
+      "status": 204,
+      "corpo": null
+    },
+    "GET /api/v1/auth/me": {
+      "status": 204,
+      "corpo": null
+    },
+    "GET /api/v1/public/competitions": {
+      "status": 200,
+      "corpo": [
+        {
+          "slug": "copa-da-vila-2026",
+          "name": "Copa da Vila",
+          "season": "2026",
+          "modality": "Fut7",
+          "organizationName": "Liga Várzea do Leste",
+          "publishedAt": "2026-09-08T12:30:00+00:00"
+        }
+      ]
+    },
+    "GET /api/v1/auth/demo": {
+      "status": 200,
+      "corpo": {
+        "available": true
+      }
+    },
+    "GET /api/v1/public/competitions/copa-da-vila-2026/fixtures": {
+      "status": 200,
+      "corpo": {
+        "slug": "copa-da-vila-2026",
+        "name": "Copa da Vila",
+        "timeZoneId": "America/Sao_Paulo",
+        "rounds": [
+          {
+            "id": "01a0f9b5-3fa3-71f0-8d3e-8b07a9bc7c32",
+            "name": "Rodada 1",
+            "sequence": 1,
+            "phase": "Consolidated",
+            "resultPublished": true,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-407f-7cee-a74f-6162b2b75ae1",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "União da Vila",
+                "awayTeamName": "Real Mangueiral",
+                "kickoffAt": "2026-09-15T12:00:00+00:00",
+                "kickoffLocal": "2026-09-15T09:00",
+                "status": "Scheduled",
+                "homeScore": 3,
+                "awayScore": 1,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-4113-7835-a6f5-033193e20349",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Estrela do Bairro",
+                "awayTeamName": "Juventude da Ponte",
+                "kickoffAt": "2026-09-15T13:30:00+00:00",
+                "kickoffLocal": "2026-09-15T10:30",
+                "status": "Scheduled",
+                "homeScore": 2,
+                "awayScore": 2,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-412a-749a-b3d7-ed000ca58f67",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Grêmio da Rua 9",
+                "awayTeamName": "Bar do Nico FC",
+                "kickoffAt": "2026-09-15T15:00:00+00:00",
+                "kickoffLocal": "2026-09-15T12:00",
+                "status": "Scheduled",
+                "homeScore": 0,
+                "awayScore": 1,
+                "hasSheet": true
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-413f-7ea5-9034-0f723373aa4e",
+            "name": "Rodada 2",
+            "sequence": 2,
+            "phase": "Consolidated",
+            "resultPublished": true,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-4153-7d2d-a28f-90070b5a10ff",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Real Mangueiral",
+                "awayTeamName": "Bar do Nico FC",
+                "kickoffAt": "2026-09-22T12:00:00+00:00",
+                "kickoffLocal": "2026-09-22T09:00",
+                "status": "Scheduled",
+                "homeScore": 1,
+                "awayScore": 0,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-416c-790d-a3bf-e52a9377e15c",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Juventude da Ponte",
+                "awayTeamName": "Grêmio da Rua 9",
+                "kickoffAt": "2026-09-22T13:30:00+00:00",
+                "kickoffLocal": "2026-09-22T10:30",
+                "status": "Scheduled",
+                "homeScore": 4,
+                "awayScore": 2,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-4181-7c7c-8e0b-56c50acce8ff",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "União da Vila",
+                "awayTeamName": "Estrela do Bairro",
+                "kickoffAt": "2026-09-22T15:00:00+00:00",
+                "kickoffLocal": "2026-09-22T12:00",
+                "status": "Scheduled",
+                "homeScore": 1,
+                "awayScore": 1,
+                "hasSheet": true
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-4195-76a2-a007-e84757980cbf",
+            "name": "Rodada 3",
+            "sequence": 3,
+            "phase": "Published",
+            "resultPublished": true,
+            "underCorrection": false,
+            "provisional": true,
+            "matches": [
+              {
+                "id": "01a0f9b5-41ad-788c-b956-c93cb42ec9fd",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Estrela do Bairro",
+                "awayTeamName": "Real Mangueiral",
+                "kickoffAt": "2026-09-29T12:00:00+00:00",
+                "kickoffLocal": "2026-09-29T09:00",
+                "status": "Scheduled",
+                "homeScore": 2,
+                "awayScore": 3,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-41c8-7d6c-a0e2-e08acfbfc420",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Grêmio da Rua 9",
+                "awayTeamName": "União da Vila",
+                "kickoffAt": "2026-09-29T13:30:00+00:00",
+                "kickoffLocal": "2026-09-29T10:30",
+                "status": "Scheduled",
+                "homeScore": 0,
+                "awayScore": 0,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-41de-79a5-accc-ad574bc61b9a",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Bar do Nico FC",
+                "awayTeamName": "Juventude da Ponte",
+                "kickoffAt": "2026-09-29T15:00:00+00:00",
+                "kickoffLocal": "2026-09-29T12:00",
+                "status": "Scheduled",
+                "homeScore": 5,
+                "awayScore": 1,
+                "hasSheet": true
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-41f2-79e2-a489-16a7e789fe6f",
+            "name": "Rodada 4",
+            "sequence": 4,
+            "phase": "UnderReview",
+            "resultPublished": false,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-420b-78ef-80de-1ff39517cd48",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Real Mangueiral",
+                "awayTeamName": "Juventude da Ponte",
+                "kickoffAt": "2026-09-30T12:00:00+00:00",
+                "kickoffLocal": "2026-09-30T09:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-4223-77ae-97b2-1d5c36f607a0",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "União da Vila",
+                "awayTeamName": "Bar do Nico FC",
+                "kickoffAt": "2026-09-30T13:30:00+00:00",
+                "kickoffLocal": "2026-09-30T10:30",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-423c-7348-ba08-a3f952b58979",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Estrela do Bairro",
+                "awayTeamName": "Grêmio da Rua 9",
+                "kickoffAt": "2026-09-30T15:00:00+00:00",
+                "kickoffLocal": "2026-09-30T12:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-4253-77a8-8abc-413236624d66",
+            "name": "Rodada 5",
+            "sequence": 5,
+            "phase": "MarketOpen",
+            "resultPublished": false,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-426a-7151-bab2-4b796418545b",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Grêmio da Rua 9",
+                "awayTeamName": "Real Mangueiral",
+                "kickoffAt": "2026-10-05T12:00:00+00:00",
+                "kickoffLocal": "2026-10-05T09:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-4282-7e27-b714-d30966f7021c",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Bar do Nico FC",
+                "awayTeamName": "Estrela do Bairro",
+                "kickoffAt": "2026-10-05T13:30:00+00:00",
+                "kickoffLocal": "2026-10-05T10:30",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-429b-7c69-9881-6618460f3bda",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Juventude da Ponte",
+                "awayTeamName": "União da Vila",
+                "kickoffAt": "2026-10-05T15:00:00+00:00",
+                "kickoffLocal": "2026-10-05T12:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-42b3-7a59-8189-c321fd12fa19",
+            "name": "Rodada 6",
+            "sequence": 6,
+            "phase": "Draft",
+            "resultPublished": false,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-42cd-7e4f-8866-24744771b404",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Real Mangueiral",
+                "awayTeamName": "União da Vila",
+                "kickoffAt": "2026-10-12T12:00:00+00:00",
+                "kickoffLocal": "2026-10-12T09:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-42e9-7226-b2d8-a099a1fc441b",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Juventude da Ponte",
+                "awayTeamName": "Estrela do Bairro",
+                "kickoffAt": "2026-10-12T13:30:00+00:00",
+                "kickoffLocal": "2026-10-12T10:30",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-4301-7482-a5e9-5b52532025bc",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Bar do Nico FC",
+                "awayTeamName": "Grêmio da Rua 9",
+                "kickoffAt": "2026-10-12T15:00:00+00:00",
+                "kickoffLocal": "2026-10-12T12:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "GET /api/v1/public/competitions/copa-da-vila-2026/ranking": {
+      "status": 200,
+      "corpo": {
+        "competitionName": "Copa da Vila",
+        "rounds": 3,
+        "lastRoundName": "Rodada 3",
+        "provisional": true,
+        "entries": [
+          {
+            "position": 1,
+            "tied": false,
+            "displayName": "Bia Lima",
+            "totalPoints": 85.29,
+            "netWorth": 100,
+            "lastRoundPoints": 58.43,
+            "isViewer": false
+          },
+          {
+            "position": 2,
+            "tied": false,
+            "displayName": "Caio Mendes",
+            "totalPoints": 83.38,
+            "netWorth": 104.5,
+            "lastRoundPoints": 23.14,
+            "isViewer": false
+          },
+          {
+            "position": 3,
+            "tied": false,
+            "displayName": "Lia Campos",
+            "totalPoints": 71.64,
+            "netWorth": 104,
+            "lastRoundPoints": 49.5,
+            "isViewer": false
+          },
+          {
+            "position": 4,
+            "tied": false,
+            "displayName": "Duda Rocha",
+            "totalPoints": 69.64,
+            "netWorth": 103.5,
+            "lastRoundPoints": 37.5,
+            "isViewer": false
+          },
+          {
+            "position": 5,
+            "tied": false,
+            "displayName": "Beto Nunes",
+            "totalPoints": 68.64,
+            "netWorth": 103,
+            "lastRoundPoints": 46.5,
+            "isViewer": false
+          },
+          {
+            "position": 6,
+            "tied": false,
+            "displayName": "Tião Ferreira",
+            "totalPoints": 64.64,
+            "netWorth": 100.5,
+            "lastRoundPoints": 26.5,
+            "isViewer": false
+          },
+          {
+            "position": 7,
+            "tied": false,
+            "displayName": "Rafa Souza",
+            "totalPoints": 64.64,
+            "netWorth": 100,
+            "lastRoundPoints": 45.5,
+            "isViewer": false
+          },
+          {
+            "position": 8,
+            "tied": false,
+            "displayName": "Juca Prado",
+            "totalPoints": 59.29,
+            "netWorth": 97.5,
+            "lastRoundPoints": 27.43,
+            "isViewer": false
+          },
+          {
+            "position": 9,
+            "tied": false,
+            "displayName": "Léo Martins",
+            "totalPoints": 57.38,
+            "netWorth": 96,
+            "lastRoundPoints": 28.14,
+            "isViewer": false
+          },
+          {
+            "position": 10,
+            "tied": false,
+            "displayName": "Visitante da demo",
+            "totalPoints": 49.64,
+            "netWorth": 97.5,
+            "lastRoundPoints": 32.5,
+            "isViewer": false
+          },
+          {
+            "position": 11,
+            "tied": false,
+            "displayName": "Gabi Teles",
+            "totalPoints": 47.5,
+            "netWorth": 103,
+            "lastRoundPoints": 47.5,
+            "isViewer": false
+          },
+          {
+            "position": 12,
+            "tied": false,
+            "displayName": "Nina Alves",
+            "totalPoints": 34.64,
+            "netWorth": 93,
+            "lastRoundPoints": 9.5,
+            "isViewer": false
+          },
+          {
+            "position": 13,
+            "tied": false,
+            "displayName": "Zé Moreira",
+            "totalPoints": 2.5,
+            "netWorth": 94,
+            "lastRoundPoints": 2.5,
+            "isViewer": false
+          }
+        ]
+      }
+    }
+  }
+}

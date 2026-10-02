@@ -1,0 +1,2061 @@
+{
+  "relogio": "2026-10-01T23:04:52.410Z",
+  "respostas": {
+    "GET /api/v1/auth/antiforgery": {
+      "status": 204,
+      "corpo": null
+    },
+    "GET /api/v1/auth/me": {
+      "status": 200,
+      "corpo": {
+        "id": "01a080e3-ae00-78e5-b40c-b6ada89da86b",
+        "email": "visitante@demo.cartola-varzea.test",
+        "displayName": "Visitante da demo",
+        "emailConfirmed": true,
+        "roles": ["DemoViewer"]
+      }
+    },
+    "GET /api/v1/auth/demo": {
+      "status": 200,
+      "corpo": {
+        "available": true
+      }
+    },
+    "GET /api/v1/organizations/mine": {
+      "status": 200,
+      "corpo": [
+        {
+          "id": "01a0f9b5-2e0a-779f-b011-65e11bed5044",
+          "name": "Liga Várzea do Leste",
+          "role": "Assistant",
+          "joinedAt": "2026-09-08T12:30:00+00:00"
+        }
+      ]
+    },
+    "GET /api/v1/fantasy": {
+      "status": 200,
+      "corpo": [
+        {
+          "competitionName": "Copa da Vila",
+          "slug": "copa-da-vila-2026",
+          "season": "2026",
+          "modality": "Fut7",
+          "balance": 1.5,
+          "squadSize": 12,
+          "squadSizeTarget": 12,
+          "hasCaptain": true,
+          "joinedAt": "2026-09-11T22:00:00+00:00",
+          "market": {
+            "isOpen": true,
+            "roundName": "Rodada 5",
+            "closesAt": "2026-10-05T11:00:00+00:00",
+            "closesAtLocal": "2026-10-05T08:00",
+            "timeZoneId": "America/Sao_Paulo"
+          }
+        }
+      ]
+    },
+    "GET /api/v1/notifications": {
+      "status": 200,
+      "corpo": {
+        "unread": 4,
+        "items": [
+          {
+            "id": "01a0f9b5-94e7-7712-8308-3a389aa31985",
+            "kind": "RoundPublished",
+            "title": "Rodada 3 apurada",
+            "body": "O resultado saiu em Copa da Vila. Veja quanto você fez.",
+            "competitionSlug": "copa-da-vila-2026",
+            "roundId": "01a0f9b5-4195-76a2-a007-e84757980cbf",
+            "createdAt": "2026-09-29T21:00:00+00:00",
+            "read": false
+          },
+          {
+            "id": "01a0f9b5-82c4-7fcb-bb40-668e186136ff",
+            "kind": "RoundCorrected",
+            "title": "Rodada 2 corrigida",
+            "body": "Copa da Vila republicou o resultado; sua pontuação pode ter mudado.",
+            "competitionSlug": "copa-da-vila-2026",
+            "roundId": "01a0f9b5-413f-7ea5-9034-0f723373aa4e",
+            "createdAt": "2026-09-24T13:40:00+00:00",
+            "read": false
+          },
+          {
+            "id": "01a0f9b5-8063-7287-90fc-15c4a92c96d0",
+            "kind": "RoundPublished",
+            "title": "Rodada 2 apurada",
+            "body": "O resultado saiu em Copa da Vila. Veja quanto você fez.",
+            "competitionSlug": "copa-da-vila-2026",
+            "roundId": "01a0f9b5-413f-7ea5-9034-0f723373aa4e",
+            "createdAt": "2026-09-23T13:00:00+00:00",
+            "read": false
+          },
+          {
+            "id": "01a0f9b5-78d5-7b27-be96-c5a07c696592",
+            "kind": "RoundPublished",
+            "title": "Rodada 1 apurada",
+            "body": "O resultado saiu em Copa da Vila. Veja quanto você fez.",
+            "competitionSlug": "copa-da-vila-2026",
+            "roundId": "01a0f9b5-3fa3-71f0-8d3e-8b07a9bc7c32",
+            "createdAt": "2026-09-16T13:00:00+00:00",
+            "read": false
+          }
+        ]
+      }
+    },
+    "GET /api/v1/public/competitions/copa-da-vila-2026/fixtures": {
+      "status": 200,
+      "corpo": {
+        "slug": "copa-da-vila-2026",
+        "name": "Copa da Vila",
+        "timeZoneId": "America/Sao_Paulo",
+        "rounds": [
+          {
+            "id": "01a0f9b5-3fa3-71f0-8d3e-8b07a9bc7c32",
+            "name": "Rodada 1",
+            "sequence": 1,
+            "phase": "Consolidated",
+            "resultPublished": true,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-407f-7cee-a74f-6162b2b75ae1",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "União da Vila",
+                "awayTeamName": "Real Mangueiral",
+                "kickoffAt": "2026-09-15T12:00:00+00:00",
+                "kickoffLocal": "2026-09-15T09:00",
+                "status": "Scheduled",
+                "homeScore": 3,
+                "awayScore": 1,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-4113-7835-a6f5-033193e20349",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Estrela do Bairro",
+                "awayTeamName": "Juventude da Ponte",
+                "kickoffAt": "2026-09-15T13:30:00+00:00",
+                "kickoffLocal": "2026-09-15T10:30",
+                "status": "Scheduled",
+                "homeScore": 2,
+                "awayScore": 2,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-412a-749a-b3d7-ed000ca58f67",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Grêmio da Rua 9",
+                "awayTeamName": "Bar do Nico FC",
+                "kickoffAt": "2026-09-15T15:00:00+00:00",
+                "kickoffLocal": "2026-09-15T12:00",
+                "status": "Scheduled",
+                "homeScore": 0,
+                "awayScore": 1,
+                "hasSheet": true
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-413f-7ea5-9034-0f723373aa4e",
+            "name": "Rodada 2",
+            "sequence": 2,
+            "phase": "Consolidated",
+            "resultPublished": true,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-4153-7d2d-a28f-90070b5a10ff",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Real Mangueiral",
+                "awayTeamName": "Bar do Nico FC",
+                "kickoffAt": "2026-09-22T12:00:00+00:00",
+                "kickoffLocal": "2026-09-22T09:00",
+                "status": "Scheduled",
+                "homeScore": 1,
+                "awayScore": 0,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-416c-790d-a3bf-e52a9377e15c",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Juventude da Ponte",
+                "awayTeamName": "Grêmio da Rua 9",
+                "kickoffAt": "2026-09-22T13:30:00+00:00",
+                "kickoffLocal": "2026-09-22T10:30",
+                "status": "Scheduled",
+                "homeScore": 4,
+                "awayScore": 2,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-4181-7c7c-8e0b-56c50acce8ff",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "União da Vila",
+                "awayTeamName": "Estrela do Bairro",
+                "kickoffAt": "2026-09-22T15:00:00+00:00",
+                "kickoffLocal": "2026-09-22T12:00",
+                "status": "Scheduled",
+                "homeScore": 1,
+                "awayScore": 1,
+                "hasSheet": true
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-4195-76a2-a007-e84757980cbf",
+            "name": "Rodada 3",
+            "sequence": 3,
+            "phase": "Published",
+            "resultPublished": true,
+            "underCorrection": false,
+            "provisional": true,
+            "matches": [
+              {
+                "id": "01a0f9b5-41ad-788c-b956-c93cb42ec9fd",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Estrela do Bairro",
+                "awayTeamName": "Real Mangueiral",
+                "kickoffAt": "2026-09-29T12:00:00+00:00",
+                "kickoffLocal": "2026-09-29T09:00",
+                "status": "Scheduled",
+                "homeScore": 2,
+                "awayScore": 3,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-41c8-7d6c-a0e2-e08acfbfc420",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Grêmio da Rua 9",
+                "awayTeamName": "União da Vila",
+                "kickoffAt": "2026-09-29T13:30:00+00:00",
+                "kickoffLocal": "2026-09-29T10:30",
+                "status": "Scheduled",
+                "homeScore": 0,
+                "awayScore": 0,
+                "hasSheet": true
+              },
+              {
+                "id": "01a0f9b5-41de-79a5-accc-ad574bc61b9a",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Bar do Nico FC",
+                "awayTeamName": "Juventude da Ponte",
+                "kickoffAt": "2026-09-29T15:00:00+00:00",
+                "kickoffLocal": "2026-09-29T12:00",
+                "status": "Scheduled",
+                "homeScore": 5,
+                "awayScore": 1,
+                "hasSheet": true
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-41f2-79e2-a489-16a7e789fe6f",
+            "name": "Rodada 4",
+            "sequence": 4,
+            "phase": "UnderReview",
+            "resultPublished": false,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-420b-78ef-80de-1ff39517cd48",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Real Mangueiral",
+                "awayTeamName": "Juventude da Ponte",
+                "kickoffAt": "2026-09-30T12:00:00+00:00",
+                "kickoffLocal": "2026-09-30T09:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-4223-77ae-97b2-1d5c36f607a0",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "União da Vila",
+                "awayTeamName": "Bar do Nico FC",
+                "kickoffAt": "2026-09-30T13:30:00+00:00",
+                "kickoffLocal": "2026-09-30T10:30",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-423c-7348-ba08-a3f952b58979",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Estrela do Bairro",
+                "awayTeamName": "Grêmio da Rua 9",
+                "kickoffAt": "2026-09-30T15:00:00+00:00",
+                "kickoffLocal": "2026-09-30T12:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-4253-77a8-8abc-413236624d66",
+            "name": "Rodada 5",
+            "sequence": 5,
+            "phase": "MarketOpen",
+            "resultPublished": false,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-426a-7151-bab2-4b796418545b",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Grêmio da Rua 9",
+                "awayTeamName": "Real Mangueiral",
+                "kickoffAt": "2026-10-05T12:00:00+00:00",
+                "kickoffLocal": "2026-10-05T09:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-4282-7e27-b714-d30966f7021c",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Bar do Nico FC",
+                "awayTeamName": "Estrela do Bairro",
+                "kickoffAt": "2026-10-05T13:30:00+00:00",
+                "kickoffLocal": "2026-10-05T10:30",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-429b-7c69-9881-6618460f3bda",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Juventude da Ponte",
+                "awayTeamName": "União da Vila",
+                "kickoffAt": "2026-10-05T15:00:00+00:00",
+                "kickoffLocal": "2026-10-05T12:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              }
+            ]
+          },
+          {
+            "id": "01a0f9b5-42b3-7a59-8189-c321fd12fa19",
+            "name": "Rodada 6",
+            "sequence": 6,
+            "phase": "Draft",
+            "resultPublished": false,
+            "underCorrection": false,
+            "provisional": false,
+            "matches": [
+              {
+                "id": "01a0f9b5-42cd-7e4f-8866-24744771b404",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Real Mangueiral",
+                "awayTeamName": "União da Vila",
+                "kickoffAt": "2026-10-12T12:00:00+00:00",
+                "kickoffLocal": "2026-10-12T09:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-42e9-7226-b2d8-a099a1fc441b",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Juventude da Ponte",
+                "awayTeamName": "Estrela do Bairro",
+                "kickoffAt": "2026-10-12T13:30:00+00:00",
+                "kickoffLocal": "2026-10-12T10:30",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              },
+              {
+                "id": "01a0f9b5-4301-7482-a5e9-5b52532025bc",
+                "stageName": "Pontos corridos",
+                "homeTeamName": "Bar do Nico FC",
+                "awayTeamName": "Grêmio da Rua 9",
+                "kickoffAt": "2026-10-12T15:00:00+00:00",
+                "kickoffLocal": "2026-10-12T12:00",
+                "status": "Scheduled",
+                "homeScore": null,
+                "awayScore": null,
+                "hasSheet": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "GET /api/v1/public/competitions/copa-da-vila-2026/ranking": {
+      "status": 200,
+      "corpo": {
+        "competitionName": "Copa da Vila",
+        "rounds": 3,
+        "lastRoundName": "Rodada 3",
+        "provisional": true,
+        "entries": [
+          {
+            "position": 1,
+            "tied": false,
+            "displayName": "Bia Lima",
+            "totalPoints": 85.29,
+            "netWorth": 100,
+            "lastRoundPoints": 58.43,
+            "isViewer": false
+          },
+          {
+            "position": 2,
+            "tied": false,
+            "displayName": "Caio Mendes",
+            "totalPoints": 83.38,
+            "netWorth": 104.5,
+            "lastRoundPoints": 23.14,
+            "isViewer": false
+          },
+          {
+            "position": 3,
+            "tied": false,
+            "displayName": "Lia Campos",
+            "totalPoints": 71.64,
+            "netWorth": 104,
+            "lastRoundPoints": 49.5,
+            "isViewer": false
+          },
+          {
+            "position": 4,
+            "tied": false,
+            "displayName": "Duda Rocha",
+            "totalPoints": 69.64,
+            "netWorth": 103.5,
+            "lastRoundPoints": 37.5,
+            "isViewer": false
+          },
+          {
+            "position": 5,
+            "tied": false,
+            "displayName": "Beto Nunes",
+            "totalPoints": 68.64,
+            "netWorth": 103,
+            "lastRoundPoints": 46.5,
+            "isViewer": false
+          },
+          {
+            "position": 6,
+            "tied": false,
+            "displayName": "Tião Ferreira",
+            "totalPoints": 64.64,
+            "netWorth": 100.5,
+            "lastRoundPoints": 26.5,
+            "isViewer": false
+          },
+          {
+            "position": 7,
+            "tied": false,
+            "displayName": "Rafa Souza",
+            "totalPoints": 64.64,
+            "netWorth": 100,
+            "lastRoundPoints": 45.5,
+            "isViewer": false
+          },
+          {
+            "position": 8,
+            "tied": false,
+            "displayName": "Juca Prado",
+            "totalPoints": 59.29,
+            "netWorth": 97.5,
+            "lastRoundPoints": 27.43,
+            "isViewer": false
+          },
+          {
+            "position": 9,
+            "tied": false,
+            "displayName": "Léo Martins",
+            "totalPoints": 57.38,
+            "netWorth": 96,
+            "lastRoundPoints": 28.14,
+            "isViewer": false
+          },
+          {
+            "position": 10,
+            "tied": false,
+            "displayName": "Visitante da demo",
+            "totalPoints": 49.64,
+            "netWorth": 97.5,
+            "lastRoundPoints": 32.5,
+            "isViewer": true
+          },
+          {
+            "position": 11,
+            "tied": false,
+            "displayName": "Gabi Teles",
+            "totalPoints": 47.5,
+            "netWorth": 103,
+            "lastRoundPoints": 47.5,
+            "isViewer": false
+          },
+          {
+            "position": 12,
+            "tied": false,
+            "displayName": "Nina Alves",
+            "totalPoints": 34.64,
+            "netWorth": 93,
+            "lastRoundPoints": 9.5,
+            "isViewer": false
+          },
+          {
+            "position": 13,
+            "tied": false,
+            "displayName": "Zé Moreira",
+            "totalPoints": 2.5,
+            "netWorth": 94,
+            "lastRoundPoints": 2.5,
+            "isViewer": false
+          }
+        ]
+      }
+    },
+    "GET /api/v1/fantasy/copa-da-vila-2026/rounds": {
+      "status": 200,
+      "corpo": [
+        {
+          "roundId": "01a0f9b5-4195-76a2-a007-e84757980cbf",
+          "roundName": "Rodada 3",
+          "sequence": 3,
+          "publishedAt": "2026-09-29T21:00:00+00:00",
+          "publishedAtLocal": "2026-09-29T18:00",
+          "consolidatesAtLocal": "2026-10-02T08:00",
+          "provisional": true,
+          "timeZoneId": "America/Sao_Paulo",
+          "total": 32.5,
+          "underCorrection": false
+        },
+        {
+          "roundId": "01a0f9b5-413f-7ea5-9034-0f723373aa4e",
+          "roundName": "Rodada 2",
+          "sequence": 2,
+          "publishedAt": "2026-09-24T13:40:00+00:00",
+          "publishedAtLocal": "2026-09-24T10:40",
+          "consolidatesAtLocal": "2026-09-25T10:40",
+          "provisional": false,
+          "timeZoneId": "America/Sao_Paulo",
+          "total": 9.71,
+          "underCorrection": false
+        },
+        {
+          "roundId": "01a0f9b5-3fa3-71f0-8d3e-8b07a9bc7c32",
+          "roundName": "Rodada 1",
+          "sequence": 1,
+          "publishedAt": "2026-09-16T13:00:00+00:00",
+          "publishedAtLocal": "2026-09-16T10:00",
+          "consolidatesAtLocal": "2026-09-18T08:00",
+          "provisional": false,
+          "timeZoneId": "America/Sao_Paulo",
+          "total": 7.43,
+          "underCorrection": false
+        }
+      ]
+    },
+    "GET /api/v1/fantasy/copa-da-vila-2026/": {
+      "status": 200,
+      "corpo": {
+        "competitionName": "Copa da Vila",
+        "slug": "copa-da-vila-2026",
+        "profile": {
+          "modality": "Fut7",
+          "version": 1,
+          "starters": 7,
+          "formation": {
+            "goalkeepers": 1,
+            "defenders": 2,
+            "midfielders": 2,
+            "forwards": 2
+          },
+          "benchSize": 4,
+          "squadAthletes": 11,
+          "budget": 100,
+          "minimumAthletesPerRealTeam": 9,
+          "realTeamLimits": [
+            {
+              "activeRealTeams": 4,
+              "maxStarters": 3,
+              "maxAthletes": 5
+            },
+            {
+              "activeRealTeams": 3,
+              "maxStarters": 4,
+              "maxAthletes": 6
+            },
+            {
+              "activeRealTeams": 2,
+              "maxStarters": 5,
+              "maxAthletes": 8
+            }
+          ],
+          "fallbackPrices": {
+            "goalkeeper": 7,
+            "defender": 7,
+            "midfielder": 8,
+            "forward": 9,
+            "coach": 8
+          }
+        },
+        "market": {
+          "isOpen": true,
+          "roundName": "Rodada 5",
+          "closesAt": "2026-10-05T11:00:00+00:00",
+          "closesAtLocal": "2026-10-05T08:00",
+          "timeZoneId": "America/Sao_Paulo"
+        },
+        "teamLimit": {
+          "activeRealTeams": 6,
+          "maxStarters": 3,
+          "maxAthletes": 5
+        },
+        "entry": {
+          "balance": 1.5,
+          "patrimony": 97.5,
+          "captainAthleteId": "01a0f9b5-3614-7b92-be24-4283c7dfcdeb",
+          "slots": [
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3613-7356-bb5e-7a51263c3eaf",
+              "name": "Zeca",
+              "position": "Defender",
+              "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+              "realTeamName": "Estrela do Bairro",
+              "role": "Bench",
+              "currentPrice": 7,
+              "purchasePrice": 7,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3615-72be-9c01-49d182b65bd9",
+              "name": "Zumbi",
+              "position": "Forward",
+              "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+              "realTeamName": "Real Mangueiral",
+              "role": "Bench",
+              "currentPrice": 4.5,
+              "purchasePrice": 6.5,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3614-7cec-bf07-e9ceb90c13d3",
+              "name": "Pipoca",
+              "position": "Goalkeeper",
+              "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+              "realTeamName": "Bar do Nico FC",
+              "role": "Bench",
+              "currentPrice": 5,
+              "purchasePrice": 5,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3614-714c-bec8-af89a8974bbe",
+              "name": "Alemão",
+              "position": "Midfielder",
+              "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+              "realTeamName": "Bar do Nico FC",
+              "role": "Bench",
+              "currentPrice": 7,
+              "purchasePrice": 5.5,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Coach",
+              "assetId": "01a0f9b5-33cf-7140-8a8f-4516dc0ff6a2",
+              "name": "Técnico do Bar do Nico FC",
+              "position": null,
+              "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+              "realTeamName": "Bar do Nico FC",
+              "role": "Coach",
+              "currentPrice": 6,
+              "purchasePrice": 5.5,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3613-7100-bfe7-2b4fcf9322b2",
+              "name": "Tijolo",
+              "position": "Defender",
+              "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+              "realTeamName": "União da Vila",
+              "role": "Starter",
+              "currentPrice": 9,
+              "purchasePrice": 9.5,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3614-7938-b464-2a07fb213aed",
+              "name": "Xerife",
+              "position": "Defender",
+              "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+              "realTeamName": "Grêmio da Rua 9",
+              "role": "Starter",
+              "currentPrice": 8.5,
+              "purchasePrice": 9.5,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3614-7f3a-a559-e19a1507c637",
+              "name": "Pelezinho",
+              "position": "Forward",
+              "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+              "realTeamName": "Bar do Nico FC",
+              "role": "Starter",
+              "currentPrice": 13.5,
+              "purchasePrice": 12,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3614-7186-a673-99374bffd2a2",
+              "name": "Raio",
+              "position": "Forward",
+              "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+              "realTeamName": "Grêmio da Rua 9",
+              "role": "Starter",
+              "currentPrice": 11,
+              "purchasePrice": 12,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3614-7981-bf53-fafefe315437",
+              "name": "Gordo",
+              "position": "Goalkeeper",
+              "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+              "realTeamName": "Bar do Nico FC",
+              "role": "Starter",
+              "currentPrice": 6.5,
+              "purchasePrice": 7,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3614-78d0-86a5-97c8bc08c0d0",
+              "name": "Neném",
+              "position": "Midfielder",
+              "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+              "realTeamName": "Juventude da Ponte",
+              "role": "Starter",
+              "currentPrice": 10.5,
+              "purchasePrice": 11,
+              "isAvailable": true,
+              "isCaptain": false
+            },
+            {
+              "kind": "Athlete",
+              "assetId": "01a0f9b5-3614-7b92-be24-4283c7dfcdeb",
+              "name": "Serginho",
+              "position": "Midfielder",
+              "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+              "realTeamName": "Grêmio da Rua 9",
+              "role": "Starter",
+              "currentPrice": 7.5,
+              "purchasePrice": 8,
+              "isAvailable": true,
+              "isCaptain": true
+            }
+          ],
+          "issues": [],
+          "lastClosedRound": {
+            "roundName": "Rodada 4",
+            "marketClosedAt": "2026-09-30T11:00:00+00:00",
+            "marketClosedAtLocal": "2026-09-30T08:00",
+            "status": "Frozen",
+            "captainAthleteId": "01a0f9b5-3614-7b92-be24-4283c7dfcdeb",
+            "slots": [
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3614-7981-bf53-fafefe315437",
+                "name": "Gordo",
+                "position": "Goalkeeper",
+                "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+                "realTeamName": "Bar do Nico FC",
+                "role": "Starter",
+                "price": 6.5,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3613-7100-bfe7-2b4fcf9322b2",
+                "name": "Tijolo",
+                "position": "Defender",
+                "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+                "realTeamName": "União da Vila",
+                "role": "Starter",
+                "price": 9,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3614-7938-b464-2a07fb213aed",
+                "name": "Xerife",
+                "position": "Defender",
+                "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+                "realTeamName": "Grêmio da Rua 9",
+                "role": "Starter",
+                "price": 8.5,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3614-7b92-be24-4283c7dfcdeb",
+                "name": "Serginho",
+                "position": "Midfielder",
+                "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+                "realTeamName": "Grêmio da Rua 9",
+                "role": "Starter",
+                "price": 7.5,
+                "isCaptain": true
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3614-78d0-86a5-97c8bc08c0d0",
+                "name": "Neném",
+                "position": "Midfielder",
+                "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+                "realTeamName": "Juventude da Ponte",
+                "role": "Starter",
+                "price": 10.5,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3614-7f3a-a559-e19a1507c637",
+                "name": "Pelezinho",
+                "position": "Forward",
+                "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+                "realTeamName": "Bar do Nico FC",
+                "role": "Starter",
+                "price": 13.5,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3614-7186-a673-99374bffd2a2",
+                "name": "Raio",
+                "position": "Forward",
+                "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+                "realTeamName": "Grêmio da Rua 9",
+                "role": "Starter",
+                "price": 11,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3614-7cec-bf07-e9ceb90c13d3",
+                "name": "Pipoca",
+                "position": "Goalkeeper",
+                "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+                "realTeamName": "Bar do Nico FC",
+                "role": "Bench",
+                "price": 5,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3613-7356-bb5e-7a51263c3eaf",
+                "name": "Zeca",
+                "position": "Defender",
+                "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+                "realTeamName": "Estrela do Bairro",
+                "role": "Bench",
+                "price": 7,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3614-714c-bec8-af89a8974bbe",
+                "name": "Alemão",
+                "position": "Midfielder",
+                "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+                "realTeamName": "Bar do Nico FC",
+                "role": "Bench",
+                "price": 7,
+                "isCaptain": false
+              },
+              {
+                "kind": "Athlete",
+                "assetId": "01a0f9b5-3615-72be-9c01-49d182b65bd9",
+                "name": "Zumbi",
+                "position": "Forward",
+                "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+                "realTeamName": "Real Mangueiral",
+                "role": "Bench",
+                "price": 4.5,
+                "isCaptain": false
+              },
+              {
+                "kind": "Coach",
+                "assetId": "01a0f9b5-33cf-7140-8a8f-4516dc0ff6a2",
+                "name": "Técnico do Bar do Nico FC",
+                "position": null,
+                "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+                "realTeamName": "Bar do Nico FC",
+                "role": "Coach",
+                "price": 6,
+                "isCaptain": false
+              }
+            ]
+          }
+        }
+      }
+    },
+    "GET /api/v1/fantasy/copa-da-vila-2026/market": {
+      "status": 200,
+      "corpo": {
+        "balance": 1.5,
+        "market": {
+          "isOpen": true,
+          "roundName": "Rodada 5",
+          "closesAt": "2026-10-05T11:00:00+00:00",
+          "closesAtLocal": "2026-10-05T08:00",
+          "timeZoneId": "America/Sao_Paulo"
+        },
+        "items": [
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7981-bf53-fafefe315437",
+            "name": "Gordo",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 6.5,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7cec-bf07-e9ceb90c13d3",
+            "name": "Pipoca",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 5,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7f14-b45a-9287d01b1738",
+            "name": "Baiano",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 7.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7630-acd4-254dfabd153b",
+            "name": "Cimento",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 9.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-714c-bec8-af89a8974bbe",
+            "name": "Alemão",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 7,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-783c-b2e7-51096e84ae73",
+            "name": "Professor",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 10,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-77ae-8c39-aaab24ede7d2",
+            "name": "Titi",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 8.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7045-aef4-1d2181069305",
+            "name": "Jacaré",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 8.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7f3a-a559-e19a1507c637",
+            "name": "Pelezinho",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 13.5,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Coach",
+            "id": "01a0f9b5-33cf-7140-8a8f-4516dc0ff6a2",
+            "name": "Técnico do Bar do Nico FC",
+            "position": null,
+            "realTeamId": "01a0f9b5-33cf-7673-bbea-b199a0eb32c4",
+            "realTeamName": "Bar do Nico FC",
+            "price": 6,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7cf3-aa35-c0d1a3ffb666",
+            "name": "Gato",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 4,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7df9-b038-4d143f31e193",
+            "name": "Luvas",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 9,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-77ea-9e7e-8814aa5d7a38",
+            "name": "Muralha",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 8,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7356-bb5e-7a51263c3eaf",
+            "name": "Zeca",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 7,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7ac5-8936-1354e6ef2cba",
+            "name": "Ceará",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 5.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7ae4-a33c-352ada36a75e",
+            "name": "Maestro",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 11,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-77b7-836d-66684278eb76",
+            "name": "Pinga",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 8,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7dc8-801e-a579c1e920d9",
+            "name": "Balinha",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 12.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7565-b2e6-03c0d748c89b",
+            "name": "Chicão",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 7,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Coach",
+            "id": "01a0f9b5-33cf-7700-a3c0-720c4fb982d3",
+            "name": "Dona Val",
+            "position": null,
+            "realTeamId": "01a0f9b5-33cf-7993-b144-bdfba6ca6208",
+            "realTeamName": "Estrela do Bairro",
+            "price": 8,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "coach_taken",
+            "blockReason": "Você já tem um técnico. Venda o atual para trocar."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-739c-ae80-8481f13376df",
+            "name": "Bombril",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 7.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7d46-819b-59ef674dc4bb",
+            "name": "Sereno",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 5.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-756d-9f7a-58b18fb9e2e9",
+            "name": "Pedra",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 7.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7938-b464-2a07fb213aed",
+            "name": "Xerife",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 8.5,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7200-a5e5-7cfd83efb3e2",
+            "name": "Cebola",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 3.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7b92-be24-4283c7dfcdeb",
+            "name": "Serginho",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 7.5,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7ebf-9eae-2be3b8bf16c8",
+            "name": "Vovô",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 8,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-762e-8b7f-40a07447d842",
+            "name": "Bilu",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 7.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7186-a673-99374bffd2a2",
+            "name": "Raio",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 11,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Coach",
+            "id": "01a0f9b5-33cf-78e5-bc3a-a4f84854b849",
+            "name": "Mestre Piu",
+            "position": null,
+            "realTeamId": "01a0f9b5-33cf-7f5f-b2cf-d19f8ac0246f",
+            "realTeamName": "Grêmio da Rua 9",
+            "price": 7.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "coach_taken",
+            "blockReason": "Você já tem um técnico. Venda o atual para trocar."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7d20-9317-aa3787f12fca",
+            "name": "Baixinho",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 3.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7977-bdcd-45511285a771",
+            "name": "Coruja",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 9.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-717b-b83f-300e152c442f",
+            "name": "Cascão",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 5.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7512-b6e8-46b327f2a4e8",
+            "name": "Tanque",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-7e2a-8bd0-ae7fba86ed03",
+            "name": "Índio",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 9.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3614-78d0-86a5-97c8bc08c0d0",
+            "name": "Neném",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 10.5,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-77ea-bc93-26f22ccea66c",
+            "name": "Tico",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 4.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-7f75-a519-4ee4d13aef2a",
+            "name": "Canhão",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 14,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-7108-9e9e-c5c6fd695b83",
+            "name": "Vavá",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 10,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Coach",
+            "id": "01a0f9b5-33cf-7d8b-90f4-e00fd2c38a40",
+            "name": "Tia Cida",
+            "position": null,
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "realTeamName": "Juventude da Ponte",
+            "price": 11,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "coach_taken",
+            "blockReason": "Você já tem um técnico. Venda o atual para trocar."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-7afe-858b-8c91925ceffe",
+            "name": "Mão de Ferro",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 8,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-75b4-a56f-29777e97578f",
+            "name": "Sombra",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 4.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-7312-a56d-497f1fdb9574",
+            "name": "Grandão",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 8,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-7fe2-98ae-6c950a59aa73",
+            "name": "Rocha",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 9.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-7bbf-a1d5-688ca8f5f3d5",
+            "name": "Bolinha",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 6.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-7395-867d-ce35b1d35bae",
+            "name": "Careca",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 9,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-7e36-b69a-c2ad4c603956",
+            "name": "Pincel",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 6.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-72c2-9c09-7502a702173b",
+            "name": "Tanque de Gol",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 9.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3615-72be-9c01-49d182b65bd9",
+            "name": "Zumbi",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 4.5,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Coach",
+            "id": "01a0f9b5-33cf-758d-b771-0e927f9fc0ee",
+            "name": "Coronel",
+            "position": null,
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "realTeamName": "Real Mangueiral",
+            "price": 8,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "coach_taken",
+            "blockReason": "Você já tem um técnico. Venda o atual para trocar."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-35ed-78a3-bee9-1068325d1afb",
+            "name": "Nena",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 8.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-713f-b628-d69407f6288d",
+            "name": "Paredão",
+            "position": "Goalkeeper",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 4,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-782a-b893-a41255524549",
+            "name": "Duda",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 6,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7100-bfe7-2b4fcf9322b2",
+            "name": "Tijolo",
+            "position": "Defender",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 9,
+            "isAvailable": true,
+            "isOwned": true,
+            "blockCode": "already_owned",
+            "blockReason": "Esse ativo já está no seu elenco."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7319-93e1-b824af33bb1f",
+            "name": "Bia",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 9.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7a7e-a53d-da760de5846a",
+            "name": "Formiga",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 4,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7754-8cd1-fa7b06c73aeb",
+            "name": "Régua",
+            "position": "Midfielder",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 8.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-7095-a625-6f4e6bbd1609",
+            "name": "Foguinho",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 10,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Athlete",
+            "id": "01a0f9b5-3613-76dc-ad37-9de7cdbede78",
+            "name": "Tatá",
+            "position": "Forward",
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 11.5,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "position_full",
+            "blockReason": "Posição completa: venda alguém dessa posição antes."
+          },
+          {
+            "kind": "Coach",
+            "id": "01a0f9b5-33a3-770e-b128-cc0790427af1",
+            "name": "Seu Zé",
+            "position": null,
+            "realTeamId": "01a0f9b5-33a2-742e-af85-07bef50f796b",
+            "realTeamName": "União da Vila",
+            "price": 11,
+            "isAvailable": true,
+            "isOwned": false,
+            "blockCode": "coach_taken",
+            "blockReason": "Você já tem um técnico. Venda o atual para trocar."
+          }
+        ]
+      }
+    },
+    "GET /api/v1/fantasy/copa-da-vila-2026/rounds/01a0f9b5-4195-76a2-a007-e84757980cbf": {
+      "status": 200,
+      "corpo": {
+        "roundId": "01a0f9b5-4195-76a2-a007-e84757980cbf",
+        "roundName": "Rodada 3",
+        "publishedAtLocal": "2026-09-29T18:00",
+        "consolidatesAtLocal": "2026-10-02T08:00",
+        "provisional": true,
+        "timeZoneId": "America/Sao_Paulo",
+        "revision": 1,
+        "played": true,
+        "total": 32.5,
+        "captainBonus": 0,
+        "slots": [
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3614-7981-bf53-fafefe315437",
+            "name": "Gordo",
+            "position": "Goalkeeper",
+            "realTeamName": "Bar do Nico FC",
+            "role": "Starter",
+            "played": true,
+            "points": 0,
+            "counts": true,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [
+              {
+                "item": "GoalkeeperSave",
+                "quantity": 1,
+                "points": 1
+              },
+              {
+                "item": "GoalConceded",
+                "quantity": 1,
+                "points": -1
+              }
+            ],
+            "price": {
+              "average": 6.17,
+              "difference": -6.17,
+              "variation": -2,
+              "previousPrice": 8.5,
+              "newPrice": 6.5
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3613-7100-bfe7-2b4fcf9322b2",
+            "name": "Tijolo",
+            "position": "Defender",
+            "realTeamName": "União da Vila",
+            "role": "Starter",
+            "played": true,
+            "points": 5,
+            "counts": true,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [
+              {
+                "item": "CleanSheet",
+                "quantity": 1,
+                "points": 5
+              }
+            ],
+            "price": {
+              "average": 2.33,
+              "difference": 2.67,
+              "variation": 0.5,
+              "previousPrice": 8.5,
+              "newPrice": 9
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3614-7938-b464-2a07fb213aed",
+            "name": "Xerife",
+            "position": "Defender",
+            "realTeamName": "Grêmio da Rua 9",
+            "role": "Starter",
+            "played": true,
+            "points": 5,
+            "counts": true,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [
+              {
+                "item": "CleanSheet",
+                "quantity": 1,
+                "points": 5
+              }
+            ],
+            "price": {
+              "average": 2.33,
+              "difference": 2.67,
+              "variation": 0.5,
+              "previousPrice": 8,
+              "newPrice": 8.5
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3614-78d0-86a5-97c8bc08c0d0",
+            "name": "Neném",
+            "position": "Midfielder",
+            "realTeamName": "Juventude da Ponte",
+            "role": "Starter",
+            "played": false,
+            "points": 0,
+            "counts": false,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": "01a0f9b5-3614-714c-bec8-af89a8974bbe",
+            "lines": [],
+            "price": {
+              "average": null,
+              "difference": null,
+              "variation": 0,
+              "previousPrice": 10.5,
+              "newPrice": 10.5
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3614-7b92-be24-4283c7dfcdeb",
+            "name": "Serginho",
+            "position": "Midfielder",
+            "realTeamName": "Grêmio da Rua 9",
+            "role": "Starter",
+            "played": false,
+            "points": 0,
+            "counts": false,
+            "isCaptain": true,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [],
+            "price": {
+              "average": null,
+              "difference": null,
+              "variation": 0,
+              "previousPrice": 7.5,
+              "newPrice": 7.5
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3614-7f3a-a559-e19a1507c637",
+            "name": "Pelezinho",
+            "position": "Forward",
+            "realTeamName": "Bar do Nico FC",
+            "role": "Starter",
+            "played": true,
+            "points": 14,
+            "counts": true,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [
+              {
+                "item": "Goal",
+                "quantity": 2,
+                "points": 10
+              },
+              {
+                "item": "Assist",
+                "quantity": 1,
+                "points": 4
+              }
+            ],
+            "price": {
+              "average": 2.67,
+              "difference": 11.33,
+              "variation": 2,
+              "previousPrice": 11.5,
+              "newPrice": 13.5
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3614-7186-a673-99374bffd2a2",
+            "name": "Raio",
+            "position": "Forward",
+            "realTeamName": "Grêmio da Rua 9",
+            "role": "Starter",
+            "played": true,
+            "points": -2,
+            "counts": true,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [
+              {
+                "item": "YellowCard",
+                "quantity": 1,
+                "points": -2
+              }
+            ],
+            "price": {
+              "average": 2.67,
+              "difference": -4.67,
+              "variation": -1,
+              "previousPrice": 12,
+              "newPrice": 11
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3614-7cec-bf07-e9ceb90c13d3",
+            "name": "Pipoca",
+            "position": "Goalkeeper",
+            "realTeamName": "Bar do Nico FC",
+            "role": "Bench",
+            "played": false,
+            "points": 0,
+            "counts": false,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [],
+            "price": {
+              "average": null,
+              "difference": null,
+              "variation": 0,
+              "previousPrice": 5,
+              "newPrice": 5
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3613-7356-bb5e-7a51263c3eaf",
+            "name": "Zeca",
+            "position": "Defender",
+            "realTeamName": "Estrela do Bairro",
+            "role": "Bench",
+            "played": true,
+            "points": 4,
+            "counts": false,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [
+              {
+                "item": "Assist",
+                "quantity": 1,
+                "points": 4
+              }
+            ],
+            "price": {
+              "average": 2.33,
+              "difference": 1.67,
+              "variation": 0.5,
+              "previousPrice": 6.5,
+              "newPrice": 7
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3614-714c-bec8-af89a8974bbe",
+            "name": "Alemão",
+            "position": "Midfielder",
+            "realTeamName": "Bar do Nico FC",
+            "role": "Bench",
+            "played": true,
+            "points": 6,
+            "counts": true,
+            "isCaptain": false,
+            "replaces": "01a0f9b5-3614-78d0-86a5-97c8bc08c0d0",
+            "replacedBy": null,
+            "lines": [
+              {
+                "item": "Goal",
+                "quantity": 1,
+                "points": 6
+              }
+            ],
+            "price": {
+              "average": 2.8,
+              "difference": 3.2,
+              "variation": 1,
+              "previousPrice": 6,
+              "newPrice": 7
+            }
+          },
+          {
+            "kind": "Athlete",
+            "assetId": "01a0f9b5-3615-72be-9c01-49d182b65bd9",
+            "name": "Zumbi",
+            "position": "Forward",
+            "realTeamName": "Real Mangueiral",
+            "role": "Bench",
+            "played": true,
+            "points": 0,
+            "counts": false,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [],
+            "price": {
+              "average": 2.67,
+              "difference": -2.67,
+              "variation": -0.5,
+              "previousPrice": 5,
+              "newPrice": 4.5
+            }
+          },
+          {
+            "kind": "Coach",
+            "assetId": "01a0f9b5-33cf-7140-8a8f-4516dc0ff6a2",
+            "name": "Técnico do Bar do Nico FC",
+            "position": null,
+            "realTeamName": "Bar do Nico FC",
+            "role": "Coach",
+            "played": true,
+            "points": 4.5,
+            "counts": true,
+            "isCaptain": false,
+            "replaces": null,
+            "replacedBy": null,
+            "lines": [],
+            "price": {
+              "average": 3.03,
+              "difference": 1.47,
+              "variation": 0.5,
+              "previousPrice": 5.5,
+              "newPrice": 6
+            }
+          }
+        ],
+        "underCorrection": false,
+        "correction": null
+      }
+    }
+  }
+}

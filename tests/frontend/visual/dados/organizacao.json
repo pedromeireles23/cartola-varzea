@@ -1,0 +1,566 @@
+{
+  "relogio": "2026-10-01T23:05:00.756Z",
+  "respostas": {
+    "GET /api/v1/auth/antiforgery": {
+      "status": 204,
+      "corpo": null
+    },
+    "GET /api/v1/auth/me": {
+      "status": 200,
+      "corpo": {
+        "id": "01a080e3-ae00-7f6c-abf7-f942c7651bb0",
+        "email": "organizacao@demo.cartola-varzea.test",
+        "displayName": "Marta Ribeiro",
+        "emailConfirmed": true,
+        "roles": ["Organizer"]
+      }
+    },
+    "GET /api/v1/auth/demo": {
+      "status": 200,
+      "corpo": {
+        "available": true
+      }
+    },
+    "GET /api/v1/fantasy": {
+      "status": 200,
+      "corpo": []
+    },
+    "GET /api/v1/notifications": {
+      "status": 200,
+      "corpo": {
+        "unread": 0,
+        "items": []
+      }
+    },
+    "GET /api/v1/public/competitions": {
+      "status": 200,
+      "corpo": [
+        {
+          "slug": "copa-da-vila-2026",
+          "name": "Copa da Vila",
+          "season": "2026",
+          "modality": "Fut7",
+          "organizationName": "Liga Várzea do Leste",
+          "publishedAt": "2026-09-08T12:30:00+00:00"
+        }
+      ]
+    },
+    "GET /api/v1/competitions/01a0f9b5-2f0b-7185-81e8-cd4986ea9415/settings": {
+      "status": 200,
+      "corpo": {
+        "id": "01a0f9b5-2f0b-7185-81e8-cd4986ea9415",
+        "organizationId": "01a0f9b5-2e0a-779f-b011-65e11bed5044",
+        "organizationName": "Liga Várzea do Leste",
+        "viewerRole": "Owner",
+        "name": "Copa da Vila",
+        "season": "2026",
+        "modality": "Fut7",
+        "status": "Published",
+        "timeZoneId": "America/Sao_Paulo",
+        "marketCloseLeadTimeMinutes": 60,
+        "resultsSlaBusinessDays": 2,
+        "correctionWindowBusinessDays": 3,
+        "registrationDeadlineLocal": null,
+        "registrationWindow": {
+          "closesAtLocal": null,
+          "source": "FirstStageLastRound",
+          "roundName": "Rodada 6",
+          "isOpen": true
+        },
+        "canChangeModality": false,
+        "modalityProfile": {
+          "modality": "Fut7",
+          "version": 1,
+          "starters": 7,
+          "formation": {
+            "goalkeepers": 1,
+            "defenders": 2,
+            "midfielders": 2,
+            "forwards": 2
+          },
+          "benchSize": 4,
+          "squadAthletes": 11,
+          "budget": 100,
+          "minimumAthletesPerRealTeam": 9,
+          "realTeamLimits": [
+            {
+              "activeRealTeams": 4,
+              "maxStarters": 3,
+              "maxAthletes": 5
+            },
+            {
+              "activeRealTeams": 3,
+              "maxStarters": 4,
+              "maxAthletes": 6
+            },
+            {
+              "activeRealTeams": 2,
+              "maxStarters": 5,
+              "maxAthletes": 8
+            }
+          ],
+          "fallbackPrices": {
+            "goalkeeper": 7,
+            "defender": 7,
+            "midfielder": 8,
+            "forward": 9,
+            "coach": 8
+          }
+        },
+        "createdAt": "2026-09-08T12:30:00+00:00",
+        "updatedAt": "2026-09-08T12:30:00+00:00",
+        "version": "AAAAAAAACCE="
+      }
+    },
+    "GET /api/v1/competitions/01a0f9b5-2f0b-7185-81e8-cd4986ea9415/rounds/01a0f9b5-41f2-79e2-a489-16a7e789fe6f/review": {
+      "status": 200,
+      "corpo": {
+        "roundId": "01a0f9b5-41f2-79e2-a489-16a7e789fe6f",
+        "roundName": "Rodada 4",
+        "phase": "UnderReview",
+        "scheduledMatches": 3,
+        "completedSheets": 3,
+        "ready": true,
+        "matches": [
+          {
+            "matchId": "01a0f9b5-420b-78ef-80de-1ff39517cd48",
+            "homeTeamName": "Real Mangueiral",
+            "awayTeamName": "Juventude da Ponte",
+            "kickoffLocal": "2026-09-30T09:00",
+            "status": "Scheduled",
+            "requiresSheet": true,
+            "hasSheet": true,
+            "homeScore": 1,
+            "awayScore": 2,
+            "participants": 16,
+            "events": [
+              {
+                "type": "Goal",
+                "quantity": 3
+              },
+              {
+                "type": "Assist",
+                "quantity": 1
+              },
+              {
+                "type": "GoalkeeperSave",
+                "quantity": 7
+              },
+              {
+                "type": "PenaltySave",
+                "quantity": 2
+              },
+              {
+                "type": "YellowCard",
+                "quantity": 2
+              }
+            ]
+          },
+          {
+            "matchId": "01a0f9b5-4223-77ae-97b2-1d5c36f607a0",
+            "homeTeamName": "União da Vila",
+            "awayTeamName": "Bar do Nico FC",
+            "kickoffLocal": "2026-09-30T10:30",
+            "status": "Scheduled",
+            "requiresSheet": true,
+            "hasSheet": true,
+            "homeScore": 3,
+            "awayScore": 3,
+            "participants": 14,
+            "events": [
+              {
+                "type": "Goal",
+                "quantity": 6
+              },
+              {
+                "type": "Assist",
+                "quantity": 3
+              },
+              {
+                "type": "GoalkeeperSave",
+                "quantity": 8
+              },
+              {
+                "type": "YellowCard",
+                "quantity": 2
+              }
+            ]
+          },
+          {
+            "matchId": "01a0f9b5-423c-7348-ba08-a3f952b58979",
+            "homeTeamName": "Estrela do Bairro",
+            "awayTeamName": "Grêmio da Rua 9",
+            "kickoffLocal": "2026-09-30T12:00",
+            "status": "Scheduled",
+            "requiresSheet": true,
+            "hasSheet": true,
+            "homeScore": 2,
+            "awayScore": 0,
+            "participants": 15,
+            "events": [
+              {
+                "type": "Goal",
+                "quantity": 2
+              },
+              {
+                "type": "GoalkeeperSave",
+                "quantity": 5
+              },
+              {
+                "type": "YellowCard",
+                "quantity": 3
+              }
+            ]
+          }
+        ],
+        "pending": [],
+        "version": "AAAAAAAACYM=",
+        "publication": null,
+        "correction": null
+      }
+    },
+    "GET /api/v1/competitions/01a0f9b5-2f0b-7185-81e8-cd4986ea9415/matches/01a0f9b5-420b-78ef-80de-1ff39517cd48/sheet": {
+      "status": 200,
+      "corpo": {
+        "matchId": "01a0f9b5-420b-78ef-80de-1ff39517cd48",
+        "roundId": "01a0f9b5-41f2-79e2-a489-16a7e789fe6f",
+        "roundName": "Rodada 4",
+        "roundPhase": "UnderReview",
+        "kickoffAt": "2026-09-30T12:00:00+00:00",
+        "homeTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+        "homeTeamName": "Real Mangueiral",
+        "awayTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+        "awayTeamName": "Juventude da Ponte",
+        "homeScore": 1,
+        "awayScore": 2,
+        "athletes": [
+          {
+            "athleteId": "01a0f9b5-3615-7bbf-a1d5-688ca8f5f3d5",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Bolinha",
+            "position": "Midfielder",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 1,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-7395-867d-ce35b1d35bae",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Careca",
+            "position": "Midfielder",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-7312-a56d-497f1fdb9574",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Grandão",
+            "position": "Defender",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-7afe-858b-8c91925ceffe",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Mão de Ferro",
+            "position": "Goalkeeper",
+            "didPlay": false,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-7e36-b69a-c2ad4c603956",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Pincel",
+            "position": "Midfielder",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-7fe2-98ae-6c950a59aa73",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Rocha",
+            "position": "Defender",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 1,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-75b4-a56f-29777e97578f",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Sombra",
+            "position": "Goalkeeper",
+            "didPlay": true,
+            "playedAsGoalkeeper": true,
+            "goalsConceded": 2,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 6,
+            "penaltySaves": 1,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-72c2-9c09-7502a702173b",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Tanque de Gol",
+            "position": "Forward",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-72be-9c01-49d182b65bd9",
+            "realTeamId": "01a0f9b5-33cf-7752-9b29-2c3525f00e6f",
+            "sportingName": "Zumbi",
+            "position": "Forward",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 1,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3614-7d20-9317-aa3787f12fca",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Baixinho",
+            "position": "Goalkeeper",
+            "didPlay": true,
+            "playedAsGoalkeeper": true,
+            "goalsConceded": 1,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 1,
+            "penaltySaves": 1,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-7f75-a519-4ee4d13aef2a",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Canhão",
+            "position": "Forward",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3614-717b-b83f-300e152c442f",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Cascão",
+            "position": "Defender",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 1,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3614-7977-bdcd-45511285a771",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Coruja",
+            "position": "Goalkeeper",
+            "didPlay": false,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3614-7e2a-8bd0-ae7fba86ed03",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Índio",
+            "position": "Midfielder",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 1,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3614-78d0-86a5-97c8bc08c0d0",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Neném",
+            "position": "Midfielder",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 1,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3614-7512-b6e8-46b327f2a4e8",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Tanque",
+            "position": "Defender",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-77ea-bc93-26f22ccea66c",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Tico",
+            "position": "Midfielder",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          },
+          {
+            "athleteId": "01a0f9b5-3615-7108-9e9e-c5c6fd695b83",
+            "realTeamId": "01a0f9b5-33cf-7d0d-91c0-eba2697b30d3",
+            "sportingName": "Vavá",
+            "position": "Forward",
+            "didPlay": true,
+            "playedAsGoalkeeper": false,
+            "goalsConceded": 0,
+            "goals": 0,
+            "assists": 0,
+            "goalkeeperSaves": 0,
+            "penaltySaves": 0,
+            "yellowCards": 0,
+            "redCards": 0,
+            "redCardReason": null,
+            "ownGoals": 0,
+            "penaltyMisses": 0
+          }
+        ],
+        "version": "AAAAAAAACYA="
+      }
+    }
+  }
+}
