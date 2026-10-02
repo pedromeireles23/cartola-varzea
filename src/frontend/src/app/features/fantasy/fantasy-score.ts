@@ -81,16 +81,8 @@ interface Grupo {
       @case ('pronto') {
         <app-page-header [heading]="pontuacao()!.roundName" kicker="Sua pontuação" variant="game" />
 
-        @if (pontuacao()!.correction; as correcao) {
-          <app-alert tone="info">
-            Rodada corrigida em {{ horario(correcao.correctedAtLocal) }}.
-            @if (correcao.reason) {
-              Motivo: {{ correcao.reason }}
-            }
-            @if (mudanca(); as texto) {
-              {{ texto }}
-            }
-          </app-alert>
+        @if (avisoDeCorrecao(); as aviso) {
+          <app-alert tone="info">{{ aviso }}</app-alert>
         }
 
         @if (pontuacao()!.underCorrection) {
@@ -243,6 +235,23 @@ export class FantasyScorePage implements OnInit {
     return anterior === rodada.total
       ? `Sua pontuação não mudou: ${this.pontos(rodada.total)}.`
       : `Sua pontuação foi de ${this.pontos(anterior)} para ${this.pontos(rodada.total)}.`;
+  });
+
+  /**
+   * O aviso de correção numa frase só. Montado em pedaços no modelo, cada pedaço entrava
+   * na região viva do aviso em separado, e o leitor de tela relia o aviso inteiro uma vez
+   * por pedaço (15, leitor de tela real).
+   */
+  protected readonly avisoDeCorrecao = computed(() => {
+    const correcao = this.pontuacao()?.correction;
+    if (!correcao) return null;
+    return [
+      `Rodada corrigida em ${this.horario(correcao.correctedAtLocal)}.`,
+      correcao.reason ? `Motivo: ${correcao.reason}` : null,
+      this.mudanca(),
+    ]
+      .filter((parte) => parte !== null)
+      .join(' ');
   });
 
   protected readonly capitaoForaDeCampo = computed(

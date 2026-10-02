@@ -101,7 +101,9 @@
           </button>
         }
       </div>
-      <p class="ferramentas__contagem">{{ contagem() }}</p>
+      <!-- Filtrar muda a lista longe do botão; a contagem é anunciada para o resultado
+        não passar despercebido a quem usa leitor de tela. -->
+      <p class="ferramentas__contagem" role="status">{{ contagem() }}</p>
     </section>
 
     @if (agrupado()) {

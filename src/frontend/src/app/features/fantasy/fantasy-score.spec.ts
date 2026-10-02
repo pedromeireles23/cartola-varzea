@@ -227,6 +227,11 @@ describe('FantasyScorePage', () => {
     expect(texto(fixture)).toContain('Rodada corrigida em qui., 24/09 às 10:00');
     expect(texto(fixture)).toContain('Motivo: Gol lançado no atleta errado.');
     expect(texto(fixture)).toContain('Sua pontuação foi de 42,50 pts para 46,00 pts.');
+    // Uma frase num nó só: em pedaços, o leitor de tela relia o aviso uma vez por pedaço.
+    const corpo = (fixture.nativeElement as HTMLElement).querySelector('.alert__body')!;
+    const textos = [...corpo.childNodes].filter((no) => no.textContent?.trim());
+    expect(textos).toHaveLength(1);
+    expect(textos[0].nodeType).toBe(Node.TEXT_NODE);
   });
 
   it('a correção que não mexeu nesta conta diz isso, em vez de uma seta entre números iguais', async () => {

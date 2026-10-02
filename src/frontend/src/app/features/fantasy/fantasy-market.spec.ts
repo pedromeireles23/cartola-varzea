@@ -358,5 +358,9 @@ describe('FantasyMarketPage', () => {
     expect(texto(fixture)).toContain('Meio-campista · Estrela');
     expect(texto(fixture)).toContain('3 opções');
     expect(texto(fixture)).not.toContain('3 opções em');
+    // O resultado do filtro é anunciado, não só desenhado longe do controle.
+    expect(elemento(fixture).querySelector('.ferramentas__contagem')?.getAttribute('role')).toBe(
+      'status',
+    );
   });
 });
