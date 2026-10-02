@@ -172,9 +172,11 @@ describe('LandingFeatured', () => {
     expect(texto(fixture)).toContain('Provisório: pode mudar até a rodada consolidar');
     const placares = (fixture.nativeElement as HTMLElement).querySelectorAll('.placar');
     expect(placares).toHaveLength(1);
-    expect(placares[0].textContent?.replace(/\s+/g, ' ')).toContain(
-      'Bar do Nico FC 5× a 1 Juventude da Ponte',
-    );
+    expect(placares[0].textContent?.replace(/\s+/g, ' ')).toContain('Bar do Nico FC 5×1');
+    // O placar desenhado sai da árvore e o leitor de tela ouve "5 a 1", com espaço
+    // inseparável nas bordas para o número não colar no nome do time.
+    expect(placares[0].querySelector('.placar__numeros')?.getAttribute('aria-hidden')).toBe('true');
+    expect(placares[0].querySelector('.sr-only')?.textContent).toBe('\u00a05 a 1\u00a0');
   });
 
   it('sem resultado publicado, mostra os próximos jogos no horário do campeonato', async () => {

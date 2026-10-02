@@ -131,8 +131,15 @@ describe('MatchSheetPage', () => {
     await fixture.whenStable();
 
     const aoVivo = elemento.querySelector('.ao-vivo__numeros')!;
-    expect(aoVivo.textContent?.replace(/\s+/g, ' ').trim()).toBe('3× a 1');
+    expect(aoVivo.textContent?.replace(/\s+/g, ' ').trim()).toBe('3×1');
     expect(aoVivo.querySelector('[aria-hidden="true"]')?.textContent).toBe('×');
+    // Os números desenhados saem da árvore; o leitor de tela ouve uma frase só.
+    expect(aoVivo.getAttribute('aria-hidden')).toBe('true');
+    expect(elemento.querySelector('.ao-vivo .sr-only')?.textContent?.trim()).toBe('3 a 1');
+    // A mudança é anunciada inteira, com os dois times, a quem usa leitor de tela.
+    const placar = elemento.querySelector('.ao-vivo')!;
+    expect(placar.getAttribute('aria-live')).toBe('polite');
+    expect(placar.getAttribute('aria-atomic')).toBe('true');
   });
 
   it('o passo atual é dito por aria-current, e os anteriores ficam marcados', async () => {

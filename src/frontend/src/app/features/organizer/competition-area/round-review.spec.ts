@@ -134,7 +134,11 @@ describe('RoundReviewPage', () => {
 
     expect(text(fixture)).toContain('Aurora × Estrela');
     // O × é só visual; o leitor de tela ouve "2 a 1", como no placar público.
-    expect(text(fixture)).toContain('2× a 1');
+    expect(text(fixture)).toContain('2×1');
+    expect(text(fixture)).toContain('Placar: 2 a 1');
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.score')?.getAttribute('aria-hidden'),
+    ).toBe('true');
     expect(text(fixture)).toContain('3 gols');
     expect(button(fixture, 'Enviar para revisão')).toBeUndefined();
   });

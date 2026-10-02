@@ -165,6 +165,12 @@ describe('ParticipantHomePage', () => {
     await comCampeonato(fixture);
 
     expect(texto(fixture)).toContain('Mercado da Rodada 1 fecha dom., 20/09 às 19:00');
+    // A contagem curta ("3 d 17 h") é só visual; o leitor de tela fica com a data.
+    expect(
+      (fixture.nativeElement as HTMLElement)
+        .querySelector('.round-clock')
+        ?.getAttribute('aria-hidden'),
+    ).toBe('true');
     expect(texto(fixture)).toContain('Montar time');
     expect(texto(fixture)).toContain('0 de 12 escolhidos');
     expect(texto(fixture)).toContain('Falta 1 goleiro entre os titulares.');

@@ -85,17 +85,24 @@ type Estado =
                 @for (jogo of rodada.matches; track jogo.id) {
                   <li class="jogo" [class.jogo--fora]="jogo.status !== 'Scheduled'">
                     <span class="jogo__time jogo__time--casa">{{ jogo.homeTeamName }}</span>
-                    <span class="jogo__placar">
+                    <span class="jogo__placar" aria-hidden="true">
                       @if (jogo.homeScore !== null && jogo.awayScore !== null) {
                         {{ jogo.homeScore }}<span aria-hidden="true">×</span>{{ jogo.awayScore }}
-                        <span class="sr-only">a</span>
                       } @else {
                         <span aria-hidden="true">×</span>
                       }
                     </span>
+                    <span class="sr-only"
+                      >&nbsp;{{
+                        jogo.homeScore !== null && jogo.awayScore !== null
+                          ? jogo.homeScore + ' a ' + jogo.awayScore
+                          : 'contra'
+                      }}&nbsp;</span
+                    >
                     <span class="jogo__time">{{ jogo.awayTeamName }}</span>
                     <span class="jogo__detalhe">
-                      {{ quando(jogo.kickoffLocal) }} · {{ jogo.stageName }}
+                      <span class="sr-only">,&nbsp;</span>{{ quando(jogo.kickoffLocal) }} ·
+                      {{ jogo.stageName }}
                       @if (jogo.status !== 'Scheduled') {
                         · {{ jogo.status === 'Postponed' ? 'adiada' : 'cancelada' }}
                       }

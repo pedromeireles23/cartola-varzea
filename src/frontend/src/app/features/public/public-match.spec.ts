@@ -45,6 +45,9 @@ describe('PublicMatchPage', () => {
     const fixture = await abrir(partida());
 
     expect(texto(fixture)).toContain('União da Vila × Estrela do Bairro');
+    const placar = (fixture.nativeElement as HTMLElement).querySelector('.sumula__numeros')!;
+    expect(placar.getAttribute('aria-hidden')).toBe('true');
+    expect(placar.nextElementSibling?.textContent?.trim()).toBe('2 a 0');
     expect(texto(fixture)).toContain('Rodada 1 · Fase única · dom., 20/09 · 10:00');
     expect(texto(fixture)).toContain('Pedrinho');
     expect(texto(fixture)).toContain('Juca');

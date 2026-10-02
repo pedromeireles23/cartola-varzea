@@ -54,10 +54,15 @@
               </a>
             }
           </div>
-          <div class="rodada-hero__relogio" aria-label="Tempo até o fechamento do mercado">
+          <!-- A contagem é só visual, como no relógio do mercado: o leitor de tela ouve
+            "Fecha em" e a data, e não "3 d 17 h". Sem rótulo no bloco: no Android, o
+            aria-label de uma div genérica tomava o lugar do texto de dentro. -->
+          <div class="rodada-hero__relogio">
             <span class="rodada-hero__relogio-label">Fecha em</span>
-            <strong class="round-clock">{{ faltam() ?? 'em breve' }}</strong>
-            <span class="rodada-hero__relogio-data">{{ fechamento() }}</span>
+            <strong class="round-clock" aria-hidden="true">{{ faltam() ?? 'em breve' }}</strong>
+            <span class="rodada-hero__relogio-data"
+              ><span class="sr-only">&nbsp;</span>{{ fechamento() }}</span
+            >
           </div>
         </section>
       } @else {
@@ -238,7 +243,7 @@
                     <span class="confronto__nome">{{ jogo.homeTeamName }}</span>
                   </span>
                   <strong class="confronto__versus">
-                    <span aria-hidden="true">×</span><span class="sr-only">contra</span>
+                    <span aria-hidden="true">×</span><span class="sr-only">&nbsp;contra&nbsp;</span>
                   </strong>
                   <span class="confronto__clube">
                     <span

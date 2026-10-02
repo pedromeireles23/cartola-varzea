@@ -80,19 +80,20 @@ const ROTULOS_DE_EVENTO: Readonly<Record<CampoNumerico, string>> = {
 
             <!--
               Placar ao vivo (V6): acompanha o que é digitado na etapa 1, como o placar de
-              uma transmissão. O × é só visual; o leitor de tela ouve "2 a 1".
+              uma transmissão. O × é só visual; o leitor de tela ouve "2 a 1", e a cada
+              mudança ouve o placar inteiro, com os times.
             -->
-            <div class="ao-vivo">
+            <div class="ao-vivo" aria-live="polite" aria-atomic="true">
               <span class="ao-vivo__time">
                 <span class="escudo" aria-hidden="true">{{
                   iniciais(sumula()!.homeTeamName)
                 }}</span>
                 {{ sumula()!.homeTeamName }}
               </span>
-              <strong class="ao-vivo__numeros num">
-                {{ mandante() }}<span aria-hidden="true">×</span><span class="sr-only"> a </span
-                >{{ visitante() }}
+              <strong class="ao-vivo__numeros num" aria-hidden="true">
+                {{ mandante() }}<span aria-hidden="true">×</span>{{ visitante() }}
               </strong>
+              <span class="sr-only">&nbsp;{{ mandante() }} a {{ visitante() }}&nbsp;</span>
               <span class="ao-vivo__time ao-vivo__time--visitante">
                 <span class="escudo" aria-hidden="true">{{
                   iniciais(sumula()!.awayTeamName)
@@ -289,10 +290,9 @@ const ROTULOS_DE_EVENTO: Readonly<Record<CampoNumerico, string>> = {
             <app-card heading="Revisão">
               <p class="resumo">
                 {{ sumula()!.homeTeamName }}
-                <strong class="resumo__numeros num"
-                  >{{ mandante() }}<span aria-hidden="true">×</span><span class="sr-only"> a </span
-                  >{{ visitante() }}</strong
-                >
+                <strong class="resumo__numeros num" aria-hidden="true"
+                  >{{ mandante() }}<span aria-hidden="true">×</span>{{ visitante() }}</strong
+                ><span class="sr-only">&nbsp;{{ mandante() }} a {{ visitante() }}&nbsp;</span>
                 {{ sumula()!.awayTeamName }}
               </p>
               <p>{{ participantes().length }} atleta(s) marcado(s) como participante(s).</p>

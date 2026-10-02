@@ -328,10 +328,10 @@ const EVENT_LABELS: Readonly<Record<string, readonly [string, string]>> = {
                   </app-badge>
                 </div>
                 @if (match.hasSheet) {
-                  <p class="score num">
-                    {{ match.homeScore }}<span aria-hidden="true">×</span
-                    ><span class="sr-only"> a </span>{{ match.awayScore }}
+                  <p class="score num" aria-hidden="true">
+                    {{ match.homeScore }}<span aria-hidden="true">×</span>{{ match.awayScore }}
                   </p>
+                  <p class="sr-only">Placar: {{ match.homeScore }} a {{ match.awayScore }}</p>
                   <p class="participants">{{ match.participants }} participante(s)</p>
                   @if (match.events.length > 0) {
                     <ul class="events">

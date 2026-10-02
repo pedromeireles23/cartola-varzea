@@ -86,10 +86,12 @@ const POSICOES: Readonly<Record<string, string>> = {
               }}</span>
               {{ partida()!.homeTeamName }}
             </h2>
-            <strong class="sumula__numeros">
+            <strong class="sumula__numeros" aria-hidden="true">
               {{ partida()!.homeScore }}<span aria-hidden="true">×</span>{{ partida()!.awayScore }}
-              <span class="sr-only">a</span>
             </strong>
+            <span class="sr-only"
+              >&nbsp;{{ partida()!.homeScore }} a {{ partida()!.awayScore }}&nbsp;</span
+            >
             <h2 class="sumula__time sumula__time--visitante">
               <span class="sumula__escudo" aria-hidden="true">{{
                 iniciais(partida()!.awayTeamName)

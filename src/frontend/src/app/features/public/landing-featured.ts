@@ -93,10 +93,12 @@ type Carga<T> =
                   @for (jogo of placares(); track jogo.id) {
                     <li class="placar">
                       <span class="placar__time placar__time--casa">{{ jogo.homeTeamName }}</span>
-                      <span class="placar__numeros num">
-                        {{ jogo.homeScore }}<span aria-hidden="true">×</span
-                        ><span class="sr-only"> a </span>{{ jogo.awayScore }}
+                      <span class="placar__numeros num" aria-hidden="true">
+                        {{ jogo.homeScore }}<span aria-hidden="true">×</span>{{ jogo.awayScore }}
                       </span>
+                      <span class="sr-only"
+                        >&nbsp;{{ jogo.homeScore }} a {{ jogo.awayScore }}&nbsp;</span
+                      >
                       <span class="placar__time">{{ jogo.awayTeamName }}</span>
                     </li>
                   }

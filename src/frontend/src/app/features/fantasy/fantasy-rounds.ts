@@ -157,15 +157,20 @@ const EM_JOGO: readonly RoundPhase[] = ['MarketOpen', 'MarketClosed', 'InProgres
                     <strong class="placar-card__time placar-card__time--casa">
                       {{ jogo.homeTeamName }}
                     </strong>
-                    <span class="placar-card__marcador num">
+                    <span class="placar-card__marcador num" aria-hidden="true">
                       @if (temPlacar(jogo)) {
                         <strong>{{ jogo.homeScore }}</strong>
-                        <span aria-hidden="true">×</span><span class="sr-only">a</span>
+                        <span aria-hidden="true">×</span>
                         <strong>{{ jogo.awayScore }}</strong>
                       } @else {
-                        <span aria-hidden="true">VS</span><span class="sr-only">contra</span>
+                        <span aria-hidden="true">VS</span>
                       }
                     </span>
+                    <span class="sr-only"
+                      >&nbsp;{{
+                        temPlacar(jogo) ? jogo.homeScore + ' a ' + jogo.awayScore : 'contra'
+                      }}&nbsp;</span
+                    >
                     <strong class="placar-card__time">{{ jogo.awayTeamName }}</strong>
                   </div>
                   @if (jogo.hasSheet) {

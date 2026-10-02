@@ -78,6 +78,9 @@ describe('CompetitionFixturesPage', () => {
 
     expect(texto(fixture)).toContain('Resultado provisório');
     expect(texto(fixture)).toContain('2');
+    const placar = (fixture.nativeElement as HTMLElement).querySelector('.jogo__placar')!;
+    expect(placar.getAttribute('aria-hidden')).toBe('true');
+    expect(placar.nextElementSibling?.textContent?.trim()).toBe('2 a 0');
     const link = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
       `a[href="/c/${SLUG}/partidas/${PARTIDA_ID}"]`,
     );

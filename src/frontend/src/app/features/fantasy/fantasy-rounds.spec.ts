@@ -131,6 +131,9 @@ describe('FantasyRoundsPage', () => {
         (valor) => valor.textContent,
       ),
     ).toEqual(['3', '1']);
+    expect(
+      elemento.querySelector('.placar-card__marcador')?.nextElementSibling?.textContent?.trim(),
+    ).toBe('3 a 1');
     expect(elemento.querySelector('.trilho__pontos')?.textContent).toContain('18,50 pts');
     expect(link(fixture, 'Ver súmula').getAttribute('href')).toBe(`/c/${SLUG}/partidas/j1`);
   });

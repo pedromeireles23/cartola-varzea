@@ -130,10 +130,14 @@ type Estado =
               @for (jogo of proximosJogos(); track jogo.id) {
                 <li class="jogo">
                   <span class="jogo__time jogo__time--casa">{{ jogo.homeTeamName }}</span>
-                  <span class="jogo__placar"><span aria-hidden="true">×</span></span>
+                  <span class="jogo__placar" aria-hidden="true"
+                    ><span aria-hidden="true">×</span></span
+                  >
+                  <span class="sr-only">&nbsp;contra&nbsp;</span>
                   <span class="jogo__time">{{ jogo.awayTeamName }}</span>
                   <span class="jogo__detalhe"
-                    >{{ quando(jogo.kickoffLocal) }} · {{ jogo.stageName }}</span
+                    ><span class="sr-only">,&nbsp;</span>{{ quando(jogo.kickoffLocal) }} ·
+                    {{ jogo.stageName }}</span
                   >
                 </li>
               }
@@ -148,13 +152,16 @@ type Estado =
               @for (jogo of rodada.matches; track jogo.id) {
                 <li class="jogo">
                   <span class="jogo__time jogo__time--casa">{{ jogo.homeTeamName }}</span>
-                  <span class="jogo__placar">
+                  <span class="jogo__placar" aria-hidden="true">
                     {{ jogo.homeScore }}<span aria-hidden="true">×</span>{{ jogo.awayScore }}
-                    <span class="sr-only">a</span>
                   </span>
+                  <span class="sr-only"
+                    >&nbsp;{{ jogo.homeScore }} a {{ jogo.awayScore }}&nbsp;</span
+                  >
                   <span class="jogo__time">{{ jogo.awayTeamName }}</span>
                   <span class="jogo__detalhe"
-                    >{{ quando(jogo.kickoffLocal) }} · {{ jogo.stageName }}</span
+                    ><span class="sr-only">,&nbsp;</span>{{ quando(jogo.kickoffLocal) }} ·
+                    {{ jogo.stageName }}</span
                   >
                 </li>
               }

@@ -271,6 +271,9 @@ describe('PublicCompetitionPage', () => {
 
     expect(texto(fixture)).toContain('Último resultado · Rodada 1');
     expect(texto(fixture)).toContain('3');
+    const placar = (fixture.nativeElement as HTMLElement).querySelector('.jogo__placar')!;
+    expect(placar.getAttribute('aria-hidden')).toBe('true');
+    expect(placar.nextElementSibling?.textContent?.trim()).toBe('3 a 1');
     expect(texto(fixture)).not.toContain('Próximos jogos');
     // Todas as rodadas fechadas: não há "agora" a mostrar.
     expect(texto(fixture)).not.toContain('Agora');
