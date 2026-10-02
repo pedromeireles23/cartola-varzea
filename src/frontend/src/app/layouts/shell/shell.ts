@@ -222,6 +222,13 @@ export class Shell {
   /** A área de organização, com casca própria; só para quem organiza. */
   protected readonly organizing = computed(() => this.areaKind() !== 'player');
 
+  /**
+   * O tema acompanha a rota, não o papel: toda tela de `/organizar` é clara, inclusive a de
+   * quem ainda pede acesso, que segue com o menu do jogo. Sem isso, o miolo claro da
+   * organização aparecia dentro da casca grafite.
+   */
+  protected readonly organizerTheme = computed(() => this.section() === 'organize');
+
   protected readonly workspaceLabel = computed(() => {
     if (this.areaKind() === 'admin') return 'Admin da plataforma';
     return this.organizerCompetition() ? 'Central da competição' : 'Organizações';

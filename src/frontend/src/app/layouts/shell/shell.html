@@ -9,8 +9,8 @@
   >
     <aside
       class="lateral"
-      [class.theme-player]="areaKind() === 'player'"
-      [class.theme-organizer]="areaKind() !== 'player'"
+      [class.theme-player]="!organizerTheme()"
+      [class.theme-organizer]="organizerTheme()"
       [class.lateral--admin]="areaKind() === 'admin'"
     >
       <a class="marca marca--clara" routerLink="/inicio" aria-label="Cartola Várzea, início">
@@ -163,8 +163,8 @@
     <div class="principal">
       <header
         class="topo"
-        [class.theme-player]="areaKind() === 'player'"
-        [class.theme-organizer]="areaKind() !== 'player'"
+        [class.theme-player]="!organizerTheme()"
+        [class.theme-organizer]="organizerTheme()"
         [class.topo--organizacao]="areaKind() === 'organizer'"
         [class.topo--admin]="areaKind() === 'admin'"
       >
@@ -243,8 +243,8 @@
     <nav
       class="inferior"
       aria-label="Navegação principal no celular"
-      [class.theme-player]="areaKind() === 'player'"
-      [class.theme-organizer]="areaKind() !== 'player'"
+      [class.theme-player]="!organizerTheme()"
+      [class.theme-organizer]="organizerTheme()"
       [class.inferior--admin]="areaKind() === 'admin'"
     >
       @if (organizing()) {
@@ -308,8 +308,8 @@
       #mais
       id="folha-mais"
       class="folha"
-      [class.theme-player]="areaKind() === 'player'"
-      [class.theme-organizer]="areaKind() !== 'player'"
+      [class.theme-player]="!organizerTheme()"
+      [class.theme-organizer]="organizerTheme()"
       [class.folha--admin]="areaKind() === 'admin'"
       aria-labelledby="folha-mais-titulo"
       (close)="moreOpen.set(false)"

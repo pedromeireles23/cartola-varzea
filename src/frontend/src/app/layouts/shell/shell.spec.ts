@@ -339,13 +339,14 @@ describe('Shell', () => {
     );
   });
 
-  it('quem ainda não organiza continua na casca do jogo, mesmo pedindo acesso', async () => {
+  it('quem ainda não organiza fica com o menu do jogo, mas na casca clara da organização', async () => {
     organiza.set(false);
     const fixture = await abrir('/organizar/solicitar');
     const root = fixture.nativeElement as HTMLElement;
 
     expect(root.querySelector('.app')?.classList.contains('app--game')).toBe(true);
-    expect(root.querySelector('aside')?.classList.contains('theme-player')).toBe(true);
+    expect(root.querySelector('aside')?.classList.contains('theme-organizer')).toBe(true);
+    expect(root.querySelector('aside')?.classList.contains('theme-player')).toBe(false);
     expect(nav(fixture, 'Organização')).toBeNull();
     expect(links(nav(fixture, 'Navegação principal'))).toEqual(['Início', 'Campeonatos']);
   });
