@@ -16,11 +16,7 @@
   padding: var(--space-4);
   overflow: hidden;
   color: var(--semantic-text-strong);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--semantic-surface-raised) 88%, transparent),
-    var(--semantic-surface)
-  );
+  background-color: var(--semantic-surface);
   border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--radius-xl);
   box-shadow: var(--semantic-shadow-raised);
@@ -37,18 +33,11 @@
 }
 
 .podio__lugar--lider {
-  background:
-    radial-gradient(
-      circle at 100% 0,
-      color-mix(in srgb, var(--semantic-highlight) 18%, transparent),
-      transparent 12rem
-    ),
-    var(--semantic-surface-raised);
   border-color: color-mix(in srgb, var(--semantic-highlight) 54%, transparent);
 }
 
 .podio__lugar--lider::before {
-  background: linear-gradient(90deg, var(--semantic-highlight), var(--semantic-brand));
+  background-color: var(--semantic-highlight);
 }
 
 .podio__posicao {

@@ -1,6 +1,6 @@
 @use '../../../styles/patterns';
 
-// Capa da landing (V5): o título como placar e um estádio noturno desenhado em CSS e
+// Capa da landing (V5): o título como placar e um gramado em perspectiva desenhado em CSS e
 // SVG, sem fotografia nem ativo de terceiros (07 §4.1 e V7). O estádio é ilustração e
 // fica fora da árvore de acessibilidade; nada nele é dado do produto.
 
@@ -54,8 +54,9 @@
 }
 
 .capa__selo-aviso {
-  color: var(--semantic-on-warning);
-  background-color: var(--semantic-highlight);
+  color: var(--semantic-highlight);
+  background-color: var(--semantic-highlight-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--semantic-highlight) 32%, transparent);
 }
 
 .capa__titulo {
@@ -127,30 +128,10 @@
   min-width: 0;
   aspect-ratio: 5 / 4;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse 55% 40% at 12% -4%, rgb(255 244 214 / 24%), transparent 70%),
-    radial-gradient(ellipse 55% 40% at 88% -4%, rgb(255 244 214 / 24%), transparent 70%),
-    linear-gradient(
-      180deg,
-      var(--primitive-color-night-1000) 0 34%,
-      var(--primitive-color-night-900) 100%
-    );
+  background-color: var(--semantic-surface-alt);
   border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--card-radius);
   box-shadow: var(--semantic-shadow-raised);
-}
-
-// Arquibancada: a torcida é uma trama de pontos que some em direção ao gramado.
-.estadio::before {
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: -1;
-  height: 38%;
-  content: '';
-
-  @include patterns.arquibancada;
-
-  mask-image: linear-gradient(180deg, black 15%, transparent 100%);
 }
 
 // Placa de LED atrás do gol: a mensagem do estádio é a mesma do selo.
@@ -162,7 +143,7 @@
   display: flex;
   gap: 0.9em;
   padding: 0.55em 1.1em;
-  color: var(--primitive-color-amber-300);
+  color: var(--semantic-text-strong);
   font-family: var(--font-family-display);
   font-size: clamp(0.5rem, 2.4cqi, 0.875rem);
   font-weight: 800;
@@ -170,17 +151,14 @@
   letter-spacing: 0.14em;
   white-space: nowrap;
   text-transform: uppercase;
-  background:
-    radial-gradient(circle, rgb(255 255 255 / 6%) 0.8px, transparent 1px) 0 0 / 3px 3px,
-    var(--primitive-color-night-1000);
-  border: 1px solid rgb(255 255 255 / 12%);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
   border-radius: 3px;
-  box-shadow: 0 0 2.5em rgb(255 200 87 / 16%);
   transform: translateX(-50%);
 }
 
 .estadio__placa-destaque {
-  color: var(--primitive-color-coral-400);
+  color: var(--semantic-brand-strong);
 }
 
 // O gramado deita em perspectiva; as fichas desfazem a rotação para ficarem de pé.
@@ -194,7 +172,6 @@
   @include patterns.gramado;
 
   border-radius: 4px;
-  box-shadow: 0 0 6em rgb(39 97 70 / 45%);
   transform: translateX(-50%) perspective(800px) rotateX(50deg);
   transform-origin: 50% 100%;
   transform-style: preserve-3d;
@@ -221,10 +198,10 @@
   font-size: clamp(0.5625rem, 2.8cqi, 0.9375rem);
   font-weight: 800;
   letter-spacing: 0.03em;
-  background: linear-gradient(145deg, var(--semantic-brand), var(--semantic-brand-strong));
+  background-color: var(--semantic-action);
   border: 2px solid rgb(255 255 255 / 72%);
   border-radius: var(--radius-round);
-  box-shadow: 0 0.6em 1.2em rgb(0 0 0 / 40%);
+  box-shadow: 0 0.3em 0.6em rgb(0 0 0 / 20%);
   transform: translate(-50%, -100%) rotateX(-50deg);
   transform-origin: 50% 100%;
   animation: entra-ficha 420ms var(--motion-easing) calc(var(--ordem) * 60ms + 260ms) backwards;
@@ -243,7 +220,7 @@
   font-size: 0.8em;
   content: 'C';
   background-color: var(--semantic-highlight);
-  border: 2px solid var(--primitive-color-night-1000);
+  border: 2px solid var(--semantic-surface);
   border-radius: var(--radius-round);
 }
 

@@ -102,7 +102,10 @@ interface Grupo {
         }
 
         @if (pontuacao()!.played) {
-          <section class="painel painel--elevado placar-total" aria-labelledby="total-titulo">
+          <section
+            class="painel painel--elevado placar-total tema-destaque"
+            aria-labelledby="total-titulo"
+          >
             <div class="placar-total__principal">
               <p class="total">
                 <span id="total-titulo" class="total__rotulo">Sua pontuação na rodada</span>

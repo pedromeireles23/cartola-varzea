@@ -33,7 +33,7 @@
 .progresso__preenchido {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--semantic-brand-strong), var(--semantic-brand));
+  background-color: var(--semantic-brand-strong);
   border-radius: inherit;
   transition: width var(--motion-panel) var(--motion-easing);
 }

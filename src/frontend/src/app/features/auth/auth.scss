@@ -1,4 +1,4 @@
-// Entrar, criar conta, recuperar senha e confirmar e-mail (V5): a mesma noite de jogo da
+// Entrar, criar conta, recuperar senha e confirmar e-mail (V5): o mesmo tema de jogo da
 // landing, com o formulário no centro e nada disputando com ele.
 :host {
   display: grid;
@@ -59,14 +59,8 @@ form {
   gap: var(--space-3);
   overflow: hidden;
   padding: var(--space-5);
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      color-mix(in srgb, var(--semantic-brand) 16%, transparent),
-      transparent 16rem
-    ),
-    linear-gradient(160deg, var(--semantic-surface-raised), var(--semantic-surface) 70%);
-  border: 1px solid color-mix(in srgb, var(--semantic-brand) 34%, var(--semantic-border-subtle));
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--card-radius);
 }
 

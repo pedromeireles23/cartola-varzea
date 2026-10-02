@@ -1,9 +1,8 @@
 @use '../../../styles/actions';
-@use '../../../styles/patterns';
 
 // O cartaz do campeonato em destaque: placar e ranking com a escala esportiva, numa
-// superfície elevada da noite de jogo. O âmbar marca o que é resultado; o coral fica
-// para a ação, como no resto do jogo.
+// superfície lisa. O âmbar marca o que é resultado; o laranja fica para a ação, como
+// no resto do jogo.
 :host {
   display: block;
   min-width: 0;
@@ -15,35 +14,10 @@
   gap: var(--space-6);
   overflow: hidden;
   padding: clamp(var(--space-5), 4vw, var(--space-8));
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      color-mix(in srgb, var(--semantic-highlight) 12%, transparent),
-      transparent 26rem
-    ),
-    linear-gradient(160deg, var(--semantic-surface-raised), var(--semantic-surface) 62%);
-  border: 1px solid color-mix(in srgb, var(--semantic-highlight) 28%, var(--semantic-border-subtle));
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--card-radius);
   box-shadow: var(--semantic-shadow-raised);
-}
-
-// Recorte diagonal de faixa de torcida no canto: só textura, atrás do conteúdo.
-.cartaz::before {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: min(60%, 22rem);
-  height: 9rem;
-  pointer-events: none;
-  content: '';
-
-  @include patterns.faixa;
-
-  mask-image: linear-gradient(225deg, black, transparent 70%);
-}
-
-.cartaz > * {
-  position: relative;
 }
 
 // ------------------------------------------------------------ topo

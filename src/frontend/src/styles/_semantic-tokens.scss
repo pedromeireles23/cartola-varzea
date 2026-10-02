@@ -175,8 +175,9 @@
   --semantic-shell-text: var(--primitive-color-neutral-300);
   --semantic-shell-text-muted: #aaa99f;
 
-  // Campo
+  // Campo. O gramado é escuro em qualquer tema, então o texto sobre ele é sempre claro.
   --semantic-pitch: var(--primitive-color-pitch-700);
+  --semantic-on-pitch: var(--primitive-color-neutral-0);
   --semantic-pitch-stripe: var(--primitive-color-pitch-800);
   --semantic-pitch-line: var(--primitive-color-pitch-line);
 
@@ -225,20 +226,22 @@
   --semantic-motion-live-iterations: var(--primitive-motion-live-iterations);
 }
 
-// Tema principal do participante: alto contraste e profundidade de uma partida noturna.
+// Tema do participante: grafite e laranja. Superfícies lisas em cinza neutro, sem textura
+// nem degradê, e o laranja onde há ação, destaque ou resultado (2026-10-02, no lugar da
+// noite azul-marinho da V1).
 .theme-player {
   color-scheme: dark;
 
-  --semantic-canvas: var(--primitive-color-night-950);
-  --semantic-surface: var(--primitive-color-night-900);
-  --semantic-surface-alt: var(--primitive-color-night-800);
-  --semantic-surface-raised: var(--primitive-color-night-700);
-  --semantic-surface-inset: var(--primitive-color-night-1000);
-  --semantic-surface-hover: var(--primitive-color-night-700);
-  --semantic-text-strong: var(--primitive-color-night-50);
-  --semantic-text: var(--primitive-color-night-100);
-  --semantic-text-muted: var(--primitive-color-night-200);
-  --semantic-text-inverse: var(--primitive-color-night-1000);
+  --semantic-canvas: var(--primitive-color-graphite-950);
+  --semantic-surface: var(--primitive-color-graphite-900);
+  --semantic-surface-alt: var(--primitive-color-graphite-800);
+  --semantic-surface-raised: var(--primitive-color-graphite-800);
+  --semantic-surface-inset: var(--primitive-color-graphite-1000);
+  --semantic-surface-hover: var(--primitive-color-graphite-700);
+  --semantic-text-strong: var(--primitive-color-graphite-50);
+  --semantic-text: var(--primitive-color-graphite-100);
+  --semantic-text-muted: var(--primitive-color-graphite-200);
+  --semantic-text-inverse: var(--primitive-color-graphite-1000);
 
   --semantic-brand-subtle: var(--primitive-color-coral-950);
   --semantic-brand-soft: var(--primitive-color-coral-900);
@@ -248,61 +251,128 @@
   --semantic-action: var(--primitive-color-coral-500);
   --semantic-action-hover: var(--primitive-color-coral-400);
   --semantic-action-active: var(--primitive-color-coral-600);
-  --semantic-on-action: #101722;
+  --semantic-on-action: var(--primitive-color-graphite-1000);
   --semantic-action-surface: var(--primitive-color-coral-950);
   --semantic-on-action-surface: var(--primitive-color-coral-400);
 
   --semantic-border-subtle: var(--primitive-color-white-a12);
-  --semantic-border-control: var(--primitive-color-night-300);
-  --semantic-border-strong: var(--primitive-color-night-200);
+  --semantic-border-control: var(--primitive-color-graphite-400);
+  --semantic-border-strong: var(--primitive-color-graphite-200);
   --semantic-focus-ring: var(--primitive-color-amber-500);
-  --semantic-focus-ring-offset: var(--primitive-color-night-1000);
+  --semantic-focus-ring-offset: var(--primitive-color-graphite-1000);
 
-  --semantic-secondary-background: var(--primitive-color-night-700);
-  --semantic-secondary-hover: var(--primitive-color-night-600);
-  --semantic-secondary-foreground: var(--primitive-color-night-50);
+  --semantic-secondary-background: var(--primitive-color-graphite-700);
+  --semantic-secondary-hover: var(--primitive-color-graphite-600);
+  --semantic-secondary-foreground: var(--primitive-color-graphite-50);
   --semantic-ghost-hover: var(--primitive-color-white-a08);
-  --semantic-disabled-background: var(--primitive-color-night-800);
-  --semantic-disabled-foreground: var(--primitive-color-night-200);
-  --semantic-disabled-border: var(--primitive-color-night-600);
-  --semantic-backdrop: var(--primitive-color-night-a72);
+  --semantic-disabled-background: var(--primitive-color-graphite-800);
+  --semantic-disabled-foreground: var(--primitive-color-graphite-200);
+  --semantic-disabled-border: var(--primitive-color-graphite-600);
+  --semantic-backdrop: rgb(10 10 12 / 72%);
 
   --semantic-success: var(--primitive-color-green-300);
   --semantic-success-surface: var(--primitive-color-green-950);
-  --semantic-on-success: #101722;
+  --semantic-on-success: var(--primitive-color-graphite-1000);
   --semantic-warning: var(--primitive-color-amber-500);
   --semantic-warning-surface: var(--primitive-color-amber-950);
-  --semantic-on-warning: #101722;
+  --semantic-on-warning: var(--primitive-color-graphite-1000);
   --semantic-danger: var(--primitive-color-red-500);
   --semantic-danger-hover: var(--primitive-color-red-600);
   --semantic-danger-surface: var(--primitive-color-red-950);
-  --semantic-on-danger: #101722;
+  --semantic-on-danger: var(--primitive-color-graphite-1000);
   --semantic-info: var(--primitive-color-cyan-300);
   --semantic-info-surface: var(--primitive-color-cyan-950);
-  --semantic-on-info: #101722;
+  --semantic-on-info: var(--primitive-color-graphite-1000);
   --semantic-live: var(--primitive-color-red-500);
   --semantic-live-surface: var(--primitive-color-red-950);
-  --semantic-on-live: #101722;
-  --semantic-highlight: var(--primitive-color-amber-500);
-  --semantic-highlight-surface: var(--primitive-color-amber-950);
+  --semantic-on-live: var(--primitive-color-graphite-1000);
+  --semantic-highlight: var(--primitive-color-coral-400);
+  --semantic-highlight-surface: var(--primitive-color-coral-950);
 
-  --semantic-shell-background: var(--primitive-color-night-1000);
-  --semantic-shell-hover: var(--primitive-color-night-800);
+  --semantic-shell-background: var(--primitive-color-graphite-900);
+  --semantic-shell-hover: var(--primitive-color-graphite-700);
   --semantic-shell-border: var(--primitive-color-white-a12);
-  --semantic-shell-text: var(--primitive-color-night-100);
-  --semantic-shell-text-muted: var(--primitive-color-night-200);
+  --semantic-shell-text: var(--primitive-color-graphite-100);
+  --semantic-shell-text-muted: var(--primitive-color-graphite-200);
 
   --semantic-pitch: var(--primitive-color-pitch-night-700);
   --semantic-pitch-stripe: var(--primitive-color-pitch-night-800);
   --semantic-pitch-line: var(--primitive-color-pitch-line);
 
   --semantic-shadow-overlay: var(--primitive-shadow-raised-dark);
-  --semantic-shadow-raised: var(--primitive-shadow-raised-dark);
-  --semantic-shadow-highlight: var(--primitive-shadow-highlight-dark);
+  --semantic-shadow-raised: var(--primitive-shadow-raised-graphite);
+  --semantic-shadow-highlight: var(--primitive-shadow-raised-graphite);
 
   --semantic-font-family-heading: var(--primitive-font-family-display);
   --semantic-font-family-display: var(--primitive-font-family-display);
   --semantic-line-height-heading: var(--primitive-line-height-tight);
+}
+
+// Destaque: o cartão protagonista da tela, com fundo laranja e texto branco. É um tema
+// aninhado, como os de cima: redefine os tokens dentro do cartão, e o que já consome token
+// se adapta sem regra própria. O laranja é o mais vivo que segura texto branco acima de
+// 4,5:1 (4,77:1). O que fica por cima dele é branco ou um véu escuro, nunca outra cor:
+// o estado se lê pelo texto, como em todo o produto.
+.tema-destaque {
+  color-scheme: dark;
+  // O texto que não declara cor herda do cartão, não da tela em volta.
+  color: var(--semantic-text-strong);
+
+  --semantic-canvas: var(--primitive-color-coral-700);
+  --semantic-surface: var(--primitive-color-coral-700);
+  --semantic-surface-alt: rgb(0 0 0 / 14%);
+  --semantic-surface-raised: var(--primitive-color-coral-700);
+  --semantic-surface-inset: rgb(0 0 0 / 18%);
+  --semantic-surface-hover: rgb(0 0 0 / 10%);
+  --semantic-text-strong: var(--primitive-color-neutral-0);
+  --semantic-text: var(--primitive-color-neutral-0);
+  --semantic-text-muted: var(--primitive-color-neutral-0);
+  --semantic-text-inverse: var(--primitive-color-neutral-900);
+
+  --semantic-brand-subtle: rgb(0 0 0 / 14%);
+  --semantic-brand-soft: rgb(0 0 0 / 20%);
+  --semantic-brand: var(--primitive-color-neutral-0);
+  --semantic-brand-strong: var(--primitive-color-neutral-0);
+  --semantic-brand-emphasis: var(--primitive-color-neutral-0);
+  --semantic-action: var(--primitive-color-neutral-0);
+  --semantic-action-hover: var(--primitive-color-orange-50);
+  --semantic-action-active: var(--primitive-color-orange-100);
+  --semantic-on-action: var(--primitive-color-neutral-900);
+  --semantic-action-surface: rgb(0 0 0 / 14%);
+  --semantic-on-action-surface: var(--primitive-color-neutral-0);
+
+  --semantic-border-subtle: rgb(255 255 255 / 28%);
+  --semantic-border-control: rgb(255 255 255 / 80%);
+  --semantic-border-strong: var(--primitive-color-neutral-0);
+  --semantic-focus-ring: var(--primitive-color-neutral-900);
+  --semantic-focus-ring-offset: var(--primitive-color-coral-700);
+
+  --semantic-secondary-background: transparent;
+  --semantic-secondary-hover: rgb(255 255 255 / 12%);
+  --semantic-secondary-foreground: var(--primitive-color-neutral-0);
+  --semantic-ghost-hover: rgb(255 255 255 / 12%);
+  --semantic-disabled-background: rgb(0 0 0 / 14%);
+  --semantic-disabled-foreground: var(--primitive-color-neutral-0);
+  --semantic-disabled-border: rgb(255 255 255 / 40%);
+
+  --semantic-success: var(--primitive-color-neutral-0);
+  --semantic-success-surface: rgb(0 0 0 / 14%);
+  --semantic-on-success: var(--primitive-color-neutral-900);
+  --semantic-warning: var(--primitive-color-neutral-0);
+  --semantic-warning-surface: rgb(0 0 0 / 14%);
+  --semantic-on-warning: var(--primitive-color-neutral-900);
+  --semantic-danger: var(--primitive-color-neutral-0);
+  --semantic-danger-surface: rgb(0 0 0 / 14%);
+  --semantic-on-danger: var(--primitive-color-neutral-900);
+  --semantic-info: var(--primitive-color-neutral-0);
+  --semantic-info-surface: rgb(0 0 0 / 14%);
+  --semantic-on-info: var(--primitive-color-neutral-900);
+  --semantic-live: var(--primitive-color-neutral-0);
+  --semantic-live-surface: rgb(0 0 0 / 14%);
+  --semantic-on-live: var(--primitive-color-neutral-900);
+  --semantic-danger-hover: var(--primitive-color-orange-50);
+  --semantic-highlight: var(--primitive-color-neutral-0);
+  --semantic-highlight-surface: rgb(0 0 0 / 14%);
 }
 
 // Central da competicao: mesma marca, mas com superficies claras, frias e calmas.
@@ -365,7 +435,8 @@
 // seletores preserva essa resolucao e evita emitir o mesmo bloco tres vezes.
 :root,
 .theme-player,
-.theme-organizer {
+.theme-organizer,
+.tema-destaque {
   @include legacy-token-aliases;
 }
 

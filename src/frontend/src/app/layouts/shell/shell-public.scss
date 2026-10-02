@@ -1,6 +1,6 @@
-// Casca pública (V5): quem chega sem conta entra pela mesma noite de jogo da área do
-// participante. O cabeçalho já é escuro em toda página pública; o canvas escuro segue só
-// as telas migradas, que declaram `theme-player` no próprio host, como na casca
+// Casca pública (V5): quem chega sem conta entra pelo mesmo tema de jogo da área do
+// participante. O cabeçalho usa o tema em toda página pública; o canvas segue só as
+// telas migradas, que declaram `theme-player` no próprio host, como na casca
 // autenticada. A Classificação, migrada na V4, também abre aqui para quem não tem conta.
 
 .publico-pagina {
@@ -10,27 +10,15 @@
 }
 
 .publico-pagina:has(.conteudo > .theme-player) {
-  --shell-footer-text: var(--primitive-color-night-200);
-  --shell-footer-link: var(--primitive-color-night-100);
+  --shell-footer-text: var(--primitive-color-graphite-200);
+  --shell-footer-link: var(--primitive-color-graphite-100);
 
-  background:
-    radial-gradient(
-      circle at 72% 4%,
-      color-mix(in srgb, var(--primitive-color-coral-400) 9%, transparent),
-      transparent 34rem
-    ),
-    linear-gradient(160deg, var(--primitive-color-night-950), var(--primitive-color-night-1000));
+  background-color: var(--primitive-color-graphite-950);
 }
 
 .publico {
   color: var(--semantic-text-strong);
-  background:
-    radial-gradient(
-      circle at 30% -120%,
-      color-mix(in srgb, var(--semantic-brand) 16%, transparent),
-      transparent 55%
-    ),
-    var(--semantic-shell-background);
+  background-color: var(--semantic-shell-background);
   border-bottom: 1px solid var(--semantic-border-subtle);
 }
 

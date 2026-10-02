@@ -65,7 +65,7 @@ export type StandingsTab = 'geral' | 'ligas' | 'liga';
 
     .abas__item[aria-current] {
       color: var(--semantic-on-action);
-      background-color: var(--semantic-brand);
+      background-color: var(--semantic-action);
     }
   `,
 })

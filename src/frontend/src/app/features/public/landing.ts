@@ -33,7 +33,7 @@ interface Ficha {
 }
 
 /**
- * Porta de entrada do produto (02 §9, `/`), na direção Noite de jogo (V5).
+ * Porta de entrada do produto (02 §9, `/`), no tema de jogo (V5).
  *
  * Quem chega aqui não sabe o que é o projeto, então a página responde, nesta ordem: o
  * que dá para fazer, onde isso já está acontecendo e como funciona. A frase conceitual
@@ -98,7 +98,7 @@ interface Ficha {
       </div>
 
       <!--
-        O estádio é ilustração: um gramado noturno em perspectiva, com uma escalação de
+        O estádio é ilustração: um gramado em perspectiva, com uma escalação de
         Fut7 e a placa de LED do fundo. Nada nele é dado, então ele fica fora da árvore
         de acessibilidade; o aviso da placa já está, em texto, no selo acima do título.
       -->

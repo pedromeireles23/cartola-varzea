@@ -1,5 +1,5 @@
-// A casca muda de atmosfera sem contaminar as telas internas: jogo escuro, operacao
-// clara e administracao identificada em azul. O conteudo segue no tema padrao ate V3.
+// A casca muda de tema sem contaminar as telas internas: jogo, operacao e administracao
+// identificada em azul. Superficies lisas: sem textura nem degrade atras da navegacao.
 
 .skip {
   position: absolute;
@@ -41,10 +41,7 @@
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.03em;
-  background:
-    linear-gradient(155deg, transparent 0 68%, rgb(255 255 255 / 18%) 68% 72%, transparent 72%),
-    var(--semantic-brand);
-  filter: drop-shadow(0 5px 10px rgb(0 0 0 / 18%));
+  background-color: var(--semantic-action);
   clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
 }
 
@@ -83,29 +80,24 @@
   min-height: 100vh;
 }
 
-// O canvas noturno acompanha a tela aberta: toda tela migrada declara `theme-player` no
+// O canvas do jogo acompanha a tela aberta: toda tela migrada declara `theme-player` no
 // próprio host, e a casca só reage a isso. A conta nova e as telas ainda não migradas
 // continuam operacionais. Com uma lista de seletores, a tela migrada que ficasse de fora
-// dela teria texto claro sobre fundo claro.
+// dela teria o canvas errado. A casca fica fora do host, então lê a primitiva da paleta.
 .principal:has(.conteudo > .theme-player) {
-  --shell-footer-text: var(--primitive-color-night-200);
-  --shell-footer-link: var(--primitive-color-night-100);
+  --shell-footer-text: var(--primitive-color-graphite-200);
+  --shell-footer-link: var(--primitive-color-graphite-100);
 
-  background:
-    radial-gradient(
-      circle at 68% 8%,
-      color-mix(in srgb, var(--primitive-color-coral-400) 8%, transparent),
-      transparent 30rem
-    ),
-    linear-gradient(145deg, var(--primitive-color-night-950), var(--primitive-color-night-1000));
+  background-color: var(--primitive-color-graphite-950);
 }
 
+// Abaixo da lateral, a casca repete a cor dela.
 .app:has(.conteudo > .theme-player) {
-  background-color: var(--primitive-color-night-1000);
+  background-color: var(--primitive-color-graphite-900);
 }
 
 // A central da competição (V6) também declara o tema no host: o canvas frio da
-// organização acompanha a tela, e a área de jogo continua noturna.
+// organização acompanha a tela, e a área de jogo segue a paleta dela.
 .principal:has(.conteudo > .theme-organizer) {
   background-color: var(--primitive-color-cool-100);
 }
@@ -129,17 +121,6 @@
   background-color: var(--semantic-surface);
   border-bottom: 1px solid var(--semantic-border-subtle);
   --shell-accent: var(--semantic-brand);
-}
-
-.topo.theme-player {
-  background:
-    radial-gradient(
-      circle at 42% -80%,
-      color-mix(in srgb, var(--semantic-brand) 18%, transparent),
-      transparent 52%
-    ),
-    color-mix(in srgb, var(--semantic-shell-background) 94%, transparent);
-  backdrop-filter: blur(14px);
 }
 
 .topo.theme-organizer {

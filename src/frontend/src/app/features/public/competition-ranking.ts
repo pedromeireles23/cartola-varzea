@@ -108,7 +108,7 @@ function numero(valor: number): string {
 
         @if (minhaLinha(); as eu) {
           @if (tabela.rounds > 0) {
-            <section class="resumo" aria-label="Sua posição">
+            <section class="resumo tema-destaque" aria-label="Sua posição">
               <div class="resumo__item">
                 <p class="resumo__rotulo">Sua posição</p>
                 <p class="resumo__valor num">

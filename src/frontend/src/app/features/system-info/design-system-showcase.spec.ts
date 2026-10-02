@@ -20,7 +20,7 @@ describe('DesignSystemShowcasePage', () => {
 
     expect(player).not.toBeNull();
     expect(organizer).not.toBeNull();
-    expect(player?.textContent).toContain('Noite de jogo');
+    expect(player?.textContent).toContain('Grafite e laranja');
     expect(organizer?.textContent).toContain('Revisão das súmulas');
   });
 

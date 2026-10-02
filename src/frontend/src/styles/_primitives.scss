@@ -27,17 +27,17 @@
   --primitive-color-cool-700: #3b4a60;
   --primitive-color-cool-900: #172033;
 
-  // Noite de jogo
-  --primitive-color-night-1000: #050b14;
-  --primitive-color-night-950: #08111f;
-  --primitive-color-night-900: #101c2f;
-  --primitive-color-night-800: #17263e;
-  --primitive-color-night-700: #1d3150;
-  --primitive-color-night-600: #2b4268;
-  --primitive-color-night-300: #7789a3;
-  --primitive-color-night-200: #9eabc0;
-  --primitive-color-night-100: #dce3ed;
-  --primitive-color-night-50: #f7f8fb;
+  // Grafite: neutros escuros sem o matiz azul da noite
+  --primitive-color-graphite-1000: #141416;
+  --primitive-color-graphite-950: #1b1b1e;
+  --primitive-color-graphite-900: #232327;
+  --primitive-color-graphite-800: #2b2b30;
+  --primitive-color-graphite-700: #34343a;
+  --primitive-color-graphite-600: #3f3f46;
+  --primitive-color-graphite-400: #7a7a83;
+  --primitive-color-graphite-200: #a9a9b0;
+  --primitive-color-graphite-100: #e4e4e7;
+  --primitive-color-graphite-50: #f6f6f7;
 
   // Marca operacional legada
   --primitive-color-orange-50: #fff0e7;
@@ -50,6 +50,7 @@
   // Marca do jogo e destaque esportivo
   --primitive-color-coral-950: #3a2521;
   --primitive-color-coral-900: #573023;
+  --primitive-color-coral-700: #cc4411;
   --primitive-color-coral-600: #e95727;
   --primitive-color-coral-500: #ff6b35;
   --primitive-color-coral-400: #ff865f;
@@ -89,7 +90,6 @@
   --primitive-color-white-a08: rgb(255 255 255 / 8%);
   --primitive-color-white-a12: rgb(224 234 248 / 12%);
   --primitive-color-white-a18: rgb(224 234 248 / 18%);
-  --primitive-color-night-a72: rgb(5 11 20 / 72%);
   --primitive-color-neutral-a08: rgb(25 25 22 / 8%);
   --primitive-color-neutral-a16: rgb(25 25 22 / 16%);
 
@@ -157,6 +157,7 @@
   --primitive-shadow-overlay:
     0 12px 32px var(--primitive-color-neutral-a16), 0 2px 6px var(--primitive-color-neutral-a08);
   --primitive-shadow-raised-light: 0 12px 28px rgb(23 32 51 / 10%), 0 2px 8px rgb(23 32 51 / 6%);
+  --primitive-shadow-raised-graphite: 0 1px 2px rgb(0 0 0 / 32%);
   --primitive-shadow-raised-dark: 0 16px 36px rgb(0 0 0 / 34%), 0 3px 10px rgb(0 0 0 / 22%);
   --primitive-shadow-highlight-dark: 0 0 0 1px rgb(255 107 53 / 22%), 0 18px 42px rgb(0 0 0 / 36%);
 

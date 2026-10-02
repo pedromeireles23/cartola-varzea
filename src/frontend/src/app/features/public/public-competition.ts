@@ -72,7 +72,7 @@ type Estado =
         </app-card>
       }
       @case ('pronto') {
-        <header class="capa-campeonato">
+        <header class="capa-campeonato tema-destaque">
           <p class="capa-campeonato__kicker">
             {{ modalidade() }} · Temporada {{ dados()!.season }}
           </p>

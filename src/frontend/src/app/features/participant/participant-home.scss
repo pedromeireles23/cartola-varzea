@@ -1,5 +1,4 @@
 @use '../../../styles/actions';
-@use '../../../styles/patterns';
 
 // V3 — o Início passa a ser o painel de uma rodada, não uma coleção de cartões neutros.
 :host {
@@ -36,32 +35,10 @@
   align-items: stretch;
   overflow: hidden;
   padding: clamp(var(--space-5), 4vw, var(--space-8));
-  background:
-    radial-gradient(
-      circle at 12% 12%,
-      color-mix(in srgb, var(--semantic-brand) 18%, transparent),
-      transparent 22rem
-    ),
-    linear-gradient(145deg, var(--semantic-surface-raised), var(--semantic-surface));
-  border: 1px solid color-mix(in srgb, var(--semantic-brand) 36%, var(--semantic-border-subtle));
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--radius-xl);
   box-shadow: var(--semantic-shadow-raised);
-}
-
-.rodada-hero::after {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: '';
-  @include patterns.prancheta;
-
-  mask-image: linear-gradient(100deg, transparent 10%, black 100%);
-}
-
-.rodada-hero__copy,
-.rodada-hero__relogio {
-  position: relative;
-  z-index: 1;
 }
 
 .rodada-hero__copy {
@@ -215,7 +192,7 @@
 .progresso__barra span {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--semantic-brand), var(--semantic-highlight));
+  background-color: var(--semantic-brand);
   border-radius: inherit;
 }
 

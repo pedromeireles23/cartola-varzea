@@ -33,7 +33,7 @@ import { ApiFailure } from '../../core/api/problem-details';
           variant="default"
           [headingLevel]="1"
           kicker="Laboratório V1"
-          heading="Noite de jogo"
+          heading="Grafite e laranja"
           subtitle="Componentes do fantasy em um contexto esportivo e sem mecânicas de aposta."
         >
           <app-badge tone="info">Tema jogador</app-badge>

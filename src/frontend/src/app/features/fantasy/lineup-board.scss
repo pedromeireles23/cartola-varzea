@@ -119,7 +119,7 @@
 }
 
 // No gramado o anel laranja some no verde; o foco é branco, 7:1 sobre ele. Branco fixo,
-// e não a superfície do tema: no tema noturno a superfície é escura, e o anel caía para
+// e não a superfície do tema: no tema de jogo a superfície é escura, e o anel caía para
 // 2,35:1 sobre o gramado (auditoria da V8).
 .gramado .ficha:focus-visible {
   outline-color: var(--primitive-color-neutral-0);
@@ -143,7 +143,7 @@
 
 .gramado .ficha:not(.ficha--vazia) .ficha__disco {
   color: var(--semantic-on-action);
-  background: linear-gradient(145deg, var(--semantic-brand), var(--semantic-brand-strong));
+  background-color: var(--semantic-action);
   border-color: color-mix(in srgb, var(--semantic-text-strong) 56%, transparent);
   box-shadow: 0 8px 16px rgb(0 0 0 / 20%);
 }
@@ -220,7 +220,7 @@ button.ficha--selecionada:hover .ficha__disco {
 
 // Vaga vazia: contorno tracejado e o sinal de mais; a sigla diz a posição.
 .ficha--vazia .ficha__disco {
-  color: var(--color-surface);
+  color: var(--semantic-on-pitch);
   background-color: rgb(255 255 255 / 8%);
   border: 2px dashed rgb(255 255 255 / 75%);
 }
@@ -230,7 +230,7 @@ button.ficha--vazia:hover .ficha__disco {
 }
 
 .ficha--vazia .ficha__nome {
-  color: var(--color-surface);
+  color: var(--semantic-on-pitch);
   letter-spacing: 0.04em;
   background-color: rgb(25 25 22 / 45%);
 }

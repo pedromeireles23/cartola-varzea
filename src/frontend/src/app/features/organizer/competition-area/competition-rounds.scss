@@ -63,7 +63,7 @@
   display: grid;
   gap: var(--space-3);
   padding: var(--space-5);
-  background: linear-gradient(160deg, var(--semantic-surface), var(--semantic-surface-alt));
+  background-color: var(--semantic-surface);
   border: 1px solid var(--semantic-border-subtle);
   border-left: 4px solid var(--semantic-brand-strong);
   border-radius: var(--card-radius);

@@ -1,6 +1,6 @@
 @use '../../../styles/actions';
 
-// Porta de entrada do produto na direção Noite de jogo (V5). A capa e o estádio ficam em
+// Porta de entrada do produto, no tema de jogo (V5). A capa e o estádio ficam em
 // landing-hero.scss; aqui moram a vitrine, o passo a passo e o movimento comum.
 :host {
   display: flex;
@@ -73,7 +73,7 @@
   align-content: start;
   overflow: hidden;
   padding: var(--space-6);
-  background: linear-gradient(160deg, var(--semantic-surface-alt), var(--semantic-surface) 70%);
+  background-color: var(--semantic-surface);
   border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--card-radius);
   transition: border-color var(--motion-feedback) var(--motion-easing);

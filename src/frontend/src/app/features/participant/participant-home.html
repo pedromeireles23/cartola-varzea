@@ -31,7 +31,7 @@
 
       <!-- 1. A rodada como protagonista: prazo, progresso e próxima ação na mesma dobra. -->
       @if (rodada.isOpen && fechamento()) {
-        <section class="rodada-hero" aria-labelledby="prazo-titulo">
+        <section class="rodada-hero tema-destaque" aria-labelledby="prazo-titulo">
           <div class="rodada-hero__copy">
             <p class="rodada-hero__eyebrow">Próxima rodada</p>
             <h2 id="prazo-titulo" class="rodada-hero__titulo">
@@ -66,7 +66,10 @@
           </div>
         </section>
       } @else {
-        <section class="rodada-hero rodada-hero--fechado" aria-labelledby="prazo-titulo">
+        <section
+          class="rodada-hero rodada-hero--fechado tema-destaque"
+          aria-labelledby="prazo-titulo"
+        >
           <div class="rodada-hero__copy">
             <p class="rodada-hero__eyebrow">{{ rodada.roundName || 'Rodada atual' }}</p>
             <h2 id="prazo-titulo" class="rodada-hero__titulo">Mercado fechado</h2>

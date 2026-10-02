@@ -11,7 +11,7 @@
 .confronto {
   min-width: 0;
   padding: var(--space-4);
-  background: linear-gradient(145deg, var(--semantic-surface-alt), var(--semantic-surface));
+  background-color: var(--semantic-surface);
   border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--radius-lg);
 }
@@ -55,7 +55,7 @@
   color: var(--semantic-on-action);
   font-family: var(--font-family-display);
   font-weight: 800;
-  background-color: var(--semantic-brand);
+  background-color: var(--semantic-action);
   clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
 }
 

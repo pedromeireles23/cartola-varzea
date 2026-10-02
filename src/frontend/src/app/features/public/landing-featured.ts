@@ -42,7 +42,7 @@ type Carga<T> =
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Loading, RouterLink],
   template: `
-    <article class="cartaz" aria-labelledby="cartaz-titulo">
+    <article class="cartaz tema-destaque" aria-labelledby="cartaz-titulo">
       <header class="cartaz__topo">
         <p class="cartaz__eyebrow">Em destaque</p>
         <h3 id="cartaz-titulo" class="cartaz__titulo">

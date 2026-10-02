@@ -15,12 +15,16 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  transition: border-color var(--motion-feedback) var(--motion-easing);
+  transition:
+    border-color var(--motion-feedback) var(--motion-easing),
+    background-color var(--motion-feedback) var(--motion-easing);
 }
 
-// A borda escurece sob o cursor; sombra fica para o que se sobrepõe (06 §9.2).
+// Sob o cursor o cartão acende no laranja da marca: borda e um fundo bem claro. Sombra
+// fica para o que se sobrepõe (06 §9.2).
 .cartao-link:hover {
-  border-color: var(--color-border-strong);
+  background-color: var(--semantic-action-surface);
+  border-color: var(--semantic-brand);
 }
 
 // Quem chega pelo teclado precisa ver o cartao todo reagir, nao so o texto do link.
@@ -59,7 +63,7 @@
   position: absolute;
   top: 50%;
   right: var(--space-4);
-  color: var(--color-ink-500);
+  color: var(--semantic-brand);
   transform: translateY(-50%);
   transition:
     color var(--motion-feedback) var(--motion-easing),
@@ -67,7 +71,7 @@
 }
 
 .cartao-link:hover .cartao-link__seta {
-  color: var(--color-brand-700);
+  color: var(--semantic-brand-strong);
   transform: translateY(-50%) translateX(3px);
 }
 

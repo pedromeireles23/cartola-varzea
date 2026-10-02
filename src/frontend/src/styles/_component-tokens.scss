@@ -142,11 +142,13 @@
 
 :root,
 .theme-player,
-.theme-organizer {
+.theme-organizer,
+.tema-destaque {
   @include component-token-aliases;
 }
 
-.theme-player {
+.theme-player,
+.tema-destaque {
   --card-radius: var(--primitive-radius-xl);
   // O título do cartão fala a língua do jogo, como o `.painel__titulo` da V3/V4.
   --card-heading-size: 1.375rem;

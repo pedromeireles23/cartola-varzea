@@ -23,10 +23,6 @@
   isolation: isolate;
 }
 
-.theme-player {
-  box-shadow: inset 0 1px 0 var(--primitive-color-white-a08);
-}
-
 .theme-organizer {
   border-radius: var(--primitive-radius-lg);
 }
@@ -41,12 +37,6 @@
   background: var(--semantic-surface);
   border: 1px solid var(--semantic-border-subtle);
   border-radius: var(--radius-lg);
-}
-
-.showcase__page-header--game {
-  background:
-    radial-gradient(circle at 90% 0%, var(--semantic-brand-soft), transparent 42%),
-    var(--semantic-surface);
 }
 
 .showcase__page-header--operational {

@@ -1,4 +1,4 @@
-// Calendário e súmula pública, na linguagem de placar da Noite de jogo (V5).
+// Calendário e súmula pública, na linguagem de placar do tema de jogo (V5).
 
 .rodada__estado {
   display: flex;
@@ -123,7 +123,7 @@
   place-items: center;
   color: var(--semantic-on-action);
   font-size: 0.8em;
-  background-color: var(--semantic-brand);
+  background-color: var(--semantic-action);
   clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
 }
 

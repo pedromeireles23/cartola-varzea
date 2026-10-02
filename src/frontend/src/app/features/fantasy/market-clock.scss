@@ -5,13 +5,7 @@
   align-items: center;
   padding: var(--space-4) var(--space-5);
   color: var(--semantic-text-strong);
-  background:
-    radial-gradient(
-      circle at 100% 0,
-      color-mix(in srgb, var(--semantic-brand) 16%, transparent),
-      transparent 20rem
-    ),
-    var(--semantic-action-surface);
+  background-color: var(--semantic-action-surface);
   border: 1px solid color-mix(in srgb, var(--semantic-brand) 52%, transparent);
   border-radius: var(--radius-xl);
 }

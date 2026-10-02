@@ -17,29 +17,12 @@
   box-shadow: var(--semantic-shadow-raised);
 }
 
-.resumo::before {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 1;
-  height: 3px;
-  content: '';
-  background: linear-gradient(90deg, var(--semantic-brand), var(--semantic-highlight));
-}
-
 .resumo__item {
   display: grid;
   gap: var(--space-1);
   min-width: 0;
   padding: var(--space-5);
-  background:
-    radial-gradient(
-      circle at 100% 0,
-      color-mix(in srgb, var(--semantic-brand) 10%, transparent),
-      transparent 12rem
-    ),
-    var(--semantic-surface);
+  background-color: var(--semantic-surface);
 }
 
 .resumo__rotulo {
