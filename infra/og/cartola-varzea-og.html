@@ -1,6 +1,7 @@
 <!doctype html>
 <!--
-  Fonte da imagem de compartilhamento (Open Graph, 1200 x 630) da V5.
+  Fonte da imagem de compartilhamento (Open Graph, 1200 x 630) da V5, no grafite e laranja
+  do tema de jogo (2026-10-02): fundo liso, sem textura nem degradê.
 
   Só ativos próprios: as fontes são as mesmas auto-hospedadas do frontend, embutidas pelo
   gerador no lugar dos marcadores, e o estádio é o mesmo desenho em CSS e SVG da landing.
@@ -47,24 +48,9 @@
         height: 630px;
         overflow: hidden;
         padding: 56px 64px;
-        color: #f7f8fb;
+        color: #f6f6f7;
         font-family: 'Inter', sans-serif;
-        background:
-          radial-gradient(circle at 78% 10%, rgb(255 134 95 / 22%), transparent 420px),
-          radial-gradient(circle at 8% 100%, rgb(255 200 87 / 10%), transparent 380px),
-          linear-gradient(150deg, #08111f, #050b14);
-      }
-
-      /* Linhas de prancheta, só textura. */
-      .cartao::before {
-        position: absolute;
-        inset: 0;
-        content: '';
-        background-image:
-          linear-gradient(rgb(255 255 255 / 4%) 1px, transparent 1px),
-          linear-gradient(90deg, rgb(255 255 255 / 4%) 1px, transparent 1px);
-        background-size: 40px 40px;
-        mask-image: linear-gradient(110deg, transparent 20%, black 100%);
+        background: #1b1b1e;
       }
 
       .texto,
@@ -89,11 +75,11 @@
         width: 52px;
         height: 58px;
         place-items: center;
-        color: #101722;
+        color: #141416;
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 24px;
         font-weight: 800;
-        background: #ff865f;
+        background: #ff6b35;
         clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
       }
 
@@ -139,18 +125,19 @@
       }
 
       .selo__marca {
-        color: #dce3ed;
-        background: #17263e;
+        color: #e4e4e7;
+        background: #2b2b30;
         box-shadow: inset 0 0 0 1px rgb(255 255 255 / 12%);
       }
 
       .selo__aviso {
-        color: #101722;
-        background: #ffc857;
+        color: #ff865f;
+        background: #3a2521;
+        box-shadow: inset 0 0 0 1px rgb(255 134 95 / 32%);
       }
 
       .rodape {
-        color: #9eabc0;
+        color: #a9a9b0;
         font-size: 19px;
       }
 
@@ -159,23 +146,9 @@
         position: relative;
         height: 460px;
         overflow: hidden;
-        background:
-          radial-gradient(ellipse 55% 40% at 12% -4%, rgb(255 244 214 / 26%), transparent 70%),
-          radial-gradient(ellipse 55% 40% at 88% -4%, rgb(255 244 214 / 26%), transparent 70%),
-          linear-gradient(180deg, #050b14 0 34%, #101c2f 100%);
+        background: #2b2b30;
         border: 1px solid rgb(255 255 255 / 12%);
         border-radius: 18px;
-        box-shadow: 0 24px 48px rgb(0 0 0 / 45%);
-      }
-
-      .estadio::before {
-        position: absolute;
-        inset: 0 0 auto;
-        height: 36%;
-        content: '';
-        background-image: radial-gradient(circle, rgb(255 255 255 / 18%) 1.2px, transparent 1.7px);
-        background-size: 9px 9px;
-        mask-image: linear-gradient(180deg, black 15%, transparent 100%);
       }
 
       .placa {
@@ -186,22 +159,21 @@
         display: flex;
         gap: 10px;
         padding: 7px 12px;
-        color: #ffe09a;
+        color: #f6f6f7;
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 13px;
         font-weight: 800;
         letter-spacing: 0.14em;
         white-space: nowrap;
         text-transform: uppercase;
-        background: #050b14;
+        background: #232327;
         border: 1px solid rgb(255 255 255 / 12%);
         border-radius: 3px;
-        box-shadow: 0 0 28px rgb(255 200 87 / 18%);
         transform: translateX(-50%);
       }
 
       .placa__destaque {
-        color: #ff865f;
+        color: #ff6b35;
       }
 
       .gramado {
@@ -212,7 +184,6 @@
         aspect-ratio: 3 / 4;
         background: repeating-linear-gradient(180deg, #276146 0 12.5%, #22573f 12.5% 25%);
         border-radius: 4px;
-        box-shadow: 0 0 80px rgb(39 97 70 / 45%);
         transform: translateX(-50%) perspective(800px) rotateX(50deg);
         transform-origin: 50% 100%;
         transform-style: preserve-3d;
@@ -234,14 +205,14 @@
         width: 50px;
         aspect-ratio: 1;
         place-items: center;
-        color: #101722;
+        color: #141416;
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 15px;
         font-weight: 800;
-        background: linear-gradient(145deg, #ff865f, #ff6b35);
+        background: #ff6b35;
         border: 2px solid rgb(255 255 255 / 72%);
         border-radius: 50%;
-        box-shadow: 0 8px 16px rgb(0 0 0 / 40%);
+        box-shadow: 0 4px 8px rgb(0 0 0 / 20%);
         transform: translate(-50%, -100%) rotateX(-50deg);
         transform-origin: 50% 100%;
       }
@@ -254,11 +225,11 @@
         width: 20px;
         aspect-ratio: 1;
         place-items: center;
-        color: #101722;
+        color: #141416;
         font-size: 11px;
         content: 'C';
-        background: #ffc857;
-        border: 2px solid #050b14;
+        background: #ff865f;
+        border: 2px solid #232327;
         border-radius: 50%;
       }
     </style>
