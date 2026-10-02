@@ -151,6 +151,25 @@ describe('NotificationBell', () => {
     expect(link.getAttribute('href')).toBe('/c/copa-da-vila/pontuacao/r1');
   });
 
+  it('Esc fecha o painel de dentro dele e devolve o foco ao sino', async () => {
+    const fixture = await abrirSino(caixa());
+
+    botao(fixture).click();
+    await fixture.whenStable();
+    http.expectOne(URL).flush(caixa());
+    http.expectOne(READ_URL).flush(caixa({ unread: 0 }));
+    await fixture.whenStable();
+
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a')!;
+    link.focus();
+    link.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+
+    expect(botao(fixture).getAttribute('aria-expanded')).toBe('false');
+    expect((fixture.nativeElement as HTMLElement).querySelector('a')).toBeNull();
+    expect(document.activeElement).toBe(botao(fixture));
+  });
+
   it('a caixa vazia explica para que o sino serve', async () => {
     const fixture = await abrirSino({ unread: 0, items: [] });
 

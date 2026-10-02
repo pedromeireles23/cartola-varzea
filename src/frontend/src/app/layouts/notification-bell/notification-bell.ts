@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Bell, ClipboardCheck, PenLine } from 'lucide';
 
@@ -28,11 +36,12 @@ const DIAS = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.'] as const;
   imports: [Icon, RouterLink],
   // Escape fecha o painel de onde quer que o foco esteja dentro do sino. Fica no host
   // porque o elemento que envolve o painel não é focável, e não deve ser.
-  host: { '(keydown.escape)': 'fechar()' },
+  host: { '(keydown.escape)': 'fecharPeloTeclado()' },
   template: `
     @if (conta()) {
       <div class="sino">
         <button
+          #botao
           type="button"
           class="sino__botao"
           [attr.aria-expanded]="aberto()"
@@ -94,6 +103,7 @@ export class NotificationBell {
   protected readonly conta = inject(AuthService).current;
   protected readonly aberto = signal(false);
   protected readonly icons = { bell: Bell } as const;
+  private readonly botao = viewChild<ElementRef<HTMLButtonElement>>('botao');
   protected readonly naoLidas = this.service.naoLidas;
   protected readonly itens = computed(() => this.service.inbox().items);
 
@@ -126,6 +136,16 @@ export class NotificationBell {
 
   protected fechar(): void {
     this.aberto.set(false);
+  }
+
+  /**
+   * Com o Esc, o foco volta ao sino: ele podia estar num aviso do painel, que some ao
+   * fechar, e o leitor de tela ficaria sem lugar (15, leitor de tela real).
+   */
+  protected fecharPeloTeclado(): void {
+    if (!this.aberto()) return;
+    this.fechar();
+    this.botao()?.nativeElement.focus();
   }
 
   protected novo(aviso: NotificationItem): boolean {
