@@ -12,6 +12,21 @@ import { Shell } from './shell';
 @Component({ template: '' })
 class Tela {}
 
+@Component({ template: '<h1>Mercado de atletas</h1>' })
+class TelaComTitulo {}
+
+/** O título só chega depois do carregamento, como nas telas que buscam dados. */
+@Component({
+  template: '@if (pronto()) { <h1>Meu time</h1> } <button type="button">Lista</button>',
+})
+class TelaQueCarrega {
+  readonly pronto = signal(false);
+
+  constructor() {
+    setTimeout(() => this.pronto.set(true), 30);
+  }
+}
+
 const CAMPEONATO: OrganizerCompetition = {
   id: 'c1',
   name: 'Copa da Vila',
@@ -348,5 +363,60 @@ describe('Shell', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('.topo__area')?.textContent).toBe(
       'Organizações',
     );
+  });
+
+  describe('foco na troca de tela', () => {
+    const rotas = [
+      { path: 'mercado', component: TelaComTitulo },
+      { path: 'escalacao', component: TelaQueCarrega },
+      { path: '**', component: Tela },
+    ];
+
+    function emFoco(): string {
+      return document.activeElement?.textContent?.trim() ?? '';
+    }
+
+    it('vai para o h1 da tela nova, mas não na carga da página nem num filtro da query', async () => {
+      secao.set('market');
+      TestBed.inject(Router).resetConfig(rotas);
+      const fixture = await abrir('/mercado');
+      expect(emFoco()).not.toBe('Mercado de atletas');
+
+      const router = TestBed.inject(Router);
+      await router.navigateByUrl('/inicio');
+      await fixture.whenStable();
+      await router.navigateByUrl('/mercado');
+      await fixture.whenStable();
+      await vi.waitFor(() => expect(emFoco()).toBe('Mercado de atletas'));
+      const titulo = (fixture.nativeElement as HTMLElement).querySelector('h1')!;
+      expect(titulo.tabIndex).toBe(-1);
+
+      titulo.blur();
+      await router.navigateByUrl('/mercado?posicao=Goalkeeper');
+      await fixture.whenStable();
+      expect(emFoco()).not.toBe('Mercado de atletas');
+    });
+
+    it('espera o título que chega depois, e cede se a pessoa mover o foco antes', async () => {
+      secao.set('team');
+      TestBed.inject(Router).resetConfig(rotas);
+      const fixture = await abrir('/inicio');
+      const router = TestBed.inject(Router);
+
+      await router.navigateByUrl('/escalacao');
+      await vi.waitFor(() => expect(emFoco()).toBe('Meu time'));
+
+      await router.navigateByUrl('/inicio');
+      await fixture.whenStable();
+      await router.navigateByUrl('/escalacao');
+      const lista = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+        'main button',
+      )!;
+      lista.focus();
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      await fixture.whenStable();
+      expect((fixture.nativeElement as HTMLElement).querySelector('h1')).not.toBeNull();
+      expect(emFoco()).toBe('Lista');
+    });
   });
 });

@@ -87,6 +87,13 @@ textarea {
   outline-offset: 2px;
 }
 
+// A exceção registrada no 02 §12: o título que recebe o foco na troca de tela (shell.ts)
+// não é controle e não se aciona; o foco está ali para o leitor de tela começar a tela
+// nova pelo começo, e o anel em volta de um texto pareceria um botão.
+h1[tabindex='-1']:focus {
+  outline: none;
+}
+
 img {
   max-width: 100%;
   height: auto;

@@ -1,7 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DOCUMENT,
+  DestroyRef,
   ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   inject,
   signal,
@@ -126,9 +130,15 @@ const GLOBAL_ROUTES: Readonly<Partial<Record<Section, string>>> = {
   organize: '/organizar',
 };
 
+/** Quanto a casca espera o título da tela nova, que só chega depois do carregamento. */
+const HEADING_WAIT_MS = 5000;
+
+function pathOf(url: string): string {
+  return url.split(/[?#]/)[0] ?? '';
+}
+
 function segmentsOf(url: string): string[] {
-  const path = url.split(/[?#]/)[0] ?? '';
-  return path.split('/').filter(Boolean).map(decodeURIComponent);
+  return pathOf(url).split('/').filter(Boolean).map(decodeURIComponent);
 }
 
 /**
@@ -166,6 +176,8 @@ export class Shell {
   private readonly router = inject(Router);
   private readonly competitions = inject(CurrentCompetition);
   private readonly organizer = inject(OrganizerArea);
+  private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
 
   private readonly moreSheet = viewChild<ElementRef<HTMLDialogElement>>('mais');
 
@@ -196,6 +208,10 @@ export class Shell {
   /** Título estático da rota mais funda, para as telas fora das seções conhecidas. */
   private readonly routeTitle = signal<string | null>(null);
   private readonly segments = signal(segmentsOf(this.router.url));
+
+  /** O caminho da última navegação; nulo antes da primeira, que é a carga da página. */
+  private lastPath: string | null = null;
+  private stopWaitingForHeading: (() => void) | null = null;
 
   /** A mesma casca diferencia explicitamente jogo, operação e administração. */
   protected readonly areaKind = computed<ShellArea>(() => {
@@ -294,7 +310,57 @@ export class Shell {
         this.segments.set(segmentsOf(event.urlAfterRedirects));
         this.routeTitle.set(deepestTitle(this.router.routerState.snapshot.root));
         this.closeMore();
+
+        // Só a troca de tela move o foco: filtro na query string não tira a pessoa do lugar.
+        const path = pathOf(event.urlAfterRedirects);
+        if (this.lastPath !== null && path !== this.lastPath) {
+          this.focusPageHeading();
+        }
+        this.lastPath = path;
       });
+    inject(DestroyRef).onDestroy(() => this.stopWaitingForHeading?.());
+  }
+
+  /**
+   * Leva o foco ao título da tela nova (15, leitor de tela real). Numa aplicação de
+   * página única, trocar de tela não anuncia nada: o foco fica no link clicado, ou cai
+   * no corpo da página quando o link some, e o leitor de tela continua de onde estava.
+   * O `h1` só existe depois do carregamento, então a casca espera por ele; se a pessoa
+   * mover o foco antes (Tab, toque), ela manda, e sem `h1` no prazo nada muda.
+   */
+  private focusPageHeading(): void {
+    this.stopWaitingForHeading?.();
+    const document = this.document;
+    const view = document.defaultView;
+    if (!view) return;
+    const focusAtNavigation = document.activeElement;
+
+    const tryFocus = (): boolean => {
+      if (document.activeElement !== focusAtNavigation) return true;
+      const heading = document.getElementById('conteudo')?.querySelector<HTMLElement>('h1');
+      if (!heading) return false;
+      heading.tabIndex = -1;
+      heading.focus();
+      return true;
+    };
+
+    const observer = new view.MutationObserver(() => {
+      if (tryFocus()) this.stopWaitingForHeading?.();
+    });
+    const timer = view.setTimeout(() => this.stopWaitingForHeading?.(), HEADING_WAIT_MS);
+    this.stopWaitingForHeading = () => {
+      observer.disconnect();
+      view.clearTimeout(timer);
+      this.stopWaitingForHeading = null;
+    };
+    observer.observe(document.body, { childList: true, subtree: true });
+    // A tela reaproveitada (mesma rota, outro parâmetro) pode já ter o título no lugar.
+    afterNextRender(
+      () => {
+        if (this.stopWaitingForHeading && tryFocus()) this.stopWaitingForHeading();
+      },
+      { injector: this.injector },
+    );
   }
 
   protected globalRoute(section: Section): string {
