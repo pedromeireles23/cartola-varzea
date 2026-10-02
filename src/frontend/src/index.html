@@ -5,6 +5,27 @@
     <title>Cartola Várzea</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      O texto e os títulos — Inter e a Barlow Condensed 800 — saem junto com o JavaScript,
+      não depois do primeiro desenho: chegando tarde, a troca da fonte empurrava a página
+      (CLS de 0,27 nas Partidas). O peso 700 fica de fora: pré-carregado, ele disputava a
+      banda do JavaScript e atrasava o LCP das páginas públicas, onde não está na primeira
+      dobra. O build não põe hash nas mídias para que estes endereços sejam fixos.
+    -->
+    <link
+      rel="preload"
+      href="media/inter-latin-wght-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="media/barlow-condensed-latin-800-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <meta
       name="description"
       content="Fantasy de futebol para campeonatos amadores: monte o elenco, acompanhe a súmula da rodada e dispute o ranking. Créditos virtuais, sem apostas em dinheiro. Demonstração de portfólio com dados fictícios."
