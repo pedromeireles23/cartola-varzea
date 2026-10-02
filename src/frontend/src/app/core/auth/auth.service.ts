@@ -32,6 +32,7 @@ export class AuthService {
 
   private readonly account = signal<Account | null>(null);
   private readonly loaded = signal(false);
+  private readonly demo = signal(false);
 
   /** Conta atual, ou `null` quando anônima. */
   readonly current = this.account.asReadonly();
@@ -40,6 +41,9 @@ export class AuthService {
   readonly ready = this.loaded.asReadonly();
 
   readonly isAuthenticated = computed(() => this.account() !== null);
+
+  /** Se a entrada de visitante existe, conhecido antes da primeira tela. */
+  readonly demoAccess = this.demo.asReadonly();
 
   /** Só decide o que mostrar; a API continua sendo quem autoriza. */
   /** Conta pública de demonstração: tudo é somente leitura no servidor. */
@@ -62,16 +66,22 @@ export class AuthService {
     );
   }
 
-  /** Carrega o estado da sessão. Chamado na inicialização da aplicação. */
+  /**
+   * Carrega o estado da sessão. Chamado na inicialização da aplicação.
+   *
+   * O token antiforgery e a sessão não dependem um do outro, então saem juntos: em
+   * sequência, a primeira tela pagava uma ida e volta a mais antes de aparecer.
+   */
   async load(): Promise<void> {
-    await this.refreshAntiforgery();
+    // 204 chega como corpo nulo: é assim que a API diz "anônimo" sem ser um erro.
+    const sessao = firstValueFrom(this.http.get<Account | null>(`${this.baseUrl}/auth/me`)).then(
+      (conta) => conta ?? null,
+      () => null,
+    );
 
     try {
-      // 204 chega como corpo nulo: é assim que a API diz "anônimo" sem ser um erro.
-      const conta = await firstValueFrom(this.http.get<Account | null>(`${this.baseUrl}/auth/me`));
-      this.account.set(conta ?? null);
-    } catch {
-      this.account.set(null);
+      const [, conta] = await Promise.all([this.refreshAntiforgery(), sessao]);
+      this.account.set(conta);
     } finally {
       this.loaded.set(true);
     }
@@ -101,15 +111,19 @@ export class AuthService {
     await this.load();
   }
 
-  /** A demonstração pública liga a entrada de visitante; fora dela, não há botão. */
-  async demoAvailable(): Promise<boolean> {
+  /**
+   * Consulta, uma vez, se a demonstração pública liga a entrada de visitante; fora dela,
+   * não há botão. Roda na inicialização, junto da sessão: perguntado só na tela, o botão
+   * chegava depois do primeiro desenho e empurrava o resto da landing (CLS de 0,066).
+   */
+  async loadDemoAccess(): Promise<void> {
     try {
       const resposta = await firstValueFrom(
         this.http.get<{ available: boolean }>(`${this.baseUrl}/auth/demo`),
       );
-      return resposta.available;
+      this.demo.set(resposta.available);
     } catch {
-      return false;
+      this.demo.set(false);
     }
   }
 

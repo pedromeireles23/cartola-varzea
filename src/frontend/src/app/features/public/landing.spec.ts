@@ -5,6 +5,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 
 import { apiErrorInterceptor } from '../../core/api/api-error.interceptor';
+import { AuthService } from '../../core/auth/auth.service';
 import { API_BASE_URL } from '../../core/config/api-base-url';
 import { LandingPage } from './landing';
 import { PublicCompetitionSummary } from './public-competition.service';
@@ -44,7 +45,8 @@ describe('LandingPage', () => {
   afterEach(() => http.verify());
 
   /**
-   * Abre a landing respondendo a busca pública e a pergunta da demonstração. O cartaz
+   * Abre a landing respondendo a busca pública. A pergunta da demonstração é da
+   * inicialização da aplicação, então chega respondida antes da tela. O cartaz
    * do destaque pede calendário e ranking do primeiro campeonato; aqui eles chegam
    * vazios, porque o conteúdo do cartaz é testado na spec dele.
    */
@@ -52,10 +54,13 @@ describe('LandingPage', () => {
     campeonatos: PublicCompetitionSummary[],
     demo = false,
   ): Promise<ComponentFixture<LandingPage>> {
+    const consulta = TestBed.inject(AuthService).loadDemoAccess();
+    http.expectOne('/api/v1/auth/demo').flush({ available: demo });
+    await consulta;
+
     const fixture = TestBed.createComponent(LandingPage);
     await fixture.whenStable();
     http.expectOne(URL).flush(campeonatos);
-    http.expectOne('/api/v1/auth/demo').flush({ available: demo });
     await proximaVolta();
     await fixture.whenStable();
 
@@ -170,7 +175,6 @@ describe('LandingPage', () => {
     const fixture = TestBed.createComponent(LandingPage);
     await fixture.whenStable();
     http.expectOne(URL).flush(null, { status: 500, statusText: 'Server Error' });
-    http.expectOne('/api/v1/auth/demo').flush({ available: false });
     await proximaVolta();
     await fixture.whenStable();
 

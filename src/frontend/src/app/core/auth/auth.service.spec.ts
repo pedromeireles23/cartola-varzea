@@ -35,20 +35,36 @@ describe('AuthService', () => {
 
   afterEach(() => http.verify());
 
-  it('busca o token antiforgery antes de consultar a sessão', async () => {
+  it('pede o token antiforgery e a sessão juntos, sem um esperar o outro', async () => {
     const carregando = auth.load();
 
-    http
-      .expectOne('/api/v1/auth/antiforgery')
-      .flush(null, { status: 204, statusText: 'No Content' });
-    await proximaRequisicao();
-
+    // As duas saem na mesma volta: a primeira tela não paga duas idas e voltas.
+    const antiforgery = http.expectOne('/api/v1/auth/antiforgery');
     http.expectOne('/api/v1/auth/me').flush(CONTA);
+    antiforgery.flush(null, { status: 204, statusText: 'No Content' });
     await carregando;
 
     expect(auth.isAuthenticated()).toBe(true);
     expect(auth.current()?.email).toBe(CONTA.email);
     expect(auth.ready()).toBe(true);
+  });
+
+  it('sabe se a demonstração liga a entrada de visitante', async () => {
+    expect(auth.demoAccess()).toBe(false);
+
+    const consulta = auth.loadDemoAccess();
+    http.expectOne('/api/v1/auth/demo').flush({ available: true });
+    await consulta;
+
+    expect(auth.demoAccess()).toBe(true);
+  });
+
+  it('sem resposta da demonstração, não oferece a entrada de visitante', async () => {
+    const consulta = auth.loadDemoAccess();
+    http.expectOne('/api/v1/auth/demo').flush(null, { status: 500, statusText: 'Server Error' });
+    await consulta;
+
+    expect(auth.demoAccess()).toBe(false);
   });
 
   it('trata 204 de /me como sessão anônima, não como erro', async () => {

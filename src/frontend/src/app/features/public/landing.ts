@@ -209,7 +209,7 @@ export class LandingPage implements OnInit {
   protected readonly logado = this.auth.isAuthenticated;
 
   /** Só a demonstração pública oferece a entrada de visitante. */
-  protected readonly demo = signal(false);
+  protected readonly demo = this.auth.demoAccess;
   protected readonly entrando = signal(false);
   protected readonly erroVisitante = signal<string | null>(null);
 
@@ -260,10 +260,6 @@ export class LandingPage implements OnInit {
         'Monte seu elenco com atletas do campeonato amador, acompanhe a pontuação de cada rodada e dispute o ranking com quem joga junto. Créditos virtuais, sem apostas em dinheiro. Demonstração de portfólio com dados fictícios.',
     });
     this.carregar();
-
-    if (!this.logado()) {
-      void this.auth.demoAvailable().then((disponivel) => this.demo.set(disponivel));
-    }
   }
 
   protected rotulo(modality: PublicCompetitionSummary['modality']): string {

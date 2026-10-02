@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
 import { apiErrorInterceptor } from '../../core/api/api-error.interceptor';
+import { AuthService } from '../../core/auth/auth.service';
 import { API_BASE_URL } from '../../core/config/api-base-url';
 import { LoginPage } from './login';
 
@@ -25,12 +26,13 @@ describe('LoginPage', () => {
 
   afterEach(() => http.verify());
 
-  /** A tela pergunta se a demonstração liga a entrada de visitante. */
+  /** A inicialização já sabe se a demonstração liga a entrada de visitante. */
   async function abrir(demo = false): Promise<ComponentFixture<LoginPage>> {
-    const fixture = TestBed.createComponent(LoginPage);
-    await fixture.whenStable();
+    const consulta = TestBed.inject(AuthService).loadDemoAccess();
     http.expectOne('/api/v1/auth/demo').flush({ available: demo });
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await consulta;
+
+    const fixture = TestBed.createComponent(LoginPage);
     await fixture.whenStable();
     return fixture;
   }

@@ -82,13 +82,9 @@ export class LoginPage {
   protected readonly erro = signal<string | null>(null);
 
   /** Só a demonstração pública oferece a entrada de visitante. */
-  protected readonly demo = signal(false);
+  protected readonly demo = this.auth.demoAccess;
   protected readonly entrandoVisitante = signal(false);
   protected readonly erroVisitante = signal<string | null>(null);
-
-  constructor() {
-    void this.auth.demoAvailable().then((disponivel) => this.demo.set(disponivel));
-  }
 
   protected async entrarComoVisitante(): Promise<void> {
     this.entrandoVisitante.set(true);

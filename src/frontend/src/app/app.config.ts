@@ -36,8 +36,12 @@ export const appConfig: ApplicationConfig = {
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
     ),
     // Carrega a sessão e o token antiforgery antes da primeira tela aparecer, para
-    // que os guards não precisem decidir com o estado ainda desconhecido.
-    provideAppInitializer(() => inject(AuthService).load()),
+    // que os guards não precisem decidir com o estado ainda desconhecido. A entrada de
+    // visitante vem junto, em paralelo, para a landing já nascer com os botões certos.
+    provideAppInitializer(() => {
+      const auth = inject(AuthService);
+      return Promise.all([auth.load(), auth.loadDemoAccess()]);
+    }),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     // A conta pública de demonstração só lê: os botões de escrita ficam indisponíveis.
     { provide: READ_ONLY_MODE, useFactory: () => inject(AuthService).isDemoViewer },
