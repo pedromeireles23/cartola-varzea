@@ -71,6 +71,10 @@ export class AuthService {
    *
    * O token antiforgery e a sessão não dependem um do outro, então saem juntos: em
    * sequência, a primeira tela pagava uma ida e volta a mais antes de aparecer.
+   *
+   * Nunca rejeita: sem a API, a aplicação abre anônima e cada tela mostra a própria
+   * falha, com "Tentar de novo". Rejeitar aqui derrubava a inicialização do Angular, e
+   * a página ficava em branco.
    */
   async load(): Promise<void> {
     // 204 chega como corpo nulo: é assim que a API diz "anônimo" sem ser um erro.
@@ -78,13 +82,11 @@ export class AuthService {
       (conta) => conta ?? null,
       () => null,
     );
+    const antiforgery = this.refreshAntiforgery().catch(() => undefined);
 
-    try {
-      const [, conta] = await Promise.all([this.refreshAntiforgery(), sessao]);
-      this.account.set(conta);
-    } finally {
-      this.loaded.set(true);
-    }
+    const [, conta] = await Promise.all([antiforgery, sessao]);
+    this.account.set(conta);
+    this.loaded.set(true);
   }
 
   async register(email: string, displayName: string, password: string): Promise<MessageResponse> {

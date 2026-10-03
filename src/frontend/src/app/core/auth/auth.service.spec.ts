@@ -83,6 +83,17 @@ describe('AuthService', () => {
     expect(auth.ready()).toBe(true);
   });
 
+  it('sem a API no ar, abre anônima em vez de travar a inicialização', async () => {
+    const carregando = auth.load();
+
+    http.expectOne('/api/v1/auth/antiforgery').error(new ProgressEvent('error'));
+    http.expectOne('/api/v1/auth/me').error(new ProgressEvent('error'));
+    await carregando;
+
+    expect(auth.isAuthenticated()).toBe(false);
+    expect(auth.ready()).toBe(true);
+  });
+
   it('renova o token antiforgery depois de entrar', async () => {
     const entrando = auth.login('pessoa@exemplo.local', 'uma-senha-bem-longa-2026');
 
