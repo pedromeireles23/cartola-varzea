@@ -24,6 +24,7 @@ using Fut7Fantasy.Infrastructure.PlatformAdministration;
 using Fut7Fantasy.Infrastructure.Scoring;
 using Fut7Fantasy.Infrastructure.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Startup;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -201,6 +202,12 @@ public static class InfrastructureServiceCollectionExtensions
                 identity.Lockout.MaxFailedAccessAttempts = auth.Value.MaxFailedAccessAttempts;
                 identity.Lockout.DefaultLockoutTimeSpan = auth.Value.LockoutDuration;
             });
+
+        // Sessao no servidor: o cookie leva so a chave, e o logout apaga a sessao em vez
+        // de so pedir ao navegador que esqueca o cookie (04-seguranca §5).
+        services.AddSingleton<DatabaseTicketStore>();
+        services.AddOptions<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
+            .Configure<DatabaseTicketStore>((cookie, store) => cookie.SessionStore = store);
 
         // Revalidar o security stamp a cada requisicao, em vez dos 30 minutos padrao.
         //

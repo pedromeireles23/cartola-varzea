@@ -44,6 +44,9 @@ public sealed class Fut7FantasyDbContext(DbContextOptions<Fut7FantasyDbContext> 
 
     public const string LeaguesSchema = "leagues";
 
+    /// <summary>Sessoes de entrada guardadas no servidor.</summary>
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
+
     /// <summary>Historico de inicializacoes.</summary>
     public DbSet<StartupRecord> StartupRecords => Set<StartupRecord>();
 
