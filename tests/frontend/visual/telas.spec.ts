@@ -11,10 +11,14 @@ import { expect, test, type Page } from '@playwright/test';
  * relógio para no instante da gravação. Com `GRAVAR=1`, as mesmas telas são abertas
  * contra a API local da demonstração (porta 5277) e as respostas são regravadas; as
  * senhas das contas da demo vêm do ambiente, nunca do repositório.
+ *
+ * Com `PRINTS=<pasta>`, nada é comparado: a primeira dobra de cada tela é salva na pasta,
+ * de onde saem os prints do README (`docs/imagens`).
  */
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const DADOS = join(AQUI, 'dados');
 const GRAVAR = !!process.env['GRAVAR'];
+const PRINTS = process.env['PRINTS'];
 const SLUG = 'copa-da-vila-2026';
 
 type Conta = 'anonimo' | 'visitante' | 'organizacao';
@@ -131,6 +135,10 @@ for (const tela of TELAS) {
       return;
     }
     expect(faltando, 'Respostas que a gravação não tem').toEqual([]);
+    if (PRINTS) {
+      await page.screenshot({ path: join(PRINTS, `${tela.nome}-${test.info().project.name}.png`) });
+      return;
+    }
     await expect(page).toHaveScreenshot(`${tela.nome}.png`, { fullPage: true });
   });
 }
