@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Fut7Fantasy.Domain.Fantasy;
+using Fut7Fantasy.Domain.SportsCatalog;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -528,6 +529,119 @@ public sealed class RoundPublicationFlowTests(SqlServerFixture sqlServer) : ICla
         Assert.Equal("Rodada 1 corrigida", avisos[0].GetProperty("title").GetString());
         Assert.Equal("RoundPublished", avisos[1].GetProperty("kind").GetString());
         Assert.True(avisos[1].GetProperty("read").GetBoolean());
+    }
+
+    [Fact]
+    public async Task APostponedMatchScoresNothingAndItsAthletesCountAsNotPlayed()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        var postponedMatch = await AddMatchAsync(
+            world, world.RoundId, world.Teams[2], world.Teams[3], cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        clock.Advance(TimeSpan.FromDays(3));
+        await PostponeAsync(world, world.RoundId, postponedMatch, cancellationToken);
+
+        // Só o jogo que aconteceu precisa de súmula para a rodada ir à conferência.
+        var sheet = await FillSheetAsync(world, world.RoundId, cancellationToken);
+        await PublishRoundAsync(world, world.RoundId, cancellationToken);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+        var calculation = await dbContext.RoundCalculations
+            .AsNoTracking()
+            .Include(item => item.Athletes)
+            .Include(item => item.Coaches)
+            .Include(item => item.Prices)
+            .SingleAsync(item => item.RoundId == world.RoundId, cancellationToken);
+
+        Assert.Equal(5m, calculation.Athletes.Single(item => item.AthleteId == sheet.Scorer).Points);
+
+        // Os dois times do jogo adiado ficam como quem não jogou: nenhum ponto de atleta,
+        // técnico sem jogo e preço parado, fora da média da posição.
+        var postponedTeams = new[] { world.Teams[2], world.Teams[3] };
+        var athletes = await dbContext.RosterRegistrations
+            .Where(item => postponedTeams.Contains(item.RealTeamId))
+            .Select(item => item.AthleteId)
+            .ToListAsync(cancellationToken);
+        Assert.NotEmpty(athletes);
+        Assert.DoesNotContain(calculation.Athletes, item => athletes.Contains(item.AthleteId) && item.Played);
+        Assert.False(await dbContext.AthleteScoreLines.AnyAsync(
+            item => item.CalculationId == calculation.Id && item.MatchId == postponedMatch,
+            cancellationToken));
+        Assert.All(
+            calculation.Coaches.Where(item => postponedTeams.Contains(item.RealTeamId)),
+            coach => Assert.False(coach.Played));
+        Assert.All(
+            calculation.Prices.Where(item => athletes.Contains(item.AssetId)),
+            price =>
+            {
+                Assert.Null(price.Average);
+                Assert.Equal(0m, price.Variation);
+            });
+    }
+
+    [Fact]
+    public async Task ATeamWithTwoMatchesInTheRoundAddsBothForAthletesCoachAndPrice()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var clock = new FakeTimeProvider(ApiFactory.FixedNow);
+        using var factory = CreateApi(clock);
+        var world = await BuildAsync(factory, cancellationToken);
+        var team = world.Teams[0];
+        var secondMatch = await AddMatchAsync(world, world.RoundId, team, world.Teams[2], cancellationToken);
+        await OpenMarketAsync(world.Owner, world, cancellationToken);
+
+        clock.Advance(TimeSpan.FromDays(3));
+
+        // O mesmo time em casa nos dois jogos, 1 × 0 em ambos, com gol do mesmo atacante.
+        var first = await FillSheetAsync(world, world.RoundId, cancellationToken);
+        var second = await FillSheetAsync(world, world.RoundId, cancellationToken, matchIndex: 1);
+        Assert.Equal(secondMatch, second.MatchId);
+        Assert.Equal(first.Scorer, second.Scorer);
+        await PublishRoundAsync(world, world.RoundId, cancellationToken);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
+        var calculation = await dbContext.RoundCalculations
+            .AsNoTracking()
+            .Include(item => item.Athletes)
+            .Include(item => item.Coaches)
+            .Include(item => item.Prices)
+            .SingleAsync(item => item.RoundId == world.RoundId, cancellationToken);
+
+        // Atleta: os 5 pontos de cada jogo somados, com o extrato separado por partida.
+        var scorer = calculation.Athletes.Single(item => item.AthleteId == first.Scorer);
+        Assert.Equal(10m, scorer.Points);
+        Assert.Equal(10m, calculation.Athletes.Single(item => item.AthleteId == first.HomeGoalkeeper).Points);
+        var matches = await dbContext.AthleteScoreLines
+            .Where(item => item.CalculationId == calculation.Id && item.AthleteId == first.Scorer)
+            .Select(item => item.MatchId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        Assert.Equal(2, matches.Count);
+
+        // Técnico: a média dos atletas do time que jogaram, já com as duas partidas somadas.
+        var played = calculation.Athletes.Where(item => item.RealTeamId == team && item.Played).ToList();
+        Assert.Equal(
+            Math.Round(played.Average(item => item.Points), 2, MidpointRounding.AwayFromZero),
+            calculation.Coaches.Single(item => item.RealTeamId == team).Points);
+
+        // Preço: a valorização parte do total da rodada, não de um jogo só.
+        var forwards = calculation.Athletes
+            .Where(item => item.Position == Position.Forward && item.Played)
+            .ToList();
+        var average = Math.Round(forwards.Average(item => item.Points), 2, MidpointRounding.AwayFromZero);
+        var price = calculation.Prices.Single(item => item.AssetId == first.Scorer);
+        Assert.Equal(average, price.Average);
+        Assert.Equal(10m - average, price.Difference);
     }
 
     private static async Task<JsonElement> InboxAsync(HttpClient client, CancellationToken cancellationToken) =>

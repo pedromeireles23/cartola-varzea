@@ -183,6 +183,61 @@ internal static class FantasyScenario
         return await match.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
     }
 
+    /// <summary>Marca mais um jogo na rodada, algumas horas depois do primeiro.</summary>
+    internal static async Task<Guid> AddMatchAsync(
+        World world,
+        Guid roundId,
+        Guid homeTeamId,
+        Guid awayTeamId,
+        CancellationToken cancellationToken)
+    {
+        using var match = await world.Owner.PostAsJsonAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds/{roundId}/matches",
+            new
+            {
+                stageId = world.StageId,
+                homeTeamId,
+                awayTeamId,
+                kickoffLocal = KickoffLocal(ApiFactory.FixedNow.AddDays(2).AddHours(3)),
+                version = await RoundVersionAsync(world, roundId, cancellationToken),
+            },
+            cancellationToken);
+        match.EnsureSuccessStatusCode();
+        return (await match.Content.ReadFromJsonAsync<JsonElement>(cancellationToken))
+            .GetProperty("matches").EnumerateArray()
+            .Single(item => item.GetProperty("homeTeamId").GetGuid() == homeTeamId
+                && item.GetProperty("awayTeamId").GetGuid() == awayTeamId)
+            .GetProperty("id").GetGuid();
+    }
+
+    /// <summary>Adia um jogo da rodada, como quando chove no domingo.</summary>
+    internal static async Task PostponeAsync(
+        World world,
+        Guid roundId,
+        Guid matchId,
+        CancellationToken cancellationToken)
+    {
+        var round = await RoundAsync(world, roundId, cancellationToken);
+        var match = round.GetProperty("matches").EnumerateArray()
+            .Single(item => item.GetProperty("id").GetGuid() == matchId);
+        using var postponed = await world.Owner.PutAsJsonAsync(
+            $"/api/v1/competitions/{world.CompetitionId}/rounds/{roundId}/matches/{matchId}",
+            new
+            {
+                stageId = world.StageId,
+                homeTeamId = match.GetProperty("homeTeamId").GetGuid(),
+                awayTeamId = match.GetProperty("awayTeamId").GetGuid(),
+                kickoffLocal = KickoffLocal(match.GetProperty("kickoffAt").GetDateTimeOffset()),
+                status = "Postponed",
+                version = round.GetProperty("version").GetString(),
+            },
+            cancellationToken);
+        postponed.EnsureSuccessStatusCode();
+    }
+
+    private static string KickoffLocal(DateTimeOffset instant) =>
+        instant.ToOffset(TimeSpan.FromHours(-3)).ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+
     internal static async Task OpenMarketAsync(HttpClient owner, World world, CancellationToken cancellationToken)
     {
         var rounds = await owner.GetFromJsonAsync<JsonElement>(
@@ -268,17 +323,19 @@ internal static class FantasyScenario
     }
 
     /// <summary>
-    /// Súmula do único jogo da rodada: mandante 1 × 0, gol do primeiro atacante do
-    /// mandante; cada time com um goleiro em campo e o outro fora; os demais jogaram.
+    /// Súmula de um jogo da rodada, o primeiro por padrão: mandante 1 × 0, gol do primeiro
+    /// atacante do mandante; cada time com um goleiro em campo e o outro fora; os demais
+    /// jogaram.
     /// </summary>
     internal static async Task<SheetFacts> FillSheetAsync(
         World world,
         Guid roundId,
         CancellationToken cancellationToken,
-        int goals = 1)
+        int goals = 1,
+        int matchIndex = 0)
     {
         var matchId = (await RoundAsync(world, roundId, cancellationToken))
-            .GetProperty("matches")[0].GetProperty("id").GetGuid();
+            .GetProperty("matches")[matchIndex].GetProperty("id").GetGuid();
         var uri = $"/api/v1/competitions/{world.CompetitionId}/matches/{matchId}/sheet";
         var current = await world.Owner.GetFromJsonAsync<JsonElement>(uri, cancellationToken);
         var home = current.GetProperty("homeTeamId").GetGuid();
