@@ -6,6 +6,7 @@
 *.md
 !README.md
 !CONTRIBUTING.md
+!CHANGELOG.md
 !SECURITY.md
 !docs/adr/*.md
 !.github/pull_request_template.md
@@ -39,6 +40,9 @@ artifacts/
 publish/
 *.nupkg
 *.snupkg
+
+# Saídas locais: prints do README, builds de conferência, clones de teste
+/tmp/
 
 # Node / Angular
 node_modules/

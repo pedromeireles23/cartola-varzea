@@ -1,6 +1,6 @@
 # Como contribuir
 
-Obrigado pelo interesse. O projeto está em fase inicial e é mantido como portfólio; sugestões e correções são bem-vindas por issue ou pull request.
+Obrigado pelo interesse. O projeto está concluído como portfólio, na release `v1.0.0-demo`. Daqui em diante entram só correções críticas, de segurança e manutenção essencial — issues e pull requests nesse escopo são bem-vindos; funcionalidade nova, só se o projeto for reaberto.
 
 ## Pré-requisitos
 
@@ -165,6 +165,14 @@ docker run --rm --ipc=host -v "${PWD}:/work" -w /work/tests/frontend mcr.microso
 # Mudança visual intencional: regerar as referências e revisar as imagens no diff
 docker run --rm --ipc=host -v "${PWD}:/work" -w /work/tests/frontend mcr.microsoft.com/playwright:v1.63.0-noble npx playwright test -c visual/playwright.config.ts --update-snapshots
 ```
+
+Os prints do README (`docs/imagens`) saem do mesmo harness, só com a primeira dobra de cada tela e sem comparar nada:
+
+```powershell
+docker run --rm --ipc=host -e PRINTS=/work/tmp/prints -v "${PWD}:/work" -w /work/tests/frontend mcr.microsoft.com/playwright:v1.63.0-noble npx playwright test -c visual/playwright.config.ts
+```
+
+As 16 imagens ficam em `tmp/prints`; as oito do README são copiadas de lá, com `-mobile` renomeado para `-celular`.
 
 Quando a API mudar o formato de uma resposta usada por essas telas, regrave os dados: recrie a demo (`demo-reset.ps1`), suba a API apontando para ela, defina `DEMO_VIEWER_PASSWORD` e `DEMO_ORGANIZER_PASSWORD` com os valores do `.env` e rode `npx playwright test -c visual/playwright.config.ts` com `GRAVAR=1` em `tests/frontend`; depois, regere as referências.
 

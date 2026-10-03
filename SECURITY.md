@@ -2,7 +2,7 @@
 
 ## Versões cobertas
 
-O projeto ainda não possui versão publicada. Enquanto isso, apenas a branch `main` recebe correções de segurança.
+A versão `v1.0.0-demo` é a release final de portfólio. Correções de segurança entram na branch `main`; não há outras versões mantidas.
 
 ## Como relatar uma vulnerabilidade
 
@@ -43,4 +43,4 @@ Fora do escopo: ataques de negação de serviço volumétricos, engenharia socia
 
 ## Testes permitidos
 
-Teste apenas em ambiente local próprio. Não execute varreduras automatizadas nem testes intrusivos contra o ambiente público de demonstração.
+Teste apenas em ambiente local próprio. O projeto não está hospedado: não existe ambiente público de demonstração, e qualquer endereço que diga sê-lo não é deste repositório.
