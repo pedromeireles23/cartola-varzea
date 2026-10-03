@@ -94,6 +94,33 @@ public sealed class SessionRevocationTests(SqlServerFixture sqlServer) : IClassF
     }
 
     [Fact]
+    public async Task RenovarERemoverNaoDependemDaRequisicaoSeguirAberta()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var factory = sqlServer.CreateApi();
+        var userId = await TestAccounts.CreateUserAsync(factory, TestAccounts.UniqueEmail("abandonada"));
+        var store = SessionStoreOf(factory);
+        var now = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow();
+        var key = await store.StoreAsync(Ticket(userId, now.AddDays(1)), cancellationToken);
+
+        // O navegador desistiu da resposta: a renovação roda quando ela começa e chega
+        // com o cancelamento da requisição já disparado.
+        using var abandonada = new CancellationTokenSource();
+        await abandonada.CancelAsync();
+
+        var newExpiry = now.AddDays(2);
+        await store.RenewAsync(key, Ticket(userId, newExpiry), abandonada.Token);
+        var renewed = await store.RetrieveAsync(key, cancellationToken);
+        Assert.Equal(newExpiry.ToUnixTimeSeconds(), renewed?.Properties.ExpiresUtc?.ToUnixTimeSeconds());
+
+        // Um logout abandonado no meio também precisa valer.
+        await store.RemoveAsync(key, abandonada.Token);
+        Assert.Null(await store.RetrieveAsync(key, cancellationToken));
+    }
+
+    [Fact]
     public async Task SessaoVencidaNaoEDevolvida()
     {
         Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);

@@ -78,13 +78,17 @@ public sealed class DatabaseTicketStore(
 
         // Só atualiza, nunca insere: a renovação de uma resposta que estava em voo chega
         // depois do logout e não pode trazer a sessão de volta.
+        //
+        // E não segue o cancelamento da requisição: ela roda quando a resposta começa, e
+        // o navegador que trocou de tela no meio já cancelou. A atualização por chave é
+        // curta; interrompê-la só gerava uma exceção sem ninguém para recebê-la.
         await dbContext.UserSessions
             .Where(session => session.Id == id)
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(session => session.Ticket, serialized)
                     .SetProperty(session => session.ExpiresAt, expiresAt),
-                cancellationToken)
+                CancellationToken.None)
             .ConfigureAwait(false);
     }
 
@@ -122,11 +126,12 @@ public sealed class DatabaseTicketStore(
             return;
         }
 
+        // O logout vale mesmo que o navegador desista da resposta no meio.
         await using var scope = scopeFactory.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<Fut7FantasyDbContext>();
         await dbContext.UserSessions
             .Where(session => session.Id == id)
-            .ExecuteDeleteAsync(cancellationToken)
+            .ExecuteDeleteAsync(CancellationToken.None)
             .ConfigureAwait(false);
     }
 
