@@ -1,16 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Builder;
+using Fut7Fantasy.Application.Abstractions;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Fut7Fantasy.IntegrationTests;
 
 public sealed class ProblemDetailsTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
-    private const string ThrowingPath = "/__tests/throw";
+    private const string ThrowingPath = "/api/v1/system/info";
     private const string InternalDetail = "detalhe interno que não pode vazar";
 
     [Fact]
@@ -19,7 +19,9 @@ public sealed class ProblemDetailsTests(ApiFactory factory) : IClassFixture<ApiF
         var cancellationToken = TestContext.Current.CancellationToken;
         using var client = factory.CreateClient();
 
-        using var response = await client.GetAsync(new Uri("/rota-inexistente", UriKind.Relative), cancellationToken);
+        // Fora de /api, rota desconhecida é do SPA e recebe o index.html (SpaHostingTests).
+        using var response = await client.GetAsync(
+            new Uri("/api/v1/rota-inexistente", UriKind.Relative), cancellationToken);
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -32,11 +34,18 @@ public sealed class ProblemDetailsTests(ApiFactory factory) : IClassFixture<ApiF
     public async Task UnhandledExceptionInProductionReturnsProblemDetailsWithoutInternalDetails()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
+
+        // A falha nasce dentro de um endpoint de verdade: uma rota pendurada depois do
+        // pipeline nunca seria alcançada, porque o fallback do SPA atende antes.
         using var client = factory
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Production");
-                builder.ConfigureServices(services => services.AddSingleton<IStartupFilter, ThrowingEndpointFilter>());
+                builder.ConfigureServices(services =>
+                {
+                    services.RemoveAll<IStartupLog>();
+                    services.AddSingleton<IStartupLog, ThrowingStartupLog>();
+                });
             })
             .CreateClient();
 
@@ -51,13 +60,12 @@ public sealed class ProblemDetailsTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.DoesNotContain(nameof(InvalidOperationException), body, StringComparison.Ordinal);
     }
 
-    private sealed class ThrowingEndpointFilter : IStartupFilter
+    private sealed class ThrowingStartupLog : IStartupLog
     {
-        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) =>
-            app =>
-            {
-                next(app);
-                app.Map(ThrowingPath, branch => branch.Run(_ => throw new InvalidOperationException(InternalDetail)));
-            };
+        public Task RecordAsync(string version, string environmentName, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task<StartupLogSummary> GetSummaryAsync(CancellationToken cancellationToken) =>
+            throw new InvalidOperationException(InternalDetail);
     }
 }

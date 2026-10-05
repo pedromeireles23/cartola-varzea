@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Fut7Fantasy.Api.Endpoints;
+using Fut7Fantasy.Api.Hosting;
 using Fut7Fantasy.Api.Security;
 using Fut7Fantasy.Application;
 using Fut7Fantasy.Application.Diagnostics;
@@ -28,6 +29,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddHealthChecks().AddInfrastructureHealthChecks();
+
+builder.Services.AddSpaHosting();
 
 // Sessao em cookie: nada de token no browser, e o cookie e inacessivel ao script.
 builder.Services.ConfigureApplicationCookie(options =>
@@ -210,6 +213,9 @@ else
 app.UseHttpsRedirection();
 app.UseSecurityHeaders();
 app.UseRateLimiter();
+
+// O build do Angular e as rotas dele, quando publicado junto (SpaHosting).
+app.UseSpa();
 
 app.UseAuthentication();
 app.UseDemoViewerReadOnly();
