@@ -39,9 +39,12 @@ public sealed class DemoResetTests(SqlServerFixture sqlServer) : IClassFixture<S
         var publico = $"/api/v1/public/competitions/{summary.Slug}";
         var primeiro = await RankingAsync(visitante, publico, cancellationToken);
 
-        // O mesmo reset de novo termina no mesmo campeonato, com a API no ar.
+        // O mesmo reset de novo termina no mesmo campeonato, com a API no ar. E esvazia o
+        // banco por dentro, sem apagá-lo: no Azure SQL, apagar removeria o recurso (Fase 17).
+        var criadoEm = await DatabaseCreatedAtAsync(connection, cancellationToken);
         await ResetAsync(connection, cancellationToken);
         Assert.Equal(primeiro, await RankingAsync(visitante, publico, cancellationToken));
+        Assert.Equal(criadoEm, await DatabaseCreatedAtAsync(connection, cancellationToken));
 
         // A história: turno com rodadas em todos os estados, e o returno em rascunho.
         var calendario = await visitante.GetFromJsonAsync<JsonElement>(
@@ -110,6 +113,15 @@ public sealed class DemoResetTests(SqlServerFixture sqlServer) : IClassFixture<S
         builder.Services.AddDemo(builder.Configuration, TimeProvider.System.GetUtcNow());
         using var host = builder.Build();
         return await DemoReset.RunAsync(host.Services, Database, cancellationToken);
+    }
+
+    private static async Task<DateTime> DatabaseCreatedAtAsync(string connection, CancellationToken cancellationToken)
+    {
+        await using var sql = new SqlConnection(connection);
+        await sql.OpenAsync(cancellationToken);
+        await using var command = new SqlCommand(
+            "SELECT create_date FROM sys.databases WHERE name = DB_NAME()", sql);
+        return (DateTime)(await command.ExecuteScalarAsync(cancellationToken))!;
     }
 
     private static async Task<List<string>> RankingAsync(

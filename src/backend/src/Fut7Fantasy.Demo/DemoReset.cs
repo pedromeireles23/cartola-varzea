@@ -5,6 +5,8 @@ using Fut7Fantasy.Infrastructure.Options;
 using Fut7Fantasy.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -13,12 +15,35 @@ using Microsoft.Extensions.Options;
 namespace Fut7Fantasy.Demo;
 
 /// <summary>
-/// O reset da demonstração: apaga o banco, recria pelas migrations e conta a história de
+/// O reset da demonstração: esvazia o banco, recria pelas migrations e conta a história de
 /// novo. Idempotente por construção — rodar duas vezes deixa o mesmo estado —, e travado
 /// para nunca tocar um banco que não seja de demo (04 §15).
 /// </summary>
 internal static class DemoReset
 {
+    /// <summary>
+    /// Derruba as chaves estrangeiras e depois todas as tabelas do banco, inclusive o
+    /// histórico de migrations. Esquemas ficam: as migrations já os criam só se faltarem.
+    /// </summary>
+    private const string DropAllTables = """
+        DECLARE @sql nvarchar(max);
+
+        SELECT @sql = STRING_AGG(CONVERT(nvarchar(max),
+            N'ALTER TABLE ' + QUOTENAME(SCHEMA_NAME(t.schema_id)) + N'.' + QUOTENAME(t.name)
+            + N' DROP CONSTRAINT ' + QUOTENAME(fk.name) + N';'), N' ')
+        FROM sys.foreign_keys AS fk
+        JOIN sys.tables AS t ON t.object_id = fk.parent_object_id;
+        SET @sql = ISNULL(@sql, N'');
+        EXEC sys.sp_executesql @sql;
+
+        SELECT @sql = STRING_AGG(CONVERT(nvarchar(max),
+            N'DROP TABLE ' + QUOTENAME(SCHEMA_NAME(schema_id)) + N'.' + QUOTENAME(name) + N';'), N' ')
+        FROM sys.tables
+        WHERE is_ms_shipped = 0;
+        SET @sql = ISNULL(@sql, N'');
+        EXEC sys.sp_executesql @sql;
+        """;
+
     /// <summary>
     /// A mesma infraestrutura da API, com três trocas: o relógio, que o seed avança; a
     /// conta que age, que o seed escolhe; e o e-mail, que o seed nunca manda.
@@ -84,7 +109,15 @@ internal static class DemoReset
             var database = new SqlConnectionStringBuilder(dbContext.Database.GetConnectionString()).InitialCatalog;
             EnsureDemoDatabase(database, confirmedDatabase);
 
-            await dbContext.Database.EnsureDeletedAsync(cancellationToken).ConfigureAwait(false);
+            // Esvazia por dentro em vez de apagar o banco: no Azure SQL, apagar remove o
+            // próprio recurso, e o banco que o EF recriasse sairia no plano padrão, pago, fora
+            // da oferta gratuita (Fase 17). Num SQL Server novo, as migrations criam o banco.
+            var creator = dbContext.GetService<IRelationalDatabaseCreator>();
+            if (await creator.ExistsAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await dbContext.Database.ExecuteSqlRawAsync(DropAllTables, cancellationToken).ConfigureAwait(false);
+            }
+
             await dbContext.Database.MigrateAsync(cancellationToken).ConfigureAwait(false);
         }
 

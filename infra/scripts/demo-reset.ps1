@@ -4,9 +4,10 @@
     Recria o ambiente de demonstracao local do zero: banco, contas e a historia da Copa.
 
 .DESCRIPTION
-    Apaga o banco Fut7Fantasy_Demo do SQL Server do compose, recria pelas migrations e
-    roda o seed (src/backend/src/Fut7Fantasy.Demo), que conta tres semanas de campeonato
-    pelas regras da aplicacao. Rodar de novo deixa o mesmo estado.
+    Esvazia o banco Fut7Fantasy_Demo do SQL Server do compose (ou cria, na primeira vez),
+    recria as tabelas pelas migrations e roda o seed (src/backend/src/Fut7Fantasy.Demo),
+    que conta tres semanas de campeonato pelas regras da aplicacao. Rodar de novo deixa
+    o mesmo estado.
 
     As senhas das contas demo nao estao no codigo: na primeira vez o script gera tres
     senhas aleatorias e guarda no .env, que fica fora do Git. Nas seguintes, reaproveita.
