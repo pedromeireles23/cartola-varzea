@@ -1,0 +1,134 @@
+name: Deploy (Azure)
+
+# Publica a demonstração na Azure (Fase 17): depois que o CI passa na main, ou à mão.
+# Fica parado até o infra/scripts/azure-bootstrap.ps1 configurar o repositório. Entra na
+# Azure por OIDC, sem segredo de longa duração; a identidade só vale no ambiente azure-demo.
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-demo
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publicar na Azure
+    if: >-
+      vars.AZURE_CLIENT_ID != '' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: azure-demo
+      url: ${{ steps.infra.outputs.appUrl }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SOLUTION: src/backend/Fut7Fantasy.slnx
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_APP_NAME: ${{ vars.AZURE_APP_NAME }}
+      AZURE_SQL_ADMIN_NAME: ${{ vars.AZURE_SQL_ADMIN_NAME }}
+      AZURE_SQL_ADMIN_OBJECT_ID: ${{ vars.AZURE_SQL_ADMIN_OBJECT_ID }}
+    steps:
+      # A versão que o CI aprovou, não a ponta da main no momento do deploy.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Instalar .NET do global.json
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Instalar Node do .nvmrc
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: src/frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Build de produção do Angular
+        working-directory: src/frontend
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+          node ../../infra/scripts/conferir-csp.mjs dist/fut7fantasy-web/browser/index.html
+
+      # A API serve o build na mesma origem (SpaHosting): ele vai para o wwwroot.
+      - name: Publicar a API com o Angular no wwwroot
+        run: |
+          dotnet restore "$SOLUTION" --locked-mode
+          dotnet publish src/backend/src/Fut7Fantasy.Api --configuration Release --no-restore --output publicacao
+          mkdir -p publicacao/wwwroot
+          cp -r src/frontend/dist/fut7fantasy-web/browser/. publicacao/wwwroot/
+
+      - name: Entrar na Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Provisionar a infraestrutura (Bicep)
+        id: infra
+        run: |
+          saida=$(az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "deploy-${GITHUB_RUN_ID}" \
+            --template-file infra/bicep/main.bicep \
+            --parameters appName="$AZURE_APP_NAME" \
+              sqlAdminObjectId="$AZURE_SQL_ADMIN_OBJECT_ID" sqlAdminLogin="$AZURE_SQL_ADMIN_NAME" \
+            --query properties.outputs --output json)
+          for chave in appName appUrl sqlServerFqdn databaseName appIdentityName appIdentityClientId; do
+            echo "$chave=$(jq -r ".$chave.value" <<< "$saida")" >> "$GITHUB_OUTPUT"
+          done
+
+      # O runner do GitHub roda dentro da Azure: a regra "Allow Azure services" do Bicep
+      # já o deixa chegar ao SQL. O banco pausado leva até um minuto para acordar.
+      #
+      # Sem bundle: compilar e aplicar acontecem no mesmo job, e o bundle compila para o
+      # runtime do runner, que os lock files não registram — o restore travado recusaria.
+      - name: Aplicar as migrations
+        env:
+          SQL_FQDN: ${{ steps.infra.outputs.sqlServerFqdn }}
+          SQL_DATABASE: ${{ steps.infra.outputs.databaseName }}
+        run: |
+          dotnet tool restore
+          dotnet ef database update --configuration Release \
+            --project src/backend/src/Fut7Fantasy.Infrastructure \
+            --startup-project src/backend/src/Fut7Fantasy.Infrastructure \
+            --connection "Server=tcp:${SQL_FQDN},1433;Database=${SQL_DATABASE};Authentication=Active Directory Default;Encrypt=True;Connect Timeout=90"
+
+      - name: Dar à Web App acesso de leitura e escrita ao banco
+        uses: azure/sql-action@eb1f9a80487ca52b90f41a473f53da4943526994 # v2.4
+        with:
+          connection-string: >-
+            Server=tcp:${{ steps.infra.outputs.sqlServerFqdn }},1433;Database=${{ steps.infra.outputs.databaseName }};Authentication=Active Directory Default;Encrypt=True;Connect Timeout=90
+          path: infra/sql/conceder-acesso-app.sql
+          arguments: >-
+            -v AppIdentityName=${{ steps.infra.outputs.appIdentityName }}
+            AppIdentityClientId=${{ steps.infra.outputs.appIdentityClientId }}
+          skip-firewall-check: true
+
+      - name: Publicar na Web App
+        uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
+        with:
+          app-name: ${{ steps.infra.outputs.appName }}
+          package: publicacao
+
+      # Só o que não toca o banco: acordá-lo a cada deploy gastaria a cota gratuita à toa.
+      - name: Smoke da publicação
+        env:
+          APP_URL: ${{ steps.infra.outputs.appUrl }}
+        run: bash infra/scripts/smoke-azure.sh "$APP_URL"

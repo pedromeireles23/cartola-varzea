@@ -215,6 +215,33 @@ Antes de abrir um PR, vale rodar o mesmo verificador do CI localmente. Baixe o `
 
 Para recriar o banco local do zero: `docker compose down -v && docker compose up -d` e aplique as migrations de novo.
 
+## Demonstração na Azure
+
+A demonstração publicada roda só em recursos com camada sempre gratuita: App Service F1 (Linux), Azure SQL na oferta gratuita, com pausa até o mês seguinte quando a cota acaba, e Application Insights com teto diário de ingestão. A infraestrutura está em `infra/bicep` e é aplicada pelo próprio deploy.
+
+Preparação, uma vez, por quem é dono da assinatura, com o [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) e o `gh` logados:
+
+```powershell
+az login
+powershell -ExecutionPolicy Bypass -File .\infra\scripts\azure-bootstrap.ps1 -Email voce@exemplo.com
+```
+
+O script cria o grupo de recursos, a identidade do GitHub Actions (OIDC, sem senha, válida só no ambiente `azure-demo`), as variáveis e os segredos do repositório e o orçamento com alerta por e-mail. As senhas das contas da demo na nuvem ficam também no `.env` local, como `AZURE_DEMO_*`.
+
+Depois disso:
+
+- **Deploy (Azure)** (`.github/workflows/deploy.yml`) roda sozinho depois de cada CI verde na `main`, ou à mão (`gh workflow run deploy.yml`): provisiona pelo Bicep, aplica as migrations por bundle, dá à identidade da Web App só leitura e escrita de dados, publica a API com o build do Angular no `wwwroot` e faz o smoke (`infra/scripts/smoke-azure.sh`).
+- **Reset da demo (Azure)** (`.github/workflows/demo-reset.yml`) recria a história toda segunda; rode à mão depois do primeiro deploy, para a primeira carga.
+
+A publicação liga três chaves que o ambiente local não usa: `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`, porque o TLS termina no balanceador da Azure; `Email:Enabled=false`, que fecha cadastro e recuperação de senha; e `DemoAccess:Enabled=true`. O smoke só consulta rotas que não tocam o banco, para não acordá-lo à toa e gastar a cota gratuita.
+
+Para desligar tudo:
+
+```powershell
+az group delete --name rg-cartola-varzea
+az ad app delete --id <AZURE_CLIENT_ID>   # o valor está nas variáveis do repositório
+```
+
 ## Convenções
 
 ### Idioma

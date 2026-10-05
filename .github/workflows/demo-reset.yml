@@ -1,0 +1,72 @@
+name: Reset da demo (Azure)
+
+# A história da demo começa 30 dias antes do reset e envelhece: toda segunda o banco na
+# Azure é esvaziado e a Copa é contada de novo, pelas regras da aplicação (Fase 17). Rodar
+# à mão também serve para a primeira carga, depois do primeiro deploy.
+#
+# Repositório público sem atividade por 60 dias tem os agendamentos desligados pelo GitHub;
+# nesse caso, reativar em Actions ou rodar à mão.
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # segunda, 6h em Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-demo
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    name: Recontar a história da demo
+    if: vars.AZURE_CLIENT_ID != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: azure-demo
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SOLUTION: src/backend/Fut7Fantasy.slnx
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_APP_NAME: ${{ vars.AZURE_APP_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar .NET do global.json
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Compilar o console da demo
+        run: |
+          dotnet restore "$SOLUTION" --locked-mode
+          dotnet build src/backend/src/Fut7Fantasy.Demo --configuration Release --no-restore
+
+      - name: Entrar na Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Recontar a história
+        env:
+          Demo__ViewerPassword: ${{ secrets.DEMO_VIEWER_PASSWORD }}
+          Demo__OrganizerPassword: ${{ secrets.DEMO_ORGANIZER_PASSWORD }}
+          Demo__AdminPassword: ${{ secrets.DEMO_ADMIN_PASSWORD }}
+        run: |
+          servidor=$(az sql server list --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query "[0].fullyQualifiedDomainName" --output tsv)
+          export Database__ConnectionString="Server=tcp:${servidor},1433;Database=Fut7Fantasy_Demo;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=90"
+          dotnet run --project src/backend/src/Fut7Fantasy.Demo --configuration Release --no-build \
+            -- reset --banco Fut7Fantasy_Demo
+
+      - name: Smoke da publicação
+        run: bash infra/scripts/smoke-azure.sh "https://${AZURE_APP_NAME}.azurewebsites.net"
