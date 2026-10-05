@@ -205,6 +205,9 @@ export class Shell {
   protected readonly isAdmin = this.auth.isPlatformAdmin;
   protected readonly organizerCompetition = this.organizer.competition;
 
+  /** "Criar conta" só onde existe cadastro: a publicação sem e-mail não tem (Fase 17). */
+  protected readonly selfService = this.auth.selfService;
+
   /** Título estático da rota mais funda, para as telas fora das seções conhecidas. */
   private readonly routeTitle = signal<string | null>(null);
   private readonly segments = signal(segmentsOf(this.router.url));

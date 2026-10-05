@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { anonymousGuard, authGuard } from './core/auth/auth.guard';
+import { anonymousGuard, authGuard, selfServiceGuard } from './core/auth/auth.guard';
 import { developmentRoutes } from './development.routes';
 import { Shell } from './layouts/shell/shell';
 
@@ -166,7 +166,7 @@ export const routes: Routes = [
       {
         path: 'cadastro',
         title: 'Criar conta',
-        canActivate: [anonymousGuard],
+        canActivate: [selfServiceGuard, anonymousGuard],
         loadComponent: () => import('./features/auth/register').then((m) => m.RegisterPage),
       },
       {
@@ -177,6 +177,7 @@ export const routes: Routes = [
       {
         path: 'recuperar-senha',
         title: 'Recuperar senha',
+        canActivate: [selfServiceGuard],
         loadComponent: () =>
           import('./features/auth/password-recovery').then((m) => m.PasswordRecoveryPage),
       },

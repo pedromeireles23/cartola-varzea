@@ -41,11 +41,13 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
         <app-button type="submit" [loading]="enviando()" [fullWidth]="true">Entrar</app-button>
       </form>
 
-      <p class="apoio">
-        <a routerLink="/recuperar-senha">Esqueci minha senha</a>
-        ·
-        <a routerLink="/cadastro">Criar uma conta</a>
-      </p>
+      @if (selfService()) {
+        <p class="apoio">
+          <a routerLink="/recuperar-senha">Esqueci minha senha</a>
+          ·
+          <a routerLink="/cadastro">Criar uma conta</a>
+        </p>
+      }
     </app-card>
 
     @if (demo()) {
@@ -83,6 +85,9 @@ export class LoginPage {
 
   /** Só a demonstração pública oferece a entrada de visitante. */
   protected readonly demo = this.auth.demoAccess;
+
+  /** Sem e-mail na publicação, não há conta nova nem recuperação de senha. */
+  protected readonly selfService = this.auth.selfService;
   protected readonly entrandoVisitante = signal(false);
   protected readonly erroVisitante = signal<string | null>(null);
 

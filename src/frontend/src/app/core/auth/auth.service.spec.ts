@@ -59,6 +59,24 @@ describe('AuthService', () => {
     expect(auth.demoAccess()).toBe(true);
   });
 
+  it('sabe quando a publicação, sem e-mail, fecha o cadastro e a recuperação de senha', async () => {
+    expect(auth.selfService()).toBe(true);
+
+    const consulta = auth.loadDemoAccess();
+    http.expectOne('/api/v1/auth/demo').flush({ available: true, selfService: false });
+    await consulta;
+
+    expect(auth.selfService()).toBe(false);
+  });
+
+  it('sem o campo na resposta, mantém o cadastro aberto', async () => {
+    const consulta = auth.loadDemoAccess();
+    http.expectOne('/api/v1/auth/demo').flush({ available: false });
+    await consulta;
+
+    expect(auth.selfService()).toBe(true);
+  });
+
   it('sem resposta da demonstração, não oferece a entrada de visitante', async () => {
     const consulta = auth.loadDemoAccess();
     http.expectOne('/api/v1/auth/demo').flush(null, { status: 500, statusText: 'Server Error' });

@@ -29,6 +29,7 @@ public static class AccountEndpoints
         var grupo = routes.MapGroup("/api/v1/auth").WithTags("Conta");
 
         grupo.MapPost("/register", RegisterAsync)
+            .AddEndpointFilter(OnlyWithEmail)
             .RequireRateLimiting(StrictRateLimitPolicy)
             .WithName("Register")
             .WithSummary("Cria uma conta e envia a verificação de e-mail.");
@@ -58,6 +59,7 @@ public static class AccountEndpoints
             .WithSummary("Encerra a sessão.");
 
         grupo.MapPost("/forgot-password", ForgotPasswordAsync)
+            .AddEndpointFilter(OnlyWithEmail)
             .RequireRateLimiting(StrictRateLimitPolicy)
             .WithName("ForgotPassword")
             .WithSummary("Solicita a recuperação de senha.");
@@ -185,10 +187,24 @@ public static class AccountEndpoints
 
     /// <summary>
     /// A tela de entrada pergunta antes de mostrar o botão: fora do ambiente de
-    /// demonstração ele não existe.
+    /// demonstração ele não existe. A mesma resposta diz se dá para criar conta e recuperar
+    /// a senha, o que a publicação sem e-mail fecha (Fase 17).
     /// </summary>
-    private static IResult DemoAvailability(IOptions<DemoAccessOptions> options) =>
-        Results.Ok(new DemoAvailabilityResponse(options.Value.Enabled));
+    private static IResult DemoAvailability(
+        IOptions<DemoAccessOptions> demo,
+        IOptions<EmailOptions> email) =>
+        Results.Ok(new DemoAvailabilityResponse(demo.Value.Enabled, email.Value.Enabled));
+
+    /// <summary>
+    /// Cadastro e recuperação de senha só existem por e-mail. Sem ele, respondem como rota
+    /// inexistente, do mesmo jeito que a entrada de visitante desligada.
+    /// </summary>
+    private static async ValueTask<object?> OnlyWithEmail(
+        EndpointFilterInvocationContext context,
+        EndpointFilterDelegate next) =>
+        context.HttpContext.RequestServices.GetRequiredService<IOptions<EmailOptions>>().Value.Enabled
+            ? await next(context).ConfigureAwait(false)
+            : Results.NotFound();
 
     /// <summary>
     /// Entrada de visitante (Fase 12). Desligada, ou com a conta configurada fora do papel
@@ -284,7 +300,9 @@ public static class AccountEndpoints
 /// <param name="Message">Texto pronto para exibir ao usuário.</param>
 public sealed record MessageResponse(string Message);
 
-public sealed record DemoAvailabilityResponse(bool Available);
+/// <param name="Available">A entrada de visitante está ligada.</param>
+/// <param name="SelfService">Dá para criar conta e recuperar a senha por e-mail.</param>
+public sealed record DemoAvailabilityResponse(bool Available, bool SelfService);
 
 public sealed record RegisterRequest(
     [property: Required(ErrorMessage = "Informe o e-mail.")]

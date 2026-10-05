@@ -33,6 +33,7 @@ export class AuthService {
   private readonly account = signal<Account | null>(null);
   private readonly loaded = signal(false);
   private readonly demo = signal(false);
+  private readonly accountSelfService = signal(true);
 
   /** Conta atual, ou `null` quando anônima. */
   readonly current = this.account.asReadonly();
@@ -44,6 +45,12 @@ export class AuthService {
 
   /** Se a entrada de visitante existe, conhecido antes da primeira tela. */
   readonly demoAccess = this.demo.asReadonly();
+
+  /**
+   * Se dá para criar conta e recuperar a senha. Só a publicação sem e-mail fecha os dois,
+   * que dependem de uma mensagem chegar (Fase 17); na dúvida, ficam abertos.
+   */
+  readonly selfService = this.accountSelfService.asReadonly();
 
   /** Só decide o que mostrar; a API continua sendo quem autoriza. */
   /** Conta pública de demonstração: tudo é somente leitura no servidor. */
@@ -116,14 +123,16 @@ export class AuthService {
   /**
    * Consulta, uma vez, se a demonstração pública liga a entrada de visitante; fora dela,
    * não há botão. Roda na inicialização, junto da sessão: perguntado só na tela, o botão
-   * chegava depois do primeiro desenho e empurrava o resto da landing (CLS de 0,066).
+   * chegava depois do primeiro desenho e empurrava o resto da landing (CLS de 0,066). A
+   * mesma resposta diz se a publicação fecha o cadastro e a recuperação de senha.
    */
   async loadDemoAccess(): Promise<void> {
     try {
       const resposta = await firstValueFrom(
-        this.http.get<{ available: boolean }>(`${this.baseUrl}/auth/demo`),
+        this.http.get<{ available: boolean; selfService?: boolean }>(`${this.baseUrl}/auth/demo`),
       );
       this.demo.set(resposta.available);
+      this.accountSelfService.set(resposta.selfService ?? true);
     } catch {
       this.demo.set(false);
     }

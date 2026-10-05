@@ -24,6 +24,17 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   return router.createUrlTree(['/entrar'], { queryParams: { destino: state.url } });
 };
 
+/**
+ * Cadastro e recuperação de senha só existem com e-mail: a publicação sem ele (Fase 17)
+ * manda quem chegar por link direto para a entrada, onde está o visitante.
+ */
+export const selfServiceGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  return auth.selfService() ? true : router.createUrlTree(['/entrar']);
+};
+
 /** Evita que quem já entrou caia nas telas de cadastro e entrada. */
 export const anonymousGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);

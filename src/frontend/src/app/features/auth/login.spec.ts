@@ -27,9 +27,9 @@ describe('LoginPage', () => {
   afterEach(() => http.verify());
 
   /** A inicialização já sabe se a demonstração liga a entrada de visitante. */
-  async function abrir(demo = false): Promise<ComponentFixture<LoginPage>> {
+  async function abrir(demo = false, selfService = true): Promise<ComponentFixture<LoginPage>> {
     const consulta = TestBed.inject(AuthService).loadDemoAccess();
-    http.expectOne('/api/v1/auth/demo').flush({ available: demo });
+    http.expectOne('/api/v1/auth/demo').flush({ available: demo, selfService });
     await consulta;
 
     const fixture = TestBed.createComponent(LoginPage);
@@ -48,6 +48,17 @@ describe('LoginPage', () => {
       selo!.compareDocumentPosition(elemento.querySelector('form')!) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it('oferece criar conta e recuperar senha só quando a publicação tem e-mail', async () => {
+    const comEmail = (await abrir()).nativeElement as HTMLElement;
+    expect(comEmail.querySelector('a[href="/cadastro"]')).not.toBeNull();
+    expect(comEmail.querySelector('a[href="/recuperar-senha"]')).not.toBeNull();
+
+    const semEmail = (await abrir(true, false)).nativeElement as HTMLElement;
+    expect(semEmail.querySelector('a[href="/cadastro"]')).toBeNull();
+    expect(semEmail.querySelector('a[href="/recuperar-senha"]')).toBeNull();
+    expect(semEmail.textContent).toContain('Entrar como visitante');
   });
 
   it('marca os campos para gerenciadores de senha', async () => {

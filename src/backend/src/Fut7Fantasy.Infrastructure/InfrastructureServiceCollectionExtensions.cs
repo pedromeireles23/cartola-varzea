@@ -104,7 +104,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddHostedService<StartupRecorder>();
 
         AddIdentity(services);
-        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        // Escolhido a cada uso, e não no registro: as opções só valem depois que toda a
+        // configuração chegou, inclusive a do host de teste.
+        services.AddScoped<SmtpEmailSender>();
+        services.AddScoped<DisabledEmailSender>();
+        services.AddScoped<IEmailSender>(provider =>
+            provider.GetRequiredService<IOptions<EmailOptions>>().Value.Enabled
+                ? provider.GetRequiredService<SmtpEmailSender>()
+                : provider.GetRequiredService<DisabledEmailSender>());
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IOrganizerApplicationService, OrganizerApplicationService>();
         services.AddScoped<InitialPlatformAdmin>();
