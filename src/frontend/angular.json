@@ -51,6 +51,14 @@
                 }
               ],
               "outputHashing": "bundles",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": true
+              },
               "fileReplacements": []
             },
             "development": {

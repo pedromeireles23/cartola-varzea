@@ -148,6 +148,11 @@ jobs:
       - name: Build de produção
         run: npm run build
 
+      # A API manda CSP sem 'unsafe-inline' junto com o index.html; script inline no
+      # build seria bloqueado no navegador, e o ng serve dos testes não manda CSP.
+      - name: Conferir o index.html contra a CSP
+        run: node ../../infra/scripts/conferir-csp.mjs dist/fut7fantasy-web/browser/index.html
+
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-24.04
