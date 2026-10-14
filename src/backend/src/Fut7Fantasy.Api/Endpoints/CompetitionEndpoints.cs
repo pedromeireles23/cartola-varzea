@@ -24,6 +24,13 @@ public static class CompetitionEndpoints
             .WithName("GetModalityProfiles")
             .WithSummary("Formação, banco, orçamento e limites vigentes de cada modalidade.");
 
+        // Fora do grupo da organização: o escopo é a sessão, como em /organizations/mine.
+        routes.MapGet("/api/v1/organizations/mine/competitions", ListMineAsync)
+            .RequireAuthorization()
+            .WithTags("Campeonatos")
+            .WithName("ListMyCompetitions")
+            .WithSummary("Campeonatos de todas as organizações da conta, com a rodada da vez de cada um.");
+
         var organizationCompetitions = routes
             .MapGroup("/api/v1/organizations/{organizationId:guid}/competitions")
             .WithTags("Campeonatos");
@@ -60,6 +67,11 @@ public static class CompetitionEndpoints
 
         return routes;
     }
+
+    private static async Task<IResult> ListMineAsync(
+        ICompetitionManagementService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await service.ListMineAsync(cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> ListAsync(
         Guid organizationId,

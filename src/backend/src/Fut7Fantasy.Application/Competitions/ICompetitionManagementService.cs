@@ -10,6 +10,13 @@ public interface ICompetitionManagementService
 {
     Task<IReadOnlyList<CompetitionSummaryView>> ListAsync(Guid organizationId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Campeonatos de todas as organizações da conta atual, com o que a central de quem
+    /// organiza precisa para dizer o próximo passo. O escopo sai da sessão, como em
+    /// "minhas organizações", nunca de um parâmetro.
+    /// </summary>
+    Task<IReadOnlyList<OrganizerCompetitionView>> ListMineAsync(CancellationToken cancellationToken);
+
     Task<CompetitionCommandResult> CreateDraftAsync(
         Guid organizationId,
         CompetitionSettings settings,
@@ -52,6 +59,37 @@ public sealed record CompetitionSummaryView(
     string Modality,
     string Status,
     DateTimeOffset UpdatedAt);
+
+/// <summary>
+/// Um campeonato na central de quem organiza: situação, tamanho e a rodada da vez.
+/// <c>ActiveTeams</c> conta os times não arquivados e <c>Matches</c>, as partidas
+/// marcadas, sem as adiadas e as canceladas. <c>CurrentRound</c> é a primeira rodada
+/// entre o mercado aberto e a publicação, nula quando nenhuma está em jogo;
+/// <c>NextRound</c>, a primeira em rascunho com partida — a próxima a abrir o mercado.
+/// </summary>
+public sealed record OrganizerCompetitionView(
+    Guid Id,
+    string Name,
+    string Season,
+    string Modality,
+    string Status,
+    Guid OrganizationId,
+    string OrganizationName,
+    string ViewerRole,
+    DateTimeOffset UpdatedAt,
+    int ActiveTeams,
+    int Matches,
+    OrganizerRoundView? CurrentRound,
+    OrganizerRoundView? NextRound);
+
+/// <summary>A rodada como a central mostra, com os horários já no fuso do campeonato.</summary>
+public sealed record OrganizerRoundView(
+    Guid Id,
+    string Name,
+    string Phase,
+    int Matches,
+    string? FirstKickoffLocal,
+    string? MarketCloseLocal);
 
 /// <summary>
 /// Configuração completa do campeonato. <c>ViewerRole</c> é o papel da conta atual na

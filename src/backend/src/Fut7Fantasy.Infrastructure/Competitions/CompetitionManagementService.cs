@@ -13,6 +13,16 @@ public sealed class CompetitionManagementService(
     ICurrentUser currentUser,
     TimeProvider clock) : ICompetitionManagementService
 {
+    /// <summary>Do mercado aberto até a publicação: a rodada pede alguma coisa da organização.</summary>
+    private static readonly RoundPhase[] InPlay =
+    [
+        RoundPhase.MarketOpen,
+        RoundPhase.MarketClosed,
+        RoundPhase.InProgress,
+        RoundPhase.UnderReview,
+        RoundPhase.ReopenedForCorrection,
+    ];
+
     public async Task<IReadOnlyList<CompetitionSummaryView>> ListAsync(
         Guid organizationId,
         CancellationToken cancellationToken)
@@ -32,6 +42,101 @@ public sealed class CompetitionManagementService(
             competition.Modality.ToString(),
             competition.Status.ToString(),
             competition.UpdatedAt))];
+    }
+
+    public async Task<IReadOnlyList<OrganizerCompetitionView>> ListMineAsync(CancellationToken cancellationToken)
+    {
+        var userId = currentUser.Id
+            ?? throw new InvalidOperationException("O caso de uso exige uma conta autenticada.");
+
+        var memberships = await (
+            from member in dbContext.OrganizationMembers.AsNoTracking()
+            join organization in dbContext.Organizations.AsNoTracking()
+                on member.OrganizationId equals organization.Id
+            where member.UserId == userId
+            select new { organization.Id, organization.Name, member.Role })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var organizationIds = memberships.Select(membership => membership.Id).ToList();
+
+        var competitions = await dbContext.Competitions
+            .AsNoTracking()
+            .Where(competition => organizationIds.Contains(competition.OrganizationId))
+            .OrderByDescending(competition => competition.UpdatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var competitionIds = competitions.Select(competition => competition.Id).ToList();
+
+        var teams = await dbContext.RealTeams
+            .AsNoTracking()
+            .Where(team => competitionIds.Contains(team.CompetitionId) && team.ArchivedAt == null)
+            .GroupBy(team => team.CompetitionId)
+            .Select(group => new { CompetitionId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(group => group.CompetitionId, group => group.Count, cancellationToken)
+            .ConfigureAwait(false);
+        var rounds = await dbContext.Rounds
+            .AsNoTracking()
+            .Where(round => competitionIds.Contains(round.CompetitionId))
+            .OrderBy(round => round.Sequence)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var matches = await dbContext.Matches
+            .AsNoTracking()
+            .Where(match => competitionIds.Contains(match.CompetitionId) && match.Status == MatchStatus.Scheduled)
+            .GroupBy(match => match.RoundId)
+            .Select(group => new ScheduledMatches(
+                group.Key,
+                group.Count(),
+                group.Min(match => match.KickoffAt)))
+            .ToDictionaryAsync(group => group.RoundId, cancellationToken)
+            .ConfigureAwait(false);
+
+        var now = clock.GetUtcNow();
+        var byOrganization = memberships.ToDictionary(membership => membership.Id);
+        return [.. competitions.Select(competition =>
+        {
+            var own = rounds.Where(round => round.CompetitionId == competition.Id).ToList();
+            var current = own.FirstOrDefault(round => InPlay.Contains(round.PhaseAt(now)));
+            var next = own.FirstOrDefault(
+                round => round.Status == RoundStatus.Draft && matches.ContainsKey(round.Id));
+            var organization = byOrganization[competition.OrganizationId];
+
+            return new OrganizerCompetitionView(
+                competition.Id,
+                competition.Name,
+                competition.Season,
+                competition.Modality.ToString(),
+                competition.Status.ToString(),
+                organization.Id,
+                organization.Name,
+                organization.Role.ToString(),
+                competition.UpdatedAt,
+                teams.GetValueOrDefault(competition.Id),
+                own.Sum(round => matches.GetValueOrDefault(round.Id)?.Count ?? 0),
+                RoundOf(current, competition.TimeZoneId, matches, now),
+                RoundOf(next, competition.TimeZoneId, matches, now));
+        })];
+    }
+
+    private static OrganizerRoundView? RoundOf(
+        Round? round,
+        string timeZoneId,
+        Dictionary<Guid, ScheduledMatches> matches,
+        DateTimeOffset now)
+    {
+        if (round is null)
+        {
+            return null;
+        }
+
+        var scheduled = matches.GetValueOrDefault(round.Id);
+        return new OrganizerRoundView(
+            round.Id,
+            round.Name,
+            round.PhaseAt(now).ToString(),
+            scheduled?.Count ?? 0,
+            scheduled is null ? null : CompetitionClock.ToLocalText(scheduled.First, timeZoneId),
+            round.MarketCloseAt is { } closeAt ? CompetitionClock.ToLocalText(closeAt, timeZoneId) : null);
     }
 
     public async Task<CompetitionCommandResult> CreateDraftAsync(
@@ -175,3 +280,6 @@ public sealed class CompetitionManagementService(
     private Guid RequiredUserId() => currentUser.Id
         ?? throw new InvalidOperationException("O caso de uso exige uma conta autenticada.");
 }
+
+/// <summary>Partidas marcadas de uma rodada: quantas e quando começa a primeira.</summary>
+internal sealed record ScheduledMatches(Guid RoundId, int Count, DateTimeOffset First);

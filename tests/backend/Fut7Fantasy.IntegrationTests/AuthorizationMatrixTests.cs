@@ -73,6 +73,7 @@ public sealed class AuthorizationMatrixTests
         "GET /api/v1/auth/me -> " + Anonymous,
         "GET /api/v1/notifications/ -> " + Authenticated,
         "GET /api/v1/organizations/mine -> " + Authenticated,
+        "GET /api/v1/organizations/mine/competitions -> " + Authenticated,
         "GET /api/v1/organizations/{organizationId:guid} -> organization-member",
         "GET /api/v1/organizations/{organizationId:guid}/team/ -> organization-owner",
         "GET /api/v1/organizer-applications/mine -> " + Authenticated,
