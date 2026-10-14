@@ -1,0 +1,106 @@
+// Tabela: a prévia em colunas de rodadas no desktop, e a ordem da chave em lista.
+.previa {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-3);
+}
+
+.previa__rodada {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-3);
+  background-color: var(--semantic-surface-alt);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.previa__rodada h3 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: baseline;
+}
+
+.previa__jogos {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  font-size: var(--font-small);
+  list-style: none;
+}
+
+.previa__hora {
+  margin-right: var(--space-2);
+  color: var(--semantic-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ordem {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.ordem__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.ordem__nome {
+  flex: 1 1 10rem;
+  font-weight: 500;
+}
+
+// Guarda o lugar do botão que não existe na ponta, para as colunas não dançarem.
+.ordem__vago {
+  width: 4.5rem;
+}
+
+.classificados {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.classificado {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.classificado__texto {
+  display: grid;
+  min-width: 0;
+}
+
+.classificado__nome {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.classificado__ordem {
+  color: var(--semantic-brand-strong);
+  font-family: var(--font-family-display);
+  font-weight: 800;
+}
+
+.classificado input {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--semantic-brand-strong);
+}

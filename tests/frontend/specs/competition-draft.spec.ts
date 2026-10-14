@@ -38,17 +38,22 @@ test('proprietário cria campeonato em rascunho, configura e só a organização
     .selectOption({ label: '1 hora antes da primeira partida' });
   await page.getByRole('button', { name: 'Criar campeonato' }).click();
 
-  // A primeira abertura da área do campeonato carrega o trecho da aplicação sob demanda.
-  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}$/, { timeout: 15_000 });
+  // A criação abre a montagem no primeiro passo; a primeira abertura da área do
+  // campeonato carrega o trecho da aplicação sob demanda.
+  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}\/montar\/times$/, {
+    timeout: 15_000,
+  });
   await expect(page.getByText('Campeonato criado em rascunho.')).toBeVisible();
-  await expect(page).toHaveTitle(`Resumo · ${nome}`);
+  await expect(page).toHaveTitle(`Montagem: times · ${nome}`);
+  const urlDoCampeonato = page.url().replace(/\/montar\/times$/, '');
+
+  const navegacao = page.getByRole('navigation', { name: 'Navegação do campeonato' });
+  await navegacao.getByRole('link', { name: 'Resumo' }).click();
   const modalidade = page.getByRole('region', { name: 'Modalidade: Futsal' });
   await expect(modalidade.getByText('80 créditos')).toBeVisible();
   await expect(page.getByText('1 hora antes da primeira partida')).toBeVisible();
-  const urlDoCampeonato = page.url();
 
   // 3. Configurar: no rascunho a modalidade ainda muda, e o resumo acompanha.
-  const navegacao = page.getByRole('navigation', { name: 'Navegação do campeonato' });
   await navegacao.getByRole('link', { name: 'Configuração' }).click();
   await expect(page.getByRole('heading', { name: 'Configuração', level: 1 })).toBeVisible();
   await page.getByRole('radio', { name: /^Futebol de campo/ }).check();

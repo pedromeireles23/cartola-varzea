@@ -22,6 +22,7 @@ import {
   ImportResult,
   ImportService,
   MAX_FILE_BYTES,
+  importIssues,
 } from './import.service';
 
 /** O que a tela mostra depois de conferir ou importar um arquivo. */
@@ -208,7 +209,7 @@ export class ImportUpload {
     this.ocupado.set(null);
     this.conferido.set(false);
     if (falha.code === IMPORT_INVALID_CODE) {
-      this.avisar({ tipo: 'invalido', problemas: problemas(falha) });
+      this.avisar({ tipo: 'invalido', problemas: importIssues(falha) });
       return;
     }
 
@@ -255,17 +256,4 @@ export class ImportUpload {
           ];
     return `${rows} ${rows === 1 ? 'linha lida' : 'linhas lidas'}: ${partes.join(', ')}.`;
   }
-}
-
-/** Lê a lista de problemas do Problem Details, conferindo o formato. */
-function problemas(falha: ApiFailure): readonly ImportIssue[] {
-  const bruto = falha.problem?.['issues'];
-  if (!Array.isArray(bruto)) return [];
-  return bruto.filter(
-    (item): item is ImportIssue =>
-      typeof item === 'object' &&
-      item !== null &&
-      typeof (item as ImportIssue).line === 'number' &&
-      typeof (item as ImportIssue).message === 'string',
-  );
 }

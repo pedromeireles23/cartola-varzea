@@ -60,7 +60,7 @@ describe('CreateCompetitionPage', () => {
     futsal.dispatchEvent(new Event('change'));
   }
 
-  it('cria em rascunho e abre o resumo avisando da criação', async () => {
+  it('cria em rascunho e abre a montagem avisando da criação', async () => {
     const fixture = await abrir('Owner');
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
@@ -82,7 +82,9 @@ describe('CreateCompetitionPage', () => {
     pedido.flush(campeonato({ id: 'c9', name: 'Copa Nova', modality: 'Futsal' }));
     await estabilizar(fixture);
 
-    expect(navegar).toHaveBeenCalledWith(['/organizar/c', 'c9'], { state: { criado: true } });
+    expect(navegar).toHaveBeenCalledWith(['/organizar/c', 'c9', 'montar'], {
+      state: { criado: true },
+    });
   });
 
   it('mostra a falha da API sem sair da tela', async () => {

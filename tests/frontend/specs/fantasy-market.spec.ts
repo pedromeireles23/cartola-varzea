@@ -97,7 +97,9 @@ async function prepararCampeonato(page: Page, organizacao: string, nome: string)
   await page.getByLabel('Nome do campeonato').fill(nome);
   await page.getByRole('radio', { name: /^Fut7/ }).check();
   await page.getByRole('button', { name: 'Criar campeonato' }).click();
-  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}\/montar\/times$/, {
+    timeout: 15_000,
+  });
   const navegacao = page.getByRole('navigation', { name: 'Navegação do campeonato' });
 
   await navegacao.getByRole('link', { name: 'Times' }).click();

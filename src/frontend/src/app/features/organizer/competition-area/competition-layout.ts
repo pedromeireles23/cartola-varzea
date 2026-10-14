@@ -106,6 +106,16 @@ export interface CompetitionCreatedState {
           </header>
 
           <nav class="area__nav" aria-label="Navegação do campeonato">
+            @if (contexto.proprietario()) {
+              <a
+                routerLink="montar"
+                routerLinkActive="area__link--ativo"
+                ariaCurrentWhenActive="page"
+                class="area__link"
+              >
+                Montagem
+              </a>
+            }
             <a
               routerLink="."
               routerLinkActive="area__link--ativo"

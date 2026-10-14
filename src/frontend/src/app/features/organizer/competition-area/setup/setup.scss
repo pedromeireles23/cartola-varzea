@@ -1,0 +1,224 @@
+// Montagem do campeonato: a barra de passos, a grade de linhas editáveis e o rodapé de
+// cada passo. O estado do passo vem em ícone e em texto; a cor só reforça.
+
+.passos ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: center;
+  height: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  color: var(--semantic-text);
+  text-decoration: none;
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.passo:hover {
+  background-color: var(--semantic-surface-hover);
+}
+
+.passo__numero {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  color: var(--semantic-text-strong);
+  font-family: var(--font-family-display);
+  font-weight: 800;
+  border: 2px solid var(--semantic-border-control);
+  border-radius: var(--radius-round);
+}
+
+.passo__texto {
+  display: grid;
+  min-width: 0;
+}
+
+.passo__rotulo {
+  color: var(--semantic-text-strong);
+  font-weight: 600;
+}
+
+.passo__detalhe {
+  overflow: hidden;
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.passo--feito .passo__numero {
+  color: var(--semantic-on-success);
+  background-color: var(--semantic-success);
+  border-color: var(--semantic-success);
+}
+
+// O passo aberto ganha a borda da marca, como a rodada em destaque na Central da rodada.
+.passo--atual {
+  border-color: var(--semantic-brand-strong);
+  box-shadow: inset 0 0 0 1px var(--semantic-brand-strong);
+}
+
+.passo--atual .passo__numero:not(:has(svg)) {
+  color: var(--semantic-on-action);
+  background-color: var(--semantic-brand-strong);
+  border-color: var(--semantic-brand-strong);
+}
+
+// Corpo de um passo.
+.etapa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.etapa h2 {
+  margin: 0;
+  color: var(--semantic-text-strong);
+  font-size: var(--font-h2);
+}
+
+.etapa h3 {
+  margin: 0;
+  font-size: var(--font-body);
+}
+
+// Grade de linhas: cada linha é um registro, cada coluna um campo com nome próprio para
+// o leitor de tela. No celular as colunas viram uma pilha dentro da linha.
+.grade {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grade__cabecalho,
+.grade__linha {
+  display: grid;
+  grid-template-columns: var(--grade-colunas, minmax(0, 1fr));
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.grade__cabecalho {
+  color: var(--semantic-text-muted);
+  font-size: var(--font-caption);
+  font-weight: 500;
+}
+
+.grade__celula {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.grade__fixo {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--touch-target);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.campo {
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--font-body-size);
+  color: var(--color-ink-950);
+  background-color: var(--color-surface);
+  // Borda forte: o limite de um campo precisa de 3:1 (WCAG 1.4.11).
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.campo:hover:not(:disabled) {
+  border-color: var(--color-ink-500);
+}
+
+.campo[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.campo--texto {
+  min-height: auto;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.erro {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-small);
+}
+
+.dica {
+  margin: 0;
+  color: var(--semantic-text-muted);
+  font-size: var(--font-small);
+}
+
+@media (max-width: 599px) {
+  .grade__cabecalho {
+    display: none;
+  }
+
+  // O primeiro campo ocupa a linha; os outros dividem a de baixo, e a ação fecha a linha.
+  .grade__linha {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--semantic-border-subtle);
+  }
+
+  .grade__linha > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .grade__linha > app-button:last-child {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+// Escudo de iniciais, o mesmo de Times e da súmula, em tamanho de lista.
+.escudo {
+  display: grid;
+  flex: none;
+  width: 2rem;
+  height: 2.25rem;
+  place-items: center;
+  color: var(--semantic-on-action);
+  font-family: var(--font-family-display);
+  font-size: 0.75rem;
+  font-weight: 800;
+  background-color: var(--semantic-brand-strong);
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
+}
+
+.rodape-passo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--semantic-border-subtle);
+}
+
+.rodape-passo .acao--principal:only-child {
+  margin-left: auto;
+}

@@ -29,7 +29,9 @@ test('proprietário inscreve, precifica e desliga atleta sem apagar o histórico
   await page.getByLabel('Nome do campeonato').fill(`Copa dos Atletas ${Date.now()}`);
   await page.getByRole('radio', { name: /^Fut7/ }).check();
   await page.getByRole('button', { name: 'Criar campeonato' }).click();
-  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}\/montar\/times$/, {
+    timeout: 15_000,
+  });
 
   const navigation = page.getByRole('navigation', { name: 'Navegação do campeonato' });
   await navigation.getByRole('link', { name: 'Times' }).click();

@@ -148,7 +148,7 @@ export class CreateCompetitionPage implements OnInit {
     this.competitions.createDraft(this.organizacao(), configuracao).subscribe({
       next: (campeonato) => {
         const estado: CompetitionCreatedState = { criado: true };
-        void this.router.navigate(['/organizar/c', campeonato.id], { state: estado });
+        void this.router.navigate(['/organizar/c', campeonato.id, 'montar'], { state: estado });
       },
       error: (falha: ApiFailure) => {
         this.criando.set(false);

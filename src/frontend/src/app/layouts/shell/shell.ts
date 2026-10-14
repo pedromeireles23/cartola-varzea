@@ -33,6 +33,7 @@ import {
   Inbox,
   Layers,
   LayoutDashboard,
+  ListChecks,
   ListOrdered,
   Menu,
   Settings,
@@ -105,6 +106,7 @@ const GAME_ITEMS: readonly GameItem[] = [
 
 /** A mesma ordem da casca do campeonato, que é a ordem do trabalho de quem organiza. */
 const ORGANIZER_ITEMS: readonly OrganizerItem[] = [
+  { path: 'montar', label: 'Montagem', icon: ListChecks, ownerOnly: true },
   { path: '', label: 'Resumo', icon: LayoutDashboard },
   { path: 'fases', label: 'Fases', icon: Layers },
   { path: 'rodadas', label: 'Rodadas', icon: CalendarDays, also: ['partidas'] },

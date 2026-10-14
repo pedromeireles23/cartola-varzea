@@ -82,9 +82,10 @@ describe('CompetitionLayout', () => {
     expect(TestBed.inject(Title).getTitle()).toBe('Resumo · Copa da Várzea');
   });
 
-  it('proprietário vê Configuração na navegação; auxiliar não', async () => {
+  it('proprietário vê Montagem e Configuração na navegação; auxiliar não', async () => {
     const dono = await abrir(campeonato());
     expect(links(dono)).toEqual([
+      'Montagem',
       'Resumo',
       'Fases',
       'Rodadas',

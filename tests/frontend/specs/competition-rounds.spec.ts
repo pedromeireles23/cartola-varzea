@@ -92,7 +92,9 @@ async function criarCampeonato(page: Page, organizacao: string): Promise<void> {
   await page.getByLabel('Nome do campeonato').fill(`Copa das Rodadas ${Date.now()}`);
   await page.getByRole('radio', { name: /^Fut7/ }).check();
   await page.getByRole('button', { name: 'Criar campeonato' }).click();
-  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}\/montar\/times$/, {
+    timeout: 15_000,
+  });
 }
 
 /** Dois times e uma fase de grupos com os dois confirmados no mesmo grupo. */

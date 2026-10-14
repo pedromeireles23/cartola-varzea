@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { ApiFailure } from '../../../core/api/problem-details';
 import { API_BASE_URL } from '../../../core/config/api-base-url';
 
 /** Tipos importáveis pela tela do campeonato. Estatísticas são importadas na rodada. */
@@ -44,6 +45,12 @@ export interface ImportResult {
   /** O que as contagens não mostram, como rodadas que serão criadas. */
   readonly notes?: readonly string[];
 }
+
+/**
+ * Linha digitada na tela, com as colunas do modelo (`nome_esportivo`, `time`…). O
+ * servidor a confere como uma linha de planilha, e o erro volta com a linha `n + 1`.
+ */
+export type ImportRow = Readonly<Record<string, string>>;
 
 /** Códigos estáveis do Problem Details da importação. */
 export const IMPORT_REJECTED_CODE = 'import_file_rejected';
@@ -102,6 +109,15 @@ export class ImportService {
     return this.statisticsUrl(competitionId, roundId);
   }
 
+  /** Grava as linhas digitadas, tudo ou nada, pelas mesmas regras do arquivo. */
+  commitRows(
+    competitionId: string,
+    kind: ImportKind,
+    rows: readonly ImportRow[],
+  ): Observable<ImportResult> {
+    return this.http.post<ImportResult>(`${this.importsUrl(competitionId)}/${kind}/rows`, { rows });
+  }
+
   /** Envia o arquivo para conferir ou importar; o endereço diz qual dos dois. */
   send(url: string, file: File): Observable<ImportResult> {
     return this.http.post<ImportResult>(url, body(file));
@@ -121,4 +137,22 @@ function body(file: File): FormData {
   const form = new FormData();
   form.append('arquivo', file, file.name);
   return form;
+}
+
+/** Lê a lista de problemas do Problem Details, conferindo o formato. */
+export function importIssues(falha: ApiFailure): readonly ImportIssue[] {
+  const bruto = falha.problem?.['issues'];
+  if (!Array.isArray(bruto)) return [];
+  return bruto.filter(
+    (item): item is ImportIssue =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof (item as ImportIssue).line === 'number' &&
+      typeof (item as ImportIssue).message === 'string',
+  );
+}
+
+/** Posição na lista enviada da linha de um problema; `null` quando o problema é geral. */
+export function rowIndexOf(issue: ImportIssue): number | null {
+  return issue.line >= 2 ? issue.line - 2 : null;
 }

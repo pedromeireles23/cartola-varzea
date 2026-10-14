@@ -247,6 +247,66 @@ export const routes: Routes = [
               ),
           },
           {
+            // Montagem guiada, sem planilha: times, elencos, formato, tabela e publicação.
+            // Sem passo na URL, leva ao primeiro que falta.
+            path: 'montar',
+            loadComponent: () =>
+              import('./features/organizer/competition-area/setup/competition-setup').then(
+                (m) => m.CompetitionSetupPage,
+              ),
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                title: 'Montagem',
+                loadComponent: () =>
+                  import('./features/organizer/competition-area/setup/competition-setup').then(
+                    (m) => m.SetupStart,
+                  ),
+              },
+              {
+                path: 'times',
+                title: 'Montagem: times',
+                loadComponent: () =>
+                  import('./features/organizer/competition-area/setup/setup-teams').then(
+                    (m) => m.SetupTeamsStep,
+                  ),
+              },
+              {
+                path: 'elencos',
+                title: 'Montagem: elencos',
+                loadComponent: () =>
+                  import('./features/organizer/competition-area/setup/setup-rosters').then(
+                    (m) => m.SetupRostersStep,
+                  ),
+              },
+              {
+                path: 'formato',
+                title: 'Montagem: formato',
+                loadComponent: () =>
+                  import('./features/organizer/competition-area/setup/setup-format').then(
+                    (m) => m.SetupFormatStep,
+                  ),
+              },
+              {
+                path: 'tabela',
+                title: 'Montagem: tabela',
+                loadComponent: () =>
+                  import('./features/organizer/competition-area/setup/setup-schedule').then(
+                    (m) => m.SetupScheduleStep,
+                  ),
+              },
+              {
+                path: 'publicar',
+                title: 'Montagem: publicar',
+                loadComponent: () =>
+                  import('./features/organizer/competition-area/setup/setup-publish').then(
+                    (m) => m.SetupPublishStep,
+                  ),
+              },
+            ],
+          },
+          {
             path: 'fases',
             title: 'Fases',
             loadComponent: () =>

@@ -1,0 +1,82 @@
+// As posições que faltam no campeonato, uma por linha dentro do aviso.
+.faltas {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-5);
+}
+
+// Elencos: a lista de times ao lado do elenco aberto no desktop; em cima dele no celular.
+.elencos {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 1100px) {
+  .elencos {
+    grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+  }
+
+  // As ações do elenco ficam embaixo do cartão, na coluna dele.
+  .elencos > .acoes {
+    grid-column: 2;
+  }
+}
+
+.elencos__times {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 1100px) {
+  .elencos__times {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.elencos__time {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  color: var(--semantic-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.elencos__time:hover {
+  background-color: var(--semantic-surface-hover);
+}
+
+.elencos__time--atual {
+  border-color: var(--semantic-brand-strong);
+  box-shadow: inset 0 0 0 1px var(--semantic-brand-strong);
+}
+
+.elencos__nome {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.elencos__contagem {
+  color: var(--semantic-warning);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.elencos__contagem--ok {
+  color: var(--semantic-success);
+}

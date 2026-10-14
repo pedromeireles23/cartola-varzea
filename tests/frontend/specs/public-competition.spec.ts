@@ -147,7 +147,9 @@ async function criarCampeonato(page: Page, organizacao: string, nome: string): P
   await page.getByLabel('Nome do campeonato').fill(nome);
   await page.getByRole('radio', { name: /^Fut7/ }).check();
   await page.getByRole('button', { name: 'Criar campeonato' }).click();
-  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}$/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/organizar\/c\/[0-9a-f-]{36}\/montar\/times$/, {
+    timeout: 15_000,
+  });
 }
 
 /** Times, elenco mínimo e uma fase com participantes: o que o checklist exige. */
