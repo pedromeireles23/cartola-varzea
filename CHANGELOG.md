@@ -2,6 +2,17 @@
 
 Mudanças relevantes do projeto. As datas são as do commit na `main`.
 
+## [Não lançado]
+
+### Adicionado
+
+- Montagem do campeonato sem planilha: cinco passos (times e técnicos, elencos, formato, tabela e publicação) em `/organizar/c/:campeonato/montar`, com lista colada, formatos prontos e a tabela de jogos gerada — turno e returno, grupos, mata-mata com folga e a fase seguinte a partir dos classificados.
+- A importação aceita linhas digitadas na tela, sem arquivo, pelas mesmas regras da planilha.
+
+### Segurança
+
+- `System.Security.Cryptography.Pkcs` fixado na 10.0.13 (CVE-2026-84008 e CVE-2026-70162) e pacotes da Microsoft atualizados para a 10.0.13.
+
 ## [1.0.0-demo] — 2026-10-02
 
 Primeira e única versão de portfólio: o produto está completo para demonstração, com dados fictícios, e o projeto fica concluído. Depois dela, só correções críticas, segurança e manutenção essencial.
