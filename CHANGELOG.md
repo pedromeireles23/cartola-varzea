@@ -8,6 +8,7 @@ Mudanças relevantes do projeto. As datas são as do commit na `main`.
 
 - Montagem do campeonato sem planilha: cinco passos (times e técnicos, elencos, formato, tabela e publicação) em `/organizar/c/:campeonato/montar`, com lista colada, formatos prontos e a tabela de jogos gerada — turno e returno, grupos, mata-mata com folga e a fase seguinte a partir dos classificados.
 - A importação aceita linhas digitadas na tela, sem arquivo, pelas mesmas regras da planilha.
+- "Meus campeonatos" em `/organizar`: os campeonatos de todas as organizações da conta, cada um com o próximo passo e o atalho para dá-lo; o Resumo do campeonato abre com o mesmo passo, e o menu do campeonato fica agrupado em Jogos, Elenco e Gestão.
 
 ### Segurança
 
