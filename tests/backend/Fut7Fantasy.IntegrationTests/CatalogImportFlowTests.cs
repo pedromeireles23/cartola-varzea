@@ -161,6 +161,70 @@ public sealed class CatalogImportFlowTests(SqlServerFixture sqlServer) : IClassF
     }
 
     [Fact]
+    public async Task TypedRowsFollowTheSameRulesAsTheFile()
+    {
+        Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var factory = sqlServer.CreateApi();
+        var ownerEmail = UniqueEmail("rows-owner");
+        var assistantEmail = UniqueEmail("rows-assistant");
+        var ownerId = await CreateUserAsync(factory, ownerEmail);
+        var assistantId = await CreateUserAsync(factory, assistantEmail);
+        var organizationId = await CreateOrganizationAsync(factory, ownerId, "Liga Digitada");
+        await AddAssistantAsync(factory, organizationId, assistantId);
+        using var owner = await CreateAuthenticatedClientAsync(factory, ownerEmail, cancellationToken);
+        using var assistant = await CreateAuthenticatedClientAsync(factory, assistantEmail, cancellationToken);
+        var competitionId = await CreateCompetitionAsync(owner, organizationId, cancellationToken);
+
+        // A montagem na tela manda os times e o nome do técnico, sem arquivo nenhum.
+        var teams = await PostRowsAsync(
+            owner,
+            competitionId,
+            "times/rows",
+            [Row(("nome", "União da Vila")), Row(("nome", "Estrela do Bairro"))],
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, teams.Status);
+        Assert.Equal((2, 2, 0, 0), Summary(teams.Body));
+        var coaches = await PostRowsAsync(
+            owner,
+            competitionId,
+            "tecnicos/rows",
+            [Row(("time", "União da Vila"), ("nome", "Seu Zé"))],
+            cancellationToken);
+        Assert.Equal((1, 0, 1, 0), Summary(coaches.Body));
+
+        // O erro aponta a linha como no arquivo: a segunda da lista é a linha 3.
+        List<Dictionary<string, string?>> elenco =
+        [
+            Row(("nome_esportivo", "Bia"), ("time", "União da Vila"), ("posicao", "meio-campista")),
+            Row(("nome_esportivo", "Nena"), ("time", "União da Vila"), ("posicao", "lateral")),
+        ];
+        var invalid = await PostRowsAsync(owner, competitionId, "atletas/rows/preview", elenco, cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.Status);
+        Assert.Equal("import_rows_invalid", Code(invalid.Body));
+        var issue = Assert.Single(Issues(invalid.Body));
+        Assert.Equal(3, issue.GetProperty("line").GetInt32());
+        Assert.Equal("posicao", issue.GetProperty("column").GetString());
+
+        elenco[1]["posicao"] = "goleiro";
+        var preview = await PostRowsAsync(owner, competitionId, "atletas/rows/preview", elenco, cancellationToken);
+        Assert.Equal((2, 2, 0, 0), Summary(preview.Body));
+        Assert.Equal(0, await CountAthletesAsync(factory, competitionId, cancellationToken));
+
+        var commit = await PostRowsAsync(owner, competitionId, "atletas/rows", elenco, cancellationToken);
+        Assert.Equal((2, 2, 0, 0), Summary(commit.Body));
+        Assert.Equal(2, await CountAthletesAsync(factory, competitionId, cancellationToken));
+
+        // Lista vazia é recusada com explicação; o auxiliar não grava, como no arquivo.
+        var empty = await PostRowsAsync(owner, competitionId, "atletas/rows", [], cancellationToken);
+        Assert.Equal(HttpStatusCode.BadRequest, empty.Status);
+        Assert.Equal("import_file_rejected", Code(empty.Body));
+        var forbidden = await PostRowsAsync(assistant, competitionId, "atletas/rows", elenco, cancellationToken);
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.Status);
+    }
+
+    [Fact]
     public async Task UnreadableFilesAreRejectedWithAnExplanationInsteadOfAStackTrace()
     {
         Assert.SkipWhen(sqlServer.Unavailable is not null, sqlServer.Unavailable ?? string.Empty);

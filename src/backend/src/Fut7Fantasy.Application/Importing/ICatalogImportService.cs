@@ -27,6 +27,24 @@ public interface ICatalogImportService
         ImportKind kind,
         ReadOnlyMemory<byte> content,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Como <see cref="PreviewAsync(Guid, ImportKind, ReadOnlyMemory{byte}, CancellationToken)"/>,
+    /// com as linhas digitadas na montagem do campeonato em vez de um arquivo. Cada linha
+    /// é um dicionário da coluna do modelo para o valor; a linha `n` volta como `n + 1`.
+    /// </summary>
+    Task<ImportResult> PreviewAsync(
+        Guid competitionId,
+        ImportKind kind,
+        IReadOnlyList<IReadOnlyDictionary<string, string?>> rows,
+        CancellationToken cancellationToken);
+
+    /// <summary>Grava as linhas digitadas, tudo ou nada, pelas mesmas regras do arquivo.</summary>
+    Task<ImportResult> CommitAsync(
+        Guid competitionId,
+        ImportKind kind,
+        IReadOnlyList<IReadOnlyDictionary<string, string?>> rows,
+        CancellationToken cancellationToken);
 }
 
 public enum ImportOutcome

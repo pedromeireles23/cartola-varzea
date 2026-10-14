@@ -62,6 +62,58 @@ public static class CsvReader
     }
 
     /// <summary>
+    /// Monta o mesmo documento a partir de linhas já separadas, como a montagem do
+    /// campeonato na tela envia: cada linha é um dicionário da coluna do modelo para o
+    /// valor. Os limites são os do arquivo, e a linha `n` da lista vira a linha `n + 1`
+    /// do documento, como se houvesse um cabeçalho — a tela acha a linha pelo mesmo
+    /// número que a importação de planilha usa.
+    /// </summary>
+    public static CsvReadResult ReadRows(IReadOnlyList<IReadOnlyDictionary<string, string?>> rows)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        if (rows.Count > CsvLimits.MaxRows)
+        {
+            return CsvReadResult.Rejected(CsvFailure.TooManyRows);
+        }
+
+        // Coluna é o que aparece em alguma linha, na ordem em que aparece; a que nenhuma
+        // linha traz fica de fora e é acusada pelo cabeçalho, como no arquivo.
+        List<string> header = [];
+        foreach (var name in rows.SelectMany(row => row.Keys).Select(Normalize))
+        {
+            if (!header.Contains(name, StringComparer.Ordinal))
+            {
+                header.Add(name);
+            }
+        }
+
+        if (header.Count > CsvLimits.MaxColumns)
+        {
+            return CsvReadResult.Rejected(CsvFailure.TooManyColumns);
+        }
+
+        List<CsvRow> lines = [];
+        for (var index = 0; index < rows.Count; index++)
+        {
+            var values = rows[index]
+                .GroupBy(pair => Normalize(pair.Key), StringComparer.Ordinal)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Last().Value ?? string.Empty,
+                    StringComparer.Ordinal);
+            var cells = header.Select(name => values.GetValueOrDefault(name) ?? string.Empty).ToList();
+            if (Close(lines, cells, index + 2) is { } failure)
+            {
+                return failure;
+            }
+        }
+
+        return lines.Count == 0
+            ? CsvReadResult.Rejected(CsvFailure.Empty)
+            : CsvReadResult.Ok(new CsvDocument(header, lines, CsvTemplate.DefaultDelimiter));
+    }
+
+    /// <summary>
     /// Decodifica como UTF-8 estrito, com ou sem BOM. Um arquivo salvo em ANSI falha
     /// aqui, e isso é melhor do que importar "João" como "JoÃ£o" sem ninguém perceber.
     /// </summary>

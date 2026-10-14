@@ -55,6 +55,19 @@ public static class CatalogImportEndpoints
             .WithSummary("Revalida o arquivo e grava tudo, ou nada, em transação única.")
             .WithMetadata(new RequestSizeLimitMetadata());
 
+        // As mesmas regras sem arquivo: a montagem do campeonato na tela envia as linhas
+        // que a pessoa digitou, e elas passam pela validação da planilha.
+        imports.MapPost("/{kind}/rows/preview", PreviewRowsAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
+            .WithName("PreviewCatalogImportRows")
+            .WithSummary("Confere as linhas digitadas na tela e mostra o que aconteceria, sem gravar nada.")
+            .WithMetadata(new RequestSizeLimitMetadata());
+        imports.MapPost("/{kind}/rows", CommitRowsAsync)
+            .RequireAuthorization(AuthorizationPolicies.CompetitionOwnerWrite)
+            .WithName("CommitCatalogImportRows")
+            .WithSummary("Revalida as linhas digitadas na tela e grava tudo, ou nada.")
+            .WithMetadata(new RequestSizeLimitMetadata());
+
         // Estatísticas são da rodada, e quem lança súmula também importa: proprietário e
         // auxiliar, como no editor da partida.
         var statistics = routes
@@ -173,6 +186,47 @@ public static class CatalogImportEndpoints
             : await service.PreviewAsync(competitionId, parsed, content, cancellationToken).ConfigureAwait(false));
     }
 
+    private static Task<IResult> PreviewRowsAsync(
+        Guid competitionId,
+        string kind,
+        ImportRowsRequest request,
+        ICatalogImportService service,
+        CancellationToken cancellationToken) =>
+        RunRowsAsync(competitionId, kind, request, service, apply: false, cancellationToken);
+
+    private static Task<IResult> CommitRowsAsync(
+        Guid competitionId,
+        string kind,
+        ImportRowsRequest request,
+        ICatalogImportService service,
+        CancellationToken cancellationToken) =>
+        RunRowsAsync(competitionId, kind, request, service, apply: true, cancellationToken);
+
+    private static async Task<IResult> RunRowsAsync(
+        Guid competitionId,
+        string kind,
+        ImportRowsRequest request,
+        ICatalogImportService service,
+        bool apply,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (!TryParseKind(kind, out var parsed))
+        {
+            return Results.NotFound();
+        }
+
+        if (request.Rows is not { Count: > 0 } rows || rows.Any(row => row is null))
+        {
+            return Rejected("Envie ao menos uma linha.");
+        }
+
+        IReadOnlyList<IReadOnlyDictionary<string, string?>> lines = [.. rows];
+        return Respond(apply
+            ? await service.CommitAsync(competitionId, parsed, lines, cancellationToken).ConfigureAwait(false)
+            : await service.PreviewAsync(competitionId, parsed, lines, cancellationToken).ConfigureAwait(false));
+    }
+
     /// <summary>
     /// Lê o arquivo do formulário para a memória, dentro do limite. Devolve a recusa
     /// pronta quando nem há arquivo para ler.
@@ -246,6 +300,12 @@ public static class CatalogImportEndpoints
         return parsed != default;
     }
 }
+
+/// <summary>
+/// Linhas digitadas na montagem do campeonato. Cada uma leva as colunas do modelo
+/// (`nome_esportivo`, `time`…) e os valores como texto, do jeito que a planilha teria.
+/// </summary>
+public sealed record ImportRowsRequest(IReadOnlyList<Dictionary<string, string?>>? Rows);
 
 /// <summary>
 /// Teto de bytes do corpo, aplicado pelo servidor antes de qualquer leitura. O limite do

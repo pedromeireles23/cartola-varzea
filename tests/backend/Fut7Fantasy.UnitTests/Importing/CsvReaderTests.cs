@@ -133,6 +133,58 @@ public sealed class CsvReaderTests
         Assert.Equal(["Bia"], document.Rows.Select(row => row.Cells[0]));
     }
 
+    [Fact]
+    public void TypedRowsBecomeTheSameDocumentWithTheLineAfterAHeader()
+    {
+        var result = CsvReader.ReadRows(
+        [
+            Row(("nome_esportivo", "Bia"), ("time", "União da Vila"), ("posicao", "meio-campista")),
+            Row(("Nome Esportivo", "Nena"), ("posicao", "goleiro"), ("time", "União da Vila")),
+        ]);
+
+        // A coluna é comparada como no cabeçalho do arquivo, e a ordem da linha não importa.
+        var document = result.Document!;
+        Assert.Equal(["nome_esportivo", "time", "posicao"], document.Header);
+        Assert.Equal([2, 3], document.Rows.Select(row => row.Line));
+        Assert.Equal(["Nena", "União da Vila", "goleiro"], document.Rows[1].Cells);
+    }
+
+    [Fact]
+    public void TypedRowWithoutAColumnLeavesTheCellEmptyAndBlankRowsAreDropped()
+    {
+        var document = CsvReader.ReadRows(
+        [
+            Row(("nome", "Seu Zé"), ("time", "União da Vila")),
+            Row(("nome", " "), ("time", null)),
+            Row(("time", "Estrela do Bairro")),
+        ]).Document!;
+
+        Assert.Equal(["nome", "time"], document.Header);
+        Assert.Equal([2, 4], document.Rows.Select(row => row.Line));
+        Assert.Equal(["", "Estrela do Bairro"], document.Rows[1].Cells);
+    }
+
+    [Fact]
+    public void TypedRowsKeepTheLimitsOfTheFile()
+    {
+        Assert.Equal(CsvFailure.Empty, CsvReader.ReadRows([]).Failure);
+        Assert.Equal(CsvFailure.Empty, CsvReader.ReadRows([Row(("nome", ""))]).Failure);
+
+        var many = Enumerable.Range(0, CsvLimits.MaxRows + 1).Select(index => Row(("nome", $"Atleta {index}")));
+        Assert.Equal(CsvFailure.TooManyRows, CsvReader.ReadRows([.. many]).Failure);
+
+        var wide = Enumerable.Range(0, CsvLimits.MaxColumns + 1).Select(index => ($"c{index}", (string?)"x"));
+        Assert.Equal(CsvFailure.TooManyColumns, CsvReader.ReadRows([Row([.. wide])]).Failure);
+
+        var cell = CsvReader.ReadRows(
+            [Row(("nome", "Bia")), Row(("nome", new string('a', CsvLimits.MaxCellLength + 1)))]);
+        Assert.Equal(CsvFailure.CellTooLong, cell.Failure);
+        Assert.Equal(3, cell.Line);
+    }
+
+    private static Dictionary<string, string?> Row(params (string Column, string? Value)[] cells) =>
+        cells.ToDictionary(cell => cell.Column, cell => cell.Value);
+
     private static CsvDocument Read(string content)
     {
         var result = CsvReader.Read(Bytes(content));

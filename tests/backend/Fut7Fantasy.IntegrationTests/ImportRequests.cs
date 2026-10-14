@@ -57,6 +57,32 @@ internal static class ImportRequests
         return (response.StatusCode, await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken));
     }
 
+    /// <summary>
+    /// Envia linhas digitadas para `/competitions/{id}/imports/{path}`, como a montagem do
+    /// campeonato faz: cada linha é um dicionário da coluna do modelo para o valor.
+    /// </summary>
+    public static async Task<(HttpStatusCode Status, JsonElement Body)> PostRowsAsync(
+        HttpClient client,
+        Guid competitionId,
+        string path,
+        IReadOnlyList<Dictionary<string, string?>> rows,
+        CancellationToken cancellationToken)
+    {
+        using var response = await client.PostAsJsonAsync(
+            new Uri($"/api/v1/competitions/{competitionId}/imports/{path}", UriKind.Relative),
+            new { rows },
+            cancellationToken);
+        if (response.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.NotFound)
+        {
+            return (response.StatusCode, default);
+        }
+
+        return (response.StatusCode, await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken));
+    }
+
+    public static Dictionary<string, string?> Row(params (string Column, string? Value)[] cells) =>
+        cells.ToDictionary(cell => cell.Column, cell => cell.Value);
+
     public static (int Rows, int Created, int Updated, int Unchanged) Summary(JsonElement body)
     {
         var summary = body.GetProperty("summary");

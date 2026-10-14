@@ -21,28 +21,42 @@ public sealed partial class CatalogImportService(
         ImportKind kind,
         ReadOnlyMemory<byte> content,
         CancellationToken cancellationToken) =>
-        RunAsync(competitionId, kind, content, apply: false, cancellationToken);
+        RunAsync(competitionId, kind, CsvReader.Read(content.Span), apply: false, cancellationToken);
 
     public Task<ImportResult> CommitAsync(
         Guid competitionId,
         ImportKind kind,
         ReadOnlyMemory<byte> content,
         CancellationToken cancellationToken) =>
-        RunAsync(competitionId, kind, content, apply: true, cancellationToken);
+        RunAsync(competitionId, kind, CsvReader.Read(content.Span), apply: true, cancellationToken);
+
+    public Task<ImportResult> PreviewAsync(
+        Guid competitionId,
+        ImportKind kind,
+        IReadOnlyList<IReadOnlyDictionary<string, string?>> rows,
+        CancellationToken cancellationToken) =>
+        RunAsync(competitionId, kind, CsvReader.ReadRows(rows), apply: false, cancellationToken);
+
+    public Task<ImportResult> CommitAsync(
+        Guid competitionId,
+        ImportKind kind,
+        IReadOnlyList<IReadOnlyDictionary<string, string?>> rows,
+        CancellationToken cancellationToken) =>
+        RunAsync(competitionId, kind, CsvReader.ReadRows(rows), apply: true, cancellationToken);
 
     /// <summary>
     /// Pré-visualizar e confirmar percorrem exatamente o mesmo caminho; só o último passo
     /// difere. Dois caminhos separados divergiriam com o tempo, e a pré-visualização
-    /// deixaria de valer como promessa do que a confirmação faz.
+    /// deixaria de valer como promessa do que a confirmação faz. O arquivo e as linhas
+    /// digitadas na tela também: só a leitura muda.
     /// </summary>
     private async Task<ImportResult> RunAsync(
         Guid competitionId,
         ImportKind kind,
-        ReadOnlyMemory<byte> content,
+        CsvReadResult read,
         bool apply,
         CancellationToken cancellationToken)
     {
-        var read = CsvReader.Read(content.Span);
         if (read.Document is null)
         {
             return ImportResult.Rejected(Explain(read.Failure!.Value, read.Line));
