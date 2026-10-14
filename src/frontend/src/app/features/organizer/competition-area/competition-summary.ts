@@ -3,7 +3,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 
 import { Alert, Card, Loading } from '../../../shared/ui';
-import { MODALITY_LABELS, registrationWindowText } from '../competition.service';
+import {
+  CompetitionService,
+  MODALITY_LABELS,
+  registrationWindowText,
+} from '../competition.service';
+import { NextStep, nextStep } from '../organizer-next-step';
 import { CompetitionContext } from './competition-context';
 import { PublicationProgress } from './publication-progress';
 import { CompetitionReadiness, PublicationService } from './publication.service';
@@ -20,6 +25,8 @@ import {
  * Mostra o que a modalidade impõe e os prazos escolhidos, em linguagem de quem
  * organiza. A situação abre com o progresso da publicação (V6): as etapas do checklist
  * e o atalho para cada pendência; o detalhe de cada impedimento fica na tela própria.
+ * Antes de tudo, "Agora" repete o próximo passo do cartão em Meus campeonatos, para quem
+ * chega pelo nome do campeonato saber o que fazer.
  */
 @Component({
   selector: 'app-competition-summary',
@@ -34,6 +41,15 @@ import {
           <app-alert tone="success">
             Campeonato criado em rascunho. Só a sua organização vê este campeonato por enquanto.
           </app-alert>
+        }
+
+        @if (agora(); as passo) {
+          <app-card heading="Agora">
+            <p class="agora__passo">{{ passo.texto }}</p>
+            <a class="acao" [class.acao--principal]="passo.urgente" [routerLink]="passo.link">
+              {{ passo.rotulo }}
+            </a>
+          </app-card>
         }
 
         <app-card heading="Situação">
@@ -158,6 +174,10 @@ export class CompetitionSummaryPage {
   protected readonly campeonato = this.contexto.campeonato;
 
   private readonly publicacao = inject(PublicationService);
+  private readonly competicoes = inject(CompetitionService);
+
+  /** O próximo passo, como em Meus campeonatos; sem ele, o resumo segue igual. */
+  protected readonly agora = signal<NextStep | null>(null);
 
   protected readonly acabouDeCriar = this.contexto.consumirCriado();
 
@@ -180,6 +200,13 @@ export class CompetitionSummaryPage {
       this.publicacao.readiness(id).subscribe({
         next: (checklist) => this.prontidao.set({ tipo: 'pronto', checklist }),
         error: () => this.prontidao.set({ tipo: 'erro' }),
+      });
+      this.competicoes.mine().subscribe({
+        next: (lista) => {
+          const este = lista.find((item) => item.id === id);
+          this.agora.set(este ? nextStep(este) : null);
+        },
+        error: () => this.agora.set(null),
       });
     }
   }

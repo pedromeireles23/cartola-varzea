@@ -22,7 +22,7 @@ import { filter } from 'rxjs';
 
 import { Alert, BackLink, Badge, Card, FailureState, Loading } from '../../../shared/ui';
 import { STATUS_LABELS } from '../competition.service';
-import { OrganizerArea } from '../organizer-area';
+import { ORGANIZER_PAGES, OrganizerArea } from '../organizer-area';
 import { CompetitionContext } from './competition-context';
 
 /** Estado de navegação que a criação deixa para a primeira abertura do campeonato. */
@@ -67,7 +67,7 @@ export interface CompetitionCreatedState {
       }
 
       @case ('erro') {
-        <app-back-link link="/organizar" label="Minhas organizações" />
+        <app-back-link link="/organizar" label="Meus campeonatos" />
         <h1>Campeonato</h1>
         <app-card>
           @if (contexto.falha()!.status === 403 || contexto.falha()!.status === 404) {
@@ -86,10 +86,7 @@ export interface CompetitionCreatedState {
       @case ('pronto') {
         <nav class="trilha" aria-label="Trilha">
           <ol>
-            <li><a routerLink="/organizar">Minhas organizações</a></li>
-            <li>
-              <a [routerLink]="organizacaoLink()">{{ dados()!.organizationName }}</a>
-            </li>
+            <li><a routerLink="/organizar">Meus campeonatos</a></li>
             <li aria-current="page">{{ dados()!.name }}</li>
           </ol>
         </nav>
@@ -101,94 +98,20 @@ export interface CompetitionCreatedState {
               <app-badge [tone]="dados()!.status === 'Draft' ? 'warning' : 'success'">
                 {{ status() }}
               </app-badge>
-              <span>Temporada {{ dados()!.season }}</span>
+              <span>{{ dados()!.organizationName }} · temporada {{ dados()!.season }}</span>
             </p>
           </header>
 
           <nav class="area__nav" aria-label="Navegação do campeonato">
-            @if (contexto.proprietario()) {
+            @for (pagina of paginas(); track pagina.path) {
               <a
-                routerLink="montar"
+                [routerLink]="pagina.path || '.'"
                 routerLinkActive="area__link--ativo"
                 ariaCurrentWhenActive="page"
+                [routerLinkActiveOptions]="{ exact: pagina.path === '' }"
                 class="area__link"
               >
-                Montagem
-              </a>
-            }
-            <a
-              routerLink="."
-              routerLinkActive="area__link--ativo"
-              ariaCurrentWhenActive="page"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="area__link"
-            >
-              Resumo
-            </a>
-            <a
-              routerLink="fases"
-              routerLinkActive="area__link--ativo"
-              ariaCurrentWhenActive="page"
-              class="area__link"
-            >
-              Fases
-            </a>
-            <a
-              routerLink="rodadas"
-              routerLinkActive="area__link--ativo"
-              ariaCurrentWhenActive="page"
-              class="area__link"
-            >
-              Rodadas
-            </a>
-            <a
-              routerLink="times"
-              routerLinkActive="area__link--ativo"
-              ariaCurrentWhenActive="page"
-              class="area__link"
-            >
-              Times
-            </a>
-            <a
-              routerLink="atletas"
-              routerLinkActive="area__link--ativo"
-              ariaCurrentWhenActive="page"
-              class="area__link"
-            >
-              Atletas
-            </a>
-            <a
-              routerLink="tecnicos"
-              routerLinkActive="area__link--ativo"
-              ariaCurrentWhenActive="page"
-              class="area__link"
-            >
-              Técnicos
-            </a>
-            <a
-              routerLink="importacoes"
-              routerLinkActive="area__link--ativo"
-              ariaCurrentWhenActive="page"
-              class="area__link"
-            >
-              Importações
-            </a>
-            <a
-              routerLink="publicacao"
-              routerLinkActive="area__link--ativo"
-              ariaCurrentWhenActive="page"
-              class="area__link"
-            >
-              Publicação
-            </a>
-            @if (contexto.proprietario()) {
-              <a
-                routerLink="configuracao"
-                routerLinkActive="area__link--ativo"
-                ariaCurrentWhenActive="page"
-                class="area__link"
-              >
-                Configuração
+                {{ pagina.label }}
               </a>
             }
           </nav>
@@ -214,11 +137,10 @@ export class CompetitionLayout implements OnInit {
   readonly campeonato = input.required<string>();
 
   protected readonly dados = this.contexto.campeonato;
-  protected readonly organizacaoLink = computed(() => [
-    '/organizar/o',
-    this.dados()?.organizationId ?? '',
-    'campeonatos',
-  ]);
+  /** O auxiliar não vê o que é só do proprietário; a API recusa do mesmo jeito. */
+  protected readonly paginas = computed(() =>
+    ORGANIZER_PAGES.filter((pagina) => !pagina.ownerOnly || this.contexto.proprietario()),
+  );
 
   protected readonly status = computed(() => {
     const atual = this.dados();

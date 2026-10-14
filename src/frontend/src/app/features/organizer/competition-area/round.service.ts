@@ -156,6 +156,31 @@ export const PHASE_LABELS: Readonly<Record<RoundPhase, string>> = {
   Cancelled: 'Cancelada',
 };
 
+/** As fases em que a rodada está em jogo: do mercado aberto até a publicação. */
+export const ROUND_IN_PLAY: readonly RoundPhase[] = [
+  'MarketOpen',
+  'MarketClosed',
+  'InProgress',
+  'UnderReview',
+  'ReopenedForCorrection',
+];
+
+/** As fases em que a organização tem súmula para lançar ou conferir. */
+export const ROUND_NEEDS_REVIEW: readonly RoundPhase[] = [
+  'InProgress',
+  'UnderReview',
+  'ReopenedForCorrection',
+];
+
+/** O próximo passo de cada fase, em linguagem de quem organiza. */
+export const ROUND_NEXT_STEP: Partial<Readonly<Record<RoundPhase, string>>> = {
+  MarketOpen: 'Mercado aberto: quem joga ainda mexe na escalação até o fechamento.',
+  MarketClosed: 'Mercado fechado e escalações congeladas. A súmula abre quando os jogos começam.',
+  InProgress: 'Jogos em andamento: lance as súmulas e envie a rodada para revisão.',
+  UnderReview: 'Em conferência: confira as súmulas e publique o resultado.',
+  ReopenedForCorrection: 'Em correção: ajuste a súmula e republique o resultado.',
+};
+
 export const MATCH_STATUS_LABELS: Readonly<Record<MatchStatus, string>> = {
   Scheduled: 'Marcada',
   Postponed: 'Adiada',

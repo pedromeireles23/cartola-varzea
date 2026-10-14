@@ -24,9 +24,8 @@ test('proprietário monta grupos e mata-mata, reordena e remove fases', async ({
   await page.goto('/organizar');
   await page
     .getByRole('region', { name: organizacao })
-    .getByRole('link', { name: 'Campeonatos' })
+    .getByRole('link', { name: 'Criar campeonato' })
     .click();
-  await page.getByRole('link', { name: 'Criar campeonato' }).click();
   await page.getByLabel('Nome do campeonato').fill(`Copa das Fases ${Date.now()}`);
   await page.getByRole('radio', { name: /^Fut7/ }).check();
   await page.getByRole('button', { name: 'Criar campeonato' }).click();

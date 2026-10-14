@@ -53,3 +53,9 @@ tbody th {
   padding-left: var(--space-5);
   text-align: left;
 }
+
+// O próximo passo no topo do Resumo, no tamanho do texto corrido.
+.agora__passo {
+  margin: 0;
+  color: var(--semantic-text);
+}

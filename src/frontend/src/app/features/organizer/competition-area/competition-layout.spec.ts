@@ -68,15 +68,17 @@ describe('CompetitionLayout', () => {
     return [...(nav?.querySelectorAll('a') ?? [])].map((link) => link.textContent?.trim() ?? '');
   }
 
-  it('mostra o nome, a trilha e o título da aba com o campeonato', async () => {
+  it('mostra o nome, a organização, a trilha e o título da aba com o campeonato', async () => {
     const harness = await abrir(campeonato());
     const elemento = harness.routeNativeElement as HTMLElement;
 
     expect(elemento.textContent).toContain('Copa da Várzea');
     expect(elemento.textContent).toContain('Rascunho');
+    expect(elemento.querySelector('.area__detalhe')?.textContent).toContain('Liga da Várzea');
+    // A trilha volta direto a Meus campeonatos: a lista por organização deixou de existir.
     const trilha = elemento.querySelector('nav[aria-label="Trilha"]');
-    expect(trilha?.querySelector('a[href="/organizar/o/o1/campeonatos"]')?.textContent).toContain(
-      'Liga da Várzea',
+    expect(trilha?.querySelector('a[href="/organizar"]')?.textContent).toContain(
+      'Meus campeonatos',
     );
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(TestBed.inject(Title).getTitle()).toBe('Resumo · Copa da Várzea');
@@ -87,14 +89,14 @@ describe('CompetitionLayout', () => {
     expect(links(dono)).toEqual([
       'Montagem',
       'Resumo',
-      'Fases',
       'Rodadas',
+      'Fases',
       'Times',
       'Atletas',
       'Técnicos',
-      'Importações',
       'Publicação',
       'Configuração',
+      'Importações',
     ]);
   });
 
@@ -102,13 +104,13 @@ describe('CompetitionLayout', () => {
     const auxiliar = await abrir(campeonato({ viewerRole: 'Assistant' }));
     expect(links(auxiliar)).toEqual([
       'Resumo',
-      'Fases',
       'Rodadas',
+      'Fases',
       'Times',
       'Atletas',
       'Técnicos',
-      'Importações',
       'Publicação',
+      'Importações',
     ]);
   });
 

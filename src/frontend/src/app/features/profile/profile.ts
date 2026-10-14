@@ -68,7 +68,7 @@ import { OrganizerArea } from '../organizer/organizer-area';
             Times, atletas, rodadas e súmulas ficam na área de organização, separada do jogo.
           </p>
           <div class="acoes">
-            <a class="acao" routerLink="/organizar">Minhas organizações</a>
+            <a class="acao" routerLink="/organizar">Meus campeonatos</a>
             <a class="acao acao--discreta" routerLink="/organizar/solicitar">
               Pedir acesso para outra organização
             </a>

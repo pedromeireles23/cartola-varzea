@@ -278,17 +278,21 @@ describe('Shell', () => {
     expect(topo.classList.contains('topo--admin')).toBe(false);
     expect(root.querySelector('.lateral__area')?.textContent?.trim()).toBe('Central da competição');
     expect(root.querySelector('.topo__area')?.textContent?.trim()).toBe('Central da competição');
-    expect(links(nav(fixture, 'Organização'))).toEqual(['Minhas organizações']);
+    expect(links(nav(fixture, 'Organização'))).toEqual(['Meus campeonatos']);
     expect(links(nav(fixture, 'Navegação do campeonato'))).toEqual([
       'Resumo',
-      'Fases',
       'Rodadas',
+      'Fases',
       'Times',
       'Atletas',
       'Técnicos',
-      'Importações',
       'Publicação',
+      'Importações',
     ]);
+    // Os grupos só organizam o olhar; o leitor de tela segue a lista de links.
+    const grupos = [...lateral.querySelectorAll('.lateral__subrotulo')];
+    expect(grupos.map((grupo) => grupo.textContent?.trim())).toEqual(['Jogos', 'Elenco', 'Gestão']);
+    expect(grupos.every((grupo) => grupo.getAttribute('aria-hidden') === 'true')).toBe(true);
     expect(lateral.textContent).toContain('Copa da Vila');
     expect(lateral.textContent).toContain('Publicado');
     expect(nav(fixture, 'Navegação principal')).toBeNull();
@@ -306,10 +310,11 @@ describe('Shell', () => {
     expect(atual?.textContent?.trim()).toBe('Rodadas');
   });
 
-  it('só o proprietário vê a configuração do campeonato', async () => {
+  it('só o proprietário vê a montagem e a configuração do campeonato', async () => {
     aberto.set({ ...CAMPEONATO, owner: true });
     const fixture = await abrir('/organizar/c/c1');
 
+    expect(links(nav(fixture, 'Navegação do campeonato'))[0]).toBe('Montagem');
     expect(links(nav(fixture, 'Navegação do campeonato'))).toContain('Configuração');
     const atual = nav(fixture, 'Navegação do campeonato')!.querySelector('[aria-current="page"]');
     expect(atual?.textContent?.trim()).toBe('Resumo');
@@ -333,7 +338,7 @@ describe('Shell', () => {
     expect(inferior.classList.contains('inferior--admin')).toBe(true);
     expect(root.querySelector('.lateral__area')?.textContent?.trim()).toBe('Admin da plataforma');
     expect(root.querySelector('.topo__area')?.textContent?.trim()).toBe('Admin da plataforma');
-    expect(links(organizacao)).toEqual(['Minhas organizações', 'Solicitações']);
+    expect(links(organizacao)).toEqual(['Meus campeonatos', 'Solicitações']);
     expect(organizacao.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe(
       'Solicitações',
     );
@@ -351,18 +356,18 @@ describe('Shell', () => {
     expect(links(nav(fixture, 'Navegação principal'))).toEqual(['Início', 'Campeonatos']);
   });
 
-  it('no celular, a barra inferior da organização leva às organizações e de volta ao início', async () => {
+  it('no celular, a barra inferior da organização leva aos campeonatos e de volta ao início', async () => {
     const fixture = await abrir('/organizar');
     const inferior = (fixture.nativeElement as HTMLElement).querySelector(
       'nav[aria-label="Navegação principal no celular"]',
     );
 
-    expect(links(inferior as HTMLElement)).toEqual(['Organizações', 'Início']);
+    expect(links(inferior as HTMLElement)).toEqual(['Campeonatos', 'Início']);
     expect(inferior?.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe(
-      'Organizações',
+      'Campeonatos',
     );
     expect((fixture.nativeElement as HTMLElement).querySelector('.topo__area')?.textContent).toBe(
-      'Organizações',
+      'Organização',
     );
   });
 

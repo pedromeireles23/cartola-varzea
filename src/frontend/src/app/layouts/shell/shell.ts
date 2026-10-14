@@ -23,7 +23,6 @@ import {
 import {
   ArrowLeft,
   BookOpen,
-  Building2,
   CalendarDays,
   CircleUserRound,
   ClipboardList,
@@ -51,7 +50,11 @@ import { filter } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MyFantasyCompetition } from '../../features/fantasy/fantasy.service';
 import { CompetitionStatus } from '../../features/organizer/competition.service';
-import { OrganizerArea } from '../../features/organizer/organizer-area';
+import {
+  ORGANIZER_PAGES,
+  OrganizerArea,
+  OrganizerPage,
+} from '../../features/organizer/organizer-area';
 import { CurrentCompetition, Section } from '../../features/participant/current-competition';
 import { DemoBanner } from '../demo-banner/demo-banner';
 import { NotificationBell } from '../notification-bell/notification-bell';
@@ -70,14 +73,10 @@ interface GameItem extends NavItem {
   readonly path: string;
 }
 
-/** Tela da área de um campeonato na organização, depois de `/organizar/c/:campeonato/`. */
-interface OrganizerItem {
-  readonly path: string;
-  readonly label: string;
+/** Uma tela do campeonato com o ícone dela e, quando abre um grupo do menu, o rótulo dele. */
+interface OrganizerItem extends OrganizerPage {
   readonly icon: IconNode;
-  /** Outras rotas que pertencem à mesma tela, como a súmula dentro de Rodadas. */
-  readonly also?: readonly string[];
-  readonly ownerOnly?: boolean;
+  readonly startsGroup: string | null;
 }
 
 const SECTION_LABELS: Readonly<Record<Section, string>> = {
@@ -104,19 +103,19 @@ const GAME_ITEMS: readonly GameItem[] = [
   { section: 'rounds', label: 'Rodadas', icon: CalendarDays, path: 'rodadas' },
 ];
 
-/** A mesma ordem da casca do campeonato, que é a ordem do trabalho de quem organiza. */
-const ORGANIZER_ITEMS: readonly OrganizerItem[] = [
-  { path: 'montar', label: 'Montagem', icon: ListChecks, ownerOnly: true },
-  { path: '', label: 'Resumo', icon: LayoutDashboard },
-  { path: 'fases', label: 'Fases', icon: Layers },
-  { path: 'rodadas', label: 'Rodadas', icon: CalendarDays, also: ['partidas'] },
-  { path: 'times', label: 'Times', icon: Shield },
-  { path: 'atletas', label: 'Atletas', icon: Users },
-  { path: 'tecnicos', label: 'Técnicos', icon: UserRound },
-  { path: 'importacoes', label: 'Importações', icon: FileUp },
-  { path: 'publicacao', label: 'Publicação', icon: Globe },
-  { path: 'configuracao', label: 'Configuração', icon: Settings, ownerOnly: true },
-];
+/** O ícone de cada tela do campeonato; a ordem e os grupos vêm de `ORGANIZER_PAGES`. */
+const ORGANIZER_ICONS: Readonly<Record<string, IconNode>> = {
+  montar: ListChecks,
+  '': LayoutDashboard,
+  rodadas: CalendarDays,
+  fases: Layers,
+  times: Shield,
+  atletas: Users,
+  tecnicos: UserRound,
+  publicacao: Globe,
+  configuracao: Settings,
+  importacoes: FileUp,
+};
 
 /** Espelha `STATUS_LABELS` sem trazer o serviço de campeonatos para o pacote inicial. */
 const COMPETITION_STATUS: Readonly<Record<CompetitionStatus, string>> = {
@@ -190,7 +189,6 @@ export class Shell {
     team: Shirt,
     rules: BookOpen,
     organize: ClipboardList,
-    organizations: Building2,
     applications: Inbox,
     back: ArrowLeft,
     home: House,
@@ -236,11 +234,18 @@ export class Shell {
 
   protected readonly workspaceLabel = computed(() => {
     if (this.areaKind() === 'admin') return 'Admin da plataforma';
-    return this.organizerCompetition() ? 'Central da competição' : 'Organizações';
+    return this.organizerCompetition() ? 'Central da competição' : 'Organização';
   });
 
-  protected readonly organizerItems = computed(() =>
-    ORGANIZER_ITEMS.filter((item) => !item.ownerOnly || this.organizerCompetition()?.owner),
+  /** As telas que a conta pode usar, com o rótulo do grupo na primeira de cada grupo. */
+  protected readonly organizerItems = computed<readonly OrganizerItem[]>(() =>
+    ORGANIZER_PAGES.filter((page) => !page.ownerOnly || this.organizerCompetition()?.owner).map(
+      (page, index, pages) => ({
+        ...page,
+        icon: ORGANIZER_ICONS[page.path],
+        startsGroup: page.group !== (pages[index - 1]?.group ?? null) ? page.group : null,
+      }),
+    ),
   );
 
   protected readonly organizerStatus = computed(() => {
@@ -248,7 +253,7 @@ export class Shell {
     return status ? COMPETITION_STATUS[status] : '';
   });
 
-  /** Minhas organizações e as páginas de uma organização, fora de um campeonato. */
+  /** Meus campeonatos e as páginas de uma organização, fora de um campeonato. */
   protected readonly inOrganizations = computed(() => {
     const [first, second] = this.segments();
     return first === 'organizar' && second !== 'c';
@@ -267,7 +272,7 @@ export class Shell {
   );
 
   protected readonly sectionTitle = computed(() => {
-    // Na operação, o título é o da tela: "Rodadas", "Minhas organizações".
+    // Na operação, o título é o da tela: "Rodadas", "Meus campeonatos".
     if (this.organizing()) {
       return this.routeTitle() ?? this.workspaceLabel();
     }

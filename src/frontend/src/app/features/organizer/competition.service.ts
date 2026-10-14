@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '../../core/config/api-base-url';
+import { RoundPhase } from './competition-area/round.service';
 import { OrganizationRole } from './organization.service';
 
 export type Modality = 'Fut7' | 'Futsal' | 'Field';
@@ -38,6 +39,31 @@ export interface CompetitionSummary {
   readonly modality: Modality;
   readonly status: CompetitionStatus;
   readonly updatedAt: string;
+}
+
+/** Rodada na central de quem organiza, com os horários já no fuso do campeonato. */
+export interface MyCompetitionRound {
+  readonly id: string;
+  readonly name: string;
+  readonly phase: RoundPhase;
+  readonly matches: number;
+  /** `2026-10-18T09:00`, ou nulo sem partida marcada. */
+  readonly firstKickoffLocal: string | null;
+  readonly marketCloseLocal: string | null;
+}
+
+/** Um campeonato em "Meus campeonatos", de qualquer organização da conta. */
+export interface MyCompetition extends CompetitionSummary {
+  readonly organizationId: string;
+  readonly organizationName: string;
+  readonly viewerRole: OrganizationRole;
+  readonly activeTeams: number;
+  /** Partidas marcadas, sem as adiadas e as canceladas. */
+  readonly matches: number;
+  /** A rodada entre o mercado aberto e a publicação, quando há uma. */
+  readonly currentRound: MyCompetitionRound | null;
+  /** A primeira rodada em rascunho com partida: a próxima a abrir o mercado. */
+  readonly nextRound: MyCompetitionRound | null;
 }
 
 /** Os campos que a organização escolhe; o resto o servidor deriva. */
@@ -110,6 +136,13 @@ export function registrationWindowText(window: RegistrationWindow): string {
   }
 }
 
+/** `2026-10-04T18:00` vira `04/10 18:00`: o curto, para lista, sem conta de fuso. */
+export function shortLocalText(local: string): string {
+  const [data, hora] = local.split('T');
+  const [, mes, dia] = data.split('-');
+  return `${dia}/${mes} ${hora}`;
+}
+
 /** `2026-10-04T18:00` vira `04/10/2026 18:00`, sem conta de fuso no navegador. */
 function localText(local: string): string {
   const [data, hora] = local.split('T');
@@ -135,6 +168,11 @@ export class CompetitionService {
 
   modalityProfiles(): Observable<ModalityProfile[]> {
     return this.http.get<ModalityProfile[]>(`${this.baseUrl}/modality-profiles`);
+  }
+
+  /** Campeonatos de todas as organizações da conta, com a rodada da vez de cada um. */
+  mine(): Observable<MyCompetition[]> {
+    return this.http.get<MyCompetition[]>(`${this.baseUrl}/organizations/mine/competitions`);
   }
 
   listByOrganization(organizationId: string): Observable<CompetitionSummary[]> {

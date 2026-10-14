@@ -1,0 +1,116 @@
+// Meus campeonatos: uma seção por organização, com os campeonatos em cartões. O cartão
+// que pede súmula ganha a borda da marca, como a rodada na Central da rodada.
+:host {
+  max-width: none;
+}
+
+.org {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.org__topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+}
+
+.org__nome {
+  margin: 0;
+  color: var(--semantic-text-strong);
+  font-size: var(--font-h3);
+}
+
+.org__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.campeonatos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.campeonato {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-4);
+  background-color: var(--semantic-surface);
+  border: 1px solid var(--semantic-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.campeonato--urgente {
+  border-color: var(--semantic-brand-strong);
+  box-shadow: inset 4px 0 0 var(--semantic-brand-strong);
+}
+
+.campeonato--vazio {
+  background-color: transparent;
+  border-style: dashed;
+}
+
+.campeonato__topo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.campeonato__nome {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.campeonato__nome a {
+  color: var(--semantic-text-strong);
+  text-decoration: none;
+}
+
+.campeonato__nome a:hover {
+  text-decoration: underline;
+}
+
+.campeonato__detalhe {
+  margin: 0;
+  color: var(--semantic-text-muted);
+  font-size: var(--font-small);
+}
+
+.campeonato__passo {
+  margin: 0;
+  color: var(--semantic-text);
+}
+
+.campeonato .acao {
+  justify-self: start;
+  margin-top: var(--space-1);
+}
+
+// Escudo de iniciais, o mesmo de Times e da montagem.
+.escudo {
+  display: grid;
+  width: 2.25rem;
+  height: 2.5rem;
+  place-items: center;
+  color: var(--semantic-on-action);
+  font-family: var(--font-family-display);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  background-color: var(--semantic-brand-strong);
+  clip-path: polygon(50% 0, 100% 13%, 92% 74%, 50% 100%, 8% 74%, 0 13%);
+}

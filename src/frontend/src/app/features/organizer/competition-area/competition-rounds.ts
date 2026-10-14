@@ -34,8 +34,11 @@ import {
   MatchInput,
   MatchStatus,
   PHASE_LABELS,
+  ROUND_IN_PLAY,
   ROUND_NAME_MAX,
   ROUND_NAME_MIN,
+  ROUND_NEEDS_REVIEW,
+  ROUND_NEXT_STEP,
   ROUND_STATUS_CODE,
   Round,
   RoundPhase,
@@ -64,26 +67,6 @@ interface Formulario {
   readonly kickoffLocal: string;
   readonly status: MatchStatus;
 }
-
-/** As fases em que a rodada está em jogo: do mercado aberto até a publicação. */
-const EM_JOGO: readonly RoundPhase[] = [
-  'MarketOpen',
-  'MarketClosed',
-  'InProgress',
-  'UnderReview',
-  'ReopenedForCorrection',
-];
-
-const PEDEM_REVISAO: readonly RoundPhase[] = ['InProgress', 'UnderReview', 'ReopenedForCorrection'];
-
-/** O próximo passo de cada fase, em linguagem de quem organiza. */
-const PROXIMO_PASSO: Partial<Readonly<Record<RoundPhase, string>>> = {
-  MarketOpen: 'Mercado aberto: quem joga ainda mexe na escalação até o fechamento.',
-  MarketClosed: 'Mercado fechado e escalações congeladas. A súmula abre quando os jogos começam.',
-  InProgress: 'Jogos em andamento: lance as súmulas e envie a rodada para revisão.',
-  UnderReview: 'Em conferência: confira as súmulas e publique o resultado.',
-  ReopenedForCorrection: 'Em correção: ajuste a súmula e republique o resultado.',
-};
 
 /**
  * Rodadas e partidas (02 §9.1, `/organizar/c/:campeonato/rodadas`).
@@ -471,7 +454,7 @@ export class CompetitionRoundsPage {
 
   /** As rodadas entre o mercado aberto e a publicação: o que a central acompanha agora. */
   protected readonly emJogo = computed(() =>
-    this.rodadas().filter((rodada) => EM_JOGO.includes(rodada.phase)),
+    this.rodadas().filter((rodada) => ROUND_IN_PLAY.includes(rodada.phase)),
   );
 
   protected readonly opcoesDeFase = computed<readonly SelectOption[]>(() =>
@@ -501,11 +484,11 @@ export class CompetitionRoundsPage {
 
   /** Depois que o mercado fecha, a próxima ação da rodada mora na revisão. */
   protected pedeRevisao(rodada: Round): boolean {
-    return PEDEM_REVISAO.includes(rodada.phase);
+    return ROUND_NEEDS_REVIEW.includes(rodada.phase);
   }
 
   protected proximoPasso(rodada: Round): string {
-    return PROXIMO_PASSO[rodada.phase] ?? '';
+    return ROUND_NEXT_STEP[rodada.phase] ?? '';
   }
 
   /** O primeiro jogo marcado da rodada, no fuso do campeonato. */

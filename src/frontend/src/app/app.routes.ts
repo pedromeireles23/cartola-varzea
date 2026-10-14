@@ -192,10 +192,10 @@ export const routes: Routes = [
         // campeonato, a casca da área (CompetitionLayout) acrescenta a navegação lateral.
         path: 'organizar',
         pathMatch: 'full',
-        title: 'Minhas organizações',
+        title: 'Meus campeonatos',
         canActivate: [authGuard],
         loadComponent: () =>
-          import('./features/organizer/my-organizations').then((m) => m.MyOrganizationsPage),
+          import('./features/organizer/my-competitions').then((m) => m.MyCompetitionsPage),
       },
       {
         // Sem guard de login: a tela lê e retira o token da URL antes de pedir a entrada.
@@ -212,13 +212,11 @@ export const routes: Routes = [
           import('./features/organizer/organization-team').then((m) => m.OrganizationTeamPage),
       },
       {
+        // A lista por organização virou seção de "Meus campeonatos" (2026-10-14); o
+        // endereço antigo continua chegando lá.
         path: 'organizar/o/:organizacao/campeonatos',
-        title: 'Campeonatos da organização',
-        canActivate: [authGuard],
-        loadComponent: () =>
-          import('./features/organizer/organization-competitions').then(
-            (m) => m.OrganizationCompetitionsPage,
-          ),
+        pathMatch: 'full',
+        redirectTo: '/organizar',
       },
       {
         path: 'organizar/o/:organizacao/campeonatos/novo',

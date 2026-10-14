@@ -22,13 +22,10 @@ test('proprietário cria campeonato em rascunho, configura e só a organização
 
   // 1. Da organização até o formulário de criação.
   await page.goto('/organizar');
-  await page
-    .getByRole('region', { name: organizacao })
-    .getByRole('link', { name: 'Campeonatos' })
-    .click();
-  await expect(page.getByRole('heading', { name: `Campeonatos de ${organizacao}` })).toBeVisible();
-  await expect(page.getByText('Crie o primeiro em rascunho')).toBeVisible();
-  await page.getByRole('link', { name: 'Criar campeonato' }).click();
+  await page.getByRole('heading', { name: 'Meus campeonatos', level: 1 }).waitFor();
+  const secao = page.getByRole('region', { name: organizacao });
+  await expect(secao.getByText('Nenhum campeonato ainda. Crie o primeiro')).toBeVisible();
+  await secao.getByRole('link', { name: 'Criar campeonato' }).click();
 
   // 2. Criar em rascunho, escolhendo a modalidade pelo que ela impõe.
   await page.getByLabel('Nome do campeonato').fill(nome);

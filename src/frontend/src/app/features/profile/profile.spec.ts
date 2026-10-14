@@ -75,7 +75,7 @@ describe('ProfilePage', () => {
     organiza.set(true);
     const fixture = await abrir();
 
-    expect(links(fixture)).toEqual(['Minhas organizações', 'Pedir acesso para outra organização']);
+    expect(links(fixture)).toEqual(['Meus campeonatos', 'Pedir acesso para outra organização']);
     expect(texto(fixture)).not.toContain('Quero organizar');
   });
 

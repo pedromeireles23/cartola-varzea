@@ -84,8 +84,9 @@ test('as telas do jogo e da organização passam no axe e cabem em 320 px', asyn
 
   const area = `/organizar/c/${competitionId}`;
   const daOrganizacao: readonly (readonly [string, string])[] = [
-    ['/organizar', 'minhas organizações'],
+    ['/organizar', 'meus campeonatos'],
     [area, 'resumo do campeonato'],
+    [`${area}/montar/times`, 'montagem'],
     [`${area}/fases`, 'fases'],
     [`${area}/rodadas`, 'rodadas da organização'],
     [`${area}/times`, 'times'],

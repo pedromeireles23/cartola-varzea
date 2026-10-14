@@ -32,7 +32,7 @@
             routerLink="/organizar"
             [attr.aria-current]="inOrganizations() ? 'page' : null"
           >
-            <svg [appIcon]="icons.organizations" />Minhas organizações
+            <svg [appIcon]="icons.competitions" />Meus campeonatos
           </a>
           @if (isAdmin()) {
             <a
@@ -54,6 +54,9 @@
             </p>
             <nav aria-label="Navegação do campeonato">
               @for (item of organizerItems(); track item.path) {
+                @if (item.startsGroup; as grupo) {
+                  <p class="lateral__subrotulo" aria-hidden="true">{{ grupo }}</p>
+                }
                 <a
                   class="lateral__link"
                   [routerLink]="organizerLink(item, campeonato.id)"
@@ -253,7 +256,7 @@
           routerLink="/organizar"
           [attr.aria-current]="inOrganizations() ? 'page' : null"
         >
-          <svg [appIcon]="icons.organizations" [size]="20" />Organizações
+          <svg [appIcon]="icons.competitions" [size]="20" />Campeonatos
         </a>
         @if (isAdmin()) {
           <a

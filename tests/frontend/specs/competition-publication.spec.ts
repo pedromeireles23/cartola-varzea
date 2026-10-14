@@ -32,9 +32,8 @@ test('checklist bloqueia o rascunho vazio e libera a publicação com o catálog
   await page.goto('/organizar');
   await page
     .getByRole('region', { name: organizacao })
-    .getByRole('link', { name: 'Campeonatos' })
+    .getByRole('link', { name: 'Criar campeonato' })
     .click();
-  await page.getByRole('link', { name: 'Criar campeonato' }).click();
   await page.getByLabel('Nome do campeonato').fill(`Copa Publicável ${Date.now()}`);
   await page.getByRole('radio', { name: /^Fut7/ }).check();
   await page.getByRole('button', { name: 'Criar campeonato' }).click();

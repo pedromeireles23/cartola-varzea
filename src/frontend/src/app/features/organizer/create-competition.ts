@@ -42,7 +42,7 @@ type Estado =
   host: { class: 'theme-organizer' },
   imports: [Alert, BackLink, Card, CompetitionSettingsForm, FailureState, Loading],
   template: `
-    <app-back-link [link]="['/organizar/o', organizacao(), 'campeonatos']" label="Campeonatos" />
+    <app-back-link link="/organizar" label="Meus campeonatos" />
     <h1>Novo campeonato</h1>
 
     @switch (estado().tipo) {

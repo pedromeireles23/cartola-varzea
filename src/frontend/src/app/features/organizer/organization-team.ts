@@ -74,7 +74,7 @@ const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     Loading,
   ],
   template: `
-    <app-back-link link="/organizar" label="Minhas organizações" />
+    <app-back-link link="/organizar" label="Meus campeonatos" />
 
     @switch (estado().tipo) {
       @case ('carregando') {

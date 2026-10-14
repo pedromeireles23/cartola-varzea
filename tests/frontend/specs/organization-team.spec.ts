@@ -19,9 +19,9 @@ test('proprietário convida e revoga auxiliar, e quem não é dono não vê a eq
 
   const { organizacao } = await criarOrganizacaoAprovada(page, admin, request);
 
-  // 1. A organização aprovada aparece em "Minhas organizações", com o papel.
+  // 1. A organização aprovada aparece em "Meus campeonatos", com o papel.
   await page.goto('/perfil');
-  await page.getByRole('link', { name: 'Minhas organizações' }).click();
+  await page.getByRole('link', { name: 'Meus campeonatos' }).click();
   await expect(page).toHaveURL(/\/organizar$/);
   const cartao = page.getByRole('region', { name: organizacao });
   await expect(cartao.getByText('Proprietário')).toBeVisible();

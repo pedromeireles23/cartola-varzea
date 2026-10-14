@@ -15,6 +15,35 @@ export interface OrganizerCompetition {
   readonly owner: boolean;
 }
 
+/** Uma tela da área do campeonato, depois de `/organizar/c/:campeonato/`. */
+export interface OrganizerPage {
+  readonly path: string;
+  readonly label: string;
+  /** O grupo do menu; nulo nas telas do topo, que valem para o campeonato inteiro. */
+  readonly group: string | null;
+  /** Outras rotas que pertencem à mesma tela, como a súmula dentro de Rodadas. */
+  readonly also?: readonly string[];
+  readonly ownerOnly?: boolean;
+}
+
+/**
+ * As telas do campeonato, na ordem do trabalho de quem organiza: montar e acompanhar no
+ * topo; depois os jogos, o elenco e o campeonato em si. A barra lateral e a faixa do
+ * celular leem a mesma lista, para nunca saírem em ordens diferentes.
+ */
+export const ORGANIZER_PAGES: readonly OrganizerPage[] = [
+  { path: 'montar', label: 'Montagem', group: null, ownerOnly: true },
+  { path: '', label: 'Resumo', group: null },
+  { path: 'rodadas', label: 'Rodadas', group: 'Jogos', also: ['partidas'] },
+  { path: 'fases', label: 'Fases', group: 'Jogos' },
+  { path: 'times', label: 'Times', group: 'Elenco' },
+  { path: 'atletas', label: 'Atletas', group: 'Elenco' },
+  { path: 'tecnicos', label: 'Técnicos', group: 'Elenco' },
+  { path: 'publicacao', label: 'Publicação', group: 'Gestão' },
+  { path: 'configuracao', label: 'Configuração', group: 'Gestão', ownerOnly: true },
+  { path: 'importacoes', label: 'Importações', group: 'Gestão' },
+];
+
 /**
  * A área de organização vista de fora dela (06 §4.1): quem pode entrar e, lá dentro,
  * qual campeonato está aberto.

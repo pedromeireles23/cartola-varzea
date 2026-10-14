@@ -50,7 +50,7 @@ const ROTA = '/organizar/convite';
           Não encontramos o convite neste endereço. Abra de novo o link exatamente como chegou no
           e-mail.
         </app-alert>
-        <a class="acao" routerLink="/organizar">Minhas organizações</a>
+        <a class="acao" routerLink="/organizar">Meus campeonatos</a>
       </app-card>
     } @else if (!conta()) {
       <app-card heading="Entre para aceitar">
@@ -100,7 +100,7 @@ const ROTA = '/organizar/convite';
                 Este convite não pode mais ser usado. Ele foi revogado, já foi aceito por outra
                 conta ou você já faz parte da equipe.
               </app-alert>
-              <a class="acao" routerLink="/organizar">Minhas organizações</a>
+              <a class="acao" routerLink="/organizar">Meus campeonatos</a>
             </app-card>
           }
           @case ('nao-encontrado') {

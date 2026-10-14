@@ -25,6 +25,17 @@
   text-transform: uppercase;
 }
 
+// Grupo do menu do campeonato (Jogos, Elenco, Campeonato): mais discreto que o rótulo da
+// área, para separar sem competir com os links.
+.lateral__subrotulo {
+  margin: var(--space-2) 10px 2px;
+  color: var(--semantic-shell-text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .lateral__link {
   display: flex;
   gap: 10px;
