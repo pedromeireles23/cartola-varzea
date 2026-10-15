@@ -64,8 +64,9 @@ test('visitante sem conta encontra o campeonato publicado e não o rascunho', as
   // "Como funciona" é o CTA e o título da seção; aqui interessa a seção.
   await expect(visitante.getByRole('heading', { name: 'Como funciona' })).toBeVisible();
   await expect(visitante.getByText('Monte seu elenco')).toBeVisible();
+  // Fora da demonstração, a capa não se diz portfólio nem promete "sem pagamento" (Fase 20).
   await expect(
-    visitante.getByText('Créditos virtuais, sem pagamento, aposta ou prêmio'),
+    visitante.getByText('Créditos virtuais, sem aposta em dinheiro nem prêmio'),
   ).toBeVisible();
   // O campeonato recém-publicado aparece no destaque, que sai da mesma busca pública.
   await expect(visitante.getByRole('link', { name: publicado })).toBeVisible();
