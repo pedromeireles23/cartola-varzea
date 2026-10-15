@@ -77,6 +77,7 @@ describe('Shell', () => {
   let trocarCampeonato: ReturnType<typeof vi.fn>;
   let organiza: ReturnType<typeof signal<boolean>>;
   let aberto: ReturnType<typeof signal<OrganizerCompetition | null>>;
+  let demo: ReturnType<typeof signal<boolean>>;
 
   beforeEach(() => {
     conta = signal<Account | null>({
@@ -94,6 +95,7 @@ describe('Shell', () => {
     trocarCampeonato = vi.fn().mockResolvedValue(undefined);
     organiza = signal(true);
     aberto = signal<OrganizerCompetition | null>(null);
+    demo = signal(false);
 
     TestBed.configureTestingModule({
       imports: [Shell],
@@ -104,6 +106,7 @@ describe('Shell', () => {
           useValue: {
             current: conta,
             isDemoViewer: signal(false),
+            demoAccess: demo,
             isPlatformAdmin: computed(() => conta()?.roles.includes('PlatformAdmin') ?? false),
           },
         },
@@ -150,6 +153,22 @@ describe('Shell', () => {
       item.textContent!.trim(),
     );
   }
+
+  it('só a demonstração se apresenta como portfólio, e o real não promete "sem pagamentos"', async () => {
+    secao.set('home');
+    const real = (await abrir('/inicio')).nativeElement as HTMLElement;
+    expect(real.querySelector('footer')?.textContent).toContain(
+      'Sem apostas em dinheiro nem prêmios',
+    );
+    expect(real.querySelector('footer')?.textContent).not.toContain('portfólio');
+    expect(real.querySelector('footer')?.textContent).not.toContain('pagamentos');
+
+    demo.set(true);
+    const demonstracao = (await abrir('/inicio')).nativeElement as HTMLElement;
+    expect(demonstracao.querySelector('footer')?.textContent).toContain(
+      'Demonstração de portfólio, com dados fictícios',
+    );
+  });
 
   it('sem campeonato mantém a casca do jogo sem navegação contextual', async () => {
     secao.set('home');

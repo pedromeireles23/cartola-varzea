@@ -115,8 +115,19 @@ describe('LandingPage', () => {
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
 
-    expect(texto(fixture)).toContain('Créditos virtuais, sem pagamento, aposta ou prêmio');
-    expect(texto(fixture)).toContain('demonstração de portfólio com dados fictícios');
+    expect(texto(fixture)).toContain('Créditos virtuais, sem aposta em dinheiro nem prêmio');
+  });
+
+  it('só a demonstração se apresenta como portfólio com dados fictícios', async () => {
+    const real = await abrir([], false);
+    expect(texto(real)).not.toContain('portfólio');
+    expect(TestBed.inject(Meta).getTag('name="description"')?.content).not.toContain('portfólio');
+
+    const demo = await abrir([], true);
+    expect(texto(demo)).toContain('demonstração de portfólio com dados fictícios');
+    expect(TestBed.inject(Meta).getTag('name="description"')?.content).toContain(
+      'Demonstração de portfólio',
+    );
   });
 
   it('o estádio é ilustração e fica fora da árvore de acessibilidade', async () => {

@@ -31,6 +31,7 @@ describe('Faixa de modo demonstração', () => {
           useValue: {
             current: signal({ ...CONTA, roles: demo ? ['DemoViewer'] : [] }),
             isDemoViewer: signal(demo),
+            demoAccess: signal(demo),
           },
         },
       ],

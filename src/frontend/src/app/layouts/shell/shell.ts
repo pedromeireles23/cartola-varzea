@@ -203,6 +203,17 @@ export class Shell {
   protected readonly moreOpen = signal(false);
   protected readonly canOrganize = this.organizer.canOrganize;
   protected readonly isAdmin = this.auth.isPlatformAdmin;
+
+  /**
+   * O rodapé diz o que o jogo não é. "Demonstração de portfólio" só vale onde a demo está
+   * ligada; na publicação real os dados são de verdade, e quem organiza paga pelo serviço,
+   * então sai também o "sem pagamentos" (Fase 20).
+   */
+  protected readonly avisoDoRodape = computed(() =>
+    this.auth.demoAccess()
+      ? 'Demonstração de portfólio, com dados fictícios. Sem pagamentos, apostas ou premiações.'
+      : 'Fantasy de futebol amador com créditos virtuais. Sem apostas em dinheiro nem prêmios.',
+  );
   protected readonly organizerCompetition = this.organizer.competition;
 
   /** "Criar conta" só onde existe cadastro: a publicação sem e-mail não tem (Fase 17). */
