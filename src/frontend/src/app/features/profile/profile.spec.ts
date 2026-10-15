@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
 import { Account, AuthService } from '../../core/auth/auth.service';
+import { TwoFactorService } from '../../core/auth/two-factor.service';
 import { OrganizerArea } from '../organizer/organizer-area';
 import { ProfilePage } from './profile';
 
@@ -12,6 +13,7 @@ const PESSOA: Account = {
   email: 'rafa@exemplo.local',
   emailConfirmed: true,
   roles: [],
+  twoFactorEnabled: false,
 };
 
 describe('ProfilePage', () => {
@@ -36,6 +38,10 @@ describe('ProfilePage', () => {
           },
         },
         { provide: OrganizerArea, useValue: { canOrganize: organiza } },
+        {
+          provide: TwoFactorService,
+          useValue: { status: vi.fn().mockResolvedValue({ enabled: false, recoveryCodesLeft: 0 }) },
+        },
       ],
     });
   });
@@ -85,6 +91,13 @@ describe('ProfilePage', () => {
     const fixture = await abrir();
 
     expect(links(fixture)).toContain('Ver solicitações');
+    expect(texto(fixture)).toContain('Verificação em duas etapas');
+  });
+
+  it('a verificação em duas etapas só aparece para a administração', async () => {
+    const fixture = await abrir();
+
+    expect(texto(fixture)).not.toContain('Verificação em duas etapas');
   });
 
   it('encerrar a sessão sai e volta para a entrada', async () => {

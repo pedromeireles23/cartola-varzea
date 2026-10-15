@@ -96,6 +96,86 @@ describe('LoginPage', () => {
     expect(texto).not.toContain('não encontrada');
   });
 
+  async function enviarSenha(fixture: ComponentFixture<LoginPage>): Promise<void> {
+    const form = (fixture.nativeElement as HTMLElement).querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne('/api/v1/auth/login').flush({ twoFactorRequired: true });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await fixture.whenStable();
+  }
+
+  it('com dois fatores, a senha certa leva ao código, com o foco no campo novo', async () => {
+    const fixture = await abrir();
+    await enviarSenha(fixture);
+
+    const elemento = fixture.nativeElement as HTMLElement;
+    expect(elemento.querySelector('h1')?.textContent).toContain('Código do aplicativo');
+    const campo = elemento.querySelector('input[autocomplete="one-time-code"]');
+    expect(campo).not.toBeNull();
+    expect(document.activeElement).toBe(campo);
+    expect(elemento.querySelector('input[type="password"]')).toBeNull();
+  });
+
+  it('o código certo abre a sessão e segue para o início', async () => {
+    const fixture = await abrir();
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    await enviarSenha(fixture);
+
+    const elemento = fixture.nativeElement as HTMLElement;
+    const campo = elemento.querySelector<HTMLInputElement>('input[autocomplete="one-time-code"]')!;
+    campo.value = '123456';
+    campo.dispatchEvent(new Event('input'));
+    elemento.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const segundo = http.expectOne('/api/v1/auth/login/two-factor');
+    expect(segundo.request.body).toEqual({ code: '123456' });
+    segundo.flush(null, { status: 204, statusText: 'No Content' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne('/api/v1/auth/antiforgery').flush(null);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne('/api/v1/auth/me').flush({
+      id: 'u1',
+      email: 'admin@exemplo.local',
+      displayName: 'Admin',
+      emailConfirmed: true,
+      roles: ['PlatformAdmin'],
+      twoFactorEnabled: true,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(navegar).toHaveBeenCalledWith('/inicio');
+  });
+
+  it('código errado avisa sem sair do passo, e dá para voltar à senha', async () => {
+    const fixture = await abrir();
+    await enviarSenha(fixture);
+
+    const elemento = fixture.nativeElement as HTMLElement;
+    elemento.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http
+      .expectOne('/api/v1/auth/login/two-factor')
+      .flush(
+        { status: 401, title: 'Código não confere' },
+        new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }),
+      );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await fixture.whenStable();
+
+    expect(elemento.textContent).toContain('O código não confere');
+
+    const voltar = [...elemento.querySelectorAll('button')].find((botao) =>
+      botao.textContent?.includes('Voltar para e-mail e senha'),
+    )!;
+    voltar.click();
+    await fixture.whenStable();
+
+    expect(elemento.querySelector('input[type="password"]')).not.toBeNull();
+    expect(elemento.textContent).not.toContain('O código não confere');
+  });
+
   it('cada campo tem rótulo persistente associado ao input', async () => {
     const fixture = await abrir();
 

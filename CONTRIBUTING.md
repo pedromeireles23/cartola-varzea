@@ -75,6 +75,14 @@ dotnet user-secrets --project src/backend/src/Fut7Fantasy.Api set "PlatformAdmin
 - Conta já confirmada: reinicie a API. O papel é concedido na inicialização.
 - Saia e entre de novo depois da concessão: a mudança de privilégio encerra as sessões abertas.
 - Tirar o e-mail da configuração não retira o papel.
+- A administração só abre com a verificação em duas etapas. Em **Conta**, ligue-a com um aplicativo autenticador (Google Authenticator, Microsoft Authenticator, 2FAS…) e guarde os códigos de recuperação; a partir daí, a entrada pede o código depois da senha. Vale também para a conta de administração da demo.
+- Perdeu o aplicativo e os códigos numa base local? Desligue direto no banco e ligue de novo pela tela:
+
+  ```sql
+  DECLARE @id uniqueidentifier = (SELECT Id FROM [identity].[Users] WHERE NormalizedEmail = 'VOCE@EXEMPLO.LOCAL');
+  UPDATE [identity].[Users] SET TwoFactorEnabled = 0, SecurityStamp = CONVERT(nvarchar(36), NEWID()) WHERE Id = @id;
+  DELETE FROM [identity].[UserTokens] WHERE UserId = @id AND LoginProvider = '[AspNetUserStore]';
+  ```
 
 ## Backend
 
@@ -140,7 +148,7 @@ npm test
 
 O Playwright sobe backend e frontend sozinho, mas o backend precisa do SQL Server: rode o `bootstrap.ps1` antes. Os testes rodam em viewport de desktop e de celular.
 
-- Um projeto `setup` cria a conta `admin-e2e@exemplo.local` antes dos demais. A API que o próprio Playwright sobe já recebe esse e-mail como administrador inicial.
+- Um projeto `setup` cria a conta `admin-e2e@exemplo.local` antes dos demais e liga nela a verificação em duas etapas, pela tela de Conta. A API que o próprio Playwright sobe já recebe esse e-mail como administrador inicial. A chave do autenticador fica em `tests/frontend/.auth/`, fora do Git, e os testes calculam o código a partir dela. Se o banco do E2E já tem a conta com dois fatores e a chave se perdeu, o setup para e diz como recomeçar: apague a conta do banco `Fut7Fantasy_E2E` (ou recrie o banco).
 - Se uma API sua já estiver rodando, o Playwright reaproveita essa instância e a configuração dela. Nesse caso, os testes de administração são ignorados com aviso quando a conta do E2E não é administradora; no CI eles falham.
 - O E2E grava contas, organizações e convites fictícios a cada execução. Para não sujar o banco de desenvolvimento, prefira rodar pelo script, que usa o banco `Fut7Fantasy_E2E` do mesmo SQL Server:
 

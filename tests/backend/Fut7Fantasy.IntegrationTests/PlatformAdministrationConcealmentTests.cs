@@ -62,8 +62,8 @@ public sealed class PlatformAdministrationConcealmentTests(SqlServerFixture sqlS
         var cancellationToken = TestContext.Current.CancellationToken;
         using var factory = sqlServer.CreateApi();
         var email = UniqueEmail("admin");
-        await CreateUserAsync(factory, email, ApplicationRole.PlatformAdmin);
-        using var admin = await CreateAuthenticatedClientAsync(factory, email, cancellationToken);
+        var key = await CreateAdminAsync(factory, email);
+        using var admin = await CreateTwoFactorClientAsync(factory, email, key, cancellationToken);
 
         using var queue = await admin.GetAsync(new Uri(Queue, UriKind.Relative), cancellationToken);
         Assert.Equal(HttpStatusCode.OK, queue.StatusCode);

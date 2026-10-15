@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  inject,
+  signal,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { ApiFailure } from '../../core/api/problem-details';
@@ -16,39 +24,70 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
       <span class="selo__aviso">Sem apostas em dinheiro</span>
     </p>
 
-    <app-card heading="Entrar" [headingLevel]="1">
-      <form (submit)="entrar($event)">
-        @if (erro()) {
-          <app-alert tone="danger">{{ erro() }}</app-alert>
-        }
+    @if (segundoFator()) {
+      <app-card heading="Código do aplicativo" [headingLevel]="1">
+        <form (submit)="confirmarCodigo($event)">
+          <p class="instrucao">
+            Esta conta usa verificação em duas etapas. Abra o aplicativo autenticador e digite o
+            código de 6 dígitos do Cartola Várzea. Sem o celular, use um código de recuperação.
+          </p>
 
-        <app-form-field
-          label="E-mail"
-          type="email"
-          autocomplete="username"
-          [required]="true"
-          [(value)]="email"
-        />
+          @if (erro()) {
+            <app-alert tone="danger">{{ erro() }}</app-alert>
+          }
 
-        <app-form-field
-          label="Senha"
-          type="password"
-          autocomplete="current-password"
-          [required]="true"
-          [(value)]="senha"
-        />
+          <app-form-field
+            label="Código"
+            autocomplete="one-time-code"
+            [required]="true"
+            [maxLength]="16"
+            [(value)]="codigo"
+          />
 
-        <app-button type="submit" [loading]="enviando()" [fullWidth]="true">Entrar</app-button>
-      </form>
+          <app-button type="submit" [loading]="enviando()" [fullWidth]="true">Entrar</app-button>
+        </form>
 
-      @if (selfService()) {
         <p class="apoio">
-          <a routerLink="/recuperar-senha">Esqueci minha senha</a>
-          ·
-          <a routerLink="/cadastro">Criar uma conta</a>
+          <button type="button" class="recomecar" (click)="recomecar()">
+            Voltar para e-mail e senha
+          </button>
         </p>
-      }
-    </app-card>
+      </app-card>
+    } @else {
+      <app-card heading="Entrar" [headingLevel]="1">
+        <form (submit)="entrar($event)">
+          @if (erro()) {
+            <app-alert tone="danger">{{ erro() }}</app-alert>
+          }
+
+          <app-form-field
+            label="E-mail"
+            type="email"
+            autocomplete="username"
+            [required]="true"
+            [(value)]="email"
+          />
+
+          <app-form-field
+            label="Senha"
+            type="password"
+            autocomplete="current-password"
+            [required]="true"
+            [(value)]="senha"
+          />
+
+          <app-button type="submit" [loading]="enviando()" [fullWidth]="true">Entrar</app-button>
+        </form>
+
+        @if (selfService()) {
+          <p class="apoio">
+            <a routerLink="/recuperar-senha">Esqueci minha senha</a>
+            ·
+            <a routerLink="/cadastro">Criar uma conta</a>
+          </p>
+        }
+      </app-card>
+    }
 
     @if (demo()) {
       <section class="visitante" aria-labelledby="visitante-titulo">
@@ -77,11 +116,17 @@ import { Alert, Button, Card, FormField } from '../../shared/ui';
 export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   protected readonly email = signal('');
   protected readonly senha = signal('');
   protected readonly enviando = signal(false);
   protected readonly erro = signal<string | null>(null);
+
+  /** A senha conferiu numa conta de dois fatores: falta o código do aplicativo. */
+  protected readonly segundoFator = signal(false);
+  protected readonly codigo = signal('');
 
   /** Só a demonstração pública oferece a entrada de visitante. */
   protected readonly demo = this.auth.demoAccess;
@@ -111,12 +156,21 @@ export class LoginPage {
     this.erro.set(null);
 
     try {
-      await this.auth.login(this.email(), this.senha());
+      if ((await this.auth.login(this.email(), this.senha())) === 'second-factor') {
+        this.senha.set('');
+        this.segundoFator.set(true);
+        // O formulário trocou: o foco vai para o campo novo, e o leitor de tela o anuncia.
+        afterNextRender(
+          () =>
+            this.host.nativeElement
+              .querySelector<HTMLInputElement>('input[autocomplete="one-time-code"]')
+              ?.focus(),
+          { injector: this.injector },
+        );
+        return;
+      }
 
-      // O destino volta da rota de origem, para que quem foi barrado numa página
-      // privada caia de volta nela e não na home.
-      const destino = new URLSearchParams(globalThis.location.search).get('destino');
-      await this.router.navigateByUrl(destino ?? '/inicio');
+      await this.seguir();
     } catch (falha) {
       // A mensagem é a mesma para e-mail inexistente e senha errada: a API não
       // distingue os dois e a interface não deve inventar essa distinção.
@@ -124,5 +178,41 @@ export class LoginPage {
     } finally {
       this.enviando.set(false);
     }
+  }
+
+  protected async confirmarCodigo(event: Event): Promise<void> {
+    event.preventDefault();
+    this.enviando.set(true);
+    this.erro.set(null);
+
+    try {
+      await this.auth.loginWithSecondFactor(this.codigo());
+      await this.seguir();
+    } catch (falha) {
+      // Código errado, conta bloqueada e espera vencida respondem igual, de propósito.
+      this.erro.set(
+        (falha as ApiFailure).status === 401
+          ? 'O código não confere. Confira o aplicativo e tente de novo. Depois de cinco minutos, ' +
+              'ou de várias tentativas, é preciso voltar para e-mail e senha.'
+          : ((falha as ApiFailure).message ?? 'Não foi possível entrar.'),
+      );
+    } finally {
+      this.enviando.set(false);
+    }
+  }
+
+  protected recomecar(): void {
+    this.segundoFator.set(false);
+    this.codigo.set('');
+    this.erro.set(null);
+  }
+
+  /**
+   * O destino volta da rota de origem, para que quem foi barrado numa página privada caia
+   * de volta nela e não na home.
+   */
+  private async seguir(): Promise<void> {
+    const destino = new URLSearchParams(globalThis.location.search).get('destino');
+    await this.router.navigateByUrl(destino ?? '/inicio');
   }
 }

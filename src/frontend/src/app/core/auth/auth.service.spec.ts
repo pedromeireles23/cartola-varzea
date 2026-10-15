@@ -15,6 +15,7 @@ const CONTA: Account = {
   displayName: 'Pessoa',
   emailConfirmed: true,
   roles: [],
+  twoFactorEnabled: false,
 };
 
 describe('AuthService', () => {

@@ -1,0 +1,54 @@
+// Verificação em duas etapas (Fase 20): no padrão dos painéis da Conta, com o QR code e a
+// chave num passo e a confirmação no outro.
+.painel__corpo {
+  justify-items: start;
+}
+
+.apoio {
+  color: var(--color-ink-700);
+  font-size: var(--font-small);
+}
+
+.passos {
+  display: grid;
+  gap: var(--space-5);
+  margin: 0;
+  padding-left: var(--space-5);
+
+  > li {
+    display: grid;
+    gap: var(--space-3);
+  }
+}
+
+// A chave tem 32 caracteres: em grupos de quatro, quebra entre os grupos no celular.
+.chave {
+  display: inline;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  word-spacing: 0.2em;
+}
+
+.confirmar {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 320px;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+
+.codigos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--space-2) var(--space-4);
+  width: 100%;
+  margin: 0;
+  padding-left: var(--space-5);
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+}

@@ -59,6 +59,26 @@ public static partial class SecurityEvents
         Message = "Sessão de demonstração aberta sem senha. userId={UserId}")]
     public static partial void DemoSignIn(ILogger logger, Guid userId);
 
+    [LoggerMessage(EventId = 2012, Level = LogLevel.Information,
+        Message = "Senha conferida; a entrada espera o segundo fator. userId={UserId}")]
+    public static partial void SignInAwaitingSecondFactor(ILogger logger, Guid userId);
+
+    [LoggerMessage(EventId = 2013, Level = LogLevel.Warning,
+        Message = "Segundo fator recusado, vencido ou com a conta bloqueada.")]
+    public static partial void SecondFactorFailed(ILogger logger);
+
+    [LoggerMessage(EventId = 2014, Level = LogLevel.Information,
+        Message = "Entrada com segundo fator. userId={UserId} recuperação={RecoveryCode}")]
+    public static partial void SecondFactorSucceeded(ILogger logger, Guid userId, bool recoveryCode);
+
+    [LoggerMessage(EventId = 2015, Level = LogLevel.Information,
+        Message = "Chave nova de aplicativo autenticador gerada. userId={UserId}")]
+    public static partial void AuthenticatorKeyReset(ILogger logger, Guid userId);
+
+    [LoggerMessage(EventId = 2016, Level = LogLevel.Information,
+        Message = "Dois fatores ligados; sessões só com senha invalidadas. userId={UserId}")]
+    public static partial void TwoFactorEnabled(ILogger logger, Guid userId);
+
     /// <summary>
     /// Reduz o e-mail ao minimo util para investigar abuso: primeira letra, dominio
     /// e nada mais. Registrar o endereco inteiro seria dado pessoal desnecessario.

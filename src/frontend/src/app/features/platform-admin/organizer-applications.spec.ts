@@ -1,6 +1,7 @@
 import { HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { apiErrorInterceptor } from '../../core/api/api-error.interceptor';
 import { API_BASE_URL } from '../../core/config/api-base-url';
@@ -46,6 +47,7 @@ describe('OrganizerApplicationsPage', () => {
       providers: [
         provideHttpClient(withInterceptors([apiErrorInterceptor])),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: API_BASE_URL, useValue: '/api/v1' },
       ],
     });
@@ -157,7 +159,7 @@ describe('OrganizerApplicationsPage', () => {
     http.expectOne(PENDING).flush([]);
   });
 
-  it('conta sem papel de administração vê o aviso de acesso restrito', async () => {
+  it('admin sem o segundo fator é mandado ligar a verificação em duas etapas', async () => {
     const fixture = TestBed.createComponent(OrganizerApplicationsPage);
     await fixture.whenStable();
     http
@@ -166,7 +168,8 @@ describe('OrganizerApplicationsPage', () => {
     await fixture.whenStable();
 
     const elemento = fixture.nativeElement as HTMLElement;
-    expect(elemento.textContent).toContain('exclusiva da administração da plataforma');
+    expect(elemento.textContent).toContain('só abre com a verificação em duas etapas');
+    expect(elemento.querySelector('a[href="/perfil#duas-etapas"]')).not.toBeNull();
     expect(elemento.textContent).not.toContain('Tentar de novo');
   });
 });

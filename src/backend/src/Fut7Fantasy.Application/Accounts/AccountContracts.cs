@@ -42,6 +42,12 @@ public enum SignInOutcome
 
     /// <summary>Conta existe e a senha confere, mas o e-mail ainda nao foi verificado.</summary>
     EmailNotConfirmed,
+
+    /// <summary>
+    /// A senha confere numa conta com dois fatores: a sessao so abre depois do codigo do
+    /// aplicativo autenticador ou de um codigo de recuperacao.
+    /// </summary>
+    TwoFactorRequired,
 }
 
 /// <summary>Dados da conta que a propria pessoa pode ver.</summary>
@@ -50,9 +56,23 @@ public enum SignInOutcome
 /// <param name="DisplayName">Nome exibido na interface.</param>
 /// <param name="EmailConfirmed">Se o e-mail ja foi verificado.</param>
 /// <param name="Roles">Papeis globais da plataforma.</param>
+/// <param name="TwoFactorEnabled">
+/// Se a conta exige o segundo fator. Ligado, toda sessao dela passou pelo codigo: ligar
+/// troca o security stamp, o que derruba as sessoes abertas so com senha.
+/// </param>
 public sealed record AccountProfile(
     Guid Id,
     string Email,
     string DisplayName,
     bool EmailConfirmed,
-    IReadOnlyList<string> Roles);
+    IReadOnlyList<string> Roles,
+    bool TwoFactorEnabled);
+
+/// <param name="Enabled">Se a conta exige o segundo fator.</param>
+/// <param name="RecoveryCodesLeft">Codigos de recuperacao ainda nao usados.</param>
+public sealed record TwoFactorStatus(bool Enabled, int RecoveryCodesLeft);
+
+/// <summary>O que a pessoa leva para o aplicativo autenticador.</summary>
+/// <param name="SharedKey">A chave em grupos de quatro, para digitar.</param>
+/// <param name="AuthenticatorUri">O endereco <c>otpauth://</c>, conteudo do QR code.</param>
+public sealed record AuthenticatorSetup(string SharedKey, string AuthenticatorUri);

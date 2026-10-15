@@ -39,11 +39,13 @@ public sealed partial class InitialPlatformAdminTests(SqlServerFixture sqlServer
         var adminId = await RegisterAndConfirmAsync(factory, emails, adminEmail, cancellationToken);
         await RegisterAndConfirmAsync(factory, emails, otherEmail, cancellationToken);
 
+        // O papel chega com a confirmação; a administração ainda espera o segundo fator,
+        // que a pessoa liga no perfil (TwoFactorFlowTests).
         using var admin = await LoginAsync(factory, adminEmail, cancellationToken);
         using var queue = await admin.GetAsync(
             new Uri("/api/v1/platform-admin/organizer-applications/pending", UriKind.Relative),
             cancellationToken);
-        Assert.Equal(HttpStatusCode.OK, queue.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, queue.StatusCode);
         var profile = await admin.GetFromJsonAsync<JsonElement>(
             new Uri("/api/v1/auth/me", UriKind.Relative), cancellationToken);
         Assert.Contains(

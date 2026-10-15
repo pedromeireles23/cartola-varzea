@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Accounts;
 using Fut7Fantasy.Application.Competitions;
@@ -224,8 +225,31 @@ public static class InfrastructureServiceCollectionExtensions
         // comprometimento. O custo e uma consulta por chave primaria por requisicao
         // autenticada, aceitavel na escala deste projeto; se virar gargalo, o lugar
         // de rever e aqui, com medicao.
+        //
+        // A revalidação recria a identidade a partir do banco e perderia como a sessão foi
+        // aberta; o Identity mesmo avisa disso no código. A marca do segundo fator (amr) é
+        // levada para a identidade nova, senão a sessão do admin deixaria de valer para a
+        // administração já na requisição seguinte à entrada.
         services.Configure<SecurityStampValidatorOptions>(options =>
-            options.ValidationInterval = TimeSpan.Zero);
+        {
+            options.ValidationInterval = TimeSpan.Zero;
+            options.OnRefreshingPrincipal = context =>
+            {
+                if (context.NewPrincipal?.Identity is ClaimsIdentity nova && context.CurrentPrincipal is { } atual)
+                {
+                    foreach (var metodo in atual.FindAll(SessionClaims.AuthenticationMethod))
+                    {
+                        if (!nova.HasClaim(metodo.Type, metodo.Value))
+                        {
+                            nova.AddClaim(new Claim(metodo.Type, metodo.Value));
+                        }
+                    }
+                }
+
+                return Task.CompletedTask;
+            };
+        });
+
 
         // O token de recuperacao de senha vale 1 hora; o de confirmacao, 24.
         services.Configure<DataProtectionTokenProviderOptions>(options =>

@@ -16,6 +16,7 @@ function conta(roles: string[]): Account {
     displayName: 'Pessoa',
     emailConfirmed: true,
     roles,
+    twoFactorEnabled: false,
   };
 }
 

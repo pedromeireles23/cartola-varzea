@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Fut7Fantasy.Api.Security;
 using Fut7Fantasy.Application.Accounts;
 using Fut7Fantasy.Infrastructure.Options;
 using Microsoft.AspNetCore.Antiforgery;
@@ -43,6 +44,29 @@ public static class AccountEndpoints
             .RequireRateLimiting(StrictRateLimitPolicy)
             .WithName("Login")
             .WithSummary("Abre a sessão em cookie.");
+
+        grupo.MapPost("/login/two-factor", LoginWithTwoFactorAsync)
+            .RequireRateLimiting(StrictRateLimitPolicy)
+            .WithName("LoginWithTwoFactor")
+            .WithSummary("Conclui a entrada de uma conta com dois fatores.");
+
+        var duasEtapas = grupo.MapGroup("/two-factor");
+
+        duasEtapas.MapGet("/", TwoFactorStatusAsync)
+            .RequireAuthorization()
+            .WithName("TwoFactorStatus")
+            .WithSummary("Diz se a conta exige o segundo fator e quantos códigos de recuperação restam.");
+
+        duasEtapas.MapPost("/authenticator", BeginAuthenticatorSetupAsync)
+            .RequireAuthorization(AuthorizationPolicies.AuthenticatedWrite)
+            .WithName("BeginAuthenticatorSetup")
+            .WithSummary("Gera a chave do aplicativo autenticador, antes de ligar os dois fatores.");
+
+        duasEtapas.MapPost("/enable", EnableTwoFactorAsync)
+            .RequireAuthorization(AuthorizationPolicies.AuthenticatedWrite)
+            .RequireRateLimiting(StrictRateLimitPolicy)
+            .WithName("EnableTwoFactor")
+            .WithSummary("Liga os dois fatores com um código do aplicativo e devolve os códigos de recuperação.");
 
         grupo.MapGet("/demo", DemoAvailability)
             .WithName("DemoAvailability")
@@ -170,6 +194,10 @@ public static class AccountEndpoints
         {
             SignInOutcome.Success => Results.NoContent(),
 
+            // Senha certa numa conta com dois fatores: a sessão ainda não existe, e a tela
+            // pede o código. Só quem acertou a senha chega a esta resposta.
+            SignInOutcome.TwoFactorRequired => Results.Ok(new LoginResponse(TwoFactorRequired: true)),
+
             SignInOutcome.EmailNotConfirmed => Results.Problem(
                 title: "E-mail ainda não confirmado",
                 detail: "Confirme seu e-mail pelo link que enviamos antes de entrar.",
@@ -184,6 +212,73 @@ public static class AccountEndpoints
                 statusCode: StatusCodes.Status401Unauthorized),
         };
     }
+
+    private static async Task<IResult> LoginWithTwoFactorAsync(
+        TwoFactorCodeRequest request,
+        IAccountService accounts,
+        CancellationToken cancellationToken)
+    {
+        if (Validar(request) is { } invalido)
+        {
+            return invalido;
+        }
+
+        // Código errado, conta bloqueada e primeiro passo vencido respondem igual: a tela
+        // manda voltar ao começo se insistir.
+        return await accounts.SignInWithTwoFactorAsync(request.Code, cancellationToken).ConfigureAwait(false)
+            ? Results.NoContent()
+            : Results.Problem(
+                title: "Código não confere",
+                detail: "Confira o código no aplicativo e tente de novo. Depois de cinco minutos, "
+                    + "ou de várias tentativas seguidas, é preciso entrar de novo com e-mail e senha.",
+                statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    private static async Task<IResult> TwoFactorStatusAsync(
+        IAccountService accounts,
+        CancellationToken cancellationToken) =>
+        await accounts.GetTwoFactorStatusAsync(cancellationToken).ConfigureAwait(false) is { } status
+            ? Results.Ok(status)
+            : Results.Unauthorized();
+
+    private static async Task<IResult> BeginAuthenticatorSetupAsync(
+        IAccountService accounts,
+        CancellationToken cancellationToken) =>
+        await accounts.BeginAuthenticatorSetupAsync(cancellationToken).ConfigureAwait(false) is { } setup
+            ? Results.Ok(setup)
+            : TwoFactorAlreadyEnabled();
+
+    private static async Task<IResult> EnableTwoFactorAsync(
+        TwoFactorCodeRequest request,
+        IAccountService accounts,
+        CancellationToken cancellationToken)
+    {
+        if (Validar(request) is { } invalido)
+        {
+            return invalido;
+        }
+
+        if (await accounts.GetTwoFactorStatusAsync(cancellationToken).ConfigureAwait(false) is { Enabled: true })
+        {
+            return TwoFactorAlreadyEnabled();
+        }
+
+        return await accounts.EnableTwoFactorAsync(request.Code, cancellationToken).ConfigureAwait(false)
+            is { } codigos
+            ? Results.Ok(new RecoveryCodesResponse(codigos))
+            : Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    ["code"] = ["O código não confere. Use o que o aplicativo mostra agora."],
+                },
+                title: "Código não confere");
+    }
+
+    private static IResult TwoFactorAlreadyEnabled() =>
+        Results.Problem(
+            title: "Verificação em duas etapas já ligada",
+            detail: "A conta já usa o aplicativo autenticador.",
+            statusCode: StatusCodes.Status409Conflict);
 
     /// <summary>
     /// A tela de entrada pergunta antes de mostrar o botão: fora do ambiente de
@@ -299,6 +394,17 @@ public static class AccountEndpoints
 
 /// <param name="Message">Texto pronto para exibir ao usuário.</param>
 public sealed record MessageResponse(string Message);
+
+/// <param name="TwoFactorRequired">A senha confere, e a sessão espera o segundo fator.</param>
+public sealed record LoginResponse(bool TwoFactorRequired);
+
+/// <param name="RecoveryCodes">Os códigos de recuperação, que só saem esta vez.</param>
+public sealed record RecoveryCodesResponse(IReadOnlyList<string> RecoveryCodes);
+
+public sealed record TwoFactorCodeRequest(
+    [property: Required(ErrorMessage = "Informe o código.")]
+    [property: StringLength(32, MinimumLength = 6, ErrorMessage = "Informe o código.")]
+    string Code);
 
 /// <param name="Available">A entrada de visitante está ligada.</param>
 /// <param name="SelfService">Dá para criar conta e recuperar a senha por e-mail.</param>

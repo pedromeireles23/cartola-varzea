@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -41,7 +42,7 @@ interface Analise {
 @Component({
   selector: 'app-organizer-applications',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Button, Card, DatePipe, Dialog, FailureState, FormField, Loading],
+  imports: [Alert, Button, Card, DatePipe, Dialog, FailureState, FormField, Loading, RouterLink],
   template: `
     <h1>Solicitações de organizador</h1>
     <p class="intro">
@@ -65,8 +66,10 @@ interface Analise {
       @case ('erro') {
         <app-card>
           @if (falhaAoCarregar()!.status === 403) {
+            <!-- Quem não administra nem chega aqui; o 403 é do admin sem o segundo fator. -->
             <app-alert tone="warning">
-              Esta área é exclusiva da administração da plataforma.
+              A administração só abre com a verificação em duas etapas ligada.
+              <a routerLink="/perfil" fragment="duas-etapas">Ligar na sua conta</a>
             </app-alert>
           } @else {
             <app-failure-state [failure]="falhaAoCarregar()!" (retry)="carregar()" />

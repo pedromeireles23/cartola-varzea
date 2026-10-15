@@ -85,6 +85,7 @@ describe('Shell', () => {
       displayName: 'Pessoa Organizadora',
       emailConfirmed: true,
       roles: ['Organizer'],
+      twoFactorEnabled: false,
     });
     secao = signal<Section | null>('organize');
     minhas = signal<readonly MyFantasyCompetition[]>([]);

@@ -19,6 +19,7 @@ const CONTA: Account = {
   displayName: 'Ana Auxiliar',
   emailConfirmed: true,
   roles: [],
+  twoFactorEnabled: false,
 };
 
 async function estabilizar(fixture: ComponentFixture<AcceptInvitationPage>): Promise<void> {

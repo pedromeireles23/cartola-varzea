@@ -3,3 +3,5 @@ playwright-report
 test-results
 blob-report
 demo/saida
+# Chave do autenticador do admin do E2E, gerada pelo setup (support/conta.ts).
+.auth

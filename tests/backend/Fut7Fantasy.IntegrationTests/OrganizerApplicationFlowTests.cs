@@ -25,7 +25,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         var applicantEmail = UniqueEmail("applicant");
         var adminEmail = UniqueEmail("admin");
         var applicantId = await CreateUserAsync(factory, applicantEmail);
-        await CreateUserAsync(factory, adminEmail, ApplicationRole.PlatformAdmin);
+        var adminKey = await CreateAdminAsync(factory, adminEmail);
 
         using var applicant = await CreateAuthenticatedClientAsync(
             factory, applicantEmail, cancellationToken);
@@ -52,7 +52,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         // Para quem não administra, a fila nem existe (PlatformAdministrationConcealmentTests).
         Assert.Equal(HttpStatusCode.NotFound, forbiddenQueue.StatusCode);
 
-        using var admin = await CreateAuthenticatedClientAsync(factory, adminEmail, cancellationToken);
+        using var admin = await CreateTwoFactorClientAsync(factory, adminEmail, adminKey, cancellationToken);
         using var queue = await admin.GetAsync(
             new Uri("/api/v1/platform-admin/organizer-applications/pending", UriKind.Relative),
             cancellationToken);
@@ -110,7 +110,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         var applicantEmail = UniqueEmail("rejected-applicant");
         var adminEmail = UniqueEmail("rejection-admin");
         await CreateUserAsync(factory, applicantEmail);
-        await CreateUserAsync(factory, adminEmail, ApplicationRole.PlatformAdmin);
+        var adminKey = await CreateAdminAsync(factory, adminEmail);
 
         using var applicant = await CreateAuthenticatedClientAsync(
             factory, applicantEmail, cancellationToken);
@@ -122,7 +122,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         var submittedBody = await submitted.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
         var applicationId = submittedBody.GetProperty("id").GetGuid();
 
-        using var admin = await CreateAuthenticatedClientAsync(factory, adminEmail, cancellationToken);
+        using var admin = await CreateTwoFactorClientAsync(factory, adminEmail, adminKey, cancellationToken);
         var review = new { reason = "Documentação mínima ainda não apresentada." };
         using var rejected = await admin.PostAsJsonAsync(
             new Uri($"/api/v1/platform-admin/organizer-applications/{applicationId}/reject", UriKind.Relative),
@@ -158,7 +158,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         var cancellationToken = TestContext.Current.CancellationToken;
         using var factory = sqlServer.CreateApi();
         var adminEmail = UniqueEmail("concurrent-admin");
-        await CreateUserAsync(factory, adminEmail, ApplicationRole.PlatformAdmin);
+        var adminKey = await CreateAdminAsync(factory, adminEmail);
 
         var applicationIds = new List<Guid>();
         for (var index = 0; index < 6; index++)
@@ -175,7 +175,7 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
             applicationIds.Add(body.GetProperty("id").GetGuid());
         }
 
-        using var admin = await CreateAuthenticatedClientAsync(factory, adminEmail, cancellationToken);
+        using var admin = await CreateTwoFactorClientAsync(factory, adminEmail, adminKey, cancellationToken);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         var responses = await Task.WhenAll(applicationIds.Select(id => admin.PostAsJsonAsync(
             new Uri($"/api/v1/platform-admin/organizer-applications/{id}/approve", UriKind.Relative),
@@ -239,8 +239,8 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         var cancellationToken = TestContext.Current.CancellationToken;
         using var factory = sqlServer.CreateApi();
         var adminEmail = UniqueEmail("race-admin");
-        await CreateUserAsync(factory, adminEmail, ApplicationRole.PlatformAdmin);
-        using var admin = await CreateAuthenticatedClientAsync(factory, adminEmail, cancellationToken);
+        var adminKey = await CreateAdminAsync(factory, adminEmail);
+        using var admin = await CreateTwoFactorClientAsync(factory, adminEmail, adminKey, cancellationToken);
 
         for (var round = 0; round < 5; round++)
         {

@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Alert, Badge, Button, PageHeader } from '../../shared/ui';
 import { OrganizerArea } from '../organizer/organizer-area';
+import { TwoFactorPanel } from './two-factor-panel';
 
 /**
  * Conta (06 §4.1 e Parte 4, `/perfil`).
@@ -16,7 +17,7 @@ import { OrganizerArea } from '../organizer/organizer-area';
 @Component({
   selector: 'app-profile',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Alert, Badge, Button, PageHeader, RouterLink],
+  imports: [Alert, Badge, Button, PageHeader, RouterLink, TwoFactorPanel],
   template: `
     <app-page-header heading="Conta" />
 
@@ -93,6 +94,8 @@ import { OrganizerArea } from '../organizer/organizer-area';
           <a class="acao" routerLink="/admin/solicitacoes">Ver solicitações</a>
         </div>
       </section>
+
+      <app-two-factor-panel />
     }
   `,
   styleUrls: ['../../shared/ui/panel.scss', './profile.scss'],

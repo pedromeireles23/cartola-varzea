@@ -56,6 +56,18 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
+// O cookie que segura a conta entre a senha e o código do segundo fator, por cinco minutos:
+// só o servidor o lê, e só vai em requisição do próprio site (Fase 20).
+builder.Services.Configure<CookieAuthenticationOptions>(IdentityConstants.TwoFactorUserIdScheme, options =>
+{
+    options.Cookie.Name = "fut7fantasy.second-factor";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+});
+
 builder.Services
     .AddOptions<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
     .Configure<IOptions<Fut7Fantasy.Infrastructure.Options.AuthenticationOptions>>(
@@ -89,7 +101,10 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(
         AuthorizationPolicies.PlatformAdmin,
-        policy => policy.RequireRole(ApplicationRole.PlatformAdmin));
+        // O papel não basta: a sessão precisa ter passado pelo segundo fator (04 §5). Quem
+        // não tem o papel nem chega aqui — para essa pessoa a rota não existe.
+        policy => policy.RequireRole(ApplicationRole.PlatformAdmin)
+            .RequireClaim(SessionClaims.AuthenticationMethod, SessionClaims.MultiFactor));
     options.AddPolicy(
         AuthorizationPolicies.OrganizationMember,
         policy => policy.RequireAuthenticatedUser().AddRequirements(

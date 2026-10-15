@@ -38,6 +38,7 @@ const PESSOA: Account = {
   email: 'pessoa@exemplo.test',
   emailConfirmed: true,
   roles: [],
+  twoFactorEnabled: false,
 };
 
 describe('NotificationBell', () => {

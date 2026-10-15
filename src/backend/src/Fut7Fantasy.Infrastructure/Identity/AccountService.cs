@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -5,10 +7,12 @@ using Fut7Fantasy.Application.Abstractions;
 using Fut7Fantasy.Application.Accounts;
 using Fut7Fantasy.Infrastructure.Options;
 using Fut7Fantasy.Infrastructure.PlatformAdministration;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using AuthenticationOptions = Fut7Fantasy.Infrastructure.Options.AuthenticationOptions;
 
 namespace Fut7Fantasy.Infrastructure.Identity;
 
@@ -32,6 +36,12 @@ public sealed class AccountService(
     };
 
     private static string? _hashDeReferencia;
+
+    /// <summary>Nome da conta no aplicativo autenticador.</summary>
+    private const string Emissor = "Cartola Várzea";
+
+    /// <summary>Quantos códigos de recuperação saem quando os dois fatores são ligados.</summary>
+    private const int CodigosDeRecuperacao = 10;
 
     private readonly AuthenticationOptions _auth = authOptions.Value;
 
@@ -151,10 +161,59 @@ public sealed class AccountService(
             return SignInOutcome.EmailNotConfirmed;
         }
 
+        // Com dois fatores, a senha certa ainda não abre a sessão: o SignInManager guarda a
+        // conta num cookie de cinco minutos, à espera do código. O caminho público até esse
+        // cookie confere a senha outra vez; só as contas com dois fatores pagam o hash a
+        // mais. As falhas de senha não são zeradas aqui, para o código errado somar com elas
+        // no mesmo bloqueio.
+        if (await users.GetTwoFactorEnabledAsync(user).ConfigureAwait(false))
+        {
+            var pendente = await signIn
+                .PasswordSignInAsync(user, password, isPersistent: true, lockoutOnFailure: false)
+                .ConfigureAwait(false);
+            if (!pendente.RequiresTwoFactor)
+            {
+                SecurityEvents.SignInFailed(logger, mascarado);
+                return SignInOutcome.InvalidCredentials;
+            }
+
+            SecurityEvents.SignInAwaitingSecondFactor(logger, user.Id);
+            return SignInOutcome.TwoFactorRequired;
+        }
+
         await users.ResetAccessFailedCountAsync(user).ConfigureAwait(false);
         await signIn.SignInAsync(user, isPersistent: true).ConfigureAwait(false);
         SecurityEvents.SignInSucceeded(logger, user.Id);
         return SignInOutcome.Success;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> SignInWithTwoFactorAsync(string code, CancellationToken cancellationToken)
+    {
+        var pendente = await signIn.GetTwoFactorAuthenticationUserAsync().ConfigureAwait(false);
+        if (pendente is null)
+        {
+            SecurityEvents.SecondFactorFailed(logger);
+            return false;
+        }
+
+        // Seis dígitos são o código do aplicativo, que conta como falha no bloqueio da conta.
+        // O resto é tentado como código de recuperação, aleatório demais para adivinhar.
+        var digitado = SomenteCodigo(code);
+        var porRecuperacao = !(digitado.Length == 6 && digitado.All(char.IsAsciiDigit));
+        var resultado = porRecuperacao
+            ? await signIn.TwoFactorRecoveryCodeSignInAsync(ComoCodigoDeRecuperacao(digitado)).ConfigureAwait(false)
+            : await signIn.TwoFactorAuthenticatorSignInAsync(digitado, isPersistent: true, rememberClient: false)
+                .ConfigureAwait(false);
+
+        if (!resultado.Succeeded)
+        {
+            SecurityEvents.SecondFactorFailed(logger);
+            return false;
+        }
+
+        SecurityEvents.SecondFactorSucceeded(logger, pendente.Id, porRecuperacao);
+        return true;
     }
 
     /// <inheritdoc />
@@ -260,8 +319,106 @@ public sealed class AccountService(
         }
 
         var papeis = await users.GetRolesAsync(user).ConfigureAwait(false);
-        return new AccountProfile(user.Id, user.Email!, user.DisplayName, user.EmailConfirmed, [.. papeis]);
+        return new AccountProfile(
+            user.Id, user.Email!, user.DisplayName, user.EmailConfirmed, [.. papeis], user.TwoFactorEnabled);
     }
+
+    /// <inheritdoc />
+    public async Task<TwoFactorStatus?> GetTwoFactorStatusAsync(CancellationToken cancellationToken)
+    {
+        if (await ContaAtualAsync().ConfigureAwait(false) is not { } user)
+        {
+            return null;
+        }
+
+        var restantes = user.TwoFactorEnabled
+            ? await users.CountRecoveryCodesAsync(user).ConfigureAwait(false)
+            : 0;
+        return new TwoFactorStatus(user.TwoFactorEnabled, restantes);
+    }
+
+    /// <inheritdoc />
+    public async Task<AuthenticatorSetup?> BeginAuthenticatorSetupAsync(CancellationToken cancellationToken)
+    {
+        if (await ContaAtualAsync().ConfigureAwait(false) is not { } user || user.TwoFactorEnabled)
+        {
+            return null;
+        }
+
+        // Trocar a chave troca o security stamp, e a revalidação a cada requisição derrubaria
+        // esta sessão na próxima: ela é reemitida com o stamp novo, mantendo o que já tinha.
+        await users.ResetAuthenticatorKeyAsync(user).ConfigureAwait(false);
+        await signIn.RefreshSignInAsync(user).ConfigureAwait(false);
+        SecurityEvents.AuthenticatorKeyReset(logger, user.Id);
+
+        var chave = await users.GetAuthenticatorKeyAsync(user).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("O Identity não gerou a chave do autenticador.");
+        var emissor = Uri.EscapeDataString(Emissor);
+        var endereco = string.Create(
+            CultureInfo.InvariantCulture,
+            $"otpauth://totp/{emissor}:{Uri.EscapeDataString(user.Email!)}?secret={chave}&issuer={emissor}&digits=6");
+
+        return new AuthenticatorSetup(EmGrupos(chave), endereco);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>?> EnableTwoFactorAsync(string code, CancellationToken cancellationToken)
+    {
+        if (await ContaAtualAsync().ConfigureAwait(false) is not { } user || user.TwoFactorEnabled)
+        {
+            return null;
+        }
+
+        var valido = await users.VerifyTwoFactorTokenAsync(
+                user, users.Options.Tokens.AuthenticatorTokenProvider, SomenteCodigo(code))
+            .ConfigureAwait(false);
+        if (!valido)
+        {
+            return null;
+        }
+
+        // Ligar troca o security stamp: as sessões abertas só com senha, em qualquer
+        // navegador, deixam de valer. Esta continua, e passa a ser de dois fatores, porque
+        // o código acabou de ser conferido; as propriedades dela, prazo absoluto inclusive,
+        // são mantidas.
+        await users.SetTwoFactorEnabledAsync(user, enabled: true).ConfigureAwait(false);
+        var codigos = await users.GenerateNewTwoFactorRecoveryCodesAsync(user, CodigosDeRecuperacao)
+            .ConfigureAwait(false);
+
+        var sessao = await signIn.Context.AuthenticateAsync(IdentityConstants.ApplicationScheme)
+            .ConfigureAwait(false);
+        await signIn.SignInWithClaimsAsync(
+                user,
+                sessao.Properties,
+                [new Claim(SessionClaims.AuthenticationMethod, SessionClaims.MultiFactor)])
+            .ConfigureAwait(false);
+        SecurityEvents.TwoFactorEnabled(logger, user.Id);
+
+        return [.. codigos ?? []];
+    }
+
+    private async Task<ApplicationUser?> ContaAtualAsync() =>
+        currentUser.Id is { } id
+            ? await users.FindByIdAsync(id.ToString()).ConfigureAwait(false)
+            : null;
+
+    /// <summary>Tira espaços e hífens que a pessoa digita ou que o aplicativo mostra.</summary>
+    private static string SomenteCodigo(string code) =>
+        string.Concat(code.Where(caractere => !char.IsWhiteSpace(caractere) && caractere != '-'));
+
+    /// <summary>
+    /// O Identity guarda o código de recuperação como <c>XXXXX-XXXXX</c>, em maiúsculas; quem
+    /// copia de um papel pode trocar a caixa, esquecer o hífen ou pôr espaço.
+    /// </summary>
+    private static string ComoCodigoDeRecuperacao(string digitado)
+    {
+        var limpo = digitado.ToUpperInvariant();
+        return limpo.Length == 10 ? $"{limpo[..5]}-{limpo[5..]}" : limpo;
+    }
+
+    /// <summary>A chave em grupos de quatro, mais fácil de conferir ao digitar.</summary>
+    private static string EmGrupos(string chave) =>
+        string.Join(' ', chave.Chunk(4).Select(grupo => new string(grupo)));
 
     /// <summary>
     /// A confirmação já valeu; uma falha ao conceder o administrador inicial não pode

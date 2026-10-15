@@ -1,4 +1,6 @@
+using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Web;
 using Fut7Fantasy.Domain.Organizations;
@@ -107,6 +109,57 @@ internal static partial class TestAccounts
             new { email, password = SenhaValida },
             cancellationToken);
         login.EnsureSuccessStatusCode();
+        await RefreshAntiforgeryAsync(client, cancellationToken);
+        return client;
+    }
+
+    /// <summary>
+    /// Platform admin com os dois fatores ligados (04 §5). Devolve a chave do aplicativo
+    /// autenticador, para o teste gerar o código.
+    /// </summary>
+    public static async Task<string> CreateAdminAsync(WebApplicationFactory<Program> factory, string email)
+    {
+        var userId = await CreateUserAsync(factory, email, ApplicationRole.PlatformAdmin);
+        return await EnableTwoFactorAsync(factory, userId);
+    }
+
+    /// <summary>Liga os dois fatores direto pelo Identity e devolve a chave do autenticador.</summary>
+    public static async Task<string> EnableTwoFactorAsync(WebApplicationFactory<Program> factory, Guid userId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = await users.FindByIdAsync(userId.ToString());
+        Assert.NotNull(user);
+        Assert.True((await users.ResetAuthenticatorKeyAsync(user)).Succeeded);
+        Assert.True((await users.SetTwoFactorEnabledAsync(user, true)).Succeeded);
+        var key = await users.GetAuthenticatorKeyAsync(user);
+        Assert.NotNull(key);
+        return key;
+    }
+
+    /// <summary>Cliente de uma conta com dois fatores: senha, depois o código do aplicativo.</summary>
+    public static async Task<HttpClient> CreateTwoFactorClientAsync(
+        WebApplicationFactory<Program> factory,
+        string email,
+        string authenticatorKey,
+        CancellationToken cancellationToken)
+    {
+        var client = factory.CreateDefaultClient(
+            new ClockCookieHandler(factory.Services.GetRequiredService<TimeProvider>()));
+        await RefreshAntiforgeryAsync(client, cancellationToken);
+        using var login = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/login", UriKind.Relative),
+            new { email, password = SenhaValida },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var pending = await login.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        Assert.True(pending.GetProperty("twoFactorRequired").GetBoolean());
+
+        using var secondFactor = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/login/two-factor", UriKind.Relative),
+            new { code = Totp.Code(authenticatorKey) },
+            cancellationToken);
+        Assert.Equal(HttpStatusCode.NoContent, secondFactor.StatusCode);
         await RefreshAntiforgeryAsync(client, cancellationToken);
         return client;
     }

@@ -11,7 +11,15 @@ export interface Account {
   readonly displayName: string;
   readonly emailConfirmed: boolean;
   readonly roles: readonly string[];
+  /** A conta exige o segundo fator; ligado, toda sessão dela passou pelo código. */
+  readonly twoFactorEnabled: boolean;
 }
+
+/**
+ * Como terminou a primeira etapa da entrada: com a sessão aberta, ou com a senha certa
+ * numa conta de dois fatores, à espera do código.
+ */
+export type LoginResult = 'signed-in' | 'second-factor';
 
 /** Resposta dos endpoints que respondem igual exista ou não a conta. */
 export interface MessageResponse {
@@ -112,9 +120,29 @@ export class AuthService {
     );
   }
 
-  async login(email: string, password: string): Promise<void> {
+  async login(email: string, password: string): Promise<LoginResult> {
+    const resposta = await firstValueFrom(
+      this.http.post<{ twoFactorRequired?: boolean } | null>(
+        `${this.baseUrl}/auth/login`,
+        { email, password },
+        { observe: 'response' },
+      ),
+    );
+
+    // A sessão ainda não existe: o servidor guarda a conta por cinco minutos, à espera
+    // do código do aplicativo.
+    if (resposta.body?.twoFactorRequired) {
+      return 'second-factor';
+    }
+
+    await this.load();
+    return 'signed-in';
+  }
+
+  /** Segundo passo da entrada: o código do aplicativo autenticador ou um de recuperação. */
+  async loginWithSecondFactor(code: string): Promise<void> {
     await firstValueFrom(
-      this.http.post(`${this.baseUrl}/auth/login`, { email, password }, { observe: 'response' }),
+      this.http.post(`${this.baseUrl}/auth/login/two-factor`, { code }, { observe: 'response' }),
     );
 
     await this.load();
