@@ -55,6 +55,29 @@ public sealed class SpaHostingTests : IDisposable
         Assert.True(resposta.Headers.CacheControl?.NoCache);
     }
 
+    [Theory]
+    [InlineData("/", false)]
+    [InlineData("/campeonatos", false)]
+    [InlineData("/c/copa-da-vila-2026/ranking", false)]
+    [InlineData("/regras", false)]
+    [InlineData("/admin/solicitacoes", true)]
+    [InlineData("/organizar", true)]
+    [InlineData("/perfil", true)]
+    [InlineData("/caminho-que-nao-existe", true)]
+    public async Task OnlyPublicPagesMayBeIndexedAndTheRestLooksTheSame(string rota, bool noindex)
+    {
+        using var client = _factory.CreateClient();
+
+        using var resposta = await client.GetAsync(
+            new Uri(rota, UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+        // A administração sai igual a um caminho que não existe: o cabeçalho não a denuncia.
+        Assert.Equal(
+            noindex ? ["noindex"] : [],
+            resposta.Headers.TryGetValues("X-Robots-Tag", out var valores) ? valores : []);
+    }
+
     [Fact]
     public async Task HashedBundleStaysCachedBecauseANewVersionHasANewName()
     {

@@ -54,7 +54,7 @@ public sealed partial class InitialPlatformAdminTests(SqlServerFixture sqlServer
         using var denied = await other.GetAsync(
             new Uri("/api/v1/platform-admin/organizer-applications/pending", UriKind.Relative),
             cancellationToken);
-        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
 
         Assert.Equal(1, await CountGrantAuditAsync(factory, adminId, cancellationToken));
     }

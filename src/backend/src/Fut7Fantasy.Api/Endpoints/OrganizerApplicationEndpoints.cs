@@ -22,7 +22,7 @@ public static class OrganizerApplicationEndpoints
             .WithName("GetMyOrganizerApplications")
             .WithSummary("Lista as solicitações da conta atual.");
 
-        var administration = routes.MapGroup("/api/v1/platform-admin/organizer-applications")
+        var administration = routes.MapGroup($"{SecurityMiddleware.PlatformAdminPath}/organizer-applications")
             .WithTags("Administração da plataforma")
             .RequireAuthorization(AuthorizationPolicies.PlatformAdmin);
 

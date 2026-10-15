@@ -218,6 +218,7 @@ app.UseRateLimiter();
 app.UseSpa();
 
 app.UseAuthentication();
+app.UseConcealedPlatformAdministration();
 app.UseDemoViewerReadOnly();
 app.UseAuthorization();
 app.UseAntiforgeryForMutations();

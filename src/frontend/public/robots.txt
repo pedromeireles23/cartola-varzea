@@ -3,7 +3,6 @@ User-agent: *
 Disallow: /inicio
 Disallow: /perfil
 Disallow: /organizar
-Disallow: /admin
 Disallow: /convite
 Disallow: /entrar
 Disallow: /cadastro

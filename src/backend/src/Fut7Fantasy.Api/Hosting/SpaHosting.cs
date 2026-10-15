@@ -18,6 +18,14 @@ public static partial class SpaHosting
     [GeneratedRegex(@"^(main|chunk|polyfills|styles)-[A-Za-z0-9_-]{8}\.(js|css)$")]
     private static partial Regex HashedBundle();
 
+    /// <summary>
+    /// As telas que buscador pode guardar: a vitrine, a busca, as páginas dos campeonatos e
+    /// as regras. O resto — as áreas com conta e qualquer caminho que não existe — sai com
+    /// <c>noindex</c>, todos do mesmo jeito: se só a administração levasse o cabeçalho, ele
+    /// mesmo diria que ela existe, que é o que o <c>robots.txt</c> deixou de dizer.
+    /// </summary>
+    private static readonly PathString[] IndexableAreas = ["/campeonatos", "/c", "/regras"];
+
     /// <summary>Cabeçalhos de cache dos arquivos do build.</summary>
     public static IServiceCollection AddSpaHosting(this IServiceCollection services) =>
         services.Configure<StaticFileOptions>(options => options.OnPrepareResponse = context =>
@@ -47,6 +55,11 @@ public static partial class SpaHosting
                 && !request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
                 && !Path.HasExtension(request.Path.Value))
             {
+                if (!IsIndexable(request.Path))
+                {
+                    context.Response.Headers["X-Robots-Tag"] = "noindex";
+                }
+
                 request.Path = "/index.html";
             }
 
@@ -55,4 +68,7 @@ public static partial class SpaHosting
 
         return app.UseStaticFiles();
     }
+
+    private static bool IsIndexable(PathString path) =>
+        path == "/" || IndexableAreas.Any(area => path.StartsWithSegments(area, StringComparison.OrdinalIgnoreCase));
 }

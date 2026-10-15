@@ -1,6 +1,11 @@
 import { Routes } from '@angular/router';
 
-import { anonymousGuard, authGuard, selfServiceGuard } from './core/auth/auth.guard';
+import {
+  anonymousGuard,
+  authGuard,
+  platformAdminGuard,
+  selfServiceGuard,
+} from './core/auth/auth.guard';
 import { developmentRoutes } from './development.routes';
 import { Shell } from './layouts/shell/shell';
 
@@ -394,11 +399,11 @@ export const routes: Routes = [
           import('./features/organizer/request-access').then((m) => m.RequestAccessPage),
       },
       {
-        // Só exige login: quem não é Platform admin recebe 403 da API e a tela mostra o
-        // estado sem permissão. A navegação própria da administração chega depois.
+        // Para quem não é Platform admin a rota não existe: cai no `**`, como qualquer
+        // endereço desconhecido, e nem o código da tela é baixado.
         path: 'admin/solicitacoes',
         title: 'Solicitações de organizador',
-        canActivate: [authGuard],
+        canMatch: [platformAdminGuard],
         loadComponent: () =>
           import('./features/platform-admin/organizer-applications').then(
             (m) => m.OrganizerApplicationsPage,

@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
 
@@ -33,6 +33,21 @@ export const selfServiceGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   return auth.selfService() ? true : router.createUrlTree(['/entrar']);
+};
+
+/**
+ * A administração só existe para o Platform admin. Para qualquer outra pessoa, com ou sem
+ * sessão, a rota não casa, e o endereço tem o destino de um caminho que não existe. É o
+ * espelho da API, que responde a essa pessoa como rota inexistente (Fase 20).
+ */
+export const platformAdminGuard: CanMatchFn = async () => {
+  const auth = inject(AuthService);
+
+  if (!auth.ready()) {
+    await auth.load();
+  }
+
+  return auth.isPlatformAdmin();
 };
 
 /** Evita que quem já entrou caia nas telas de cadastro e entrada. */

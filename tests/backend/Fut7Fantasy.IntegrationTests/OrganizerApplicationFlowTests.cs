@@ -49,7 +49,8 @@ public sealed class OrganizerApplicationFlowTests(SqlServerFixture sqlServer) : 
         using var forbiddenQueue = await applicant.GetAsync(
             new Uri("/api/v1/platform-admin/organizer-applications/pending", UriKind.Relative),
             cancellationToken);
-        Assert.Equal(HttpStatusCode.Forbidden, forbiddenQueue.StatusCode);
+        // Para quem não administra, a fila nem existe (PlatformAdministrationConcealmentTests).
+        Assert.Equal(HttpStatusCode.NotFound, forbiddenQueue.StatusCode);
 
         using var admin = await CreateAuthenticatedClientAsync(factory, adminEmail, cancellationToken);
         using var queue = await admin.GetAsync(
